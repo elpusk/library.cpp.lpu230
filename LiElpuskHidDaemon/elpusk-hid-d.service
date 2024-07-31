@@ -1,0 +1,12 @@
+[Unit]
+Description="elpsuk hid deamon"
+After=local-fs.target
+
+[Service]
+Type=simple
+ExecStart=/home/tester/projects/LiElpuskHidDaemon/bin/x64/Debug/elpusk-hid-d
+Restart=no
+User=tester
+
+[Install]
+WantedBy=multi-user.target

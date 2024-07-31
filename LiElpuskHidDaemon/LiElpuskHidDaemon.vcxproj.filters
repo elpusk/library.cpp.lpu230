@@ -1,0 +1,218 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="..\shared\3thpart\src\linux\hid.c">
+      <Filter>3thpart</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\projects\ElpuskHidDaemon\elpusk_hid_daemon.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\lib\src\server\mp_cserver_.cpp">
+      <Filter>lib\svr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\lib\src\server\mp_cctl_svr_.cpp">
+      <Filter>lib\svr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\lib\src\server\mp_cdev_ctl_.cpp">
+      <Filter>lib\svr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\lib\src\server\mp_cmain_ctl_.cpp">
+      <Filter>lib\svr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\lib\src\cert\mp_ccertificate_.cpp">
+      <Filter>lib\cert</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\lib\src\cert\mp_ccoffee_hlp_cert_.cpp">
+      <Filter>lib\cert</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\lib\inc\mp_csystem_.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\lib\inc\mp_cnamed_pipe_.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\common\src\main_trace.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\common\src\main_wss.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\common\src\main_cert.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\common\src\main_remove_cert.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="3thpart">
+      <UniqueIdentifier>{f279765c-6979-4bc0-bc25-c4966c1a9da7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib">
+      <UniqueIdentifier>{be20f0ef-9e54-4cad-8298-6f099e478a46}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\hid">
+      <UniqueIdentifier>{19dd6cc6-964a-4579-970d-9db39d9de2e6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="test">
+      <UniqueIdentifier>{eaf603ae-b8dc-4184-85ab-c23c81083f02}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{777d7c9c-6987-4a78-a7d7-68601d6f77ba}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="setting">
+      <UniqueIdentifier>{5a963c8a-1796-473b-a88b-cd79a232fdc0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="setting\/etc/systemd/system">
+      <UniqueIdentifier>{3addb7ac-88d6-4633-a63e-3043997068d7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\ws">
+      <UniqueIdentifier>{6cdbbd1f-266c-4a41-ac94-279a2a4d7385}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\svr">
+      <UniqueIdentifier>{d4b9846c-774d-4445-ab8b-1d1c31115cde}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\path">
+      <UniqueIdentifier>{4b3bba52-bccb-4009-a032-73e88fa3d397}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="cert">
+      <UniqueIdentifier>{4cbedfd1-41c1-47b1-8607-45292fed493e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\cert">
+      <UniqueIdentifier>{cd667eda-4c2e-4ec1-8e2f-244aa118cf0e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\_dev">
+      <UniqueIdentifier>{d891647b-8b73-4fe1-8ab0-61b3252bdf70}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common">
+      <UniqueIdentifier>{dc6ae2d9-db0d-4e14-99cc-816614a8a6de}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\shared\3thpart\src\linux\hidapi_libusb.h">
+      <Filter>3thpart</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\3thpart\src\linux\hidapi_thread_pthread.h">
+      <Filter>3thpart</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\3thpart\inc\hidapi.h">
+      <Filter>3thpart</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\local\libusb\out\include\libusb-1.0\libusb.h">
+      <Filter>3thpart</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\hid\mp_clibhid.h">
+      <Filter>lib\hid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\hid\mp_clibhid_dev.h">
+      <Filter>lib\hid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\hid\mp_clibhid_dev_info.h">
+      <Filter>lib\hid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cconvert.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_coperation.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cqitem_dev.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cqueue.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cwait.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_elpusk.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_type.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\test\test_tp_hid.h">
+      <Filter>test</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cfile.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cstring.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\websocket\mp_cws_server.h">
+      <Filter>lib\ws</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_clog.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\websocket\mp_ws_tools.h">
+      <Filter>lib\ws</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\server\mp_cserver_.h">
+      <Filter>lib\svr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\path\mp_cpath.h">
+      <Filter>lib\path</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_vcpacket.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\server\mp_cio_packet.h">
+      <Filter>lib\svr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\server\mp_cctl_svr_.h">
+      <Filter>lib\svr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\server\mp_cdev_ctl_.h">
+      <Filter>lib\svr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\server\mp_cmain_ctl_.h">
+      <Filter>lib\svr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_vcworker.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\server\mp_cworker_ctl.h">
+      <Filter>lib\svr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\websocket\mp_win_nt.h">
+      <Filter>lib\ws</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\cert\mp_ccertificate_.h">
+      <Filter>lib\cert</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\cert\mp_ccoffee_hlp_cert_.h">
+      <Filter>lib\cert</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\_dev\mp_cdev_util.h">
+      <Filter>lib\_dev</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cconsole.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_csystem_.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_coffee.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cnamed_pipe_.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\main.h">
+      <Filter>common</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="elpusk-hid-d.service">
+      <Filter>setting\/etc/systemd/system</Filter>
+    </None>
+    <None Include="..\shared\data_for_debug\cert\coffee_server.crt">
+      <Filter>cert</Filter>
+    </None>
+    <None Include="..\shared\data_for_debug\cert\coffee_server.key">
+      <Filter>cert</Filter>
+    </None>
+  </ItemGroup>
+</Project>

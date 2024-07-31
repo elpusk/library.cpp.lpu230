@@ -1,0 +1,183 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{97688664-34b4-4267-9e94-2bd9b1a3608d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{75202a2d-f401-47af-bb7a-a9e52c4fc125}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3thpart">
+      <UniqueIdentifier>{3a5b1f1d-0e8d-4665-aded-3935cd84ad90}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib">
+      <UniqueIdentifier>{acffbe04-746a-4a0d-86bd-5d282a1307e6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\hid">
+      <UniqueIdentifier>{22a81496-cddd-4090-b4ba-92e145364120}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common">
+      <UniqueIdentifier>{faecd87e-f57b-42bc-8867-091dbad5c344}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="test">
+      <UniqueIdentifier>{6984ba25-af4d-45e0-b82c-1f97e458b05f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\websocket">
+      <UniqueIdentifier>{a21cc1cb-0d58-4c10-aea0-c8e02c1bcb9c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\svr">
+      <UniqueIdentifier>{efe8de32-44d0-4c5d-abe6-471f2191226b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\cert">
+      <UniqueIdentifier>{fbfaefa4-3a3f-4867-940a-780df5a9811b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\_dev">
+      <UniqueIdentifier>{ca82276f-54c6-4e5f-9c87-929758cc1df8}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\shared\3thpart\src\linux\hid.c">
+      <Filter>3thpart</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\projects\MgmtLpu230\src\mgmt_lpu230.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\lib\src\server\mp_cserver_.cpp">
+      <Filter>lib\svr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\lib\src\server\mp_cctl_svr_.cpp">
+      <Filter>lib\svr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\lib\src\server\mp_cdev_ctl_.cpp">
+      <Filter>lib\svr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\lib\src\server\mp_cmain_ctl_.cpp">
+      <Filter>lib\svr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\lib\src\cert\mp_ccertificate_.cpp">
+      <Filter>lib\cert</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\lib\src\cert\mp_ccoffee_hlp_cert_.cpp">
+      <Filter>lib\cert</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\lib\inc\mp_csystem_.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\lib\inc\mp_cnamed_pipe_.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\local\libusb\out\include\libusb-1.0\libusb.h">
+      <Filter>3thpart</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_type.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cqueue.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_coperation.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_elpusk.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cqitem_dev.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cconvert.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cwait.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\3thpart\inc\hidapi.h">
+      <Filter>3thpart</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\3thpart\src\linux\hidapi_libusb.h">
+      <Filter>3thpart</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\3thpart\src\linux\hidapi_thread_pthread.h">
+      <Filter>3thpart</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\hid\mp_clibhid_dev_info.h">
+      <Filter>lib\hid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\hid\mp_clibhid.h">
+      <Filter>lib\hid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\hid\mp_clibhid_dev.h">
+      <Filter>lib\hid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\dev_lpu237.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\test\test_tp_hid.h">
+      <Filter>test</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cfile.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cstring.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_clog.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\websocket\mp_win_nt.h">
+      <Filter>lib\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\server\mp_cserver_.h">
+      <Filter>lib\svr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\websocket\mp_cws_server.h">
+      <Filter>lib\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\websocket\mp_ws_tools.h">
+      <Filter>lib\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\server\mp_cctl_svr_.h">
+      <Filter>lib\svr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\server\mp_cdev_ctl_.h">
+      <Filter>lib\svr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\server\mp_cio_packet.h">
+      <Filter>lib\svr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\server\mp_cmain_ctl_.h">
+      <Filter>lib\svr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\server\mp_cworker_ctl.h">
+      <Filter>lib\svr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_vcpacket.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_vcworker.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\cert\mp_ccertificate_.h">
+      <Filter>lib\cert</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\cert\mp_ccoffee_hlp_cert_.h">
+      <Filter>lib\cert</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\_dev\mp_cdev_util.h">
+      <Filter>lib\_dev</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cconsole.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_csystem_.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_coffee.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cnamed_pipe_.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,255 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="projects">
+      <UniqueIdentifier>{782ab638-50f9-41c2-b23f-909737021620}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common">
+      <UniqueIdentifier>{ff5063a2-d3ee-423d-b5d6-ff1e92b5f99b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common\inc">
+      <UniqueIdentifier>{6aaaa992-2e23-4a54-b0ed-5f9fb16925e3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common\src">
+      <UniqueIdentifier>{a56c95de-44b4-42e6-bb78-91c3b668a368}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="projects\MgmtLpu230">
+      <UniqueIdentifier>{ae58ccf9-5ead-462f-8d6b-7c347cbd3362}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="projects\MgmtLpu230\inc">
+      <UniqueIdentifier>{6597c25f-cc1f-446e-a1ab-0232b61a191f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="projects\MgmtLpu230\src">
+      <UniqueIdentifier>{2b6d556b-e15b-4bc5-9ff4-f1a40de97b03}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib">
+      <UniqueIdentifier>{4c07b15d-2245-4a4b-b685-d68d14137d23}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\inc">
+      <UniqueIdentifier>{c10d9418-f448-45d9-aad8-8bc59cdefbf5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3thpart">
+      <UniqueIdentifier>{a20d34ed-e039-4c5b-8a3d-08da64ff6dfb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3thpart\inc">
+      <UniqueIdentifier>{c2e9c8a0-e5eb-4967-8949-22d0c474a2cd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3thpart\src">
+      <UniqueIdentifier>{a34b908e-d728-4bd2-abff-e37d9eeb019a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3thpart\src\win">
+      <UniqueIdentifier>{5a475be2-49a6-43a6-9a40-768d81262624}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3thpart\src\linux">
+      <UniqueIdentifier>{c2f1964c-4307-4123-bc58-56190710fdbb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3thpart\src\win\pp_data_dump">
+      <UniqueIdentifier>{5e7b381d-16f9-4953-90dd-d509bba5f089}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\inc\hid">
+      <UniqueIdentifier>{6b8cfeb7-e5eb-498e-b078-4143fc681608}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\inc\test">
+      <UniqueIdentifier>{a3cc5a90-f3d9-45a0-8f38-437c41d4827e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\inc\ws">
+      <UniqueIdentifier>{a4450237-749e-4c39-9e94-4b5fbf1d8b1b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\inc\svr">
+      <UniqueIdentifier>{8ae99fd8-a6f0-4ec9-b8fe-04c5fbbbf328}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\inc\path">
+      <UniqueIdentifier>{777e8969-045d-436f-9aa7-e8bfb174e47c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\inc\cert">
+      <UniqueIdentifier>{f02cdaa2-5885-4c8d-825b-6172657729b8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\inc\_dev">
+      <UniqueIdentifier>{ce771d09-a82e-4623-9343-c5b95590824c}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="$(MSBuildThisFileDirectory)3thpart\src\win\hidapi_descriptor_reconstruct.c">
+      <Filter>3thpart\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)3thpart\src\win\hid.c">
+      <Filter>3thpart\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)3thpart\src\linux\hid.c">
+      <Filter>3thpart\src\linux</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)3thpart\src\win\pp_data_dump\pp_data_dump.c">
+      <Filter>3thpart\src\win\pp_data_dump</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)projects\MgmtLpu230\src\mgmt_lpu230.cpp">
+      <Filter>projects\MgmtLpu230\src</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)lib\src\server\mp_cserver_.cpp">
+      <Filter>lib\inc\svr</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)lib\src\server\mp_cctl_svr_.cpp">
+      <Filter>lib\inc\svr</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)lib\src\server\mp_cdev_ctl_.cpp">
+      <Filter>lib\inc\svr</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)lib\src\server\mp_cmain_ctl_.cpp">
+      <Filter>lib\inc\svr</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)lib\src\cert\mp_ccertificate_.cpp">
+      <Filter>lib\inc\cert</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)lib\src\cert\mp_ccoffee_hlp_cert_.cpp">
+      <Filter>lib\inc\cert</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)lib\inc\mp_csystem_.cpp">
+      <Filter>lib\inc</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)lib\inc\mp_cnamed_pipe_.cpp">
+      <Filter>lib\inc</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)common\src\main_trace.cpp">
+      <Filter>common\src</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)common\src\main_wss.cpp">
+      <Filter>common\src</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)common\src\main_cert.cpp">
+      <Filter>common\src</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)common\src\main_remove_cert.cpp">
+      <Filter>common\src</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="$(MSBuildThisFileDirectory)3thpart\inc\hidapi.h">
+      <Filter>3thpart\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)3thpart\src\win\hidapi_descriptor_reconstruct.h">
+      <Filter>3thpart\src\win</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)3thpart\src\win\hidapi_hidclass.h">
+      <Filter>3thpart\src\win</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)3thpart\src\win\hidapi_hidpi.h">
+      <Filter>3thpart\src\win</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)3thpart\src\win\hidapi_hidsdi.h">
+      <Filter>3thpart\src\win</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)3thpart\src\win\hidapi_winapi.h">
+      <Filter>3thpart\src\win</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)3thpart\src\win\hidapi_cfgmgr32.h">
+      <Filter>3thpart\src\win</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)3thpart\src\linux\hidapi_thread_pthread.h">
+      <Filter>3thpart\src\linux</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)3thpart\src\linux\hidapi_libusb.h">
+      <Filter>3thpart\src\linux</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\mp_type.h">
+      <Filter>lib\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\mp_cqueue.h">
+      <Filter>lib\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\mp_coperation.h">
+      <Filter>lib\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\mp_elpusk.h">
+      <Filter>lib\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\mp_cqitem_dev.h">
+      <Filter>lib\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\mp_cconvert.h">
+      <Filter>lib\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\mp_cwait.h">
+      <Filter>lib\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)common\inc\dev_lpu237.h">
+      <Filter>common\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\hid\mp_clibhid_dev.h">
+      <Filter>lib\inc\hid</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\hid\mp_clibhid_dev_info.h">
+      <Filter>lib\inc\hid</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\hid\mp_clibhid.h">
+      <Filter>lib\inc\hid</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\test\test_tp_hid.h">
+      <Filter>lib\inc\test</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\mp_cfile.h">
+      <Filter>lib\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\mp_cstring.h">
+      <Filter>lib\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\websocket\mp_cws_server.h">
+      <Filter>lib\inc\ws</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\websocket\mp_ws_tools.h">
+      <Filter>lib\inc\ws</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\mp_clog.h">
+      <Filter>lib\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\server\mp_cserver_.h">
+      <Filter>lib\inc\svr</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\path\mp_cpath.h">
+      <Filter>lib\inc\path</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\mp_vcpacket.h">
+      <Filter>lib\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\server\mp_cio_packet.h">
+      <Filter>lib\inc\svr</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\server\mp_cctl_svr_.h">
+      <Filter>lib\inc\svr</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\server\mp_cdev_ctl_.h">
+      <Filter>lib\inc\svr</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\server\mp_cmain_ctl_.h">
+      <Filter>lib\inc\svr</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\mp_vcworker.h">
+      <Filter>lib\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\server\mp_cworker_ctl.h">
+      <Filter>lib\inc\svr</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\cert\mp_ccertificate_.h">
+      <Filter>lib\inc\cert</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\cert\mp_ccoffee_hlp_cert_.h">
+      <Filter>lib\inc\cert</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\_dev\mp_cdev_util.h">
+      <Filter>lib\inc\_dev</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\mp_csystem_.h">
+      <Filter>lib\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\mp_coffee.h">
+      <Filter>lib\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\mp_cnamed_pipe_.h">
+      <Filter>lib\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)common\inc\main.h">
+      <Filter>common\inc</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)..\README.md" />
+  </ItemGroup>
+</Project>
