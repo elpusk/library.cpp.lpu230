@@ -50,13 +50,27 @@ namespace _mp
 						continue;
 					//
 					vwprintf(s_fmt, ap);
-#ifdef _WIN32
-#else
-#endif
 				} while (false);
 
 				va_end(ap);
 
+			} while (false);
+#endif // _DEBUG
+		}
+
+		static void TraceHex(const type_v_buffer& v_data, const std::wstring& s_delimiter = L"")
+		{
+#ifdef _DEBUG
+			static std::mutex _m;
+			do {
+				std::lock_guard<std::mutex>	lock(_m);
+
+				std::wstring s = cconvert::hex_string_from_binary(v_data, s_delimiter);
+				if (s.empty()) {
+					continue;
+				}
+
+				std::wcout << s;
 			} while (false);
 #endif // _DEBUG
 		}
@@ -141,6 +155,21 @@ namespace _mp
 
 				va_end(ap);
 
+			} while (false);
+		}
+		void trace_hex(const type_v_buffer& v_data, const std::wstring& s_delimiter = L"")
+		{
+			do {
+				std::lock_guard<std::mutex>	lock(m_mutex_trace);
+				if (!m_ptr_track_pipe) {
+					continue;
+				}
+
+				std::wstring s = cconvert::hex_string_from_binary(v_data, s_delimiter);
+				if (s.empty()) {
+					continue;
+				}
+				m_ptr_track_pipe->write(s);
 			} while (false);
 		}
 

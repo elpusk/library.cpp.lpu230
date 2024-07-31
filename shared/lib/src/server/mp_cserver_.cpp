@@ -548,40 +548,57 @@ namespace _mp{
 		//display code for using easy.
 		void cserver::_dp_n(const std::wstring& s_info)
 		{
-			std::wcout << L"[I] - " << s_info << std::endl;
+			if (!s_info.empty()) {
+				clog::get_instance().trace(L"[I] - %s\n",s_info.c_str());
+				clog::Trace(L"[I] - %s\n", s_info.c_str());
+			}
 		}
 		void cserver::_dp_w(const std::wstring& s_info)
 		{
-			std::wcout << L"[W] - " << s_info << std::endl;
+			if (!s_info.empty()) {
+				clog::get_instance().trace(L"[W] - %s\n", s_info.c_str());
+				clog::Trace(L"[W] - %s\n", s_info.c_str());
+			}
 		}
 		void cserver::_dp_e(const std::wstring& s_info)
 		{
-			std::wcout << L"[E] - " << s_info << std::endl;
+			if (!s_info.empty()) {
+				clog::get_instance().trace(L"[E] - %s\n", s_info.c_str());
+				clog::Trace(L"[E] - %s\n", s_info.c_str());
+			}
 		}
 		void cserver::_dp_n(const _mp::type_v_buffer& v_data)
 		{
-			std::wcout << L"[I] - ";
-			for (unsigned char i : v_data) {
-				std::wcout << std::hex << i << L'.';
+			clog::get_instance().trace(L"[I] - ");
+			clog::Trace(L"[I] - ");
+			if (!v_data.empty()) {
+				clog::get_instance().trace_hex(v_data,L".");
+				clog::TraceHex(v_data, L".");
 			}
-			std::wcout << std::dec << std::endl;
+			clog::get_instance().trace(L"\n");
+			clog::Trace(L"\n");
 		}
 		void cserver::_dp_w(const _mp::type_v_buffer& v_data)
 		{
-			std::wcout << L"[W] - ";
-			for (unsigned char i : v_data) {
-				std::wcout << std::hex << i << L'.';
+			clog::get_instance().trace(L"[W] - ");
+			clog::Trace(L"[W] - ");
+			if (!v_data.empty()) {
+				clog::get_instance().trace_hex(v_data, L".");
+				clog::TraceHex(v_data, L".");
 			}
-			std::wcout << std::dec << std::endl;
-
+			clog::get_instance().trace(L"\n");
+			clog::Trace(L"\n");
 		}
 		void cserver::_dp_e(const _mp::type_v_buffer& v_data)
 		{
-			std::wcout << L"[E] - ";
-			for (unsigned char i : v_data) {
-				std::wcout << std::hex << i << L'.';
+			clog::get_instance().trace(L"[E] - ");
+			clog::Trace(L"[E] - ");
+			if (!v_data.empty()) {
+				clog::get_instance().trace_hex(v_data, L".");
+				clog::TraceHex(v_data, L".");
 			}
-			std::wcout << std::dec << std::endl;
+			clog::get_instance().trace(L"\n");
+			clog::Trace(L"\n");
 		}
 
 }
