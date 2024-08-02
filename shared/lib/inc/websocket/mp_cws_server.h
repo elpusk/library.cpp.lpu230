@@ -187,7 +187,8 @@ namespace _mp
 		public:
 			csession& set_callback(const cws_server::ccallback& cb)
 			{
-				clog::get_instance().log(L"I : [%ls ] : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] : %ls : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
 				m_callback = cb;
 				return *this;
 			}
@@ -205,7 +206,8 @@ namespace _mp
 				, m_b_dont_use_this_this_will_be_removed(false)
 				, m_b_read_mode(false)
 			{
-				clog::get_instance().log(L"I : [%ls ] : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
 				m_b_ssl = parent_server.is_ssl();
 
 				if (m_b_ssl)
@@ -213,12 +215,13 @@ namespace _mp
 				else
 					m_ptr_ws = std::make_shared<csession::_type_ws>(std::move(socket));
 
-				clog::get_instance().log(L"I : [%ls ] : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
 			}
 			virtual ~csession()
 			{
-				clog::get_instance().log(L"I : [%ls ] : %u.\n", __WFUNCTION__, m_n_session);
-				clog::get_instance().log_fmt(L"[I] [%ls ] : %u : deleted csession.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u : deleted csession.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u : deleted csession.\n", __WFUNCTION__, m_n_session);
 				if (m_ptr_ws) {
 					if (m_ptr_ws->is_open()) {
 						boost::beast::get_lowest_layer(*m_ptr_ws).close();
@@ -234,17 +237,20 @@ namespace _mp
 				}
 				//close all opened files
 				close_all_opened_file();
-				clog::get_instance().log(L"I : [%ls ] : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
 			}
 
 			void request_run()
 			{
-				clog::get_instance().log(L"I : [%ls ] : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
 				do {
 					std::lock_guard<std::mutex> lock(m_mutex_session);
 					if (m_b_ssl) {
 						if (!m_ptr_wss) {
-							clog::get_instance().log(L"E : [%ls ] : %u : none wss socket.\n", __WFUNCTION__, m_n_session);
+							clog::get_instance().log_fmt(L"[E] - %ls : %u : none wss socket.\n", __WFUNCTION__, m_n_session);
+							clog::get_instance().trace(L"[E] - %ls : %u : none wss socket.\n", __WFUNCTION__, m_n_session);
 							continue;
 						}
 
@@ -252,18 +258,21 @@ namespace _mp
 					}
 					else {
 						if (!m_ptr_ws) {
-							clog::get_instance().log(L"E : [%ls ] : %u : none ws socket.\n", __WFUNCTION__, m_n_session);
+							clog::get_instance().log_fmt(L"[E] - %ls : %u : none ws socket.\n", __WFUNCTION__, m_n_session);
+							clog::get_instance().trace(L"[E] - %ls : %u : none ws socket.\n", __WFUNCTION__, m_n_session);
 							continue;
 						}
 						boost::asio::dispatch(m_ptr_ws->get_executor(), boost::beast::bind_front_handler(&csession::_run, shared_from_this())); //shared_from_this()
 					}
 				} while (false);
-				clog::get_instance().log(L"I : [%ls ] : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
 			}
 
 			void close_socket()
 			{
-				clog::get_instance().log(L"I : [%ls ] : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
 				do {
 					std::lock_guard<std::mutex> lock(m_mutex_session);
 
@@ -275,29 +284,35 @@ namespace _mp
 					}
 
 				} while (false);
-				clog::get_instance().log(L"I : [%ls ] : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
 			}
 			bool do_send(const _mp::type_ptr_v_buffer& ptr_v_data)
 			{
-				clog::get_instance().log(L"I : [%ls ] : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
 				bool b_result(false);
 				do {
 					std::lock_guard<std::mutex> lock(m_mutex_session);
 
 					if (m_b_dont_use_this_this_will_be_removed) {
-						clog::get_instance().log(L"I : [%ls ] : %u : dont_use_this_this_will_be_removed.\n", __WFUNCTION__, m_n_session);
+						clog::get_instance().log_fmt(L"[I] - %ls : %u : dont_use_this_this_will_be_removed.\n", __WFUNCTION__, m_n_session);
+						clog::get_instance().trace(L"[I] - %ls : %u : dont_use_this_this_will_be_removed.\n", __WFUNCTION__, m_n_session);
 						continue;
 					}
 					if (!ptr_v_data) {
-						clog::get_instance().log(L"E : [%ls ] : %u : ptr_v_data is null.\n", __WFUNCTION__, m_n_session);
+						clog::get_instance().log_fmt(L"[E] - %ls : %u : ptr_v_data is null.\n", __WFUNCTION__, m_n_session);
+						clog::get_instance().trace(L"[E] - %ls : %u : ptr_v_data is null.\n", __WFUNCTION__, m_n_session);
 						continue;
 					}
 					if (ptr_v_data->empty()) {
-						clog::get_instance().log(L"E : [%ls ] : %u : ptr_v_data->empty().\n", __WFUNCTION__, m_n_session);
+						clog::get_instance().log_fmt(L"[E] - %ls : %u : ptr_v_data->empty().\n", __WFUNCTION__, m_n_session);
+						clog::get_instance().trace(L"[E] - %ls : %u : ptr_v_data->empty().\n", __WFUNCTION__, m_n_session);
 						continue;
 					}
 					if (!m_b_setup) {
-						clog::get_instance().log(L"I : [%ls ] : %u : is not ready for.\n", __WFUNCTION__, m_n_session);
+						clog::get_instance().log_fmt(L"[I] - %ls : %u : is not ready for.\n", __WFUNCTION__, m_n_session);
+						clog::get_instance().trace(L"[I] - %ls : %u : is not ready for.\n", __WFUNCTION__, m_n_session);
 						continue;
 					}
 
@@ -326,7 +341,8 @@ namespace _mp
 						);
 					}
 				} while (false);
-				clog::get_instance().log(L"I : [%ls ] : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
 				return b_result;
 			}
 
@@ -354,27 +370,31 @@ namespace _mp
 
 			void close_all_opened_file()
 			{
-				clog::get_instance().log(L"I : [%ls ] : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
 				std::lock_guard<std::mutex> lock(m_mutex_session_files);
 
 				std::for_each(std::begin(m_map_opened_files), std::end(m_map_opened_files), [&](const _mp::type_pair_wfilename_ptr_fstream& pair_item) {
 					if (pair_item.second) {
 						if (pair_item.second->is_open()) {
 							pair_item.second->close();
-							clog::get_instance().log(L"I : [%ls ] : %u : closed : %ls.\n", __WFUNCTION__, m_n_session, pair_item.first.c_str());
+							clog::get_instance().log_fmt(L"[I] - %ls : %u : closed : %ls.\n", __WFUNCTION__, m_n_session, pair_item.first.c_str());
+							clog::get_instance().trace(L"[I] - %ls : %u : closed : %ls.\n", __WFUNCTION__, m_n_session, pair_item.first.c_str());
 						}
 					}
 					});
 				//
 				//remove temp file here of session.
 				delete_temp_file();//no matter delete is failed or success.
-				clog::get_instance().log(L"I : [%ls ] : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
 			}
 
 			bool delete_temp_file()
 			{
 				bool b_result(false);
-				clog::get_instance().log(L"I : [%ls ] : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
 				do {
 					if (m_s_virtual_full_path_of_temp_file.empty())
 						continue;
@@ -393,13 +413,15 @@ namespace _mp
 #endif
 					b_result = true;
 				} while (false);
-				clog::get_instance().log(L"I : [%ls ] : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
 				return b_result;
 			}
 			bool get_opened_file_path(_mp::type_set_wstring& out_set_opened_file_paths)
 			{
 				bool b_result(false);
-				clog::get_instance().log(L"I : [%ls ] : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
 				do {
 					std::lock_guard<std::mutex> lock(m_mutex_session_files);
 
@@ -415,14 +437,16 @@ namespace _mp
 					//
 					b_result = true;
 				} while (false);
-				clog::get_instance().log(L"I : [%ls ] : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
 				return b_result;
 			}
 
 			bool get_first_opened_file_path(std::wstring& out_s_paths)
 			{
 				bool b_result(false);
-				clog::get_instance().log(L"I : [%ls ] : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
 				std::lock_guard<std::mutex> lock(m_mutex_session_files);
 
 				if (m_map_opened_files.empty()) {
@@ -432,14 +456,16 @@ namespace _mp
 					out_s_paths = std::begin(m_map_opened_files)->first;
 					b_result = true;
 				}
-				clog::get_instance().log(L"I : [%ls ] : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
 				return b_result;
 			}
 
 			bool file_firmware(const std::wstring& s_sub, const std::wstring& s_virtual_abs_file)
 			{
 				bool b_result(false);
-				clog::get_instance().log(L"I : [%ls ] : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
 				do {
 					std::lock_guard<std::mutex> lock(m_mutex_session_files);
 					if (s_sub.empty())
@@ -498,14 +524,16 @@ namespace _mp
 						b_result = true;
 					}
 				} while (false);
-				clog::get_instance().log(L"I : [%ls ] : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
 				return b_result;
 			}
 
 			bool file_create(const std::wstring& s_virtual_abs_file)
 			{
 				bool b_result(false);
-				clog::get_instance().log(L"I : [%ls ] : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
 				do {
 					std::lock_guard<std::mutex> lock(m_mutex_session_files);
 					if (s_virtual_abs_file.empty())
@@ -540,13 +568,15 @@ namespace _mp
 					//
 					b_result = true;
 				} while (false);
-				clog::get_instance().log(L"I : [%ls ] : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
 				return b_result;
 			}
 			bool file_open(const std::wstring& s_virtual_abs_file)
 			{
 				bool b_result(false);
-				clog::get_instance().log(L"I : [%ls ] : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
 				do {
 					std::lock_guard<std::mutex> lock(m_mutex_session_files);
 					if (s_virtual_abs_file.empty())
@@ -573,13 +603,15 @@ namespace _mp
 					//
 					b_result = true;
 				} while (false);
-				clog::get_instance().log(L"I : [%ls ] : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
 				return b_result;
 			}
 			bool file_is_open(const std::wstring& s_virtual_abs_file)
 			{
 				bool b_result(false);
-				clog::get_instance().log(L"I : [%ls ] : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
 				do {
 					std::lock_guard<std::mutex> lock(m_mutex_session_files);
 					if (s_virtual_abs_file.empty())
@@ -590,13 +622,15 @@ namespace _mp
 					//
 					b_result = true;
 				} while (false);
-				clog::get_instance().log(L"I : [%ls ] : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
 				return b_result;
 			}
 			bool file_close(const std::wstring& s_virtual_abs_file)
 			{
 				bool b_result(false);
-				clog::get_instance().log(L"I : [%ls ] : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
 				do {
 					std::lock_guard<std::mutex> lock(m_mutex_session_files);
 					if (s_virtual_abs_file.empty())
@@ -611,13 +645,15 @@ namespace _mp
 					//
 					b_result = true;
 				} while (false);
-				clog::get_instance().log(L"I : [%ls ] : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
 				return b_result;
 			}
 			bool file_truncate(const std::wstring& s_virtual_abs_file)
 			{
 				bool b_result(false);
-				clog::get_instance().log(L"I : [%ls ] : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
 				do {
 					std::lock_guard<std::mutex> lock(m_mutex_session_files);
 					if (s_virtual_abs_file.empty())
@@ -635,13 +671,15 @@ namespace _mp
 					//
 					b_result = true;
 				} while (false);
-				clog::get_instance().log(L"I : [%ls ] : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
 				return b_result;
 			}
 			bool file_write(const std::wstring& s_virtual_abs_file, const _mp::type_v_buffer& v_data)
 			{
 				bool b_result(false);
-				clog::get_instance().log(L"I : [%ls ] : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
 				do {
 					std::lock_guard<std::mutex> lock(m_mutex_session_files);
 					if (s_virtual_abs_file.empty())
@@ -657,13 +695,15 @@ namespace _mp
 					//
 					b_result = true;
 				} while (false);
-				clog::get_instance().log(L"I : [%ls ] : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
 				return b_result;
 			}
 			int file_get_size(const std::wstring& s_virtual_abs_file)
 			{
 				int n_size(-1);
-				clog::get_instance().log(L"I : [%ls ] : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
 				do {
 					std::lock_guard<std::mutex> lock(m_mutex_session_files);
 					if (s_virtual_abs_file.empty())
@@ -677,7 +717,8 @@ namespace _mp
 					it->second->seekg(0, it->second->end);
 					n_size = (int)it->second->tellg();//tellg return the length of file in only binary mode.
 				} while (false);
-				clog::get_instance().log(L"I : [%ls ] : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
 				return n_size;
 			}
 			bool is_will_be_removed()
@@ -688,11 +729,13 @@ namespace _mp
 		private:
 			void _do_close()
 			{
-				clog::get_instance().log(L"I : [%ls ] : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
 				if (m_b_ssl) {
 					if (m_ptr_wss->is_open()) {
 						boost::beast::websocket::close_reason cr(boost::beast::websocket::close_code::normal);
-						clog::get_instance().log(L"I : [%ls ] : %u : async_close()\n", __WFUNCTION__, m_n_session);
+						clog::get_instance().log_fmt(L"[I] - %ls : %u : async_close()\n", __WFUNCTION__, m_n_session);
+						clog::get_instance().trace(L"[I] - %ls : %u : async_close()\n", __WFUNCTION__, m_n_session);
 						m_ptr_wss->async_close(
 							cr,
 							boost::beast::bind_front_handler(&csession::_on_close, shared_from_this(), m_n_session)//shared_from_this()
@@ -702,19 +745,22 @@ namespace _mp
 				else {
 					if (m_ptr_ws->is_open()) {
 						boost::beast::websocket::close_reason cr(boost::beast::websocket::close_code::normal);
-						clog::get_instance().log(L"I : [%ls ] : %u : async_close()\n", __WFUNCTION__, m_n_session);
+						clog::get_instance().log_fmt(L"[I] - %ls : %u : async_close()\n", __WFUNCTION__, m_n_session);
+						clog::get_instance().trace(L"[I] - %ls : %u : async_close()\n", __WFUNCTION__, m_n_session);
 						m_ptr_ws->async_close(
 							cr,
 							boost::beast::bind_front_handler(&csession::_on_close, shared_from_this(), m_n_session)//shared_from_this()
 						);
 					}
 				}
-				clog::get_instance().log(L"I : [%ls ] : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
 			}
 
 			void _do_cancel()
 			{
-				clog::get_instance().log(L"I : [%ls ] : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
 				if (m_b_ssl) {
 					if (m_ptr_wss->is_open()) {
 						boost::beast::get_lowest_layer(*m_ptr_wss).cancel();
@@ -725,42 +771,49 @@ namespace _mp
 						boost::beast::get_lowest_layer(*m_ptr_ws).cancel();
 					}
 				}
-				clog::get_instance().log(L"I : [%ls ] : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
 			}
 
 			void _do_read()
 			{
-				clog::get_instance().log(L"I : [%ls ] : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
 				// Read a message into our buffer
 				if (m_b_ssl) {
-					clog::get_instance().log(L"I : [%ls ] : %u : async_read()\n", __WFUNCTION__, m_n_session);
+					clog::get_instance().log_fmt(L"[I] - %ls : %u : async_read()\n", __WFUNCTION__, m_n_session);
+					clog::get_instance().trace(L"[I] - %ls : %u : async_read()\n", __WFUNCTION__, m_n_session);
 					m_ptr_wss->async_read(
 						m_buffer_rx,
 						boost::beast::bind_front_handler(&csession::_on_read, shared_from_this(), m_n_session)//shared_from_this()
 					);
 				}
 				else {
-					clog::get_instance().log(L"I : [%ls ] : %u : async_read()\n", __WFUNCTION__, m_n_session);
+					clog::get_instance().log_fmt(L"[I] - %ls : %u : async_read()\n", __WFUNCTION__, m_n_session);
+					clog::get_instance().trace(L"[I] - %ls : %u : async_read()\n", __WFUNCTION__, m_n_session);
 					m_ptr_ws->async_read(
 						m_buffer_rx,
 						boost::beast::bind_front_handler(&csession::_on_read, shared_from_this(), m_n_session)//shared_from_this()
 					);
 				}
 				m_b_read_mode = true;
-				clog::get_instance().log(L"I : [%ls ] : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
 			}
 
 			void _on_close(unsigned long n_session, boost::beast::error_code ec)
 			{
 				bool b_result(false);
-				clog::get_instance().log(L"I : [%ls ] : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
 				do {
 					std::lock_guard<std::mutex> lock(m_mutex_session);
 
 					close_all_opened_file();
 					m_b_dont_use_this_this_will_be_removed = true;
 
-					clog::get_instance().log_fmt(L"[I] ws:: se:: call_on_close::run_close.\n");
+					clog::get_instance().log_fmt(L"[I] - ws:: se:: call_on_close::run_close.\n");
+					clog::get_instance().trace(L"[I] - ws:: se:: call_on_close::run_close.\n");
 					m_callback.run_close(m_n_session, ec);
 
 					if (!ec) {
@@ -769,13 +822,16 @@ namespace _mp
 					}
 
 					std::wstring ws_msg(_mp::cstring::get_unicode_english_error_message(ec));
-					clog::get_instance().log(L"E : [%ls ] : %u : %ls.\n", __WFUNCTION__, m_n_session, ws_msg.c_str());
+					clog::get_instance().log_fmt(L"[E] - %ls : %u : %ls.\n", __WFUNCTION__, m_n_session, ws_msg.c_str());
+					clog::get_instance().trace(L"[E] - %ls : %u : %ls.\n", __WFUNCTION__, m_n_session, ws_msg.c_str());
 				} while (false);
-				clog::get_instance().log(L"I : [%ls ] : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
 			}
 			void _on_send(unsigned long n_session, const _mp::type_ptr_v_buffer& ptr_data)
 			{
-				clog::get_instance().log(L"I : [%ls ] : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
 				do {
 					std::lock_guard<std::mutex> lock(m_mutex_session);
 
@@ -784,19 +840,22 @@ namespace _mp
 						continue;
 					_write(m_queue_write.front());
 				} while (false);
-				clog::get_instance().log(L"I : [%ls ] : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
 			}
 
 			void _on_write(unsigned long n_session, boost::beast::error_code ec, size_t bytes_transferred)
 			{
 				bool b_result(false);
-				clog::get_instance().log(L"I : [%ls ] : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
 				do {
 					std::lock_guard<std::mutex> lock(m_mutex_session);
 
 					if (ec) {
 						std::wstring ws_msg(_mp::cstring::get_unicode_english_error_message(ec));
-						clog::get_instance().log(L"E : [%ls ] : %u : %ls(%d).\n", __WFUNCTION__, m_n_session, ws_msg.c_str(), ec.value());
+						clog::get_instance().log_fmt(L"[E] - %ls : %u : %ls(%d).\n", __WFUNCTION__, m_n_session, ws_msg.c_str(), ec.value());
+						clog::get_instance().trace(L"[E] - %ls : %u : %ls(%d).\n", __WFUNCTION__, m_n_session, ws_msg.c_str(), ec.value());
 						m_callback.run_write(m_n_session, ec, _mp::type_v_buffer(0));
 						continue;
 					}
@@ -817,20 +876,24 @@ namespace _mp
 					b_result = true;
 
 				} while (false);
-				clog::get_instance().log(L"I : [%ls ] : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
 			}
 			void _on_read(unsigned long n_session, boost::beast::error_code ec, size_t bytes_transferred)
 			{
 				//boost::ignore_unused(bytes_transferred);
 				bool b_result(false);
-				clog::get_instance().log(L"I : [%ls ] : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
 				do {
 					std::lock_guard<std::mutex> lock(m_mutex_session);
-					clog::get_instance().log(L"I : [%ls ] : %u : bytes_transferred = %u.\n", __WFUNCTION__, m_n_session, (unsigned int)bytes_transferred);
+					clog::get_instance().log_fmt(L"[I] - %ls : %u : bytes_transferred = %u.\n", __WFUNCTION__, m_n_session, (unsigned int)bytes_transferred);
+					clog::get_instance().trace(L"[I] - %ls : %u : bytes_transferred = %u.\n", __WFUNCTION__, m_n_session, (unsigned int)bytes_transferred);
 
 					_mp::type_v_buffer v_data;
 					v_data.resize(m_buffer_rx.cdata().size());
-					clog::get_instance().log(L"I : [%ls ] : %u : v_data.size() = %u.\n", __WFUNCTION__, m_n_session, (unsigned int)v_data.size());
+					clog::get_instance().log_fmt(L"[I] - %ls : %u : v_data.size() = %u.\n", __WFUNCTION__, m_n_session, (unsigned int)v_data.size());
+					clog::get_instance().trace(L"[I] - %ls : %u : v_data.size() = %u.\n", __WFUNCTION__, m_n_session, (unsigned int)v_data.size());
 					if (v_data.size() > 0) {
 						memcpy(&v_data[0], (const unsigned char*)m_buffer_rx.cdata().data(), v_data.size());
 					}
@@ -844,7 +907,8 @@ namespace _mp
 
 					m_buffer_rx.consume(m_buffer_rx.size());// Clear the buffer
 					if (ec) {
-						clog::get_instance().log_fmt(L"[E] call_on_read : (%d) %ls.\n", ec.value(), _mp::cstring::get_unicode_english_error_message(ec).c_str());
+						clog::get_instance().log_fmt(L"[E] - call_on_read : (%d) %ls.\n", ec.value(), _mp::cstring::get_unicode_english_error_message(ec).c_str());
+						clog::get_instance().trace(L"[E] - call_on_read : (%d) %ls.\n", ec.value(), _mp::cstring::get_unicode_english_error_message(ec).c_str());
 						//session.m_s_error = "read";	session.m_ec = ec;
 						std::wstring s_bin(L"<T>");
 
@@ -854,10 +918,12 @@ namespace _mp
 									s_bin = L"<B>";
 								}
 
-								clog::get_instance().log(L"I : [%ls ] : %u : ssl session is closed.\n", __WFUNCTION__, m_n_session);
+								clog::get_instance().log_fmt(L"[I] - %ls : %u : ssl session is closed.\n", __WFUNCTION__, m_n_session);
+								clog::get_instance().trace(L"[I] - %ls : %u : ssl session is closed.\n", __WFUNCTION__, m_n_session);
 								close_all_opened_file();
 								m_b_dont_use_this_this_will_be_removed = true;
-								clog::get_instance().log_fmt(L"[I] wss%ls:: se:: call_on_read::run_close : %ls.\n", s_bin.c_str(), _mp::cstring::get_unicode_from_mcsc(std::string(m_ptr_wss->reason().reason.c_str())).c_str());
+								clog::get_instance().log_fmt(L"[I] - wss%ls:: se:: call_on_read::run_close : %ls.\n", s_bin.c_str(), _mp::cstring::get_unicode_from_mcsc(std::string(m_ptr_wss->reason().reason.c_str())).c_str());
+								clog::get_instance().trace(L"[I] - wss%ls:: se:: call_on_read::run_close : %ls.\n", s_bin.c_str(), _mp::cstring::get_unicode_from_mcsc(std::string(m_ptr_wss->reason().reason.c_str())).c_str());
 								m_callback.run_close(m_n_session, ec);
 							}
 						}
@@ -867,35 +933,42 @@ namespace _mp
 									s_bin = L"<B>";
 								}
 
-								clog::get_instance().log(L"I : [%ls ] : %u : session is closed.\n", __WFUNCTION__, m_n_session);
+								clog::get_instance().log_fmt(L"[I] - %ls : %u : session is closed.\n", __WFUNCTION__, m_n_session);
+								clog::get_instance().trace(L"[I] - %ls : %u : session is closed.\n", __WFUNCTION__, m_n_session);
 								close_all_opened_file();
 								m_b_dont_use_this_this_will_be_removed = true;
-								clog::get_instance().log_fmt(L"[I] ws%ls:: se:: _on_read::run_close(wss) : %ls.\n", s_bin.c_str(), _mp::cstring::get_unicode_from_mcsc(std::string(m_ptr_ws->reason().reason.c_str())).c_str());
+								clog::get_instance().log_fmt(L"[I] - ws%ls:: se:: _on_read::run_close(wss) : %ls.\n", s_bin.c_str(), _mp::cstring::get_unicode_from_mcsc(std::string(m_ptr_ws->reason().reason.c_str())).c_str());
+								clog::get_instance().trace(L"[I] - ws%ls:: se:: _on_read::run_close(wss) : %ls.\n", s_bin.c_str(), _mp::cstring::get_unicode_from_mcsc(std::string(m_ptr_ws->reason().reason.c_str())).c_str());
 								m_callback.run_close(m_n_session, ec);
 							}
 						}
 
-						clog::get_instance().log(L"I : [%ls ] : %u : %ls(%d).\n", __WFUNCTION__, m_n_session, _mp::cstring::get_unicode_english_error_message(ec).c_str(), ec.value());
+						clog::get_instance().log_fmt(L"[I] - %ls : %u : %ls(%d).\n", __WFUNCTION__, m_n_session, _mp::cstring::get_unicode_english_error_message(ec).c_str(), ec.value());
+						clog::get_instance().trace(L"[I] - %ls : %u : %ls(%d).\n", __WFUNCTION__, m_n_session, _mp::cstring::get_unicode_english_error_message(ec).c_str(), ec.value());
 						continue;
 					}
 
 					_do_read();
 					b_result = true;
 				} while (false);
-				clog::get_instance().log(L"I : [%ls ] : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
 			}
 			void _on_accept(unsigned long n_session, boost::beast::error_code ec)
 			{
 				bool b_result(false);
-				clog::get_instance().log(L"I : [%ls ] : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
 				do {
 					//std::lock_guard<std::mutex> lock(m_mutex_session);<><>!!
-					clog::get_instance().log(L"I : [%ls ] : %u.\n", __WFUNCTION__, m_n_session);
+					clog::get_instance().log_fmt(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
+					clog::get_instance().trace(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
 
 					if (ec) {
 						//session.m_s_error = "accept";	session.m_ec = ec;
 						std::wstring ws_msg(_mp::cstring::get_unicode_english_error_message(ec));
-						clog::get_instance().log(L"E : [%ls ] : %u : %ls(%d).\n", __WFUNCTION__, m_n_session, ws_msg.c_str(), ec.value());
+						clog::get_instance().log_fmt(L"[E] - %ls : %u : %ls(%d).\n", __WFUNCTION__, m_n_session, ws_msg.c_str(), ec.value());
+						clog::get_instance().trace(L"[E] - %ls : %u : %ls(%d).\n", __WFUNCTION__, m_n_session, ws_msg.c_str(), ec.value());
 						m_callback.run_accept(m_n_session, ec);
 						continue;
 					}
@@ -908,18 +981,22 @@ namespace _mp
 					_do_read();// Read a message
 					b_result = true;
 				} while (false);
-				clog::get_instance().log(L"I : [%ls ] : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
 			}
 			void _on_handshake(unsigned long n_session, boost::beast::error_code ec)
 			{
 				bool b_result(false);
-				clog::get_instance().log(L"I : [%ls ] : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
 				do {
 					//
 					std::lock_guard<std::mutex> lock(m_mutex_session);
-					clog::get_instance().log(L"I : [%ls ] : %u.\n", __WFUNCTION__, m_n_session);
+					clog::get_instance().log_fmt(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
+					clog::get_instance().trace(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
 					if (!m_b_ssl) {
-						clog::get_instance().log(L"I : [%ls ] : %u : not ssl.\n", __WFUNCTION__, m_n_session);
+						clog::get_instance().log_fmt(L"[I] - %ls : %u : not ssl.\n", __WFUNCTION__, m_n_session);
+						clog::get_instance().trace(L"[I] - %ls : %u : not ssl.\n", __WFUNCTION__, m_n_session);
 						continue;
 					}
 
@@ -930,7 +1007,8 @@ namespace _mp
 						m_b_dont_use_this_this_will_be_removed = true;
 						//session.m_s_error = "_on_handshake";	session.m_ec = ec;
 						std::wstring s_error = _mp::cstring::get_unicode_english_error_message(ec);
-						clog::get_instance().log(L"E : [%ls ] : %u : %ls.\n", __WFUNCTION__, m_n_session, s_error.c_str());
+						clog::get_instance().log_fmt(L"[E] - %ls : %u : %ls.\n", __WFUNCTION__, m_n_session, s_error.c_str());
+						clog::get_instance().trace(L"[E] - %ls : %u : %ls.\n", __WFUNCTION__, m_n_session, s_error.c_str());
 						continue;
 					}
 
@@ -957,11 +1035,13 @@ namespace _mp
 					m_ptr_wss->control_callback(boost::beast::bind_front_handler(&csession::_on_callback_control, this, m_n_session));
 
 					// Accept the websocket handshake
-					clog::get_instance().log(L"I : [%ls ] : %u : async_accept()\n", __WFUNCTION__, m_n_session);
+					clog::get_instance().log_fmt(L"[I] - %ls : %u : async_accept()\n", __WFUNCTION__, m_n_session);
+					clog::get_instance().trace(L"[I] - %ls : %u : async_accept()\n", __WFUNCTION__, m_n_session);
 					m_ptr_wss->async_accept(boost::beast::bind_front_handler(&csession::_on_accept, shared_from_this(), m_n_session));//shared_from_this()
 					b_result = true;
 				} while (false);
-				clog::get_instance().log(L"I : [%ls ] : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
 			}
 			void _on_callback_control(unsigned long n_session, boost::beast::websocket::frame_type ftype, boost::beast::string_view str_view)
 			{
@@ -978,24 +1058,28 @@ namespace _mp
 					default:
 						continue;
 					}//end switch
-					clog::get_instance().log(L"I : [%ls ] : %u : frame_type::close.\n", __WFUNCTION__, m_n_session);
+					clog::get_instance().log_fmt(L"[I] - %ls : %u : frame_type::close.\n", __WFUNCTION__, m_n_session);
+					clog::get_instance().trace(L"[I] - %ls : %u : frame_type::close.\n", __WFUNCTION__, m_n_session);
 					m_b_setup = false;
 
 					close_all_opened_file();
 
-					clog::get_instance().log_fmt(L"[I] ws:: se:: call_callback_control::run_close.\n");
+					clog::get_instance().log_fmt(L"[I] - ws:: se:: call_callback_control::run_close.\n");
+					clog::get_instance().trace(L"[I] - ws:: se:: call_callback_control::run_close.\n");
 					std::wstring s_bin(L"<T>");
 					if (m_b_ssl) {
 						if (m_ptr_wss->got_binary()) {
 							s_bin = L"<B>";
 						}
-						clog::get_instance().log_fmt(L"[I] wss%ls:: se:: reason : %ls.\n", s_bin.c_str(), cstring::get_unicode_from_mcsc(std::string(m_ptr_wss->reason().reason.c_str())).c_str());
+						clog::get_instance().log_fmt(L"[I] - wss%ls:: se:: reason : %ls.\n", s_bin.c_str(), cstring::get_unicode_from_mcsc(std::string(m_ptr_wss->reason().reason.c_str())).c_str());
+						clog::get_instance().trace(L"[I] - wss%ls:: se:: reason : %ls.\n", s_bin.c_str(), cstring::get_unicode_from_mcsc(std::string(m_ptr_wss->reason().reason.c_str())).c_str());
 					}
 					else {
 						if (m_ptr_ws->got_binary()) {
 							s_bin = L"<B>";
 						}
-						clog::get_instance().log_fmt(L"[I] ws%ls:: se:: reason : %ls.\n", s_bin.c_str(), cstring::get_unicode_from_mcsc(std::string(m_ptr_ws->reason().reason.c_str())).c_str());
+						clog::get_instance().log_fmt(L"[I] - ws%ls:: se:: reason : %ls.\n", s_bin.c_str(), cstring::get_unicode_from_mcsc(std::string(m_ptr_ws->reason().reason.c_str())).c_str());
+						clog::get_instance().trace(L"[I] - ws%ls:: se:: reason : %ls.\n", s_bin.c_str(), cstring::get_unicode_from_mcsc(std::string(m_ptr_ws->reason().reason.c_str())).c_str());
 					}
 					//
 					m_b_dont_use_this_this_will_be_removed = true;
@@ -1004,10 +1088,12 @@ namespace _mp
 					m_callback.run_close(m_n_session, ec);
 
 					if (m_b_ssl) {
-						clog::get_instance().log(L"I : [%ls ] : %u : run_close() ssl session  : %ls.\n", __WFUNCTION__, m_n_session, cstring::get_unicode_from_mcsc(std::string(m_ptr_wss->reason().reason.c_str())).c_str());
+						clog::get_instance().log_fmt(L"[I] - %ls : %u : run_close() ssl session  : %ls.\n", __WFUNCTION__, m_n_session, cstring::get_unicode_from_mcsc(std::string(m_ptr_wss->reason().reason.c_str())).c_str());
+						clog::get_instance().trace(L"[I] - %ls : %u : run_close() ssl session  : %ls.\n", __WFUNCTION__, m_n_session, cstring::get_unicode_from_mcsc(std::string(m_ptr_wss->reason().reason.c_str())).c_str());
 					}
 					else {
-						clog::get_instance().log(L"I : [%ls ] : %u : run_close() session :  %ls.\n", __WFUNCTION__, m_n_session, cstring::get_unicode_from_mcsc(std::string(m_ptr_ws->reason().reason.c_str())).c_str());
+						clog::get_instance().log_fmt(L"[I] - %ls : %u : run_close() session :  %ls.\n", __WFUNCTION__, m_n_session, cstring::get_unicode_from_mcsc(std::string(m_ptr_ws->reason().reason.c_str())).c_str());
+						clog::get_instance().trace(L"[I] - %ls : %u : run_close() session :  %ls.\n", __WFUNCTION__, m_n_session, cstring::get_unicode_from_mcsc(std::string(m_ptr_ws->reason().reason.c_str())).c_str());
 					}
 
 					b_result = true;
@@ -1017,7 +1103,8 @@ namespace _mp
 
 			void _write(const _mp::type_v_buffer& v_tx)
 			{
-				clog::get_instance().log(L"I : [%ls ] : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
 				do {
 					//When you call websocket::stream::async_write, 
 					//you must wait until the operation completes(your completion handler is invoked) 
@@ -1033,32 +1120,37 @@ namespace _mp
 					}
 					//
 					if (m_b_ssl) {
-						clog::get_instance().log(L"I : [%ls ] : %u : async_write()\n", __WFUNCTION__, m_n_session);
+						clog::get_instance().log_fmt(L"[I] - %ls : %u : async_write()\n", __WFUNCTION__, m_n_session);
+						clog::get_instance().trace(L"[I] - %ls : %u : async_write()\n", __WFUNCTION__, m_n_session);
 						m_ptr_wss->async_write(
 							m_buffer_tx.data(),
 							boost::beast::bind_front_handler(&csession::_on_write, shared_from_this(), m_n_session)//shared_from_this()
 						);
 					}
 					else {
-						clog::get_instance().log(L"I : [%ls ] : %u : async_write()\n", __WFUNCTION__, m_n_session);
+						clog::get_instance().log_fmt(L"[I] - %ls : %u : async_write()\n", __WFUNCTION__, m_n_session);
+						clog::get_instance().trace(L"[I] - %ls : %u : async_write()\n", __WFUNCTION__, m_n_session);
 						m_ptr_ws->async_write(
 							m_buffer_tx.data(),
 							boost::beast::bind_front_handler(&csession::_on_write, shared_from_this(), m_n_session)//shared_from_this()
 						);
 					}
 				} while (false);
-				clog::get_instance().log(L"I : [%ls ] : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
 			}
 
 			// Start the asynchronous operation
 			void _run()
 			{
-				clog::get_instance().log(L"I : [%ls ] : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
 				if (m_b_ssl) {
 					boost::beast::get_lowest_layer(*m_ptr_wss).expires_after(std::chrono::seconds(cws_server::const_default_expires_after_sec));
 
 					// Perform the SSL handshake
-					clog::get_instance().log(L"I : [%ls ] : %u : async_handshake()\n", __WFUNCTION__, m_n_session);
+					clog::get_instance().log_fmt(L"[I] - %ls : %u : async_handshake()\n", __WFUNCTION__, m_n_session);
+					clog::get_instance().trace(L"[I] - %ls : %u : async_handshake()\n", __WFUNCTION__, m_n_session);
 					m_ptr_wss->next_layer().async_handshake(
 						boost::asio::ssl::stream_base::server,
 						boost::beast::bind_front_handler(&csession::_on_handshake, shared_from_this(), m_n_session)//shared_from_this()
@@ -1086,10 +1178,12 @@ namespace _mp
 					m_ptr_ws->control_callback(boost::beast::bind_front_handler(&csession::_on_callback_control, this, m_n_session));
 
 					// Accept the websocket handshake
-					clog::get_instance().log(L"I : [%ls ] : %u : async_accept()\n", __WFUNCTION__, m_n_session);
+					clog::get_instance().log_fmt(L"[I] - %ls : %u : async_accept()\n", __WFUNCTION__, m_n_session);
+					clog::get_instance().trace(L"[I] - %ls : %u : async_accept()\n", __WFUNCTION__, m_n_session);
 					m_ptr_ws->async_accept(boost::beast::bind_front_handler(&csession::_on_accept, shared_from_this(), m_n_session));//shared_from_this()
 				}
-				clog::get_instance().log(L"I : [%ls ] : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
+				clog::get_instance().trace(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
 			}
 
 		private:
@@ -1246,13 +1340,15 @@ namespace _mp
 
 				if (n_concurrency_hint_of_io_context <= 0) {
 					//m_s_error = "concurrency_hint_of_io_context";
-					clog::get_instance().log(L"E : [%ls ] : concurrency_hint_of_io_context.\n", __WFUNCTION__);
+					clog::get_instance().log_fmt(L"[E] - %ls : concurrency_hint_of_io_context.\n", __WFUNCTION__);
+					clog::get_instance().trace(L"[E] - %ls : concurrency_hint_of_io_context.\n", __WFUNCTION__);
 					continue;
 				}
 
 				m_uptr_acceptor = std::make_unique<boost::asio::ip::tcp::acceptor>(boost::asio::make_strand(*m_ptr_ioc));
 				if (!m_uptr_acceptor) {
-					clog::get_instance().log(L"E : [%ls ] : create  tcp::acceptor.\n", __WFUNCTION__);
+					clog::get_instance().log_fmt(L"[E] - %ls : create  tcp::acceptor.\n", __WFUNCTION__);
+					clog::get_instance().trace(L"[E] - %ls : create  tcp::acceptor.\n", __WFUNCTION__);
 					continue;
 				}
 
@@ -1262,7 +1358,8 @@ namespace _mp
 				m_uptr_acceptor->open(m_ptr_endpoint->protocol(), ec);
 				if (ec) {
 					std::wstring ws_msg(_mp::cstring::get_unicode_english_error_message(ec));
-					clog::get_instance().log_fmt(L"E : [%ls ] : open() : %ls\n", __WFUNCTION__, ws_msg.c_str());
+					clog::get_instance().log_fmt(L"[E] - %ls : open() : %ls\n", __WFUNCTION__, ws_msg.c_str());
+					clog::get_instance().trace(L"[E] - %ls : open() : %ls\n", __WFUNCTION__, ws_msg.c_str());
 					continue;
 				}
 
@@ -1270,7 +1367,8 @@ namespace _mp
 				m_uptr_acceptor->set_option(boost::asio::socket_base::reuse_address(true), ec);
 				if (ec) {
 					std::wstring ws_msg(_mp::cstring::get_unicode_english_error_message(ec));
-					clog::get_instance().log_fmt(L"E : [%ls ] : set_option() : %ls\n", __WFUNCTION__, ws_msg.c_str());
+					clog::get_instance().log_fmt(L"[E] - %ls : set_option() : %ls\n", __WFUNCTION__, ws_msg.c_str());
+					clog::get_instance().trace(L"[E] - %ls : set_option() : %ls\n", __WFUNCTION__, ws_msg.c_str());
 					continue;
 				}
 
@@ -1278,7 +1376,8 @@ namespace _mp
 				m_uptr_acceptor->bind(*m_ptr_endpoint, ec);
 				if (ec) {
 					std::wstring ws_msg(_mp::cstring::get_unicode_english_error_message(ec));
-					clog::get_instance().log_fmt(L"E : [%ls ] : bind() : %ls\n", __WFUNCTION__, ws_msg.c_str());
+					clog::get_instance().log_fmt(L"[E] - %ls : bind() : %ls\n", __WFUNCTION__, ws_msg.c_str());
+					clog::get_instance().trace(L"[E] - %ls : bind() : %ls\n", __WFUNCTION__, ws_msg.c_str());
 					continue;
 				}
 
@@ -1286,13 +1385,15 @@ namespace _mp
 				m_uptr_acceptor->listen(boost::asio::socket_base::max_listen_connections, ec);
 				if (ec) {
 					std::wstring ws_msg(_mp::cstring::get_unicode_english_error_message(ec));
-					clog::get_instance().log_fmt(L"E : [%ls ] : listen() : %ls\n", __WFUNCTION__, ws_msg.c_str());
+					clog::get_instance().log_fmt(L"[E] - %ls : listen() : %ls\n", __WFUNCTION__, ws_msg.c_str());
+					clog::get_instance().trace(L"[E] - %ls : listen() : %ls\n", __WFUNCTION__, ws_msg.c_str());
 					continue;
 				}
 
 				m_b_ini = true;
 
-				clog::get_instance().log(L"I : [%ls ] : constructor() : p_ico = 0x%p.\n", __WFUNCTION__, m_ptr_ioc.get());
+				clog::get_instance().log_fmt(L"[I] - %ls : constructor() : p_ico = 0x%p.\n", __WFUNCTION__, m_ptr_ioc.get());
+				clog::get_instance().trace(L"[I] - %ls : constructor() : p_ico = 0x%p.\n", __WFUNCTION__, m_ptr_ioc.get());
 			} while (false);
 		}
 
@@ -1315,7 +1416,8 @@ namespace _mp
 				m_n_concurrency_hint_of_io_context = n_concurrency_hint_of_io_context;
 
 				if (n_concurrency_hint_of_io_context <= 0) {
-					clog::get_instance().log(L"E : [%ls ] : concurrency_hint_of_io_context.\n", __WFUNCTION__);
+					clog::get_instance().log_fmt(L"[E] - %ls : concurrency_hint_of_io_context.\n", __WFUNCTION__);
+					clog::get_instance().trace(L"[E] - %ls : concurrency_hint_of_io_context.\n", __WFUNCTION__);
 					continue;
 				}
 
@@ -1323,26 +1425,29 @@ namespace _mp
 					continue;
 				if (s_server_private_key_file.empty())
 					continue;
+				
 				bool b_load = _load_server_certificate(*m_ptr_ssl_ctx, s_server_cert_file, s_server_private_key_file);
-
 				if (!b_load) {
 					_unload_server_certificate(*m_ptr_ssl_ctx);
-					clog::get_instance().log(L"E : [%ls ] : _load_server_certificate().\n", __WFUNCTION__);
+					clog::get_instance().log_fmt(L"[E] - %ls : _load_server_certificate().\n", __WFUNCTION__);
+					clog::get_instance().trace(L"[E] - %ls : _load_server_certificate().\n", __WFUNCTION__);
 					continue;
 				}
 
 				m_uptr_acceptor = std::make_unique<boost::asio::ip::tcp::acceptor>(boost::asio::make_strand(*m_ptr_ioc));
 				if (!m_uptr_acceptor) {
-					clog::get_instance().log(L"E : [%ls ] : create  tcp::acceptor.\n", __WFUNCTION__);
+					clog::get_instance().log_fmt(L"[E] - %ls : create  tcp::acceptor.\n", __WFUNCTION__);
+					clog::get_instance().trace(L"[E] - %ls : create  tcp::acceptor.\n", __WFUNCTION__);
 					continue;
 				}
 				boost::beast::error_code ec;
-
+				
 				// Open the acceptor
 				m_uptr_acceptor->open(m_ptr_endpoint->protocol(), ec);
 				if (ec) {
 					std::wstring ws_msg(_mp::cstring::get_unicode_english_error_message(ec));
-					clog::get_instance().log_fmt(L"E : [%ls ] : open() : %ls.\n", __WFUNCTION__, ws_msg.c_str());
+					clog::get_instance().log_fmt(L"[E] - %ls : open() : %ls.\n", __WFUNCTION__, ws_msg.c_str());
+					clog::get_instance().trace(L"[E] - %ls : open() : %ls.\n", __WFUNCTION__, ws_msg.c_str());
 					continue;
 				}
 
@@ -1350,28 +1455,32 @@ namespace _mp
 				m_uptr_acceptor->set_option(boost::asio::socket_base::reuse_address(true), ec);
 				if (ec) {
 					std::wstring ws_msg(_mp::cstring::get_unicode_english_error_message(ec));
-					clog::get_instance().log_fmt(L"E : [%ls ] : set_option() : %ls.\n", __WFUNCTION__, ws_msg.c_str());
+					clog::get_instance().log_fmt(L"[E] - %ls : set_option() : %ls.\n", __WFUNCTION__, ws_msg.c_str());
+					clog::get_instance().trace(L"[E] - %ls : set_option() : %ls.\n", __WFUNCTION__, ws_msg.c_str());
 					continue;
 				}
-
+				
 				// Bind to the server address
 				m_uptr_acceptor->bind(*m_ptr_endpoint, ec);
 				if (ec) {
 					std::wstring ws_msg(_mp::cstring::get_unicode_english_error_message(ec));
-					clog::get_instance().log_fmt(L"E : [%ls ] : bind() : %ls.\n", __WFUNCTION__, ws_msg.c_str());
+					clog::get_instance().log_fmt(L"[E] - %ls : bind() : %ls.\n", __WFUNCTION__, ws_msg.c_str());
+					clog::get_instance().trace(L"[E] - %ls : bind() : %ls.\n", __WFUNCTION__, ws_msg.c_str());
 					continue;
 				}
-
+				
 				// Start listening for connections
 				m_uptr_acceptor->listen(boost::asio::socket_base::max_listen_connections, ec);
 				if (ec) {
 					std::wstring ws_msg(_mp::cstring::get_unicode_english_error_message(ec));
-					clog::get_instance().log_fmt(L"E : [%ls ] : listen() : %ls.\n", __WFUNCTION__, ws_msg.c_str());
+					clog::get_instance().log_fmt(L"[E] - %ls : listen() : %ls.\n", __WFUNCTION__, ws_msg.c_str());
+					clog::get_instance().trace(L"[E] - %ls : listen() : %ls.\n", __WFUNCTION__, ws_msg.c_str());
 					continue;
 				}
 
 				m_b_ini = true;
-				clog::get_instance().log(L"I : [%ls ] : constructor()s : p_ico = 0x%p.\n", __WFUNCTION__, m_ptr_ioc.get());
+				clog::get_instance().log_fmt(L"[I]- %ls : constructor()s : p_ico = 0x%p.\n", __WFUNCTION__, m_ptr_ioc.get());
+				clog::get_instance().trace(L"[I]- %ls : constructor()s : p_ico = 0x%p.\n", __WFUNCTION__, m_ptr_ioc.get());
 			} while (false);
 		}
 
@@ -1390,7 +1499,8 @@ namespace _mp
 			m_uptr_acceptor.reset();
 			m_ptr_endpoint.reset();
 
-			clog::get_instance().log(L"I : [%ls ] : destructor() : p_ico = 0x%p.\n", __WFUNCTION__, m_ptr_ioc.get());
+			clog::get_instance().log_fmt(L"[I]- %ls : destructor() : p_ico = 0x%p.\n", __WFUNCTION__, m_ptr_ioc.get());
+			clog::get_instance().trace(L"[I]- %ls : destructor() : p_ico = 0x%p.\n", __WFUNCTION__, m_ptr_ioc.get());
 			m_ptr_ioc.reset();
 		}
 
@@ -1440,12 +1550,16 @@ namespace _mp
 					std::string s_error(e.what());
 					ws_error.assign(std::begin(s_error), std::end(s_error));
 
-					clog::get_instance().log(L"[E] exception server thread : %ls\n", ws_error.c_str());
-					clog::get_instance().log_fmt(L"E : [%ls ] : exception : %ls.\n", __WFUNCTION__, ws_error.c_str());
+					clog::get_instance().log_fmt(L"[E] - exception server thread : %ls\n", ws_error.c_str());
+					clog::get_instance().log_fmt(L"[E] - %ls : exception : %ls.\n", __WFUNCTION__, ws_error.c_str());
+					clog::get_instance().trace(L"[E] - exception server thread : %ls\n", ws_error.c_str());
+					clog::get_instance().trace(L"[E] - %ls : exception : %ls.\n", __WFUNCTION__, ws_error.c_str());
 				}
 			} while (b_run);
-			clog::get_instance().log(L"[I] exit server thread\n");
-			clog::get_instance().log(L"I : [%ls ] : exit.\n", __WFUNCTION__);
+			clog::get_instance().log_fmt(L"[I] - exit server thread\n");
+			clog::get_instance().log_fmt(L"[I] - %ls : exit.\n", __WFUNCTION__);
+			clog::get_instance().trace(L"[I] - exit server thread\n");
+			clog::get_instance().trace(L"[I] - %ls : exit.\n", __WFUNCTION__);
 			return n_result;
 		}
 
@@ -1513,9 +1627,9 @@ namespace _mp
 
 		void _do_accept()
 		{
-			clog::get_instance().log(L"I : [%ls ].\n", __WFUNCTION__);
 			// The new connection gets its own strand
-			clog::get_instance().log(L"I : [%ls ] : async_accept()\n", __WFUNCTION__);
+			clog::get_instance().log_fmt(L"[I] - %ls : async_accept()\n", __WFUNCTION__);
+			clog::get_instance().trace(L"[I] - %ls : async_accept()\n", __WFUNCTION__);
 			m_uptr_acceptor->async_accept(
 				boost::asio::make_strand(*m_ptr_ioc),
 				boost::beast::bind_front_handler(&cws_server::_on_accept, this)
@@ -1525,19 +1639,22 @@ namespace _mp
 		//static void _on_accept(boost::beast::error_code ec, boost::asio::ip::tcp::socket socket, cws_server & server)
 		void _on_accept(boost::beast::error_code ec, boost::asio::ip::tcp::socket socket)
 		{
-			clog::get_instance().log(L"I : [%ls ].\n", __WFUNCTION__);
+			clog::get_instance().log_fmt(L"[I] - %ls.\n", __WFUNCTION__);
+			clog::get_instance().trace(L"[I] - %ls.\n", __WFUNCTION__);
 			do {
 				_remove_remove_reserved_sesssion();
 				if (ec) {
 					//server.m_s_error = "accept";	server.m_ec = ec;
 					std::wstring ws_msg(_mp::cstring::get_unicode_english_error_message(ec));
-					clog::get_instance().log_fmt(L"E : [%ls ] : %ls.\n", __WFUNCTION__, ws_msg.c_str());
+					clog::get_instance().log_fmt(L"[E] - %ls : %ls.\n", __WFUNCTION__, ws_msg.c_str());
+					clog::get_instance().trace(L"[E] - %ls : %ls.\n", __WFUNCTION__, ws_msg.c_str());
 					continue;
 				}
 				// Create the session and run it
 				cws_server::csession::type_ptr_session& ptr_session(_create_session_and_insert_to_map(socket));
 				if (!ptr_session) {
-					clog::get_instance().log_fmt(L"E : [%ls ] : _create_session_and_insert_to_map().\n", __WFUNCTION__);
+					clog::get_instance().log_fmt(L"[E] - %ls : _create_session_and_insert_to_map().\n", __WFUNCTION__);
+					clog::get_instance().trace(L"[E] - %ls : _create_session_and_insert_to_map().\n", __WFUNCTION__);
 					continue;
 				}
 				ptr_session->set_callback(m_callback);
@@ -1562,17 +1679,21 @@ namespace _mp
 				)->shared_from_this()
 			);
 			if (!result.second) {
-				clog::get_instance().log(L"E : [%ls ] : emplace map.\n", __WFUNCTION__);
+				clog::get_instance().log_fmt(L"[E] - %ls : emplace map.\n", __WFUNCTION__);
+				clog::get_instance().trace(L"[E] - %ls : emplace map.\n", __WFUNCTION__);
 				return ptr_empty_session;
 			}
 			else {
-				clog::get_instance().log(L"X : [%ls ] : %u : 0x%p.\n", __WFUNCTION__, result.first->first, result.first->second.get());
+				clog::get_instance().log_fmt(L"[I] - %ls : %u : 0x%p.\n", __WFUNCTION__, result.first->first, result.first->second.get());
+				clog::get_instance().trace(L"[I] - %ls : %u : 0x%p.\n", __WFUNCTION__, result.first->first, result.first->second.get());
 
 				if (result.first->second.unique()) {
-					clog::get_instance().log(L"X7 : [%ls ] : unique.\n", __WFUNCTION__);
+					clog::get_instance().log_fmt(L"[I] - X7 - %ls : unique.\n", __WFUNCTION__);
+					clog::get_instance().trace(L"[I] - X7 - %ls : unique.\n", __WFUNCTION__);
 				}
 				else {
-					clog::get_instance().log(L"X7 : [%ls ] : not unique : %d.\n", __WFUNCTION__, result.first->second.use_count());
+					clog::get_instance().log_fmt(L"[I] - X7 - %ls : not unique : %d.\n", __WFUNCTION__, result.first->second.use_count());
+					clog::get_instance().trace(L"[I] - X7 - %ls : not unique : %d.\n", __WFUNCTION__, result.first->second.use_count());
 				}
 
 				unsigned long n_cur_session = m_n_next_session;
@@ -1584,7 +1705,8 @@ namespace _mp
 					n_next_session = _generate_session_number();//regenerate
 				}//end while
 				m_n_next_session = n_next_session;
-				clog::get_instance().log(L"I : [%ls ] : current session_number = %u.\n", __WFUNCTION__, n_cur_session);
+				clog::get_instance().log_fmt(L"[I] - %ls : current session_number = %u.\n", __WFUNCTION__, n_cur_session);
+				clog::get_instance().trace(L"[I] - %ls : current session_number = %u.\n", __WFUNCTION__, n_cur_session);
 				//
 				return result.first->second;
 			}
@@ -1592,7 +1714,8 @@ namespace _mp
 
 		void _remove_remove_reserved_sesssion()
 		{
-			clog::get_instance().log(L"I : [%ls ].\n", __WFUNCTION__);
+			clog::get_instance().log_fmt(L"[I] - %ls.\n", __WFUNCTION__);
+			clog::get_instance().trace(L"[I] - %ls.\n", __WFUNCTION__);
 			std::lock_guard<std::mutex> lock(m_mutex_map_session);
 
 			cws_server::_type_map_index_ptr_session::iterator it = std::begin(m_map_ptr_session);
@@ -1601,11 +1724,18 @@ namespace _mp
 				if (it->second) {
 					if (it->second->is_will_be_removed()) {
 						if (it->second.unique()) {
-							clog::get_instance().log(L"X2 : [%ls ] : %u : unique.\n", __WFUNCTION__, it->second->get_session_number());
-							clog::get_instance().log(L"X2 : [%ls ] : %u : will be removed.\n", __WFUNCTION__, it->second->get_session_number());
+							clog::get_instance().log_fmt(L"[I] - X2 - %ls : %u : unique.\n", __WFUNCTION__, it->second->get_session_number());
+							clog::get_instance().log_fmt(L"[I] - X2 - %ls : %u : will be removed.\n", __WFUNCTION__, it->second->get_session_number());
+							clog::get_instance().trace(L"[I] - X2 - %ls : %u : unique.\n", __WFUNCTION__, it->second->get_session_number());
+							clog::get_instance().trace(L"[I] - X2 - %ls : %u : will be removed.\n", __WFUNCTION__, it->second->get_session_number());
 						}
 						else {
-							clog::get_instance().log(L"X2 : [%ls ] : %u : not unique : address = 0x%p : cnt = %d.\n",
+							clog::get_instance().log_fmt(L"[I] - X2 - %ls : %u : not unique : address = 0x%p : cnt = %d.\n",
+								__WFUNCTION__,
+								it->second->get_session_number(),
+								it->second.get(),
+								it->second.use_count());
+							clog::get_instance().trace(L"[I] - X2 - %ls : %u : not unique : address = 0x%p : cnt = %d.\n",
 								__WFUNCTION__,
 								it->second->get_session_number(),
 								it->second.get(),
@@ -1624,7 +1754,8 @@ namespace _mp
 		}
 		void _remove_all_sesssion()
 		{
-			clog::get_instance().log(L"I : [%ls ].\n", __WFUNCTION__);
+			clog::get_instance().log_fmt(L"[I] - %ls.\n", __WFUNCTION__);
+			clog::get_instance().trace(L"[I] - %ls.\n", __WFUNCTION__);
 			std::lock_guard<std::mutex> lock(m_mutex_map_session);
 			//
 			for (auto item : m_map_ptr_session) {
@@ -1641,26 +1772,32 @@ namespace _mp
 			int8_t subject_name[256];
 			int32_t length = 0;
 			X509* cert = X509_STORE_CTX_get_current_cert(ctx.native_handle());
-			clog::get_instance().log(L"E : [%ls ] : CTX ERROR : %d\n", __WFUNCTION__, X509_STORE_CTX_get_error(ctx.native_handle()));
+			clog::get_instance().log_fmt(L"[E] - %ls : CTX ERROR : %d\n", __WFUNCTION__, X509_STORE_CTX_get_error(ctx.native_handle()));
+			clog::get_instance().trace(L"[E] - %ls : CTX ERROR : %d\n", __WFUNCTION__, X509_STORE_CTX_get_error(ctx.native_handle()));
 
 			int32_t depth = X509_STORE_CTX_get_error_depth(ctx.native_handle());
-			clog::get_instance().log(L"E : [%ls ] : CTX DEPTH : %d\n", __WFUNCTION__, depth);
+			clog::get_instance().log_fmt(L"[E] - %ls : CTX DEPTH : %d\n", __WFUNCTION__, depth);
+			clog::get_instance().trace(L"[E] - %ls : CTX DEPTH : %d\n", __WFUNCTION__, depth);
 
 			switch (X509_STORE_CTX_get_error(ctx.native_handle()))
 			{
 			case X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT:
-				clog::get_instance().log(L"E : [%ls ] : X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT\n", __WFUNCTION__);
+				clog::get_instance().log_fmt(L"[E] - %ls : X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT\n", __WFUNCTION__);
+				clog::get_instance().trace(L"[E] - %ls : X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT\n", __WFUNCTION__);
 				break;
 			case X509_V_ERR_CERT_NOT_YET_VALID:
 			case X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD:
-				clog::get_instance().log(L"E : [%ls ] : Certificate not yet valid!n", __WFUNCTION__);
+				clog::get_instance().log_fmt(L"[E] - %ls : Certificate not yet valid!n", __WFUNCTION__);
+				clog::get_instance().trace(L"[E] - %ls : Certificate not yet valid!n", __WFUNCTION__);
 				break;
 			case X509_V_ERR_CERT_HAS_EXPIRED:
 			case X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD:
-				clog::get_instance().log(L"E : [%ls ] : Certificate expired..\n", __WFUNCTION__);
+				clog::get_instance().log_fmt(L"[E] - %ls : Certificate expired..\n", __WFUNCTION__);
+				clog::get_instance().trace(L"[E] - %ls : Certificate expired..\n", __WFUNCTION__);
 				break;
 			case X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN:
-				clog::get_instance().log(L"I : [%ls ] : Self signed certificate in chain!!!\n", __WFUNCTION__);
+				clog::get_instance().log_fmt(L"[I] - %ls : Self signed certificate in chain!!!\n", __WFUNCTION__);
+				clog::get_instance().trace(L"[I] - %ls : Self signed certificate in chain!!!\n", __WFUNCTION__);
 				preverified = true;
 				break;
 			default:
@@ -1669,8 +1806,10 @@ namespace _mp
 			const int32_t name_length = 256;
 			X509_NAME_oneline(X509_get_subject_name(cert), reinterpret_cast<char*>(subject_name), name_length);
 			std::wstring sw_subject_name = _mp::cstring::get_unicode_from_mcsc(std::string(reinterpret_cast<char*>(subject_name)));
-			clog::get_instance().log_fmt(L"I : [%ls ] : Verifying %ls", __WFUNCTION__, sw_subject_name.c_str());
-			clog::get_instance().log(L"I : [%ls ] : Verification status : %d", __WFUNCTION__, preverified);
+			clog::get_instance().log_fmt(L"[I] - %ls : Verifying %ls", __WFUNCTION__, sw_subject_name.c_str());
+			clog::get_instance().log_fmt(L"[I] - %ls : Verification status : %d", __WFUNCTION__, preverified);
+			clog::get_instance().trace(L"[I] - %ls : Verifying %ls", __WFUNCTION__, sw_subject_name.c_str());
+			clog::get_instance().trace(L"[I] - %ls : Verification status : %d", __WFUNCTION__, preverified);
 			return preverified;
 		}
 

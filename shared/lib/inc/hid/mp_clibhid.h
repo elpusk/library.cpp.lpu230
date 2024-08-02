@@ -6,6 +6,7 @@
 #include <mutex>
 #include <atomic>
 
+#include <mp_clog.h>
 #include <mp_elpusk.h>
 #include <mp_coperation.h>
 #include <hid/mp_clibhid_dev.h>
@@ -196,23 +197,17 @@ namespace _mp{
                 m_set_inserted_dev_info = coperation::subtract<clibhid_dev_info>(set_dev, m_set_cur_dev_info);
                 m_set_cur_dev_info = set_dev;
 
-                std::wcout << "removed : " << std::endl;
                 for (auto item : m_set_removed_dev_info) {
-                    std::wcout << "\t" << item.get_path_by_wstring() << std::endl;
+                    clog::get_instance().trace(L"[I] - removed : %s.\n", item.get_path_by_wstring().c_str());
                 }
-                std::wcout << std::endl;
 
-                std::wcout << "inserted : " << std::endl;
                 for (auto item : m_set_inserted_dev_info) {
-                    std::wcout << "\t" << item.get_path_by_wstring() << std::endl;
+                    clog::get_instance().trace(L"[I] - inserted : %s.\n", item.get_path_by_wstring().c_str());
                 }
-                std::wcout << std::endl;
 
-                std::wcout << "cur : " << std::endl;
                 for (auto item : m_set_cur_dev_info) {
-                    std::wcout << "\t" << item.get_path_by_wstring() << std::endl;
+                    clog::get_instance().trace(L"[I] - current : %s.\n", item.get_path_by_wstring().c_str());
                 }
-                std::wcout << std::endl;
 
                 //
                 b_changed = true;

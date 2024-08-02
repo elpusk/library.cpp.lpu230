@@ -179,26 +179,6 @@
     <ClInclude Include="..\shared\lib\inc\_dev\mp_cdev_util.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\shared\data_for_debug\cert\coffee_server.crt">
-      <RemoteCopyToOutputDir Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</RemoteCopyToOutputDir>
-      <RemoteCopyToOutputDir Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</RemoteCopyToOutputDir>
-      <RemoteCopyToOutputDir Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</RemoteCopyToOutputDir>
-      <RemoteCopyToOutputDir Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</RemoteCopyToOutputDir>
-      <RemoteCopyToOutputDir Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">true</RemoteCopyToOutputDir>
-      <RemoteCopyToOutputDir Condition="'$(Configuration)|$(Platform)'=='Release|x86'">true</RemoteCopyToOutputDir>
-      <RemoteCopyToOutputDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</RemoteCopyToOutputDir>
-      <RemoteCopyToOutputDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</RemoteCopyToOutputDir>
-    </None>
-    <None Include="..\shared\data_for_debug\cert\coffee_server.key">
-      <RemoteCopyToOutputDir Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</RemoteCopyToOutputDir>
-      <RemoteCopyToOutputDir Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</RemoteCopyToOutputDir>
-      <RemoteCopyToOutputDir Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</RemoteCopyToOutputDir>
-      <RemoteCopyToOutputDir Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</RemoteCopyToOutputDir>
-      <RemoteCopyToOutputDir Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">true</RemoteCopyToOutputDir>
-      <RemoteCopyToOutputDir Condition="'$(Configuration)|$(Platform)'=='Release|x86'">true</RemoteCopyToOutputDir>
-      <RemoteCopyToOutputDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</RemoteCopyToOutputDir>
-      <RemoteCopyToOutputDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</RemoteCopyToOutputDir>
-    </None>
     <None Include="elpusk-hid-d.service">
       <RemoteFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">/etc/systemd/system/elpusk-hid-d.service</RemoteFile>
       <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">false</RemoteCopyFile>

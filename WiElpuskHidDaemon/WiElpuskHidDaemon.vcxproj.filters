@@ -198,12 +198,4 @@
       <Filter>common</Filter>
     </ClInclude>
   </ItemGroup>
-  <ItemGroup>
-    <None Include="..\shared\data_for_debug\cert\coffee_server.key">
-      <Filter>cert</Filter>
-    </None>
-    <None Include="..\shared\data_for_debug\cert\coffee_server.crt">
-      <Filter>cert</Filter>
-    </None>
-  </ItemGroup>
 </Project>

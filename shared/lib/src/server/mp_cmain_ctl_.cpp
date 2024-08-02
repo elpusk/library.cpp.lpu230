@@ -50,10 +50,12 @@ namespace _mp {
 				size_t n_data(request.get_data_field_size());
 				if (n_data > cws_server::const_default_max_rx_size_bytes) {
 					if (request.get_data_field_type() == cio_packet::data_field_string_utf8) {
-						m_p_log->log_fmt(L"[E] %ls | overflow rx data(string type) : %u(limit : %u).\n", __WFUNCTION__, n_data, cws_server::const_default_max_rx_size_bytes);
+						m_p_log->log_fmt(L"[E] - %ls | overflow rx data(string type) : %u(limit : %u).\n", __WFUNCTION__, n_data, cws_server::const_default_max_rx_size_bytes);
+						m_p_log->trace(L"[E] - %ls | overflow rx data(string type) : %u(limit : %u).\n", __WFUNCTION__, n_data, cws_server::const_default_max_rx_size_bytes);
 					}
 					else {
-						m_p_log->log_fmt(L"[E] %ls | overflow rx data(binary type) : %u(limit : %u).\n", __WFUNCTION__, n_data, cws_server::const_default_max_rx_size_bytes);
+						m_p_log->log_fmt(L"[E] - %ls | overflow rx data(binary type) : %u(limit : %u).\n", __WFUNCTION__, n_data, cws_server::const_default_max_rx_size_bytes);
+						m_p_log->trace(L"[E] - %ls | overflow rx data(binary type) : %u(limit : %u).\n", __WFUNCTION__, n_data, cws_server::const_default_max_rx_size_bytes);
 					}
 					b_completet = _execute_general_error_response(request, response, cio_packet::error_reason_overflow_buffer);
 					continue;
@@ -194,7 +196,8 @@ namespace _mp {
 			} while (false);
 
 			for (auto item : set_dev_path) {
-				m_p_log->log_fmt(L"[I] %ls | dev : %ls.\n", __WFUNCTION__, item.c_str());
+				m_p_log->log_fmt(L"[I] - %ls | dev : %ls.\n", __WFUNCTION__, item.c_str());
+				m_p_log->trace(L"[I] - %ls | dev : %ls.\n", __WFUNCTION__, item.c_str());
 			}
 
 			response = request;
@@ -257,23 +260,27 @@ namespace _mp {
 
 				ptr_session = cserver::get_instance().get_session(n_session);
 				if (!ptr_session) {
-					m_p_log->log(L"[E] %ls | get_session() == NULL.\n", __WFUNCTION__);
+					m_p_log->log_fmt(L"[E] - %ls | get_session() == NULL.\n", __WFUNCTION__);
+					m_p_log->trace(L"[E] - %ls | get_session() == NULL.\n", __WFUNCTION__);
 					continue;
 				}
 				if (request.get_data_field_type() == cio_packet::data_field_binary) {
 					//append mode
 					_ns_tools::type_v_buffer v_data(0);
 					if (request.get_data_field(v_data) == 0) {
-						m_p_log->log(L"[E] %ls | get_data_field() == empty.\n", __WFUNCTION__);
+						m_p_log->log_fmt(L"[E] - %ls | get_data_field() == empty.\n", __WFUNCTION__);
+						m_p_log->trace(L"[E] - %ls | get_data_field() == empty.\n", __WFUNCTION__);
 						continue;
 					}
 					if (!ptr_session->get_first_opened_file_path(s_file)) {
-						m_p_log->log(L"[E] %ls | get_first_opened_file_path().\n", __WFUNCTION__);
+						m_p_log->log_fmt(L"[E] - %ls | get_first_opened_file_path().\n", __WFUNCTION__);
+						m_p_log->trace(L"[E] - %ls | get_first_opened_file_path().\n", __WFUNCTION__);
 						continue;
 					}
 
 					if (!ptr_session->file_write(s_file, v_data)) {
-						m_p_log->log(L"[E] %ls | file_write().\n", __WFUNCTION__);
+						m_p_log->log_fmt(L"[E] - %ls | file_write().\n", __WFUNCTION__);
+						m_p_log->trace(L"[E] - %ls | file_write().\n", __WFUNCTION__);
 						continue;
 					}
 					//
@@ -281,19 +288,22 @@ namespace _mp {
 					continue;
 				}
 				if (request.get_data_field(deque_wstring_data_field) == 0) {
-					m_p_log->log(L"[E] %ls | get_data_field() none.\n", __WFUNCTION__);
+					m_p_log->log_fmt(L"[E] - %ls | get_data_field() none.\n", __WFUNCTION__);
+					m_p_log->trace(L"[E] - %ls | get_data_field() none.\n", __WFUNCTION__);
 					continue;
 				}
 				//
 				if (deque_wstring_data_field[0].compare(L"firmware") == 0) {
 					if (deque_wstring_data_field.size() != 2) {
-						m_p_log->log_fmt(L"[E] %ls | firmware | deque_wstring_data_field.size() != 2.\n", __WFUNCTION__);
+						m_p_log->log_fmt(L"[E] - %ls | firmware | deque_wstring_data_field.size() != 2.\n", __WFUNCTION__);
+						m_p_log->trace(L"[E] - %ls | firmware | deque_wstring_data_field.size() != 2.\n", __WFUNCTION__);
 						continue;
 					}
 					s_sub = deque_wstring_data_field[1];
 					std::wstring s_virtual_abs_file(ccoffee_path::get_virtual_path_of_temp_rom_file_of_session(n_session));
 					if (!ptr_session->file_firmware(s_sub, s_virtual_abs_file)) {
-						m_p_log->log_fmt(L"[E] %ls | file_firmware(%ls,%ls).\n", __WFUNCTION__, s_sub.c_str(), s_virtual_abs_file.c_str());
+						m_p_log->log_fmt(L"[E] - %ls | file_firmware(%ls,%ls).\n", __WFUNCTION__, s_sub.c_str(), s_virtual_abs_file.c_str());
+						m_p_log->trace(L"[E] - %ls | file_firmware(%ls,%ls).\n", __WFUNCTION__, s_sub.c_str(), s_virtual_abs_file.c_str());
 						continue;
 					}
 					//
@@ -302,12 +312,14 @@ namespace _mp {
 				}
 				if (deque_wstring_data_field[0].compare(L"create") == 0) {
 					if (deque_wstring_data_field.size() != 2) {
-						m_p_log->log_fmt(L"[E] %ls | create | deque_wstring_data_field.size() != 2.\n", __WFUNCTION__);
+						m_p_log->log_fmt(L"[E] - %ls | create | deque_wstring_data_field.size() != 2.\n", __WFUNCTION__);
+						m_p_log->trace(L"[E] - %ls | create | deque_wstring_data_field.size() != 2.\n", __WFUNCTION__);
 						continue;
 					}
 					s_file = deque_wstring_data_field[1];
 					if (!ptr_session->file_create(s_file)) {
-						m_p_log->log_fmt(L"[E] %ls | file_create(%ls).\n", __WFUNCTION__, s_file.c_str());
+						m_p_log->log_fmt(L"[E] - %ls | file_create(%ls).\n", __WFUNCTION__, s_file.c_str());
+						m_p_log->trace(L"[E] - %ls | file_create(%ls).\n", __WFUNCTION__, s_file.c_str());
 						continue;
 					}
 					//
@@ -316,12 +328,14 @@ namespace _mp {
 				}
 				if (deque_wstring_data_field[0].compare(L"open") == 0) {
 					if (deque_wstring_data_field.size() != 2) {
-						m_p_log->log_fmt(L"[E] %ls | open | deque_wstring_data_field.size() != 2.\n", __WFUNCTION__);
+						m_p_log->log_fmt(L"[E] - %ls | open | deque_wstring_data_field.size() != 2.\n", __WFUNCTION__);
+						m_p_log->trace(L"[E] - %ls | open | deque_wstring_data_field.size() != 2.\n", __WFUNCTION__);
 						continue;
 					}
 					s_file = deque_wstring_data_field[1];
 					if (!ptr_session->file_open(s_file)) {
-						m_p_log->log_fmt(L"[E] %ls | file_open(%ls).\n", __WFUNCTION__, s_file.c_str());
+						m_p_log->log_fmt(L"[E] - %ls | file_open(%ls).\n", __WFUNCTION__, s_file.c_str());
+						m_p_log->trace(L"[E] - %ls | file_open(%ls).\n", __WFUNCTION__, s_file.c_str());
 						continue;
 					}
 					//
@@ -330,15 +344,18 @@ namespace _mp {
 				}
 				if (deque_wstring_data_field[0].compare(L"close") == 0) {
 					if (deque_wstring_data_field.size() != 1) {
-						m_p_log->log_fmt(L"[E] %ls | close | deque_wstring_data_field.size() != 1.\n", __WFUNCTION__);
+						m_p_log->log_fmt(L"[E] - %ls | close | deque_wstring_data_field.size() != 1.\n", __WFUNCTION__);
+						m_p_log->trace(L"[E] - %ls | close | deque_wstring_data_field.size() != 1.\n", __WFUNCTION__);
 						continue;
 					}
 					if (!ptr_session->get_first_opened_file_path(s_file)) {
-						m_p_log->log_fmt(L"[E] %ls | get_first_opened_file_path().\n", __WFUNCTION__);
+						m_p_log->log_fmt(L"[E] - %ls | get_first_opened_file_path().\n", __WFUNCTION__);
+						m_p_log->trace(L"[E] - %ls | get_first_opened_file_path().\n", __WFUNCTION__);
 						continue;
 					}
 					if (!ptr_session->file_close(s_file)) {
-						m_p_log->log_fmt(L"[E] %ls | file_close(%ls).\n", __WFUNCTION__, s_file.c_str());
+						m_p_log->log_fmt(L"[E] - %ls | file_close(%ls).\n", __WFUNCTION__, s_file.c_str());
+						m_p_log->trace(L"[E] - %ls | file_close(%ls).\n", __WFUNCTION__, s_file.c_str());
 						continue;
 					}
 					//
@@ -347,14 +364,16 @@ namespace _mp {
 				}
 				if (deque_wstring_data_field[0].compare(L"delete") == 0) {
 					if (deque_wstring_data_field.size() != 2) {
-						m_p_log->log_fmt(L"[E] %ls | delete | deque_wstring_data_field.size() != 2.\n", __WFUNCTION__);
+						m_p_log->log_fmt(L"[E] - %ls | delete | deque_wstring_data_field.size() != 2.\n", __WFUNCTION__);
+						m_p_log->trace(L"[E] - %ls | delete | deque_wstring_data_field.size() != 2.\n", __WFUNCTION__);
 						continue;
 					}
 					s_file = ccoffee_path::get_path_of_virtual_drive_root_except_backslash();
 					s_file += L"\\";
 					s_file += deque_wstring_data_field[1];
 					if (!DeleteFile(s_file.c_str())) {
-						m_p_log->log_fmt(L"[E] %ls | DeleteFile(%ls).\n", __WFUNCTION__, s_file.c_str());
+						m_p_log->log_fmt(L"[E] - %ls | DeleteFile(%ls).\n", __WFUNCTION__, s_file.c_str());
+						m_p_log->trace(L"[E] - %ls | DeleteFile(%ls).\n", __WFUNCTION__, s_file.c_str());
 						continue;
 					}
 					//
@@ -363,15 +382,18 @@ namespace _mp {
 				}
 				if (deque_wstring_data_field[0].compare(L"truncate") == 0) {
 					if (deque_wstring_data_field.size() != 1) {
-						m_p_log->log_fmt(L"[E] %ls | truncate | deque_wstring_data_field.size() != 1.\n", __WFUNCTION__);
+						m_p_log->log_fmt(L"[E] - %ls | truncate | deque_wstring_data_field.size() != 1.\n", __WFUNCTION__);
+						m_p_log->trace(L"[E] - %ls | truncate | deque_wstring_data_field.size() != 1.\n", __WFUNCTION__);
 						continue;
 					}
 					if (!ptr_session->get_first_opened_file_path(s_file)) {
-						m_p_log->log_fmt(L"[E] %ls | get_first_opened_file_path().\n", __WFUNCTION__);
+						m_p_log->log_fmt(L"[E] - %ls | get_first_opened_file_path().\n", __WFUNCTION__);
+						m_p_log->trace(L"[E] - %ls | get_first_opened_file_path().\n", __WFUNCTION__);
 						continue;
 					}
 					if (!ptr_session->file_truncate(s_file)) {
-						m_p_log->log_fmt(L"[E] %ls | file_truncate(%ls).\n", __WFUNCTION__, s_file.c_str());
+						m_p_log->log_fmt(L"[E] - %ls | file_truncate(%ls).\n", __WFUNCTION__, s_file.c_str());
+						m_p_log->trace(L"[E] - %ls | file_truncate(%ls).\n", __WFUNCTION__, s_file.c_str());
 						continue;
 					}
 					//
@@ -381,17 +403,20 @@ namespace _mp {
 
 				if (deque_wstring_data_field[0].compare(L"get") == 0) {
 					if (deque_wstring_data_field.size() != 2) {
-						m_p_log->log_fmt(L"[E] %ls | delete | deque_wstring_data_field.size() != 2.\n", __WFUNCTION__);
+						m_p_log->log_fmt(L"[E] - %ls | delete | deque_wstring_data_field.size() != 2.\n", __WFUNCTION__);
+						m_p_log->trace(L"[E] - %ls | delete | deque_wstring_data_field.size() != 2.\n", __WFUNCTION__);
 						continue;
 					}
 					if (deque_wstring_data_field[1].compare(L"size") == 0) {
 						if (!ptr_session->get_first_opened_file_path(s_file)) {
-							m_p_log->log_fmt(L"[E] %ls | get_first_opened_file_path().\n", __WFUNCTION__);
+							m_p_log->log_fmt(L"[E] - %ls | get_first_opened_file_path().\n", __WFUNCTION__);
+							m_p_log->trace(L"[E] - %ls | get_first_opened_file_path().\n", __WFUNCTION__);
 							continue;
 						}
 						int n_size = ptr_session->file_get_size(s_file);
 						if (n_size < 0) {
-							m_p_log->log_fmt(L"[E] %ls | file_get_size(%ls) = %d.\n", __WFUNCTION__, s_file.c_str(), n_size);
+							m_p_log->log_fmt(L"[E] - %ls | file_get_size(%ls) = %d.\n", __WFUNCTION__, s_file.c_str(), n_size);
+							m_p_log->trace(L"[E] - %ls | file_get_size(%ls) = %d.\n", __WFUNCTION__, s_file.c_str(), n_size);
 							continue;
 						}
 						//

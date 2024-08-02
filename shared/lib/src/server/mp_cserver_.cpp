@@ -59,7 +59,7 @@ namespace _mp{
 						cctl_svr::get_instance().create_new_dev_ctl(m_p_log, item);
 					}//end for
 				}
-
+				
 				// create server
 				if (m_b_ssl) {
 					std::string s_cert_file;
@@ -76,7 +76,8 @@ namespace _mp{
 					m_ptr_server_for_ip4 = std::make_shared<_mp::cws_server>(ip4_address, m_w_port, n_thread_for_server, s_root_folder_except_backslash);
 				//
 				if (!m_ptr_server_for_ip4->is_ini()) {
-					m_p_log->log_fmt(L" [%ls ]create server : fail.\n", __WFUNCTION__);
+					m_p_log->log_fmt(L"[E] - %ls - create server : fail.\n", __WFUNCTION__);
+					m_p_log->trace(L"[E] - %ls - create server : fail.\n", __WFUNCTION__);
 					m_ptr_server_for_ip4.reset();
 					continue;
 				}
@@ -94,7 +95,8 @@ namespace _mp{
 				std::transform(std::begin(s_ip), std::end(s_ip), std::back_inserter(sw_ip), [](char c)->wchar_t {
 					return (wchar_t)c;
 					});
-				m_p_log->log_fmt(L" [%ls ]started server : %ls.\n", __WFUNCTION__, sw_ip.c_str());
+				m_p_log->log_fmt(L"[I] - %ls - started server : %ls.\n", __WFUNCTION__, sw_ip.c_str());
+				m_p_log->trace(L"[I] - %ls - started server : %ls.\n", __WFUNCTION__, sw_ip.c_str());
 
 				b_result = true;
 			} while (false);
@@ -301,9 +303,11 @@ namespace _mp{
 					//std::wstring s_error = cserver::_system_category_message_win32_by_english(ec.value());//ec.message();
 					std::wstring ws_error = _mp::cstring::get_unicode_english_error_message(ec);
 					p_obj->_dp_e(L"_cb_svr_handshake : error : " + ws_error);
-					//m_p_log->log_fmt(L"[E] %ls : %ls.\n", __WFUNCTION__, ws_error.c_str());
+					//m_p_log->log_fmt(L"[E] - %ls : %ls.\n", __WFUNCTION__, ws_error.c_str());
+					//m_p_log->trace(L"[E] - %ls : %ls.\n", __WFUNCTION__, ws_error.c_str());
 					continue;
 				}
+				
 				s_info = L"_cb_svr_handshake : session = " + std::to_wstring(n_session);
 				p_obj->_dp_n(s_info);
 			} while (false);
@@ -315,11 +319,11 @@ namespace _mp{
 			std::wstring s_error_reason;
 			do {
 				cserver* p_obj = (cserver*)p_parameter;
-
 				if (ec) {
 					std::wstring s_error = _mp::cstring::get_unicode_english_error_message(ec);//ec.message();
 					p_obj->_dp_e(L"_cb_svr_accept : error : " + s_error);
-					//m_p_log->log_fmt(L"[E] %ls : %ls.\n", __WFUNCTION__, s_error.c_str());
+					//m_p_log->log_fmt(L"[E] - %ls : %ls.\n", __WFUNCTION__, s_error.c_str());
+					//m_p_log->trace(L"[E] - %ls : %ls.\n", __WFUNCTION__, s_error.c_str());
 					continue;
 				}
 
@@ -342,7 +346,8 @@ namespace _mp{
 				);
 
 				if (!cctl_svr::get_instance().push_request_to_worker_ctl(ptr_request_echo, s_error_reason)) {//automatic cancel device
-					p_obj->m_p_log->log_fmt(L"[E] %ls | _push_request_of_client() of echo[for sending session number].\n", __WFUNCTION__);
+					p_obj->m_p_log->log_fmt(L"[E] - %ls | _push_request_of_client() of echo[for sending session number].\n", __WFUNCTION__);
+					p_obj->m_p_log->trace(L"[E] - %ls | _push_request_of_client() of echo[for sending session number].\n", __WFUNCTION__);
 				}
 
 			} while (false);
@@ -356,7 +361,8 @@ namespace _mp{
 				if (ec) {//this case this connection is closed by accident error.
 					std::wstring s_info = L"_cb_svr_close : error(" + _mp::cstring::get_unicode_english_error_message(ec) + L") : session = " + std::to_wstring(n_session);
 					p_obj->_dp_e(s_info);
-					p_obj->m_p_log->log_fmt(L"[E] %ls(%ls) | session = %u.\n", __WFUNCTION__, _mp::cstring::get_unicode_english_error_message(ec).c_str(), n_session);
+					p_obj->m_p_log->log_fmt(L"[E] - %ls(%ls) | session = %u.\n", __WFUNCTION__, _mp::cstring::get_unicode_english_error_message(ec).c_str(), n_session);
+					p_obj->m_p_log->trace(L"[E] - %ls(%ls) | session = %u.\n", __WFUNCTION__, _mp::cstring::get_unicode_english_error_message(ec).c_str(), n_session);
 				}
 				else {//this case this connection is closed by user request,
 					std::wstring s_info = L"_cb_svr_close : success : session = " + std::to_wstring(n_session);
@@ -393,14 +399,16 @@ namespace _mp{
 				if (!ptr_request) {
 					//this case client request has a missing format.
 					ptr_error_response = cio_packet::build_common_error_response(ptr_request, cio_packet::get_error_message(cio_packet::error_reason_json));
-					p_obj->m_p_log->log_fmt(L"[E] %ls | build_from_json().\n", __WFUNCTION__);
+					p_obj->m_p_log->log_fmt(L"[E] - %ls | build_from_json().\n", __WFUNCTION__);
+					p_obj->m_p_log->trace(L"[E] - %ls | build_from_json().\n", __WFUNCTION__);
 					s_info = L"_cb_svr_read : request has a missing format.";
 					p_obj->_dp_e(s_info);
 					continue;
 				}
 				if (ptr_request->empty()) {
 					ptr_error_response = cio_packet::build_common_error_response(ptr_request, cio_packet::get_error_message(cio_packet::error_reason_json));
-					p_obj->m_p_log->log_fmt(L"[E] %ls | ptr_request->empty().\n", __WFUNCTION__);
+					p_obj->m_p_log->log_fmt(L"[E] - %ls | ptr_request->empty().\n", __WFUNCTION__);
+					p_obj->m_p_log->trace(L"[E] - %ls | ptr_request->empty().\n", __WFUNCTION__);
 					s_info = L"_cb_svr_read : no request";
 					p_obj->_dp_e(s_info);
 					continue;
@@ -408,14 +416,16 @@ namespace _mp{
 				if (ptr_request->get_session_number() != n_session) {
 					//invalied session number
 					ptr_error_response = cio_packet::build_common_error_response(ptr_request, cio_packet::get_error_message(cio_packet::error_reason_session));
-					p_obj->m_p_log->log_fmt(L"[E] %ls | mismatch session number | request %u , current session %u.\n", __WFUNCTION__, ptr_request->get_session_number(), n_session);
+					p_obj->m_p_log->log_fmt(L"[E] - %ls | mismatch session number | request %u , current session %u.\n", __WFUNCTION__, ptr_request->get_session_number(), n_session);
+					p_obj->m_p_log->trace(L"[E] - %ls | mismatch session number | request %u , current session %u.\n", __WFUNCTION__, ptr_request->get_session_number(), n_session);
 					s_info = L"_cb_svr_read : mismatch session number[req : saved]" + std::to_wstring(ptr_request->get_session_number()) + L" : " + std::to_wstring(n_session);
 					p_obj->_dp_e(s_info);
 					continue;
 				}
 				if (!ptr_request->is_request()) {
 					ptr_error_response = cio_packet::build_common_error_response(ptr_request, cio_packet::get_error_message(cio_packet::error_reason_request_type));
-					p_obj->m_p_log->log_fmt(L"[E] %ls | !is_request().\n", __WFUNCTION__);
+					p_obj->m_p_log->log_fmt(L"[E] - %ls | !is_request().\n", __WFUNCTION__);
+					p_obj->m_p_log->trace(L"[E] - %ls | !is_request().\n", __WFUNCTION__);
 					s_info = L"_cb_svr_read : invalied request";
 					p_obj->_dp_e(s_info);
 					continue;
@@ -446,7 +456,8 @@ namespace _mp{
 				if (!cctl_svr::get_instance().push_request_to_worker_ctl(ptr_request, s_error_reason)) {
 					ptr_error_response = cio_packet::build_common_error_response(ptr_request, s_error_reason);
 
-					p_obj->m_p_log->log_fmt(L"[E] %ls | _push_request_of_client()\n", __WFUNCTION__);
+					p_obj->m_p_log->log_fmt(L"[E] - %ls | _push_request_of_client()\n", __WFUNCTION__);
+					p_obj->m_p_log->trace(L"[E] - %ls | _push_request_of_client()\n", __WFUNCTION__);
 					s_info = L"_cb_svr_read : fail _push_request_of_client()";
 					p_obj->_dp_e(s_info);
 					continue;
@@ -456,7 +467,8 @@ namespace _mp{
 			if (ptr_error_response && p_obj != nullptr) {
 				//push error response
 				if (!cctl_svr::get_instance().push_request_to_worker_ctl(ptr_error_response, s_error_reason)) {
-					p_obj->m_p_log->log_fmt(L"[E] %ls | _push_request_of_client()\n", __WFUNCTION__);
+					p_obj->m_p_log->log_fmt(L"[E] - %ls | _push_request_of_client()\n", __WFUNCTION__);
+					p_obj->m_p_log->trace(L"[E] - %ls | _push_request_of_client()\n", __WFUNCTION__);
 					s_info = L"_cb_svr_read : fail error response _push_request_of_client()";
 					p_obj->_dp_e(s_info);
 				}
@@ -493,14 +505,16 @@ namespace _mp{
 				std::string s_json_error;
 				cio_packet::type_ptr ptr_response(cio_packet::build_from_json(v_data, s_json_error));
 				if (!ptr_response) {
-					p_obj->m_p_log->log_fmt(L"[E] %ls | build_from_json().\n", __WFUNCTION__);
+					p_obj->m_p_log->log_fmt(L"[E] - %ls | build_from_json().\n", __WFUNCTION__);
+					p_obj->m_p_log->trace(L"[E] - %ls | build_from_json().\n", __WFUNCTION__);
 					s_info = L"_cb_svr_write : invalied json.";
 					p_obj->_dp_e(s_info);
 					continue;
 				}
 				if (ptr_response->get_action() == cio_packet::act_dev_open) {
 					if (!ptr_response->is_success()) {
-						p_obj->m_p_log->log_fmt(L"[E] %ls | open !is_success().\n", __WFUNCTION__);
+						p_obj->m_p_log->log_fmt(L"[E] - %ls | open !is_success().\n", __WFUNCTION__);
+						p_obj->m_p_log->trace(L"[E] - %ls | open !is_success().\n", __WFUNCTION__);
 						continue;
 					}
 					cctl_svr::get_instance().insert_device_index_to_device_index_set_of_session(n_session, (unsigned short)ptr_response->get_device_index());
@@ -508,7 +522,7 @@ namespace _mp{
 				}
 				if (ptr_response->get_action() == cio_packet::act_dev_close) {
 					if (!ptr_response->is_success()) {
-						p_obj->m_p_log->log_fmt(L"[E] %ls | close !is_success().\n", __WFUNCTION__);
+						p_obj->m_p_log->trace(L"[E] - %ls | close !is_success().\n", __WFUNCTION__);
 						continue;
 					}
 					cctl_svr::get_instance().erase_device_index_from_device_index_set_of_session(n_session, (unsigned short)ptr_response->get_device_index());
@@ -516,7 +530,8 @@ namespace _mp{
 				}
 				if (ptr_response->get_action() == cio_packet::act_mgmt_dev_kernel_operation) {
 					if (!ptr_response->is_success()) {
-						p_obj->m_p_log->log_fmt(L"[E] %ls | kernel_operation !is_success().\n", __WFUNCTION__);
+						p_obj->m_p_log->log_fmt(L"[E] - %ls | kernel_operation !is_success().\n", __WFUNCTION__);
+						p_obj->m_p_log->trace(L"[E] - %ls | kernel_operation !is_success().\n", __WFUNCTION__);
 						continue;
 					}
 					if (ptr_response->is_kernel_device_open()) {
@@ -550,55 +565,43 @@ namespace _mp{
 		{
 			if (!s_info.empty()) {
 				clog::get_instance().trace(L"[I] - %s\n",s_info.c_str());
-				clog::Trace(L"[I] - %s\n", s_info.c_str());
 			}
 		}
 		void cserver::_dp_w(const std::wstring& s_info)
 		{
 			if (!s_info.empty()) {
 				clog::get_instance().trace(L"[W] - %s\n", s_info.c_str());
-				clog::Trace(L"[W] - %s\n", s_info.c_str());
 			}
 		}
 		void cserver::_dp_e(const std::wstring& s_info)
 		{
 			if (!s_info.empty()) {
 				clog::get_instance().trace(L"[E] - %s\n", s_info.c_str());
-				clog::Trace(L"[E] - %s\n", s_info.c_str());
 			}
 		}
 		void cserver::_dp_n(const _mp::type_v_buffer& v_data)
 		{
 			clog::get_instance().trace(L"[I] - ");
-			clog::Trace(L"[I] - ");
 			if (!v_data.empty()) {
 				clog::get_instance().trace_hex(v_data,L".");
-				clog::TraceHex(v_data, L".");
 			}
 			clog::get_instance().trace(L"\n");
-			clog::Trace(L"\n");
 		}
 		void cserver::_dp_w(const _mp::type_v_buffer& v_data)
 		{
 			clog::get_instance().trace(L"[W] - ");
-			clog::Trace(L"[W] - ");
 			if (!v_data.empty()) {
 				clog::get_instance().trace_hex(v_data, L".");
-				clog::TraceHex(v_data, L".");
 			}
 			clog::get_instance().trace(L"\n");
-			clog::Trace(L"\n");
 		}
 		void cserver::_dp_e(const _mp::type_v_buffer& v_data)
 		{
 			clog::get_instance().trace(L"[E] - ");
-			clog::Trace(L"[E] - ");
 			if (!v_data.empty()) {
 				clog::get_instance().trace_hex(v_data, L".");
-				clog::TraceHex(v_data, L".");
 			}
 			clog::get_instance().trace(L"\n");
-			clog::Trace(L"\n");
 		}
 
 }

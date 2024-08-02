@@ -45,10 +45,12 @@ namespace _mp {
 				size_t n_data(request.get_data_field_size());
 				if (n_data > cws_server::const_default_max_rx_size_bytes) {
 					if (request.get_data_field_type() == cio_packet::data_field_string_utf8) {
-						m_p_log->get_instance().log_fmt(L"[E] %ls | overflow rx data(string type) : %u(limit : %u).\n", __WFUNCTION__, n_data, cws_server::const_default_max_rx_size_bytes);
+						m_p_log->get_instance().log_fmt(L"[E] - %ls | overflow rx data(string type) : %u(limit : %u).\n", __WFUNCTION__, n_data, cws_server::const_default_max_rx_size_bytes);
+						m_p_log->get_instance().trace(L"[E] - %ls | overflow rx data(string type) : %u(limit : %u).\n", __WFUNCTION__, n_data, cws_server::const_default_max_rx_size_bytes);
 					}
 					else {
-						m_p_log->log_fmt(L"[E] %ls | overflow rx data(binary type) : %u(limit : %u).\n", __WFUNCTION__, n_data, cws_server::const_default_max_rx_size_bytes);
+						m_p_log->log_fmt(L"[E] - %ls | overflow rx data(binary type) : %u(limit : %u).\n", __WFUNCTION__, n_data, cws_server::const_default_max_rx_size_bytes);
+						m_p_log->trace(L"[E] - %ls | overflow rx data(binary type) : %u(limit : %u).\n", __WFUNCTION__, n_data, cws_server::const_default_max_rx_size_bytes);
 					}
 					b_completet = _execute_general_error_response(request, response, cio_packet::error_reason_overflow_buffer);
 					continue;
@@ -138,7 +140,8 @@ namespace _mp {
 				response.set_data_error();
 
 				if (m_n_cnt_open > 0) {//only suuport exclusive using device
-					m_p_log->log_fmt(L"[E] %ls | open counter = %d : session = %u.\n", __WFUNCTION__, m_n_cnt_open, request.get_session_number());
+					m_p_log->log_fmt(L"[E] - %ls | open counter = %d : session = %u.\n", __WFUNCTION__, m_n_cnt_open, request.get_session_number());
+					m_p_log->trace(L"[E] - %ls | open counter = %d : session = %u.\n", __WFUNCTION__, m_n_cnt_open, request.get_session_number());
 					continue;
 				}
 
@@ -151,19 +154,22 @@ namespace _mp {
 
 				if (request.get_data_field(s_dev_path) == 0) {
 					response.set_data_by_utf8(cio_packet::get_error_message(cio_packet::error_reason_device_path), true);
-					m_p_log->log_fmt(L"[E] %ls | dev_open() : session = %u.\n", __WFUNCTION__, request.get_session_number());
+					m_p_log->log_fmt(L"[E] - %ls | dev_open() : session = %u.\n", __WFUNCTION__, request.get_session_number());
+					m_p_log->trace(L"[E] - %ls | dev_open() : session = %u.\n", __WFUNCTION__, request.get_session_number());
 					continue;
 				}
 
 				_mp::clibhid_dev::type_wptr wptr_dev = lib_hid.get_device(s_dev_path);
 				if (wptr_dev.expired()) {
-					m_p_log->log_fmt(L"[E] %ls | lib_hid.get_device() is expired() : session = %u.\n", __WFUNCTION__, request.get_session_number());
+					m_p_log->log_fmt(L"[E] - %ls | lib_hid.get_device() is expired() : session = %u.\n", __WFUNCTION__, request.get_session_number());
+					m_p_log->trace(L"[E] - %ls | lib_hid.get_device() is expired() : session = %u.\n", __WFUNCTION__, request.get_session_number());
 					continue;
 				}
 
 				if (!wptr_dev.lock()->is_open()) {
 					response.set_data_by_utf8(cio_packet::get_error_message(cio_packet::error_reason_device_open), true);
-					m_p_log->log_fmt(L"[E] %ls | dev_open() : session = %u.\n", __WFUNCTION__, request.get_session_number());
+					m_p_log->log_fmt(L"[E] - %ls | dev_open() : session = %u.\n", __WFUNCTION__, request.get_session_number());
+					m_p_log->trace(L"[E] - %ls | dev_open() : session = %u.\n", __WFUNCTION__, request.get_session_number());
 					continue;
 				}
 
@@ -210,7 +216,8 @@ namespace _mp {
 				
 				_mp::clibhid_dev::type_wptr wptr_dev = lib_hid.get_device(get_dev_path());
 				if (wptr_dev.expired()) {
-					m_p_log->log_fmt(L"[E] %ls | lib_hid.get_device() is expired() : session = %u.\n", __WFUNCTION__, request.get_session_number());
+					m_p_log->log_fmt(L"[E] - %ls | lib_hid.get_device() is expired() : session = %u.\n", __WFUNCTION__, request.get_session_number());
+					m_p_log->trace(L"[E] - %ls | lib_hid.get_device() is expired() : session = %u.\n", __WFUNCTION__, request.get_session_number());
 					continue;
 				}
 

@@ -1,6 +1,6 @@
 #pragma once
-#include <iostream>     // std::cout, std::ios
-#include <sstream>      // std::ostringstream
+#include <iostream>
+#include <sstream>
 #include <iomanip> 
 #include <climits>
 #include <cctype>

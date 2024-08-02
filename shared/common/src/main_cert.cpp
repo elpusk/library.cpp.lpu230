@@ -3,19 +3,15 @@
 #include <iostream>
 
 #include <mp_type.h>
+#include <mp_clog.h>
 #include <cert/mp_ccoffee_hlp_cert_.h>
 /**
  * generate & install certificate 
  */
 int main_cert(const _mp::type_set_wstring &set_parameters)
 {
-#ifdef _WIN32
-	std::wstring s_server_certificate_file = L"C:\\job\\library.cpp.lpu230\\shared\\data_for_debug\\cert\\coffee_server.crt";
-	std::wstring s_server_private_key_file = L"C:\\job\\library.cpp.lpu230\\shared\\data_for_debug\\cert\\coffee_server.key";
-#else
-	std::wstring s_server_certificate_file = L"/home/tester/projects/LiElpuskHidDaemon/bin/x64/Debug/coffee_server.crt";
-	std::wstring s_server_private_key_file = L"/home/tester/projects/LiElpuskHidDaemon/bin/x64/Debug/coffee_server.key";
-#endif
+	std::wstring s_server_certificate_file = cdef_const::get_certificate_file();
+	std::wstring s_server_private_key_file = cdef_const::get_private_key_file();
 
 	if ([&]()->bool {
 		bool b_result(false);
@@ -46,12 +42,10 @@ int main_cert(const _mp::type_set_wstring &set_parameters)
 		return b_result;
 		}()
 			) {
-		wprintf(L"[I] %ls | config certificates.\n", __WFUNCTION__);
-		std::wcout << L"success : config certificates." << std::endl;
+		_mp::clog::get_instance().trace(L"[I] - %s - %s - config certificates.\n", __WFILE__, __WFUNCTION__);
 	}
 	else {
-		wprintf(L"[E] %ls | config certificates.\n", __WFUNCTION__);
-		std::wcout << L"fail : config certificates." << std::endl;
+		_mp::clog::get_instance().trace(L"[E] - %s - %s - config certificates.\n", __WFILE__, __WFUNCTION__);
 	}
 	return 0;
 }

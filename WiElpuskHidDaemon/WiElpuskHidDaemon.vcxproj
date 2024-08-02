@@ -71,10 +71,6 @@
     <ClInclude Include="..\shared\lib\inc\websocket\mp_ws_tools.h" />
     <ClInclude Include="..\shared\lib\inc\_dev\mp_cdev_util.h" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="..\shared\data_for_debug\cert\coffee_server.crt" />
-    <None Include="..\shared\data_for_debug\cert\coffee_server.key" />
-  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>

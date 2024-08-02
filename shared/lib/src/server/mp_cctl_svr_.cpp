@@ -53,7 +53,8 @@ namespace _mp {
 				m_map_device_index_to_ptr_dev_ctl.emplace(m_w_new_device_index, ptr_dev_ctl);
 				++m_w_new_device_index;
 
-				p_log->log_fmt(L"[I] %ls | inserted : %ls.\n", __WFUNCTION__, item.get_path_by_wstring().c_str());
+				p_log->log_fmt(L"[I] - %ls | inserted : %ls.\n", __WFUNCTION__, item.get_path_by_wstring().c_str());
+				p_log->trace(L"[I] - %ls | inserted : %ls.\n", __WFUNCTION__, item.get_path_by_wstring().c_str());
 
 				b_result = true;
 			} while (false);
@@ -86,7 +87,8 @@ namespace _mp {
 						w_device_index = it->first;
 						m_map_device_index_to_ptr_dev_ctl.erase(it);
 
-						clog::get_instance().log_fmt(L"[I] %ls | removed : %ls.\n", __WFUNCTION__, s_device_path.c_str());
+						clog::get_instance().log_fmt(L"[I] - %ls | removed : %ls.\n", __WFUNCTION__, s_device_path.c_str());
+						clog::get_instance().trace(L"[I] - %ls | removed : %ls.\n", __WFUNCTION__, s_device_path.c_str());
 
 						b_found = true;
 					} while (false);
@@ -286,7 +288,8 @@ namespace _mp {
 						break;
 					default:
 						s_error_reason = cio_packet::get_error_message(cio_packet::error_reason_action_code);
-						//clog::get_instance().log_fmt(L"[E] %ls | unknown action_code of manager.\n", __WFUNCTION__);
+						//clog::get_instance().log_fmt(L"[E] - %ls | unknown action_code of manager.\n", __WFUNCTION__);
+						//clog::get_instance().trace(L"[E] - %ls | unknown action_code of manager.\n", __WFUNCTION__);
 						continue;
 					}//end switch
 
@@ -305,14 +308,16 @@ namespace _mp {
 				case cio_packet::act_dev_open:
 					if (ptr_request->get_data_field(s_path) == 0) {
 						s_error_reason = cio_packet::get_error_message(cio_packet::error_reason_device_path);
-						clog::get_instance().log(L"[E] %ls | no device path.\n", __WFUNCTION__);
+						clog::get_instance().log_fmt(L"[E] - %ls | no device path.\n", __WFUNCTION__);
+						clog::get_instance().trace(L"[E] - %ls | no device path.\n", __WFUNCTION__);
 						continue;
 					}
 
 
 					if (!_push_back_request_to_dev_ctl(ptr_request, s_path)) {
 						s_error_reason = cio_packet::get_error_message(cio_packet::error_reason_device_object);
-						clog::get_instance().log_fmt(L"[E] %ls | no device page object | %ls.\n", __WFUNCTION__, s_path.c_str());
+						clog::get_instance().log_fmt(L"[E] - %ls | no device page object | %ls.\n", __WFUNCTION__, s_path.c_str());
+						clog::get_instance().trace(L"[E] - %ls | no device page object | %ls.\n", __WFUNCTION__, s_path.c_str());
 						continue;
 					}
 					break;
@@ -324,7 +329,8 @@ namespace _mp {
 				case cio_packet::act_dev_sub_bootloader:
 					if (!_push_back_request_to_dev_ctl(ptr_request)) {
 						s_error_reason = cio_packet::get_error_message(cio_packet::error_reason_device_object);
-						clog::get_instance().log(L"[E] %ls | no device page object : device index = %u.\n", __WFUNCTION__, ptr_request->get_device_index());
+						clog::get_instance().log_fmt(L"[E] - %ls | no device page object : device index = %u.\n", __WFUNCTION__, ptr_request->get_device_index());
+						clog::get_instance().trace(L"[E] - %ls | no device page object : device index = %u.\n", __WFUNCTION__, ptr_request->get_device_index());
 						continue;
 					}
 					break;
@@ -338,7 +344,8 @@ namespace _mp {
 								s_path = *(++std::begin(list_wstring));
 								if (!_push_back_request_to_dev_ctl(ptr_request, s_path)) {
 									s_error_reason = cio_packet::get_error_message(cio_packet::error_reason_device_object);
-									clog::get_instance().log_fmt(L"[E] %ls | no device page object | %ls.\n", __WFUNCTION__, s_path.c_str());
+									clog::get_instance().log_fmt(L"[E] - %ls | no device page object | %ls.\n", __WFUNCTION__, s_path.c_str());
+									clog::get_instance().trace(L"[E] - %ls | no device page object | %ls.\n", __WFUNCTION__, s_path.c_str());
 									continue;
 								}
 								break;
@@ -348,13 +355,15 @@ namespace _mp {
 
 					if (!_push_back_request_to_dev_ctl(ptr_request)) {
 						s_error_reason = cio_packet::get_error_message(cio_packet::error_reason_device_object);
-						clog::get_instance().log(L"[E] %ls | no device page object : device index = %u.\n", __WFUNCTION__, ptr_request->get_device_index());
+						clog::get_instance().log_fmt(L"[E] - %ls | no device page object : device index = %u.\n", __WFUNCTION__, ptr_request->get_device_index());
+						clog::get_instance().trace(L"[E] - %ls | no device page object : device index = %u.\n", __WFUNCTION__, ptr_request->get_device_index());
 						continue;
 					}
 					break;
 				default:
 					s_error_reason = cio_packet::get_error_message(cio_packet::error_reason_action_code);
-					clog::get_instance().log(L"[E] %ls | unknown action_code of device.\n", __WFUNCTION__);
+					clog::get_instance().log_fmt(L"[E] - %ls | unknown action_code of device.\n", __WFUNCTION__);
+					clog::get_instance().trace(L"[E] - %ls | unknown action_code of device.\n", __WFUNCTION__);
 					continue;
 				}//end switch
 
@@ -371,7 +380,8 @@ namespace _mp {
 
 				cctl_svr::type_set_device_index set_device_index(get_device_index_set_of_session(n_session));
 				if (set_device_index.empty()) {
-					clog::get_instance().log(L"[E] %ls | none device in session %u.\n", __WFUNCTION__, n_session);
+					clog::get_instance().log_fmt(L"[E] - %ls | none device in session %u.\n", __WFUNCTION__, n_session);
+					clog::get_instance().trace(L"[E] - %ls | none device in session %u.\n", __WFUNCTION__, n_session);
 					continue;
 				}
 				_erase_device_index_set_of_session(n_session);
@@ -388,13 +398,15 @@ namespace _mp {
 					//cancel current processing
 					cio_packet::type_ptr ptr_request_cancel = cio_packet::build_cancel(n_session, w_device_index);
 					if (!push_request_to_worker_ctl(ptr_request_cancel, s_error_reason)) {//automatic cancel device
-						clog::get_instance().log(L"[E] %ls | _push_request_of_client() of cancel.\n", __WFUNCTION__);
+						clog::get_instance().log_fmt(L"[E] - %ls | _push_request_of_client() of cancel.\n", __WFUNCTION__);
+						clog::get_instance().trace(L"[E] - %ls | _push_request_of_client() of cancel.\n", __WFUNCTION__);
 					}
 
 					//close device.
 					cio_packet::type_ptr ptr_request_close = cio_packet::build_close(n_session, w_device_index);
 					if (!push_request_to_worker_ctl(ptr_request_close, s_error_reason)) {//automatic close device
-						clog::get_instance().log(L"[E] %ls | _push_request_of_client() of close.\n", __WFUNCTION__);
+						clog::get_instance().log_fmt(L"[E] - %ls | _push_request_of_client() of close.\n", __WFUNCTION__);
+						clog::get_instance().trace(L"[E] - %ls | _push_request_of_client() of close.\n", __WFUNCTION__);
 					}
 				}//end for
 
@@ -438,12 +450,14 @@ namespace _mp {
 			bool b_result(false);
 			do {
 				if (!ptr_cio_packet) {
-					clog::get_instance().log(L"[E] %ls | ptr_cio_packet is nulllptr.\n", __WFUNCTION__);
+					clog::get_instance().log_fmt(L"[E] - %ls | ptr_cio_packet is nulllptr.\n", __WFUNCTION__);
+					clog::get_instance().trace(L"[E] - %ls | ptr_cio_packet is nulllptr.\n", __WFUNCTION__);
 					continue;
 				}
 				cworker_ctl::type_ptr ptr_dev_ctl = _get_dev_ctl(s_device_path);
 				if (!ptr_dev_ctl) {
-					clog::get_instance().log_fmt(L"[E] %ls | _get_dev_ctl() none | %ls.\n", __WFUNCTION__, s_device_path.c_str());
+					clog::get_instance().log_fmt(L"[E] - %ls | _get_dev_ctl() none | %ls.\n", __WFUNCTION__, s_device_path.c_str());
+					clog::get_instance().trace(L"[E] - %ls | _get_dev_ctl() none | %ls.\n", __WFUNCTION__, s_device_path.c_str());
 					continue;
 				}
 				ptr_cio_packet->set_device_index(ptr_dev_ctl->get_device_index());
@@ -485,12 +499,14 @@ namespace _mp {
 
 				std::lock_guard<std::mutex> lock(m_mutex_device_map);
 				//
-				clog::get_instance().log(L"[I] %ls | m_map_device_index_to_ptr_dev_ctl = %u items.\n", __WFUNCTION__, m_map_device_index_to_ptr_dev_ctl.size());
+				clog::get_instance().log_fmt(L"[I] - %ls | m_map_device_index_to_ptr_dev_ctl = %u items.\n", __WFUNCTION__, m_map_device_index_to_ptr_dev_ctl.size());
+				clog::get_instance().trace(L"[I] - %ls | m_map_device_index_to_ptr_dev_ctl = %u items.\n", __WFUNCTION__, m_map_device_index_to_ptr_dev_ctl.size());
 
 				cctl_svr::_type_map_device_index_to_ptr_dev_ctl::iterator it = std::begin(m_map_device_index_to_ptr_dev_ctl);
 				for (; it != std::end(m_map_device_index_to_ptr_dev_ctl); ++it) {
 					if (it->second) {
-						clog::get_instance().log_fmt(L"[I] %ls | item : %ls.\n", __WFUNCTION__, it->second->get_dev_path().c_str());
+						clog::get_instance().log_fmt(L"[I] - %ls | item : %ls.\n", __WFUNCTION__, it->second->get_dev_path().c_str());
+						clog::get_instance().trace(L"[I] - %ls | item : %ls.\n", __WFUNCTION__, it->second->get_dev_path().c_str());
 						if (s_device_path.compare(it->second->get_dev_path()) == 0) {
 							w_index = it->first;
 							ptr_dev_ctl = it->second;

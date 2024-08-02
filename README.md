@@ -32,3 +32,6 @@ lpu23x device c++ library
 
 ## Problems
 + after starting wss, the inserted device is reported that  is used.
+
+## coding rules
++ Wherever the file log is, the trace must be present.

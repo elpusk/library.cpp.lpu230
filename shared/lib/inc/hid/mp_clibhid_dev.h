@@ -278,13 +278,11 @@ namespace _mp {
 
                         //processing new request.
                         if (!ptr_new->is_empty_tx()) {
-                            clog::Trace(L" :tx -> ");
                             if (!obj._write(ptr_new->get_tx())) {//ERROR TX
-                                clog::Trace(L"error.\n");
+                                clog::get_instance().trace(L"[E] - %s - %s - obj._write().\n", __WFILE__, __WFUNCTION__);
                                 ptr_new->set_result(cqitem_dev::result_error,type_v_buffer(0),L"TX");
                                 continue;
                             }
-                            clog::Trace(L"ok.\n");
                         }
                         if (!ptr_new->is_need_rx()) {
                             //map be cancel request.......
@@ -302,14 +300,13 @@ namespace _mp {
                     // here current request exist.......
                     //ready for rx mode.
                     if (!obj._read(v_rx)) {//ERROR RX
-                        clog::Trace(L"rx error.\n");
+                        clog::get_instance().trace(L"[E] - %s - %s - obj._read().\n", __WFILE__, __WFUNCTION__);
                         ptr_cur->set_result(cqitem_dev::result_error,type_v_buffer(0), L"RX");
                         continue;
                     }
 
                     if (v_rx.size() != 0) {
                         //RX OK.
-                        clog::Trace(L"rx ok success.\n");
                         ptr_cur->set_result(cqitem_dev::result_success, v_rx);
                         continue;
                     }

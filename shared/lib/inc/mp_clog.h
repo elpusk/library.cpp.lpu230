@@ -149,8 +149,19 @@ namespace _mp
 					if (v.size() == 0) {
 						continue;
 					}
-					vswprintf(&v[0],v.size(),s_fmt, ap);
+#ifdef _DEBUG
+					va_list ap_cp;
+					va_copy(ap_cp, ap);
+					//
+					vswprintf(&v[0], v.size(), s_fmt, ap);
 					m_ptr_track_pipe->write(&v[0]);
+
+					vwprintf(s_fmt, ap_cp);
+					va_end(ap_cp);
+#else
+					vswprintf(&v[0], v.size(), s_fmt, ap);
+					m_ptr_track_pipe->write(&v[0]);
+#endif
 				} while (false);
 
 				va_end(ap);
@@ -170,6 +181,9 @@ namespace _mp
 					continue;
 				}
 				m_ptr_track_pipe->write(s);
+#ifdef _DEBUG
+				std::wcout << s;
+#endif
 			} while (false);
 		}
 
@@ -178,6 +192,7 @@ namespace _mp
 		// foir logging system
 		/**
 		* configuration logging system
+		* Don't creates log() function.
 		*/
 		bool config(const std::wstring & s_in_folder_path , size_t n_employee_id )
 		{
@@ -337,90 +352,6 @@ namespace _mp
 					if (vsnprintf(&(*ptr_v_s_buffer)[0], ptr_v_s_buffer->size(), s_fmt, ap) <= 0)
 						continue;
 #endif
-					//
-					std::wstring sw_message = cstring::get_unicode_from_mcsc(std::string(&(*ptr_v_s_buffer)[0]));
-					_write_file(sw_message, m_b_enable_time, m_b_enable_systick);
-
-				} while (false);
-
-				va_end(ap);
-
-			} while (false);
-		}
-
-		// if log() is error ,use log_fmt() !
-		void log(const wchar_t *s_fmt, ...)
-		{
-			do {
-				std::lock_guard<std::mutex>	lock(m_mutex_log);
-				if (!m_b_enable)
-					continue;
-				if (m_s_log_file_path.empty())
-					continue;
-				//
-				va_list ap;
-				va_start(ap, s_fmt);
-
-				do {
-					if (s_fmt == NULL)
-						continue;
-#ifdef _WIN32
-					size_t n_len = _vscwprintf(s_fmt, ap) + 1; // for '\0'
-
-					std::shared_ptr<type_v_ws_buffer> ptr_v_ws_buffer(std::make_shared<type_v_ws_buffer>(n_len, 0));
-					if (!ptr_v_ws_buffer)
-						continue;
-					if (vswprintf_s(&(*ptr_v_ws_buffer)[0], ptr_v_ws_buffer->size(), s_fmt, ap) <= 0)
-						continue;
-#else
-					std::shared_ptr<type_v_ws_buffer> ptr_v_ws_buffer(std::make_shared<type_v_ws_buffer>(2048, 0));
-					if (!ptr_v_ws_buffer)
-						continue;
-					if (vswprintf(&(*ptr_v_ws_buffer)[0], ptr_v_ws_buffer->size(), s_fmt, ap) <= 0)
-						continue;
-#endif
-					//
-					_write_file(std::wstring(&(*ptr_v_ws_buffer)[0]), m_b_enable_time, m_b_enable_systick);
-
-				} while (false);
-
-				va_end(ap);
-
-			} while (false);
-		}
-		// if log() is error ,use log_fmt() !
-		void log(const char* s_fmt, ...)
-		{
-			do {
-				std::lock_guard<std::mutex>	lock(m_mutex_log);
-				if (!m_b_enable)
-					continue;
-				if (m_s_log_file_path.empty())
-					continue;
-				//
-				va_list ap;
-				va_start(ap, s_fmt);
-
-				do {
-					if (s_fmt == NULL)
-						continue;
-
-#ifdef _WIN32
-					size_t n_len = _vscprintf(s_fmt, ap) + 1; // for '\0'
-
-					std::shared_ptr<type_v_s_buffer> ptr_v_s_buffer(std::make_shared<type_v_s_buffer>(n_len, 0));
-					if (!ptr_v_s_buffer)
-						continue;
-					if (vsprintf_s(&(*ptr_v_s_buffer)[0], ptr_v_s_buffer->size(), s_fmt, ap) <= 0)
-						continue;
-#else
-					std::shared_ptr<type_v_s_buffer> ptr_v_s_buffer(std::make_shared<type_v_s_buffer>(2048, 0));
-					if (!ptr_v_s_buffer)
-						continue;
-					if (vsnprintf(&(*ptr_v_s_buffer)[0], ptr_v_s_buffer->size(), s_fmt, ap) <= 0)
-						continue;
-#endif
-
 					//
 					std::wstring sw_message = cstring::get_unicode_from_mcsc(std::string(&(*ptr_v_s_buffer)[0]));
 					_write_file(sw_message, m_b_enable_time, m_b_enable_systick);
