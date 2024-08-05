@@ -42,10 +42,10 @@ int main_cert(const _mp::type_set_wstring &set_parameters)
 		return b_result;
 		}()
 			) {
-		_mp::clog::get_instance().trace(L"[I] - %s - %s - config certificates.\n", __WFILE__, __WFUNCTION__);
+		_mp::clog::get_instance().trace(L"[I] - %ls - %ls - config certificates.\n", __WFILE__, __WFUNCTION__);
 	}
 	else {
-		_mp::clog::get_instance().trace(L"[E] - %s - %s - config certificates.\n", __WFILE__, __WFUNCTION__);
+		_mp::clog::get_instance().trace(L"[E] - %ls - %ls - config certificates.\n", __WFILE__, __WFUNCTION__);
 	}
 	return 0;
 }

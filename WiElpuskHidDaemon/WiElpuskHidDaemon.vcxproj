@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClCompile Include="..\shared\3thpart\src\win\hid.c" />
     <ClCompile Include="..\shared\common\src\main_cert.cpp" />
+    <ClCompile Include="..\shared\common\src\main_remove_all.cpp" />
     <ClCompile Include="..\shared\common\src\main_remove_cert.cpp" />
     <ClCompile Include="..\shared\common\src\main_trace.cpp" />
     <ClCompile Include="..\shared\common\src\main_wss.cpp" />

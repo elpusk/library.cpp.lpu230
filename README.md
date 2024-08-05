@@ -30,8 +30,13 @@ lpu23x device c++ library
 + Win11 : elpusk-hid-d.exe /removecert
 + Debian : elpusk-hid-d /removecert
 
+### remove all installed files & add path
++ Win11 : elpusk-hid-d.exe /removeall
++ Debian : elpusk-hid-d /removeall
+
+
 ## Problems
-+ after starting wss, the inserted device is reported that  is used.
++ fixed after starting wss, the inserted device is reported that  is used.
 
 ## coding rules
 + Wherever the file log is, the trace must be present.

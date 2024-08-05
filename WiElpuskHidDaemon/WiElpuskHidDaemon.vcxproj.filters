@@ -90,6 +90,9 @@
     <ClCompile Include="..\shared\common\src\main_cert.cpp">
       <Filter>common</Filter>
     </ClCompile>
+    <ClCompile Include="..\shared\common\src\main_remove_all.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\3thpart\inc\hidapi.h">

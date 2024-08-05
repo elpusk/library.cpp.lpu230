@@ -40,6 +40,7 @@ namespace _mp{
 #define	_MP_TOOLS_CT_TYPE_FILE_TIMEIN_DAY			((unsigned long long)_NS_TOOLS_CT_TYPE_FILE_TIMEIN_HOUR*24)
 
 #define	_MP_TOOLS_INVALID_SESSION_NUMBER		0xFFFFFFFF
+#define	_MP_TOOLS_INVALID_DEVICE_INDEX		0x0000
 
 #define _MP_TOOLS_OFFSET_OF_STRUCT(s, m)   (size_t)&(((s *)0)->m)
 

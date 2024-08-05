@@ -279,7 +279,7 @@ namespace _mp {
                         //processing new request.
                         if (!ptr_new->is_empty_tx()) {
                             if (!obj._write(ptr_new->get_tx())) {//ERROR TX
-                                clog::get_instance().trace(L"[E] - %s - %s - obj._write().\n", __WFILE__, __WFUNCTION__);
+                                clog::get_instance().trace(L"[E] - %ls - %ls - obj._write().\n", __WFILE__, __WFUNCTION__);
                                 ptr_new->set_result(cqitem_dev::result_error,type_v_buffer(0),L"TX");
                                 continue;
                             }
@@ -300,7 +300,7 @@ namespace _mp {
                     // here current request exist.......
                     //ready for rx mode.
                     if (!obj._read(v_rx)) {//ERROR RX
-                        clog::get_instance().trace(L"[E] - %s - %s - obj._read().\n", __WFILE__, __WFUNCTION__);
+                        clog::get_instance().trace(L"[E] - %ls - %ls - obj._read().\n", __WFILE__, __WFUNCTION__);
                         ptr_cur->set_result(cqitem_dev::result_error,type_v_buffer(0), L"RX");
                         continue;
                     }

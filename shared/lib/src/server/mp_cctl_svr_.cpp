@@ -1,4 +1,4 @@
-#pragma once
+#include <websocket/mp_win_nt.h>
 
 #include <functional>
 #include <memory>
@@ -8,9 +8,11 @@
 #include <vector>
 
 #include <mp_type.h>
+#include <server/mp_cserver_.h>
 #include <server/mp_cctl_svr_.h>
 #include <server/mp_cmain_ctl_.h>
 #include <server/mp_cdev_ctl_.h>
+#include <hid/mp_clibhid.h>
 
 namespace _mp {
 
@@ -26,16 +28,93 @@ namespace _mp {
 		{
 		}
 
-		cctl_svr& cctl_svr::create_main_ctl(clog* p_log)
+		cctl_svr& cctl_svr::create_main_ctl_and_set_callack(clog* p_log)
 		{
 			m_ptr_main_ctl = cworker_ctl::type_ptr(new cmain_ctl(p_log));
+
+			clibhid::get_instance().set_callback_pluginout(cctl_svr::_cb_dev_pluginout, this);
 			return *this;
+		}
+
+		void cctl_svr::_cb_dev_pluginout(
+			const clibhid_dev_info::type_set& set_inserted,
+			const clibhid_dev_info::type_set& set_removed,
+			const clibhid_dev_info::type_set& set_current,
+			void* p_usr
+		)
+		{
+			cctl_svr* p_obj = (cctl_svr*)p_usr;
+
+			std::set<unsigned short> set_removed_dev_index;
+
+			unsigned long n_session(_MP_TOOLS_INVALID_SESSION_NUMBER);
+
+			do {
+				//build set of device index.
+				for (const clibhid_dev_info& item : set_removed) {
+					std::wstring s = item.get_path_by_wstring();
+					unsigned short w = p_obj->_get_device_index_from_device_path(s);
+					if (w == _MP_TOOLS_INVALID_DEVICE_INDEX) {
+						continue;
+					}
+					set_removed_dev_index.insert(w);
+					n_session = p_obj->get_session_number_from_device_index(w);
+					cserver::get_instance().send_data_to_client_by_ip4_device_plug_out(
+						n_session,
+						w,
+						s
+					);
+				}//end for
+
+				for (const clibhid_dev_info& item : set_inserted) {
+					std::wstring s = item.get_path_by_wstring();
+					cserver::get_instance().broadcast_by_ip4_device_plug_in(s);
+				}//end for
+
+				if (!set_removed.empty()) {
+					//update m_map_session_to_set_of_device_index
+					do {
+						std::lock_guard<std::mutex> lock(p_obj->m_mutex_map_session_to_device_index);
+						for (auto item : p_obj->m_map_session_to_set_of_device_index) {
+							for (auto index : set_removed_dev_index) {
+								item.second.erase(index);
+							}//end for set
+						}//end for map
+
+					} while (false);
+					
+					//update m_map_device_index_to_ptr_dev_ctl
+					do {
+						std::lock_guard<std::mutex> lock(p_obj->m_mutex_device_map);
+						for (auto index : set_removed_dev_index) {
+							p_obj->m_map_device_index_to_ptr_dev_ctl.erase(index);
+						}//end for set
+
+					} while (false);
+				}//the end of removed.
+
+				if (!set_inserted.empty()) {
+					//update m_map_device_index_to_ptr_dev_ctl
+					do {
+						for (auto item : set_inserted) {
+							unsigned short w = p_obj->create_new_dev_ctl(&clog::get_instance(), item);
+							if (w == _MP_TOOLS_INVALID_DEVICE_INDEX) {
+								continue;
+							}
+						}//end for set
+					} while (false);
+				}
+
+				// send to clients !!!
+				//TODO.
+
+			} while (false);
 		}
 
 		// >> m_map_device_index_to_wptr_dev_ctl
 		unsigned short cctl_svr::create_new_dev_ctl(clog* p_log, const clibhid_dev_info &item)
 		{
-			bool b_result(false);
+			unsigned short w_result(0);
 			do {
 				if (!p_log)
 					continue;
@@ -45,6 +124,7 @@ namespace _mp {
 				//
 				std::lock_guard<std::mutex> lock(m_mutex_device_map);
 				ptr_dev_ctl->set_device_index(m_w_new_device_index);
+				w_result = m_w_new_device_index;
 
 				cctl_svr::_type_map_device_index_to_ptr_dev_ctl::iterator it = m_map_device_index_to_ptr_dev_ctl.find(m_w_new_device_index);
 				if (it != std::end(m_map_device_index_to_ptr_dev_ctl)) {
@@ -52,13 +132,14 @@ namespace _mp {
 				}
 				m_map_device_index_to_ptr_dev_ctl.emplace(m_w_new_device_index, ptr_dev_ctl);
 				++m_w_new_device_index;
+				if (_MP_TOOLS_INVALID_DEVICE_INDEX == m_w_new_device_index) {
+					++m_w_new_device_index;
+				}
 
 				p_log->log_fmt(L"[I] - %ls | inserted : %ls.\n", __WFUNCTION__, item.get_path_by_wstring().c_str());
 				p_log->trace(L"[I] - %ls | inserted : %ls.\n", __WFUNCTION__, item.get_path_by_wstring().c_str());
-
-				b_result = true;
 			} while (false);
-			return b_result;
+			return w_result;
 		}
 
 		std::pair<unsigned long, unsigned short> cctl_svr::clear_dev_ctl(const std::wstring& s_device_path)
@@ -475,6 +556,9 @@ namespace _mp {
 				m_map_session_to_set_of_device_index.erase(it);
 		}
 
+		/**
+		* m_mutex_device_map is used!
+		*/
 		cworker_ctl::type_ptr cctl_svr::_get_dev_ctl(unsigned short w_device_index)
 		{
 			cworker_ctl::type_ptr ptr_dev_ctl;
@@ -488,6 +572,10 @@ namespace _mp {
 
 			return ptr_dev_ctl;
 		}
+
+		/**
+		* m_mutex_device_map is used!
+		*/
 		cworker_ctl::type_ptr cctl_svr::_get_dev_ctl(const std::wstring& s_device_path)
 		{
 			cworker_ctl::type_ptr ptr_dev_ctl;
@@ -499,14 +587,9 @@ namespace _mp {
 
 				std::lock_guard<std::mutex> lock(m_mutex_device_map);
 				//
-				clog::get_instance().log_fmt(L"[I] - %ls | m_map_device_index_to_ptr_dev_ctl = %u items.\n", __WFUNCTION__, m_map_device_index_to_ptr_dev_ctl.size());
-				clog::get_instance().trace(L"[I] - %ls | m_map_device_index_to_ptr_dev_ctl = %u items.\n", __WFUNCTION__, m_map_device_index_to_ptr_dev_ctl.size());
-
 				cctl_svr::_type_map_device_index_to_ptr_dev_ctl::iterator it = std::begin(m_map_device_index_to_ptr_dev_ctl);
 				for (; it != std::end(m_map_device_index_to_ptr_dev_ctl); ++it) {
 					if (it->second) {
-						clog::get_instance().log_fmt(L"[I] - %ls | item : %ls.\n", __WFUNCTION__, it->second->get_dev_path().c_str());
-						clog::get_instance().trace(L"[I] - %ls | item : %ls.\n", __WFUNCTION__, it->second->get_dev_path().c_str());
 						if (s_device_path.compare(it->second->get_dev_path()) == 0) {
 							w_index = it->first;
 							ptr_dev_ctl = it->second;
@@ -520,6 +603,9 @@ namespace _mp {
 			return ptr_dev_ctl;
 		}
 
+		/**
+		* m_mutex_device_map is used in _get_dev_ctl()
+		*/
 		std::wstring cctl_svr::_get_device_path_from_device_index(unsigned short w_device_index)
 		{
 			std::wstring s_device_path;
@@ -530,6 +616,40 @@ namespace _mp {
 				s_device_path = ptr_dev_ctl->get_dev_path();
 			} while (false);
 			return s_device_path;
+		}
+
+		/**
+		* m_mutex_device_map is used in _get_dev_ctl()
+		*/
+		unsigned short cctl_svr::_get_device_index_from_device_path(const std::wstring& s_path)
+		{
+			unsigned short w = _MP_TOOLS_INVALID_DEVICE_INDEX;
+
+			do {
+				cworker_ctl::type_ptr ptr_dev_ctl = _get_dev_ctl(s_path);
+				if (!ptr_dev_ctl)
+					continue;//already removed device data.
+				w = ptr_dev_ctl->get_device_index();
+
+			} while (false);
+
+			return w;
+		}
+
+		unsigned long cctl_svr::get_session_number_from_device_index(unsigned short w_device_index)
+		{
+			unsigned long n_s = _MP_TOOLS_INVALID_SESSION_NUMBER;
+
+			std::lock_guard<std::mutex> lock(m_mutex_map_session_to_device_index);
+
+			for (auto item : m_map_session_to_set_of_device_index) {
+				for (auto n : item.second) {
+					if (n == w_device_index) {
+						return item.first;
+					}
+				}//end for set
+			}//end for map
+			return n_s;
 		}
 
 }//the end of _mp namespace

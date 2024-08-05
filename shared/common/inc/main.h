@@ -89,3 +89,9 @@ int main_cert(const _mp::type_set_wstring &set_parameters);
  * remove certificate.
  */
 int main_remove_cert(const _mp::type_set_wstring &set_parameters);
+
+
+/**
+ * remove all installed file and paths.
+ */
+int main_remove_all(const _mp::type_set_wstring& set_parameters);

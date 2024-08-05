@@ -297,7 +297,7 @@ namespace _mp {
 
             if (h_store == NULL) {
                 if (ccertificate::get_log()) {
-                    ccertificate::get_log()->trace(L"[E] - %s - %s - CertOpenStore().\n", __WFILE__, __WFUNCTION__);
+                    ccertificate::get_log()->trace(L"[E] - %ls - %ls - CertOpenStore().\n", __WFILE__, __WFUNCTION__);
                 }
                 continue;
             }
@@ -305,7 +305,7 @@ namespace _mp {
             int n_cert = i2d_X509(ptr_cert.get(), &s_cert);
             if (n_cert <= 0) {
                 if (ccertificate::get_log()) {
-                    ccertificate::get_log()->trace(L"[E] - %s - %s - i2d_X509().\n", __WFILE__, __WFUNCTION__);
+                    ccertificate::get_log()->trace(L"[E] - %ls - %ls - i2d_X509().\n", __WFILE__, __WFUNCTION__);
                 }
                 continue;
             }
@@ -320,7 +320,7 @@ namespace _mp {
             )) {
                 dw_result = GetLastError();
                 if (ccertificate::get_log()) {
-                    ccertificate::get_log()->trace(L"[E] - %s - %s - CertAddEncodedCertificateToStore() - code - %u.\n", __WFILE__, __WFUNCTION__, dw_result);
+                    ccertificate::get_log()->trace(L"[E] - %ls - %ls - CertAddEncodedCertificateToStore() - code - %u.\n", __WFILE__, __WFUNCTION__, dw_result);
                 }
                 continue;
             }
@@ -335,7 +335,7 @@ namespace _mp {
      do {
         if (!ptr_cert) {
             if (ccertificate::get_log()) {
-                ccertificate::get_log()->trace(L"[E] - %s - %s - Invalid certificate.\n", __WFILE__, __WFUNCTION__);
+                ccertificate::get_log()->trace(L"[E] - %ls - %ls - Invalid certificate.\n", __WFILE__, __WFUNCTION__);
             }
             continue;
         }
@@ -367,7 +367,7 @@ namespace _mp {
 
         if (PEM_write_X509(fp, ptr_cert.get()) == 0) {
             if (ccertificate::get_log()) {
-                ccertificate::get_log()->trace(L"[E] - %s - %s - PEM_write_X509().\n", __WFILE__, __WFUNCTION__);
+                ccertificate::get_log()->trace(L"[E] - %ls - %ls - PEM_write_X509().\n", __WFILE__, __WFUNCTION__);
             }
             fclose(fp);
             continue;
@@ -378,7 +378,7 @@ namespace _mp {
         int ret = system("sudo update-ca-certificates");
         if (ret != 0) {
             if (ccertificate::get_log()) {
-                ccertificate::get_log()->trace(L"[E] - %s - %s - update CA certificates.\n", __WFILE__, __WFUNCTION__);
+                ccertificate::get_log()->trace(L"[E] - %ls - %ls - update CA certificates.\n", __WFILE__, __WFUNCTION__);
             }
             continue;
         }

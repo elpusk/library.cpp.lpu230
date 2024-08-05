@@ -5,6 +5,7 @@
 #include <map>
 #include <mutex>
 #include <atomic>
+#include <functional>
 
 #include <mp_clog.h>
 #include <mp_elpusk.h>
@@ -26,6 +27,13 @@ namespace _mp{
 
         typedef std::pair< clibhid_dev::type_ptr, clibhid_dev_info::type_ptr> pair_ptrs;
         typedef std::map< std::string, clibhid::pair_ptrs > type_map_ptrs;
+
+        /**
+        * callback funtion prototype
+        * Don't use the member function in this callack function. If use, deadlock!! 
+        * @parameter 1'st - inserted devices. 2'nd - removed devices. 3'rd - current device. 4'th - user parameter for callack
+        */
+        typedef	std::function<void(const clibhid_dev_info::type_set&, const clibhid_dev_info::type_set&, const clibhid_dev_info::type_set&, void*)>	type_callback_pluginout;
 
     private:
         enum {
@@ -58,6 +66,13 @@ namespace _mp{
             return m_b_ini;
         }
 
+        void set_callback_pluginout(clibhid::type_callback_pluginout cb, void *p_user)
+        {
+            std::lock_guard<std::mutex> lock(m_mutex);
+            m_cb = cb;
+            m_p_user = p_user;
+        }
+
         clibhid_dev_info::type_set get_cur_device_set()
         {
             std::lock_guard<std::mutex> lock(m_mutex);
@@ -81,7 +96,7 @@ namespace _mp{
         }
 
     private:
-        clibhid() : m_b_ini(false), m_b_run_th_pluginout(false)
+        clibhid() : m_b_ini(false), m_b_run_th_pluginout(false), m_p_user(NULL), m_cb(nullptr)
         {
             //setup usb filter
             m_set_usb_filter.emplace(_elpusk::const_usb_vid, _elpusk::_lpu237::const_usb_pid, _elpusk::_lpu237::const_usb_inf_hid);
@@ -161,7 +176,12 @@ namespace _mp{
                 do {
                     std::lock_guard<std::mutex> lock(lib.m_mutex);
                     if (lib._update_dev_set()) {
+                        //device list is changed
                         lib._update_device_map();
+
+                        if (lib.m_cb) {//call callback
+                            lib.m_cb(lib.m_set_inserted_dev_info, lib.m_set_removed_dev_info, lib.m_set_cur_dev_info, lib.m_p_user);
+                        }
                     }
                 } while (false);
 
@@ -170,7 +190,8 @@ namespace _mp{
         }
 
         /**
-        * ONLY for _worker_pluginout
+        * ONLY for _worker_pluginout.
+        * update m_set_removed_dev_info, m_set_inserted_dev_info and m_set_cur_dev_info.
         */
         bool _update_dev_set()
         {
@@ -198,15 +219,20 @@ namespace _mp{
                 m_set_cur_dev_info = set_dev;
 
                 for (auto item : m_set_removed_dev_info) {
-                    clog::get_instance().trace(L"[I] - removed : %s.\n", item.get_path_by_wstring().c_str());
+                    clog::get_instance().trace(L"[I] - %ls - removed : %ls.\n", __WFUNCTION__, item.get_path_by_wstring().c_str());
                 }
 
                 for (auto item : m_set_inserted_dev_info) {
-                    clog::get_instance().trace(L"[I] - inserted : %s.\n", item.get_path_by_wstring().c_str());
+                    clog::get_instance().trace(L"[I] - %ls - inserted : %ls.\n", __WFUNCTION__, item.get_path_by_wstring().c_str());
                 }
 
-                for (auto item : m_set_cur_dev_info) {
-                    clog::get_instance().trace(L"[I] - current : %s.\n", item.get_path_by_wstring().c_str());
+                if (m_set_cur_dev_info.empty()) {
+                    clog::get_instance().trace(L"[I] - current : none.\n");
+                }
+                else {
+                    for (auto item : m_set_cur_dev_info) {
+                        clog::get_instance().trace(L"[I] - %ls - current : %ls.\n", __WFUNCTION__, item.get_path_by_wstring().c_str());
+                    }
                 }
 
                 //
@@ -272,6 +298,9 @@ namespace _mp{
         }
 
     private:
+        void* m_p_user;
+        clibhid::type_callback_pluginout m_cb;
+
         bool m_b_ini;
         std::mutex m_mutex;
         clibhid::type_map_ptrs m_map_ptrs;

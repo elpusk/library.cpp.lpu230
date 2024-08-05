@@ -47,21 +47,40 @@ namespace _mp {
 
 		virtual ~cctl_svr();
 
-		cctl_svr& create_main_ctl(clog* p_log);
+		cctl_svr& create_main_ctl_and_set_callack(clog* p_log);
 
 		// >> m_map_device_index_to_wptr_dev_ctl
 		/**
 		* register new device, device index is generated automatically.
+		* update m_map_device_index_to_ptr_dev_ctl.
+		* @return the created device index, if it is zero, error!
 		*/
 		unsigned short create_new_dev_ctl(clog* p_log, const clibhid_dev_info& item);
 
+
+		/**
+		* remove cdev_ctl from m_map_device_index_to_ptr_dev_ctl.
+		* update m_map_device_index_to_ptr_dev_ctl
+		*/
 		std::pair<unsigned long, unsigned short> clear_dev_ctl(const std::wstring& s_device_path);
 
 		// >> for m_map_session_to_set_of_device_index
 		cctl_svr::type_set_device_index get_device_index_set_of_session(unsigned long n_session);
 
+		unsigned long get_session_number_from_device_index(unsigned short w_device_index);
+
+		/**
+		* indicate that the selected device(w_device_index) is used by the session(n_session)
+		* open request by client.
+		* updates m_map_session_to_set_of_device_index.
+		*/
 		void insert_device_index_to_device_index_set_of_session(unsigned long n_session, unsigned short w_device_index);
 
+		/**
+		* indicate that the selected device(w_device_index) isn't used by the session(n_session)
+		* close request by client.
+		* updates m_map_session_to_set_of_device_index.
+		*/
 		void erase_device_index_from_device_index_set_of_session(unsigned long n_session, unsigned short w_device_index);
 		// <<
 
@@ -106,6 +125,17 @@ namespace _mp {
 		cworker_ctl::type_ptr _get_dev_ctl(const std::wstring& s_device_path);
 
 		std::wstring _get_device_path_from_device_index(unsigned short w_device_index);
+		unsigned short _get_device_index_from_device_path(const std::wstring & s_path);
+		
+	private:
+		//callback for device
+		static void _cb_dev_pluginout(
+			const clibhid_dev_info::type_set& set_inserted,
+			const clibhid_dev_info::type_set& set_removed,
+			const clibhid_dev_info::type_set& set_current,
+			void* p_usr
+		);
+
 	private:
 		//for session
 		cctl_svr::_type_map_session_to_name m_map_session_to_name;	//save the name of session

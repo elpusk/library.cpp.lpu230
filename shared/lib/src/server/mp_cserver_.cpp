@@ -24,7 +24,7 @@ namespace _mp{
 			if (b_first) {
 				b_first = false;
 				ptr_obj->m_p_log = p_log;
-				cctl_svr::get_instance().create_main_ctl(p_log);
+				cctl_svr::get_instance().create_main_ctl_and_set_callack(p_log);
 			}
 
 			return *ptr_obj;
@@ -48,7 +48,7 @@ namespace _mp{
 					continue;
 				if (m_ptr_server_for_ip4)
 					continue;
-				//
+				//create hid device library instance.
 				clibhid& lib_hid(_mp::clibhid::get_instance());
 				if (lib_hid.is_ini()) {
 					clibhid_dev_info::type_set st_dev = lib_hid.get_cur_device_set();
@@ -564,19 +564,19 @@ namespace _mp{
 		void cserver::_dp_n(const std::wstring& s_info)
 		{
 			if (!s_info.empty()) {
-				clog::get_instance().trace(L"[I] - %s\n",s_info.c_str());
+				clog::get_instance().trace(L"[I] - %ls\n",s_info.c_str());
 			}
 		}
 		void cserver::_dp_w(const std::wstring& s_info)
 		{
 			if (!s_info.empty()) {
-				clog::get_instance().trace(L"[W] - %s\n", s_info.c_str());
+				clog::get_instance().trace(L"[W] - %ls\n", s_info.c_str());
 			}
 		}
 		void cserver::_dp_e(const std::wstring& s_info)
 		{
 			if (!s_info.empty()) {
-				clog::get_instance().trace(L"[E] - %s\n", s_info.c_str());
+				clog::get_instance().trace(L"[E] - %ls\n", s_info.c_str());
 			}
 		}
 		void cserver::_dp_n(const _mp::type_v_buffer& v_data)
