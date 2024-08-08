@@ -11,7 +11,6 @@
 
 #include <test/test_tp_hid.h>
 
-#include <dev_lpu237.h>
 
 
 

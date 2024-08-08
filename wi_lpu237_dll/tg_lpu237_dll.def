@@ -1,0 +1,41 @@
+LIBRARY tg_lpu237_dll
+
+EXPORTS
+	LPU237_get_list
+	LPU237_get_list_w
+	LPU237_get_list_a
+	LPU237_open
+	LPU237_open_w
+	LPU237_open_a
+	LPU237_close
+	LPU237_enable
+	LPU237_disable
+	LPU237_cancel_wait_swipe
+	LPU237_wait_swipe_with_waits
+	LPU237_wait_swipe_with_callback
+	LPU237_wait_swipe_with_message
+	LPU237_get_data
+	LPU237_dll_on
+	LPU237_dll_off
+	LPU237_get_id
+	LPU237_SCR_bypass_IccPowerOn
+	LPU237_SCR_bypass_IccPowerOff
+	LPU237_SCR_bypass_XfrBlock
+	LPU237_SCR_bypass_GetParameters
+	LPU237_SCR_bypass_SetParameters
+	LPU237_SCR_bypass_ResetParameters
+	LPU237_SCR_bypass_GetSlotStatus
+	LPU237_SCR_bypass_Escape
+	LPU237_SCR_helper_GetLastError
+	LPU237_SCR_helper_GetFirmwareVersion
+	LPU237_SCR_helper_GetReaderMode
+	LPU237_SCR_helper_SetReaderMode
+	LPU237_SCR_helper_XfrBlock
+	LPU237_SCR_helper_SetCardParameters
+	LPU237_SCR_helper_ResetCardParameters
+	LPU237_SCR_helper_result_is_success
+	LPU237_SCR_helper_SetParameters
+	LPU237_SCR_helper_GetATRParameterString_w
+	LPU237_SCR_helper_GetATRParameterString_a
+
+

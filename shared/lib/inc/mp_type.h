@@ -50,6 +50,17 @@ namespace _mp{
 
 #define _MP_TOOLS_MAKE_QWORD(hi, lo)    (  (unsigned long long(unsigned long(hi) & 0xffffffff) << 32 ) | unsigned long long(unsigned long(lo) & 0xffffffff)  )
 
+#ifdef _WIN32
+#define _MP_TIMEOUT     INFINITE
+#define _PACK_BYTE
+#else
+#define    _MP_TIMEOUT     -1
+#define _PACK_BYTE  __attribute__((packed))
+#define __stdcall   __attribute__((__stdcall__))
+#define typedef unsigned long HWND
+#define typedef unsigned long UINT
+#endif // !_WIN32
+
     typedef std::vector<unsigned char> type_v_buffer;
     typedef std::shared_ptr< std::vector<unsigned char> > type_ptr_v_buffer;
     typedef	std::vector<unsigned long>			type_v_ul_buffer;
@@ -64,6 +75,7 @@ namespace _mp{
     typedef	std::set<type_tuple_usb_filter> type_set_usb_filter;
 
     typedef std::list<std::wstring> type_list_wstring;
+    typedef std::list<std::string> type_list_string;
 
     typedef	std::shared_ptr<std::wfstream>		type_ptr_wfstream;
     typedef	std::shared_ptr<std::fstream>		type_ptr_fstream;
@@ -84,6 +96,9 @@ namespace _mp{
 
     typedef	std::deque<std::wstring>			type_deque_wstring;
     typedef	std::deque<std::string>				type_deque_string;
+
+    typedef	std::deque<type_v_buffer>			type_dequeu_v_buffer;
+    typedef	std::deque<type_ptr_v_buffer>		type_dequeu_ptr_v_buffer;
 
     typedef enum : unsigned long {
         type_bm_dev_unknown = 0x00000000//primitive type

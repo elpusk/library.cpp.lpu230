@@ -27,6 +27,291 @@ namespace _mp{
 		typedef	std::pair< type_value_type, std::wstring>	type_pair_type_string;
 
     public:
+		/*
+		* p_ss_multi_dst can be null.
+		* if p_ss_multi_dst is null, return the size of multi-string.( included separator null & string end mark( double nulls )
+		* and unit is byte.
+		* if p_ss_multi_dst isn't null, return the number of string in p_ss_multi_dst buffer.
+		*/
+		static size_t change(wchar_t* p_ss_multi_dst, const type_list_wstring& list_s_src)
+		{
+			size_t n_string(0);
+			do {
+
+				size_t n_size = 0; //unit byte
+				if (list_s_src.empty())
+					continue;
+
+				n_string = list_s_src.size();
+
+				std::for_each(std::begin(list_s_src), std::end(list_s_src), [&](const std::wstring path) {
+					n_size += ((path.size() + 1) * sizeof(wchar_t));
+					});
+
+				n_size += sizeof(wchar_t);	//add multi null size
+
+				if (p_ss_multi_dst == NULL) {
+					n_string = n_size;	//return only need buffer size( BYTE unit, including NULL & NULLs )
+					continue;
+				}
+
+				std::for_each(std::begin(list_s_src), std::end(list_s_src), [&](const std::wstring& s_str) {
+
+					for (size_t i = 0; i < s_str.length(); i++) {
+						p_ss_multi_dst[i] = s_str[i];
+					}//end for
+					p_ss_multi_dst[s_str.length()] = NULL;
+
+					p_ss_multi_dst = &p_ss_multi_dst[s_str.length() + 1];
+					});
+
+				*p_ss_multi_dst = NULL; //make multi string
+
+			} while (false);
+			return n_string;
+		}
+
+		/*
+		* p_ss_multi_dst can be null.
+		* if p_ss_multi_dst is null, return the size of multi-string.( included separator null & string end mark( double nulls )
+		* and unit is byte.
+		* if p_ss_multi_dst isn't null, return the number of string in p_ss_multi_dst buffer.
+		*/
+		static size_t change(char* p_ss_multi_dst, const type_list_string& list_s_src)
+		{
+			size_t n_string(0);
+			do {
+
+				size_t n_size = 0; //unit byte
+				if (list_s_src.empty())
+					continue;
+
+				n_string = list_s_src.size();
+
+				std::for_each(std::begin(list_s_src), std::end(list_s_src), [&](const std::string path) {
+					n_size += ((path.size() + 1) * sizeof(char));
+					});
+
+				n_size += sizeof(char);	//add multi null size
+
+				if (p_ss_multi_dst == NULL) {
+					n_string = n_size;	//return only need buffer size( BYTE unit, including NULL & NULLs )
+					continue;
+				}
+
+				std::for_each(std::begin(list_s_src), std::end(list_s_src), [&](const std::string& s_str) {
+
+					for (size_t i = 0; i < s_str.length(); i++) {
+						p_ss_multi_dst[i] = s_str[i];
+					}//end for
+					p_ss_multi_dst[s_str.length()] = NULL;
+
+					p_ss_multi_dst = &p_ss_multi_dst[s_str.length() + 1];
+					});
+
+				*p_ss_multi_dst = NULL; //make multi string
+
+			} while (false);
+			return n_string;
+		}
+
+		/*
+		* p_ss_multi_dst can be null.
+		* if p_ss_multi_dst is null, return the size of multi-string.( included separator null & string end mark( double nulls )
+		* and unit is byte.
+		* if p_ss_multi_dst isn't null, return the number of string in p_ss_multi_dst buffer.
+		*/
+		static size_t change(wchar_t* p_ss_multi_dst, const type_set_wstring& set_s_src)
+		{
+			size_t n_string(0);
+			do {
+
+				size_t n_size = 0; //unit byte
+				if (set_s_src.empty())
+					continue;
+
+				n_string = set_s_src.size();
+
+				std::for_each(std::begin(set_s_src), std::end(set_s_src), [&](const std::wstring path) {
+					n_size += ((path.size() + 1) * sizeof(wchar_t));
+					});
+
+				n_size += sizeof(wchar_t);	//add multi null size
+
+				if (p_ss_multi_dst == NULL) {
+					n_string = n_size;	//return only need buffer size( BYTE unit, including NULL & NULLs )
+					continue;
+				}
+
+				std::for_each(std::begin(set_s_src), std::end(set_s_src), [&](const std::wstring& s_str) {
+
+					for (size_t i = 0; i < s_str.length(); i++) {
+						p_ss_multi_dst[i] = s_str[i];
+					}//end for
+					p_ss_multi_dst[s_str.length()] = NULL;
+
+					p_ss_multi_dst = &p_ss_multi_dst[s_str.length() + 1];
+					});
+
+				*p_ss_multi_dst = NULL; //make multi string
+
+			} while (false);
+			return n_string;
+		}
+
+		static size_t change(type_list_wstring& list_s_dst, const wchar_t* p_ss_multi_src)
+		{//p_ss_multi_src is multi string
+			const wchar_t* pDest;
+			std::wstring stemp;
+			size_t n_count = 0;
+			size_t nOffset = 0;
+
+			do {
+				if (p_ss_multi_src == NULL)
+					continue;
+
+				list_s_dst.clear();
+				//
+				while (p_ss_multi_src[nOffset] != NULL) {
+
+					pDest = &(p_ss_multi_src[nOffset]);
+					stemp = pDest;
+					list_s_dst.push_back(stemp);
+
+					nOffset += stemp.length() + 1;//for passing null termination
+					n_count++;
+				}//while
+			} while (false);
+			return n_count;
+		}
+
+		static size_t change(type_set_wstring& set_s_dst, const wchar_t* p_ss_multi_src)
+		{//p_ss_multi_src is multi string
+			const wchar_t* pDest;
+			std::wstring stemp;
+			size_t n_count = 0;
+			size_t nOffset = 0;
+
+			do {
+				if (p_ss_multi_src == NULL)
+					continue;
+
+				set_s_dst.clear();
+				//
+				while (p_ss_multi_src[nOffset] != NULL) {
+
+					pDest = &(p_ss_multi_src[nOffset]);
+					stemp = pDest;
+					std::pair<type_set_wstring::iterator, bool> result = set_s_dst.insert(stemp);
+
+					nOffset += stemp.length() + 1;//for passing null termination
+
+					if (result.second)//inserted.
+						n_count++;
+				}//while
+			} while (false);
+			return n_count;
+		}
+
+		static size_t change(type_list_string& list_s_dst, const char* p_ss_multi_src)
+		{//p_ss_multi_src is multi string
+			const char* pDest;
+			std::string stemp;
+			size_t n_count = 0;
+			size_t nOffset = 0;
+
+			do {
+				if (p_ss_multi_src == NULL)
+					continue;
+
+				list_s_dst.clear();
+				//
+				while (p_ss_multi_src[nOffset] != NULL) {
+
+					pDest = &(p_ss_multi_src[nOffset]);
+					stemp = pDest;
+					list_s_dst.push_back(stemp);
+
+					nOffset += stemp.length() + 1;//for passing null termination
+					n_count++;
+				}//while
+			} while (false);
+			return n_count;
+		}
+
+		static size_t change(type_set_string& set_s_dst, const char* p_ss_multi_src)
+		{//p_ss_multi_src is multi string
+			const char* pDest;
+			std::string stemp;
+			size_t n_count = 0;
+			size_t nOffset = 0;
+
+			do {
+				if (p_ss_multi_src == NULL)
+					continue;
+
+				set_s_dst.clear();
+				//
+				while (p_ss_multi_src[nOffset] != NULL) {
+
+					pDest = &(p_ss_multi_src[nOffset]);
+					stemp = pDest;
+					std::pair<type_set_string::iterator, bool> result = set_s_dst.insert(stemp);
+
+					nOffset += stemp.length() + 1;//for passing null termination
+
+					if (result.second)//inserted.
+						n_count++;
+				}//while
+			} while (false);
+			return n_count;
+		}
+
+		static size_t change(type_set_wstring& set_s_dst, unsigned long n_src, const unsigned char* s_src)
+		{
+			std::wstring stemp;
+
+			do {
+				set_s_dst.clear();
+
+				if (s_src == NULL)
+					continue;
+				if (n_src == 0)
+					continue;
+
+				for (unsigned long i = 0; i < n_src; i++) {
+					if (std::isprint(s_src[i]) == 0) {
+						if (s_src[i] != 0x00) {
+							set_s_dst.clear();
+							break;//error exit for
+						}
+						//null terminatred string
+						if (stemp.empty())
+							continue;
+						set_s_dst.insert(stemp);
+						stemp.clear();
+						continue;
+					}
+
+					stemp.push_back((std::wstring::value_type)s_src[i]);
+				}//end for
+				//
+			} while (false);
+			return set_s_dst.size();
+		}
+
+		static size_t change(type_set_wstring& set_s_dst, const type_v_buffer& v_src)
+		{
+			size_t n_item(0);
+			do {
+				set_s_dst.clear();
+
+				if (v_src.empty())
+					continue;
+				n_item = cconvert::change(set_s_dst, (unsigned long)v_src.size(), &v_src[0]);
+			} while (false);
+			return n_item;
+		}
 		static size_t tokenizer(type_list_wstring& list_s_token, const std::wstring& s_src, const std::wstring& s_separator, bool b_if_token_empty_then_ignore = true)
 		{
 			do {

@@ -120,6 +120,15 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)common\src\main_remove_cert.cpp">
       <Filter>common\src</Filter>
     </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)lib\src\server\mp_cclient.cpp">
+      <Filter>lib\inc\svr</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)common\src\main_remove_all.cpp">
+      <Filter>common\src</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)lib\src\server\mp_cclient_cb.cpp">
+      <Filter>lib\inc\svr</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)3thpart\inc\hidapi.h">
@@ -169,9 +178,6 @@
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\mp_cwait.h">
       <Filter>lib\inc</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)common\inc\dev_lpu237.h">
-      <Filter>common\inc</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\hid\mp_clibhid_dev.h">
       <Filter>lib\inc\hid</Filter>
@@ -247,6 +253,48 @@
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)common\inc\main.h">
       <Filter>common\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\server\mp_cclient.h">
+      <Filter>lib\inc\svr</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\websocket\mp_cws_client.h">
+      <Filter>lib\inc\ws</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)common\inc\capi_client.h">
+      <Filter>common\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\server\mp_cclient_cb.h">
+      <Filter>lib\inc\svr</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\server\mp_cclient_cb_qitem.h">
+      <Filter>lib\inc\svr</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)common\inc\i_device_of_client.h">
+      <Filter>common\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)common\inc\manager_of_device_of_client.h">
+      <Filter>common\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\mp_icprotocol.h">
+      <Filter>lib\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)common\inc\cprotocol_lpu237.h">
+      <Filter>common\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\mp_casync_parameter_result.h">
+      <Filter>lib\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\mp_casync_result_manager.h">
+      <Filter>lib\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\mp_cversion.h">
+      <Filter>lib\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)common\inc\ckey_map.h">
+      <Filter>common\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\server\mp_cclient_manager.h">
+      <Filter>lib\inc\svr</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

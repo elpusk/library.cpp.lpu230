@@ -1,0 +1,160 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="inc">
+      <UniqueIdentifier>{8ec45e71-ae37-46c3-afcc-40314274cfff}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib">
+      <UniqueIdentifier>{5baea31f-372f-467f-b064-b96016d36e6a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\svr">
+      <UniqueIdentifier>{e879b6f4-4f23-49a4-8711-b890a753f2bf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\ws">
+      <UniqueIdentifier>{193ffd9c-bbfe-4648-948e-4d353cd3f14f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common">
+      <UniqueIdentifier>{d78a24cd-cef5-4b58-9b1c-e1b4e6ea2d73}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3thpart">
+      <UniqueIdentifier>{601a171d-f687-4c64-af04-d5dde118d988}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="framework.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="pch.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\projects\lpu237_dll\inc\tg_lpu237_dll.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\server\mp_cclient.h">
+      <Filter>lib\svr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\websocket\mp_win_nt.h">
+      <Filter>lib\ws</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\websocket\mp_ws_tools.h">
+      <Filter>lib\ws</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\websocket\mp_cws_client.h">
+      <Filter>lib\ws</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\server\mp_cclient_cb.h">
+      <Filter>lib\svr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\server\mp_cclient_cb_qitem.h">
+      <Filter>lib\svr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\capi_client.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\i_device_of_client.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\manager_of_device_of_client.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_vcworker.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_casync_parameter_result.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_casync_result_manager.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_icprotocol.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\cprotocol_lpu237.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cversion.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\ckey_map.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\projects\lpu237_dll\inc\ccb_client.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\projects\lpu237_dll\inc\lpu237_of_client.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\3thpart\inc\GemCoreScrHelper.h">
+      <Filter>3thpart</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\projects\lpu237_dll\inc\cash_msdata.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\server\mp_cclient_manager.h">
+      <Filter>lib\svr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cconvert.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cnamed_pipe_.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="dllmain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="pch.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\projects\lpu237_dll\tg_lpu237_dll.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\lib\src\server\mp_cclient.cpp">
+      <Filter>lib\svr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\lib\src\server\mp_cclient_cb.cpp">
+      <Filter>lib\svr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\projects\lpu237_dll\lpu237_of_client.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\3thpart\src\GemCoreScrHelper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\projects\lpu237_dll\cash_msdata.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\common\src\capi_client.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\lib\inc\mp_cnamed_pipe_.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="wi_lpu237_dll.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="tg_lpu237_dll.def">
+      <Filter>Source Files</Filter>
+    </None>
+  </ItemGroup>
+</Project>
