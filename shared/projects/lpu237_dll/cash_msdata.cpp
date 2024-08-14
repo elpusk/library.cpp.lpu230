@@ -36,7 +36,7 @@ void cash_msdata::cashing(const int n_result_index,const unsigned long n_result_
 			continue;
 		}
 		std::for_each(std::begin(s_track), std::end(s_track), [&](const wchar_t data) {
-			m_v_iso_data[i].push_back(static_cast<BYTE>(data));
+			m_v_iso_data[i].push_back(static_cast<unsigned char>(data));
 			});
 
 		m_dw_result[i] = static_cast<unsigned long>(s_track.length());

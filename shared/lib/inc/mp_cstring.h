@@ -334,7 +334,7 @@ namespace _mp{
 			va_end(ap);
 		}
 
-		static std::string get_mcsc_from_unicode(const std::wstring& s_unicode)
+		static std::string get_mcsc_from_unicode(const std::wstring& s_unicode) 
 		{
 			std::string s_mcsc;
 
@@ -342,9 +342,35 @@ namespace _mp{
 				if (s_unicode.empty())
 					continue;
 				//
-				std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
-				s_mcsc = converter.to_bytes(s_unicode);
+#ifdef _WIN32
+				size_t size_needed = 0;
+				wcstombs_s(&size_needed, nullptr, 0, s_unicode.c_str(), _TRUNCATE);
+				if (size_needed > 0)
+				{
+					s_mcsc.resize(size_needed);
+					wcstombs_s(&size_needed, &s_mcsc[0], size_needed, s_unicode.c_str(), _TRUNCATE);
+					//mbstowcs_s function copy the last NULL. but std::wstring(or std::string) no need the last NULL
+					//therefore .. need remove the last NULL from std::wstring(or std::string)
+					if (!s_mcsc.empty()) {
+						s_mcsc.resize(s_mcsc.size() - 1);
+					}
+
+				}
+#else
+				size_t size_needed = std::wcstombs(nullptr, s_unicode.c_str(), 0);
+				if (size_needed != (size_t)-1)
+				{
+					s_mcsc.resize(size_needed);
+					std::wcstombs(&s_mcsc[0], s_unicode.c_str(), size_needed);
+				}
+#endif
+				else
+				{
+					s_mcsc.clear(); //default for error
+				}
+
 			} while (false);
+
 			return s_mcsc;
 		}
 
@@ -356,8 +382,32 @@ namespace _mp{
 				if (s_mcsc.empty())
 					continue;
 				//
-				std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
-				s_unicode = converter.from_bytes(s_mcsc);
+#ifdef _WIN32
+				size_t size_needed = 0;
+				mbstowcs_s(&size_needed, nullptr, 0, s_mcsc.c_str(), _TRUNCATE);
+				if (size_needed > 0)
+				{
+					s_unicode.resize(size_needed);
+					mbstowcs_s(&size_needed, &s_unicode[0], size_needed, s_mcsc.c_str(), _TRUNCATE);
+					//mbstowcs_s function copy the last NULL. but std::wstring(or std::string) no need the last NULL
+					//therefore .. need remove the last NULL from std::wstring(or std::string)
+					if (!s_unicode.empty()) {
+						s_unicode.resize(s_unicode.size() - 1);
+					}
+				}
+#else
+				size_t size_needed = std::mbstowcs(nullptr, s_mcsc.c_str(), 0);
+				if (size_needed != (size_t)-1)
+				{
+					s_unicode.resize(size_needed);
+					std::mbstowcs(&s_unicode[0], s_mcsc.c_str(), size_needed);
+				}
+#endif
+				else
+				{
+					s_unicode.clear();//default for erro
+				}
+
 			} while (false);
 
 			return s_unicode;
@@ -366,16 +416,36 @@ namespace _mp{
 		static std::wstring get_unicode_english_error_message(boost::beast::error_code& ec)
 		{
 			std::wstring s_unicode;
+			std::string error_message = ec.message();
 
-			do {
-				std::string error_message = ec.message();
-				if (error_message.empty())
-					continue;
-
-				std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-				s_unicode = converter.from_bytes(error_message);
-			} while (false);
-
+			if (!error_message.empty())
+			{
+#ifdef _WIN32
+				size_t size_needed = 0;
+				mbstowcs_s(&size_needed, nullptr, 0, error_message.c_str(), _TRUNCATE);
+				if (size_needed > 0)
+				{
+					s_unicode.resize(size_needed);
+					mbstowcs_s(&size_needed, &s_unicode[0], size_needed, error_message.c_str(), _TRUNCATE);
+					//mbstowcs_s function copy the last NULL. but std::wstring(or std::string) no need the last NULL
+					//therefore .. need remove the last NULL from std::wstring(or std::string)
+					if (!s_unicode.empty()) {
+						s_unicode.resize(s_unicode.size() - 1);
+					}
+				}
+#else
+				size_t size_needed = std::mbstowcs(nullptr, error_message.c_str(), 0);
+				if (size_needed != (size_t)-1)
+				{
+					s_unicode.resize(size_needed);
+					std::mbstowcs(&s_unicode[0], error_message.c_str(), size_needed);
+				}
+#endif
+				else
+				{
+					s_unicode = L"conversion failed(get_unicode_english_error_message())";
+				}
+			}
 			return s_unicode;
 		}
 

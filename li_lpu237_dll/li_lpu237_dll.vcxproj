@@ -48,34 +48,42 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'" Label="Configuration">
     <UseDebugLibraries>true</UseDebugLibraries>
     <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseOfStl>libstdc++_static</UseOfStl>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'" Label="Configuration">
     <UseDebugLibraries>false</UseDebugLibraries>
     <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseOfStl>libstdc++_static</UseOfStl>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'" Label="Configuration">
     <UseDebugLibraries>true</UseDebugLibraries>
     <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseOfStl>libstdc++_static</UseOfStl>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'" Label="Configuration">
     <UseDebugLibraries>false</UseDebugLibraries>
     <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseOfStl>libstdc++_static</UseOfStl>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <UseDebugLibraries>true</UseDebugLibraries>
     <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseOfStl>libstdc++_static</UseOfStl>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <UseDebugLibraries>false</UseDebugLibraries>
     <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseOfStl>libstdc++_static</UseOfStl>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'" Label="Configuration">
     <UseDebugLibraries>false</UseDebugLibraries>
     <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseOfStl>libstdc++_static</UseOfStl>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" Label="Configuration">
     <UseDebugLibraries>true</UseDebugLibraries>
     <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseOfStl>libstdc++_static</UseOfStl>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings" />
@@ -85,69 +93,90 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/openssl-1.1.1s;/usr/local/libusb/include/libusb-1.0;/usr/local/json/include;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc</IncludePath>
     <LibraryPath>/usr/local/openssl-1.1.1s/lib;;C:\local\boost_1_80_0\stage\debug\lib;$(LibraryPath);C:\local\libusb\out\lib;C:\local\libusb\out\lib;/usr/local/lib;C:\local\libusb\out\lib;/usr/local/libusb/lib</LibraryPath>
-    <TargetName>tg_lpu237_dll</TargetName>
-    <TargetExt>.so</TargetExt>
+    <TargetName>libtg_lpu237_dll</TargetName>
+    <TargetExt>.so.0.0.0</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
     <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/openssl-1.1.1s;/usr/local/libusb/include/libusb-1.0;/usr/local/json/include;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc</IncludePath>
     <LibraryPath>/usr/local/openssl-1.1.1s/lib;C:\local\boost_1_80_0\stage\release\lib;$(LibraryPath);C:\local\libusb\out\lib;C:\local\libusb\out\lib;/usr/local/lib;C:\local\libusb\out\lib;/usr/local/libusb/lib</LibraryPath>
-    <TargetName>tg_lpu237_dll</TargetName>
-    <TargetExt>.so</TargetExt>
+    <TargetName>libtg_lpu237_dll</TargetName>
+    <TargetExt>.so.0.0.0</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/openssl-1.1.1s;/usr/local/libusb/include/libusb-1.0;/usr/local/json/include;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc</IncludePath>
     <LibraryPath>/usr/local/openssl-1.1.1s/lib;;C:\local\boost_1_80_0\stage\debug\lib;$(LibraryPath);C:\local\libusb\out\lib;C:\local\libusb\out\lib;/usr/local/lib;C:\local\libusb\out\lib;/usr/local/libusb/lib</LibraryPath>
-    <TargetName>tg_lpu237_dll</TargetName>
-    <TargetExt>.so</TargetExt>
+    <TargetName>libtg_lpu237_dll</TargetName>
+    <TargetExt>.so.0.0.0</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/openssl-1.1.1s;/usr/local/libusb/include/libusb-1.0;/usr/local/json/include;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc</IncludePath>
     <LibraryPath>/usr/local/openssl-1.1.1s/lib;C:\local\boost_1_80_0\stage\release\lib;$(LibraryPath);C:\local\libusb\out\lib;C:\local\libusb\out\lib;/usr/local/lib;C:\local\libusb\out\lib;/usr/local/libusb/lib</LibraryPath>
-    <TargetName>tg_lpu237_dll</TargetName>
-    <TargetExt>.so</TargetExt>
+    <TargetName>libtg_lpu237_dll</TargetName>
+    <TargetExt>.so.0.0.0</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/openssl-1.1.1s;/usr/local/libusb/include/libusb-1.0;/usr/local/json/include;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc</IncludePath>
     <LibraryPath>/usr/local/openssl-1.1.1s/lib;;C:\local\boost_1_80_0\stage\debug\lib;$(LibraryPath);C:\local\libusb\out\lib;C:\local\libusb\out\lib;/usr/local/lib;C:\local\libusb\out\lib;/usr/local/libusb/lib</LibraryPath>
-    <TargetName>tg_lpu237_dll</TargetName>
-    <TargetExt>.so</TargetExt>
+    <TargetName>libtg_lpu237_dll</TargetName>
+    <TargetExt>.so.0.0.0</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/openssl-1.1.1s;/usr/local/libusb/include/libusb-1.0;/usr/local/json/include;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc</IncludePath>
     <LibraryPath>/usr/local/openssl-1.1.1s/lib;C:\local\boost_1_80_0\stage\release\lib;$(LibraryPath);C:\local\libusb\out\lib;C:\local\libusb\out\lib;/usr/local/lib;C:\local\libusb\out\lib;/usr/local/libusb/lib</LibraryPath>
-    <TargetName>tg_lpu237_dll</TargetName>
-    <TargetExt>.so</TargetExt>
+    <TargetName>libtg_lpu237_dll</TargetName>
+    <TargetExt>.so.0.0.0</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
     <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/openssl-1.1.1s;/usr/local/libusb/include/libusb-1.0;/usr/local/json/include;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc</IncludePath>
     <LibraryPath>/usr/local/openssl-1.1.1s/lib;;C:\local\boost_1_80_0\stage\debug\lib;$(LibraryPath);C:\local\libusb\out\lib;C:\local\libusb\out\lib;/usr/local/lib;C:\local\libusb\out\lib;/usr/local/libusb/lib</LibraryPath>
-    <TargetName>tg_lpu237_dll</TargetName>
-    <TargetExt>.so</TargetExt>
+    <TargetName>libtg_lpu237_dll</TargetName>
+    <TargetExt>.so.0.0.0</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
     <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/openssl-1.1.1s;/usr/local/libusb/include/libusb-1.0;/usr/local/json/include;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc</IncludePath>
     <LibraryPath>/usr/local/openssl-1.1.1s/lib;C:\local\boost_1_80_0\stage\release\lib;$(LibraryPath);C:\local\libusb\out\lib;C:\local\libusb\out\lib;/usr/local/lib;C:\local\libusb\out\lib;/usr/local/libusb/lib</LibraryPath>
-    <TargetName>tg_lpu237_dll</TargetName>
-    <TargetExt>.so</TargetExt>
+    <TargetName>libtg_lpu237_dll</TargetName>
+    <TargetExt>.so.0.0.0</TargetExt>
   </PropertyGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\3thpart\inc\GemCoreScrHelper.h" />
     <ClInclude Include="..\shared\common\inc\capi_client.h" />
+    <ClInclude Include="..\shared\common\inc\cdef.h" />
     <ClInclude Include="..\shared\common\inc\ckey_map.h" />
     <ClInclude Include="..\shared\common\inc\cprotocol_lpu237.h" />
     <ClInclude Include="..\shared\common\inc\i_device_of_client.h" />
+    <ClInclude Include="..\shared\common\inc\lpu230\compiler.h" />
+    <ClInclude Include="..\shared\common\inc\lpu230\config\cfg_msrlib.h" />
+    <ClInclude Include="..\shared\common\inc\lpu230\info_msr.h" />
+    <ClInclude Include="..\shared\common\inc\lpu230\info_sys.h" />
+    <ClInclude Include="..\shared\common\inc\lpu230\info_sys_cnst.h" />
+    <ClInclude Include="..\shared\common\inc\lpu230\KBConst.h" />
     <ClInclude Include="..\shared\common\inc\manager_of_device_of_client.h" />
     <ClInclude Include="..\shared\lib\inc\mp_casync_parameter_result.h" />
     <ClInclude Include="..\shared\lib\inc\mp_casync_result_manager.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_cconsole.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cconvert.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_cfile.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_clog.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cnamed_pipe_.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_coffee.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_coperation.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_cqitem_dev.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_cqueue.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_cstring.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_csystem_.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cversion.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_cwait.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_elpusk.h" />
     <ClInclude Include="..\shared\lib\inc\mp_icprotocol.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_type.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_vcpacket.h" />
     <ClInclude Include="..\shared\lib\inc\mp_vcworker.h" />
     <ClInclude Include="..\shared\lib\inc\server\mp_cclient.h" />
     <ClInclude Include="..\shared\lib\inc\server\mp_cclient_cb.h" />
     <ClInclude Include="..\shared\lib\inc\server\mp_cclient_cb_qitem.h" />
     <ClInclude Include="..\shared\lib\inc\server\mp_cclient_manager.h" />
+    <ClInclude Include="..\shared\lib\inc\server\mp_cio_packet.h" />
     <ClInclude Include="..\shared\lib\inc\websocket\mp_cws_client.h" />
     <ClInclude Include="..\shared\lib\inc\websocket\mp_win_nt.h" />
     <ClInclude Include="..\shared\lib\inc\websocket\mp_ws_tools.h" />
@@ -157,86 +186,227 @@
     <ClInclude Include="..\shared\projects\lpu237_dll\inc\tg_lpu237_dll.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\third\project\third.project.tg_lpu237\tg_lpu237_dll\tg_lpu237_dll.cpp" />
     <ClCompile Include="..\shared\3thpart\src\GemCoreScrHelper.cpp" />
     <ClCompile Include="..\shared\common\src\capi_client.cpp" />
     <ClCompile Include="..\shared\lib\inc\mp_cnamed_pipe_.cpp" />
+    <ClCompile Include="..\shared\lib\inc\mp_csystem_.cpp" />
     <ClCompile Include="..\shared\lib\src\server\mp_cclient.cpp" />
     <ClCompile Include="..\shared\lib\src\server\mp_cclient_cb.cpp" />
     <ClCompile Include="..\shared\projects\lpu237_dll\cash_msdata.cpp" />
     <ClCompile Include="..\shared\projects\lpu237_dll\lpu237_of_client.cpp" />
+    <ClCompile Include="..\shared\projects\lpu237_dll\tg_lpu237_dll.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="li_lpu237_dll.ld">
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</RemoteCopyFile>
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</RemoteCopyFile>
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</RemoteCopyFile>
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</RemoteCopyFile>
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">true</RemoteCopyFile>
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Release|x86'">true</RemoteCopyFile>
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</RemoteCopyFile>
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</RemoteCopyFile>
+      <RemoteCopyToOutputDir Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
+      </RemoteCopyToOutputDir>
+      <RemoteCopyToOutputDir Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
+      </RemoteCopyToOutputDir>
+      <RemoteCopyToOutputDir Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </RemoteCopyToOutputDir>
+      <RemoteCopyToOutputDir Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </RemoteCopyToOutputDir>
+      <RemoteCopyToOutputDir Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
+      </RemoteCopyToOutputDir>
+      <RemoteCopyToOutputDir Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
+      </RemoteCopyToOutputDir>
+      <RemoteCopyToOutputDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </RemoteCopyToOutputDir>
+      <RemoteCopyToOutputDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </RemoteCopyToOutputDir>
+      <RemoteFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
+      </RemoteFile>
+      <RemoteFile Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
+      </RemoteFile>
+      <RemoteFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+      </RemoteFile>
+      <RemoteFile Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+      </RemoteFile>
+      <RemoteFile Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
+      </RemoteFile>
+      <RemoteFile Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
+      </RemoteFile>
+      <RemoteFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </RemoteFile>
+      <RemoteFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </RemoteFile>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x86'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+    </None>
   </ItemGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <ClCompile>
-      <PreprocessorDefinitions>__linux__;</PreprocessorDefinitions>
+      <PreprocessorDefinitions>__linux__;_DEBUG</PreprocessorDefinitions>
       <CppLanguageStandard>c++14</CppLanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)shared/projects/lpu237_dll/inc;%(ClCompile.AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>-fPIC %(AdditionalOptions)</AdditionalOptions>
+      <PositionIndependentCode>false</PositionIndependentCode>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>/usr/local/libusb/lib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <LibraryDependencies>crypto;ssl;boost_filesystem</LibraryDependencies>
+      <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_lpu237_dll/li_lpu237_dll/li_lpu237_dll.ld,-soname,libtg_lpu237_dll.so.0 %(AdditionalOptions)</AdditionalOptions>
+      <Version>false</Version>
     </Link>
+    <RemotePostBuildEvent>
+      <Command>rm $(RemoteOutDir)$(TargetName).so;rm $(RemoteOutDir)$(TargetName).so.0;ln -s $(RemoteOutDir)$(TargetFileName) $(RemoteOutDir)$(TargetName).so;
+ln -s $(RemoteOutDir)$(TargetFileName) $(RemoteOutDir)$(TargetName).so.0
+</Command>
+    </RemotePostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
     <ClCompile>
       <PreprocessorDefinitions>__linux__;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <CppLanguageStandard>c++14</CppLanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)shared/projects/lpu237_dll/inc;%(ClCompile.AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>-fPIC %(AdditionalOptions)</AdditionalOptions>
+      <PositionIndependentCode>false</PositionIndependentCode>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>/usr/local/libusb/lib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <LibraryDependencies>crypto;ssl;boost_filesystem</LibraryDependencies>
+      <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_lpu237_dll/li_lpu237_dll/li_lpu237_dll.ld,-soname,libtg_lpu237_dll.so.0 %(AdditionalOptions)</AdditionalOptions>
+      <Version>false</Version>
     </Link>
+    <RemotePostBuildEvent>
+      <Command>rm $(RemoteOutDir)$(TargetName).so;rm $(RemoteOutDir)$(TargetName).so.0;ln -s $(RemoteOutDir)$(TargetFileName) $(RemoteOutDir)$(TargetName).so;
+ln -s $(RemoteOutDir)$(TargetFileName) $(RemoteOutDir)$(TargetName).so.0
+</Command>
+    </RemotePostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <ClCompile>
-      <PreprocessorDefinitions>__linux__;</PreprocessorDefinitions>
+      <PreprocessorDefinitions>__linux__;_DEBUG</PreprocessorDefinitions>
       <CppLanguageStandard>c++14</CppLanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)shared/projects/lpu237_dll/inc;%(ClCompile.AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>-fPIC %(AdditionalOptions)</AdditionalOptions>
+      <PositionIndependentCode>false</PositionIndependentCode>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>/usr/local/libusb/lib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <LibraryDependencies>crypto;ssl;boost_filesystem</LibraryDependencies>
+      <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_lpu237_dll/li_lpu237_dll/li_lpu237_dll.ld,-soname,libtg_lpu237_dll.so.0 %(AdditionalOptions)</AdditionalOptions>
+      <Version>false</Version>
     </Link>
+    <RemotePostBuildEvent>
+      <Command>rm $(RemoteOutDir)$(TargetName).so;rm $(RemoteOutDir)$(TargetName).so.0;ln -s $(RemoteOutDir)$(TargetFileName) $(RemoteOutDir)$(TargetName).so;
+ln -s $(RemoteOutDir)$(TargetFileName) $(RemoteOutDir)$(TargetName).so.0
+</Command>
+    </RemotePostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <ClCompile>
       <PreprocessorDefinitions>__linux__;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <CppLanguageStandard>c++14</CppLanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)shared/projects/lpu237_dll/inc;%(ClCompile.AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>-fPIC %(AdditionalOptions)</AdditionalOptions>
+      <PositionIndependentCode>false</PositionIndependentCode>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>/usr/local/libusb/lib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <LibraryDependencies>crypto;ssl;boost_filesystem</LibraryDependencies>
+      <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_lpu237_dll/li_lpu237_dll/li_lpu237_dll.ld,-soname,libtg_lpu237_dll.so.0 %(AdditionalOptions)</AdditionalOptions>
+      <Version>false</Version>
     </Link>
+    <RemotePostBuildEvent>
+      <Command>rm $(RemoteOutDir)$(TargetName).so;rm $(RemoteOutDir)$(TargetName).so.0;ln -s $(RemoteOutDir)$(TargetFileName) $(RemoteOutDir)$(TargetName).so;
+ln -s $(RemoteOutDir)$(TargetFileName) $(RemoteOutDir)$(TargetName).so.0
+</Command>
+    </RemotePostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <PreprocessorDefinitions>__linux__;</PreprocessorDefinitions>
+      <PreprocessorDefinitions>__linux__;_DEBUG</PreprocessorDefinitions>
       <CppLanguageStandard>c++14</CppLanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)shared/projects/lpu237_dll/inc;%(ClCompile.AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>-fPIC %(AdditionalOptions)</AdditionalOptions>
+      <PositionIndependentCode>false</PositionIndependentCode>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>/usr/local/libusb/lib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <LibraryDependencies>crypto;ssl;boost_filesystem</LibraryDependencies>
+      <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_lpu237_dll/li_lpu237_dll/li_lpu237_dll.ld,-soname,libtg_lpu237_dll.so.0 %(AdditionalOptions)</AdditionalOptions>
+      <Version>false</Version>
     </Link>
+    <RemotePostBuildEvent>
+      <Command>rm $(RemoteOutDir)$(TargetName).so;rm $(RemoteOutDir)$(TargetName).so.0;ln -s $(RemoteOutDir)$(TargetFileName) $(RemoteOutDir)$(TargetName).so;
+ln -s $(RemoteOutDir)$(TargetFileName) $(RemoteOutDir)$(TargetName).so.0
+</Command>
+    </RemotePostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <PreprocessorDefinitions>__linux__;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <CppLanguageStandard>c++14</CppLanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)shared/projects/lpu237_dll/inc;%(ClCompile.AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>-fPIC %(AdditionalOptions)</AdditionalOptions>
+      <PositionIndependentCode>false</PositionIndependentCode>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>/usr/local/libusb/lib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <LibraryDependencies>crypto;ssl;boost_filesystem</LibraryDependencies>
+      <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_lpu237_dll/li_lpu237_dll/li_lpu237_dll.ld,-soname,libtg_lpu237_dll.so.0 %(AdditionalOptions)</AdditionalOptions>
+      <Version>false</Version>
     </Link>
+    <RemotePostBuildEvent>
+      <Command>rm $(RemoteOutDir)$(TargetName).so;rm $(RemoteOutDir)$(TargetName).so.0;ln -s $(RemoteOutDir)$(TargetFileName) $(RemoteOutDir)$(TargetName).so;
+ln -s $(RemoteOutDir)$(TargetFileName) $(RemoteOutDir)$(TargetName).so.0
+</Command>
+    </RemotePostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
     <ClCompile>
-      <PreprocessorDefinitions>__linux__;</PreprocessorDefinitions>
+      <PreprocessorDefinitions>__linux__;_DEBUG</PreprocessorDefinitions>
       <CppLanguageStandard>c++14</CppLanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)shared/projects/lpu237_dll/inc;%(ClCompile.AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>-fPIC %(AdditionalOptions)</AdditionalOptions>
+      <PositionIndependentCode>false</PositionIndependentCode>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>/usr/local/libusb/lib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <LibraryDependencies>crypto;ssl;boost_filesystem</LibraryDependencies>
+      <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_lpu237_dll/li_lpu237_dll/li_lpu237_dll.ld,-soname,libtg_lpu237_dll.so.0 %(AdditionalOptions)</AdditionalOptions>
+      <Version>false</Version>
     </Link>
+    <RemotePostBuildEvent>
+      <Command>rm $(RemoteOutDir)$(TargetName).so;rm $(RemoteOutDir)$(TargetName).so.0;ln -s $(RemoteOutDir)$(TargetFileName) $(RemoteOutDir)$(TargetName).so;
+ln -s $(RemoteOutDir)$(TargetFileName) $(RemoteOutDir)$(TargetName).so.0
+</Command>
+    </RemotePostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
     <ClCompile>
       <PreprocessorDefinitions>__linux__;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <CppLanguageStandard>c++14</CppLanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)shared/projects/lpu237_dll/inc;%(ClCompile.AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>-fPIC %(AdditionalOptions)</AdditionalOptions>
+      <PositionIndependentCode>false</PositionIndependentCode>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>/usr/local/libusb/lib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <LibraryDependencies>crypto;ssl;boost_filesystem</LibraryDependencies>
+      <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_lpu237_dll/li_lpu237_dll/li_lpu237_dll.ld,-soname,libtg_lpu237_dll.so.0 %(AdditionalOptions)</AdditionalOptions>
+      <Version>false</Version>
     </Link>
+    <RemotePostBuildEvent>
+      <Command>rm $(RemoteOutDir)$(TargetName).so;rm $(RemoteOutDir)$(TargetName).so.0;ln -s $(RemoteOutDir)$(TargetFileName) $(RemoteOutDir)$(TargetName).so;
+ln -s $(RemoteOutDir)$(TargetFileName) $(RemoteOutDir)$(TargetName).so.0
+</Command>
+    </RemotePostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />

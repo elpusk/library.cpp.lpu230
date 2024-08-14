@@ -49,6 +49,7 @@ int main(int argc, char* argv[])
 			n_result = main_wss(set_parameters);
 			continue;
 		}
+
 		if (set_parameters.find(L"/server") != std::end(set_parameters)) {
 			//run wss server
 			n_result = main_wss(set_parameters);

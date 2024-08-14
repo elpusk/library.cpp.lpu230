@@ -11,8 +11,10 @@
 
 #include <websocket/mp_win_nt.h>
 #include <mp_clog.h>
+#include <mp_coffee.h>
 
 #include <manager_of_device_of_client.h>
+#include <cdef.h>
 #include "lpu237_of_client.h"
 
 static void _process_attach(HINSTANCE hInstance);
@@ -41,10 +43,19 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 
 void _process_attach(HINSTANCE hInstance)
 {
-    _mp::clog::get_instance().config(L"elpusk", 6);
-    _mp::clog::get_instance().remove_log_files_older_then_now_day(1);
-    _mp::clog::get_instance().enable(true);
-    _mp::clog::get_instance().log_fmt(L" ***** Attach tg_lpu237_dll.dll *****\n");
+    std::wstring s_log_folder_except_backslash = cdef::get_log_folder_except_backslash();
+    std::wstring s_pipe_name_of_trace(_mp::_coffee::CONST_S_COFFEE_MGMT_TRACE_PIPE_NAME);
+
+    //setup tracing system
+    _mp::clog& log(_mp::clog::get_instance());
+    log.enable_trace(s_pipe_name_of_trace, true);
+
+    //setup logging system
+    log.config(s_log_folder_except_backslash, 3);
+    log.remove_log_files_older_then_now_day(3);
+    log.enable(true);
+    log.log_fmt(L"[I] START tg_lpu237_dll so or dll.\n");
+    log.trace(L"[I] - START tg_lpu237_dll so or dll.\n");
 }
 
 void _process_detach()

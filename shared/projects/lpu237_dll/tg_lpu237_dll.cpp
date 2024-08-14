@@ -1,5 +1,3 @@
-// tg_lpu237_dll.cpp : DLL 응용 프로그램을 위해 내보낸 함수를 정의합니다.
-//
 #include <websocket/mp_win_nt.h>
 
 #include <iostream>
@@ -13,24 +11,43 @@
 #include <iterator>
 #include <string>
 
-#include <basetsd.h>
-
 #include <mp_clog.h>
 #include <mp_cconvert.h>
 #include <cprotocol_lpu237.h>
 #include <tg_lpu237_dll.h>
+#include <mp_coffee.h>
 
 #include <manager_of_device_of_client.h>
 #include <ccb_client.h>
 #include <lpu237_of_client.h>
+#include <cdef.h>
 
 #include "GemCoreScrHelper.h"
-
 #include "cash_msdata.h"
 
 #define	LPU237_VID		0x134b
 #define	LPU237_PID		0x0206
 #define	LPU237_INF		1
+
+#ifndef _WIN32
+//linux only
+static void _so_init(void) __attribute__((constructor));
+static void _so_fini(void) __attribute__((destructor));
+//when calls dlopen().
+void _so_init(void)
+{
+	//printf("Shared library loaded\n");
+	// NOT executed
+}
+
+//when calls dlclose().
+void _so_fini(void)
+{
+	//printf("Shared library unloaded\n");
+	// NOT executed
+}
+#endif // _WIN32
+
 
 /////////////////////////////////////////////////////////////////////////
 // local class
@@ -40,9 +57,9 @@
 /////////////////////////////////////////////////////////////////////////
 // local function prototype
 /////////////////////////////////////////////////////////////////////////
-static bool _pre_check_for_scr(DWORD& dwResult, const std::wstring& sFuntionName, HANDLE hDev = NULL);
-static DWORD _post_process_for_scr_in_success_case(const _mp::type_v_buffer& vCcidRaw, const std::wstring& sFuntionName);
-static DWORD _last_result_code(DWORD dwResult, bool bSet);
+static bool _pre_check_for_scr(unsigned long& dwResult, const std::wstring& sFuntionName, HANDLE hDev = NULL);
+static unsigned long _post_process_for_scr_in_success_case(const _mp::type_v_buffer& vCcidRaw, const std::wstring& sFuntionName);
+static unsigned long _last_result_code(unsigned long dwResult, bool bSet);
 static unsigned char _last_bwi(unsigned char cBWI, bool bSet);
 
 /////////////////////////////////////////////////////////////////////////
@@ -53,7 +70,7 @@ static unsigned char _last_bwi(unsigned char cBWI, bool bSet);
 // local function body
 /////////////////////////////////////////////////////////////////////////
 
-bool _pre_check_for_scr(DWORD& dwResult, const std::wstring& sFuntionName, HANDLE hDev /*=NULL*/)
+bool _pre_check_for_scr(unsigned long& dwResult, const std::wstring& sFuntionName, HANDLE hDev /*=NULL*/)
 {
 	dwResult = 0;
 
@@ -82,14 +99,14 @@ bool _pre_check_for_scr(DWORD& dwResult, const std::wstring& sFuntionName, HANDL
 	return b_result;
 }
 
-DWORD _post_process_for_scr_in_success_case(const _mp::type_v_buffer& vCcidRaw, const std::wstring& sFuntionName)
+unsigned long _post_process_for_scr_in_success_case(const _mp::type_v_buffer& vCcidRaw, const std::wstring& sFuntionName)
 {
 	std::wstring s_hex;
 	_mp::cconvert::hex_string_from_binary(s_hex, vCcidRaw, L" ");
 	_mp::clog::get_instance().log_fmt(L" : RSP : %s\n", s_hex.c_str());
 	_mp::clog::get_instance().log_fmt(L" : RET : %s : success\n", sFuntionName.c_str());
 
-	DWORD dwResult(0);
+	unsigned long dwResult(0);
 
 	if (vCcidRaw.size() >= sizeof(gemcore_scr_interface::ccid_rdr_to_pc_header)) {
 		const gemcore_scr_interface::ccid_rdr_to_pc_header* pRsp(reinterpret_cast<const gemcore_scr_interface::ccid_rdr_to_pc_header*>(&vCcidRaw[0]));
@@ -107,10 +124,10 @@ DWORD _post_process_for_scr_in_success_case(const _mp::type_v_buffer& vCcidRaw, 
 	return dwResult;
 }
 
-DWORD _last_result_code(DWORD dwResult, bool bSet)
+unsigned long _last_result_code(unsigned long dwResult, bool bSet)
 {
-	static DWORD dwLastResult = LPU237_DLL_SCR_RESULT_STATUS_CMD_SUCCESS | LPU237_DLL_SCR_RESULT_STATUS_ICC_UNKNOWN;
-	DWORD dwLast = dwLastResult;
+	static unsigned long dwLastResult = LPU237_DLL_SCR_RESULT_STATUS_CMD_SUCCESS | LPU237_DLL_SCR_RESULT_STATUS_ICC_UNKNOWN;
+	unsigned long dwLast = dwLastResult;
 
 	if (bSet) {
 		dwLastResult = dwResult;
@@ -136,14 +153,14 @@ unsigned char _last_bwi(unsigned char cBWI, bool bSet)
 //
 // ssDevPaths == NULL : return need size of ssDevPaths. [ unit : byte ]
 // ssDevPaths != NULL : return the number of device path.
-// LPTSTR ssDevPaths : [in/out] Multi string of devices
-DWORD _CALLTYPE_ LPU237_get_list(LPTSTR ssDevPaths)
+// wchar_t* ssDevPaths : [in/out] Multi string of devices
+unsigned long _CALLTYPE_ LPU237_get_list(wchar_t* ssDevPaths)
 {
 	_mp::clog::get_instance().log_fmt(L" : CAL : LPU237_get_list\n");
 	//const std::wstring s_filter(L"hid#vid_134b&pid_0206&mi_01");
 	_mp::type_list_wstring list_filter{ L"lpu200",L"msr" };
 	_mp::type_list_wstring list_dev_path;
-	DWORD dw_dev(0);
+	unsigned long dw_dev(0);
 	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
 
 	do {
@@ -177,7 +194,7 @@ DWORD _CALLTYPE_ LPU237_get_list(LPTSTR ssDevPaths)
 *	equal to LPU237_get_list.
 *  LPU237_get_list' unicode version
 */
-DWORD _CALLTYPE_ LPU237_get_list_w(WCHAR* ssDevPaths)
+unsigned long _CALLTYPE_ LPU237_get_list_w(wchar_t* ssDevPaths)
 {
 	if (ssDevPaths)
 		return LPU237_get_list(ssDevPaths);
@@ -191,16 +208,16 @@ DWORD _CALLTYPE_ LPU237_get_list_w(WCHAR* ssDevPaths)
 *	equal to LPU237_get_list.
 *  LPU237_get_list' Multi Byte Code Set version
 */
-DWORD _CALLTYPE_ LPU237_get_list_a(CHAR* ssDevPaths)
+unsigned long _CALLTYPE_ LPU237_get_list_a(char* ssDevPaths)
 {
 	if (ssDevPaths) {
 		std::vector<wchar_t> vDevPaths(2048, 0);
-		DWORD dwResult = LPU237_get_list(&vDevPaths[0]);
+		unsigned long dwResult = LPU237_get_list(&vDevPaths[0]);
 
 		if (dwResult > 0) {
 			auto two = 0;
 			for (size_t i = 0; i < vDevPaths.size(); i++) {
-				ssDevPaths[i] = (CHAR)vDevPaths[i];
+				ssDevPaths[i] = (char)vDevPaths[i];
 				if (vDevPaths[i] == NULL) {
 					two++;
 					if (two == 2)
@@ -215,14 +232,14 @@ DWORD _CALLTYPE_ LPU237_get_list_a(CHAR* ssDevPaths)
 		return dwResult;
 	}
 	else {
-		return (LPU237_get_list(NULL) / sizeof(WCHAR));
+		return (LPU237_get_list(NULL) / sizeof(wchar_t));
 	}
 }
 
-HANDLE _CALLTYPE_ LPU237_open(LPCTSTR sDevPath)
+HANDLE _CALLTYPE_ LPU237_open(const wchar_t* sDevPath)
 {
 	HANDLE h_dev(INVALID_HANDLE_VALUE);
-	DWORD dwResult(0);
+	unsigned long dwResult(0);
 	bool b_need_close(false);
 	unsigned long n_device_index(i_device_of_client::const_invalied_device_index);
 	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
@@ -270,7 +287,7 @@ HANDLE _CALLTYPE_ LPU237_open(LPCTSTR sDevPath)
 			_mp::clog::get_instance().log_fmt(L" : RET : %s : error : cmd_enter_opos.\n", __WFUNCTION__);
 			continue;
 		}
-		h_dev = (PVOID)((ULONG_PTR)ptr_new_device->get_device_index());
+		h_dev = (HANDLE)(ptr_new_device->get_device_index());
 		_mp::clog::get_instance().log_fmt(L" : RET : %s : 0x%x\n", __WFUNCTION__, h_dev);
 	} while (0);
 
@@ -284,12 +301,12 @@ HANDLE _CALLTYPE_ LPU237_open(LPCTSTR sDevPath)
 	return h_dev;
 }
 
-HANDLE _CALLTYPE_ LPU237_open_w(CONST WCHAR* sDevPath)
+HANDLE _CALLTYPE_ LPU237_open_w(const wchar_t* sDevPath)
 {
 	return LPU237_open(sDevPath);
 }
 
-HANDLE _CALLTYPE_ LPU237_open_a(CONST CHAR* sDevPath)
+HANDLE _CALLTYPE_ LPU237_open_a(const char* sDevPath)
 {
 	if (sDevPath) {
 		std::string dev(sDevPath);
@@ -306,9 +323,9 @@ HANDLE _CALLTYPE_ LPU237_open_a(CONST CHAR* sDevPath)
 	}
 }
 
-DWORD _CALLTYPE_ LPU237_close(HANDLE hDev)
+unsigned long _CALLTYPE_ LPU237_close(HANDLE hDev)
 {
-	DWORD dwResult(LPU237_DLL_RESULT_ERROR);
+	unsigned long dwResult(LPU237_DLL_RESULT_ERROR);
 	unsigned long n_device_index(PtrToUlong(hDev));
 	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
 
@@ -341,9 +358,9 @@ DWORD _CALLTYPE_ LPU237_close(HANDLE hDev)
 	return dwResult;
 }
 
-DWORD _CALLTYPE_ LPU237_enable(HANDLE hDev)
+unsigned long _CALLTYPE_ LPU237_enable(HANDLE hDev)
 {
-	DWORD dwResult(LPU237_DLL_RESULT_ERROR);
+	unsigned long dwResult(LPU237_DLL_RESULT_ERROR);
 	unsigned long n_device_index(PtrToUlong(hDev));
 	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
 
@@ -370,9 +387,9 @@ DWORD _CALLTYPE_ LPU237_enable(HANDLE hDev)
 	return dwResult;
 }
 
-DWORD _CALLTYPE_ LPU237_disable(HANDLE hDev)
+unsigned long _CALLTYPE_ LPU237_disable(HANDLE hDev)
 {
-	DWORD dwResult(LPU237_DLL_RESULT_ERROR);
+	unsigned long dwResult(LPU237_DLL_RESULT_ERROR);
 	unsigned long n_device_index(PtrToUlong(hDev));
 	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
 
@@ -399,9 +416,9 @@ DWORD _CALLTYPE_ LPU237_disable(HANDLE hDev)
 	return dwResult;
 }
 
-DWORD _CALLTYPE_ LPU237_enter_opos(HANDLE hDev)
+unsigned long _CALLTYPE_ LPU237_enter_opos(HANDLE hDev)
 {
-	DWORD dwResult(LPU237_DLL_RESULT_ERROR);
+	unsigned long dwResult(LPU237_DLL_RESULT_ERROR);
 	unsigned long n_device_index(PtrToUlong(hDev));
 	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
 
@@ -428,9 +445,9 @@ DWORD _CALLTYPE_ LPU237_enter_opos(HANDLE hDev)
 	return dwResult;
 }
 
-DWORD _CALLTYPE_ LPU237_leave_opos(HANDLE hDev)
+unsigned long _CALLTYPE_ LPU237_leave_opos(HANDLE hDev)
 {
-	DWORD dwResult(LPU237_DLL_RESULT_ERROR);
+	unsigned long dwResult(LPU237_DLL_RESULT_ERROR);
 	unsigned long n_device_index(PtrToUlong(hDev));
 	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
 
@@ -457,9 +474,9 @@ DWORD _CALLTYPE_ LPU237_leave_opos(HANDLE hDev)
 	return dwResult;
 }
 
-DWORD _CALLTYPE_ LPU237_cancel_wait_swipe(HANDLE hDev)
+unsigned long _CALLTYPE_ LPU237_cancel_wait_swipe(HANDLE hDev)
 {
-	DWORD dwResult(LPU237_DLL_RESULT_ERROR);
+	unsigned long dwResult(LPU237_DLL_RESULT_ERROR);
 	unsigned long n_device_index(PtrToUlong(hDev));
 	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
 
@@ -488,9 +505,9 @@ DWORD _CALLTYPE_ LPU237_cancel_wait_swipe(HANDLE hDev)
 	return dwResult;
 }
 
-DWORD _CALLTYPE_ LPU237_wait_swipe_with_waits(HANDLE hDev)
+unsigned long _CALLTYPE_ LPU237_wait_swipe_with_waits(HANDLE hDev)
 {
-	DWORD dw_result(LPU237_DLL_RESULT_ERROR);
+	unsigned long dw_result(LPU237_DLL_RESULT_ERROR);
 	unsigned long n_device_index(PtrToUlong(hDev));
 	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
 
@@ -542,9 +559,9 @@ DWORD _CALLTYPE_ LPU237_wait_swipe_with_waits(HANDLE hDev)
 	return dw_result;
 }
 
-DWORD _CALLTYPE_ LPU237_wait_swipe_with_callback(HANDLE hDev, type_callback pFun, void* pParameter)
+unsigned long _CALLTYPE_ LPU237_wait_swipe_with_callback(HANDLE hDev, type_callback pFun, void* pParameter)
 {
-	DWORD dw_result(LPU237_DLL_RESULT_ERROR);
+	unsigned long dw_result(LPU237_DLL_RESULT_ERROR);
 	unsigned long n_device_index(PtrToUlong(hDev));
 	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
 
@@ -575,7 +592,7 @@ DWORD _CALLTYPE_ LPU237_wait_swipe_with_callback(HANDLE hDev, type_callback pFun
 			continue;
 		}
 
-		dw_result = (DWORD)n_result_index;
+		dw_result = (unsigned long)n_result_index;
 
 		_mp::clog::get_instance().log_fmt(L" : RET : %s : success - %u.\n", __WFUNCTION__, n_result_index);
 	} while (0);
@@ -583,9 +600,9 @@ DWORD _CALLTYPE_ LPU237_wait_swipe_with_callback(HANDLE hDev, type_callback pFun
 	return dw_result;
 }
 
-DWORD _CALLTYPE_ LPU237_wait_swipe_with_message(HANDLE hDev, HWND hWnd, UINT nMsg)
+unsigned long _CALLTYPE_ LPU237_wait_swipe_with_message(HANDLE hDev, HWND hWnd, UINT nMsg)
 {
-	DWORD dw_result(LPU237_DLL_RESULT_ERROR);
+	unsigned long dw_result(LPU237_DLL_RESULT_ERROR);
 	unsigned long n_device_index(PtrToUlong(hDev));
 	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
 
@@ -616,7 +633,7 @@ DWORD _CALLTYPE_ LPU237_wait_swipe_with_message(HANDLE hDev, HWND hWnd, UINT nMs
 			continue;
 		}
 
-		dw_result = (DWORD)n_result_index;
+		dw_result = (unsigned long)n_result_index;
 
 		_mp::clog::get_instance().log_fmt(L" : RET : %s : success - %u.\n", __WFUNCTION__, n_result_index);
 
@@ -625,9 +642,9 @@ DWORD _CALLTYPE_ LPU237_wait_swipe_with_message(HANDLE hDev, HWND hWnd, UINT nMs
 	return dw_result;
 }
 
-DWORD _CALLTYPE_ LPU237_get_data(DWORD dwBufferIndex, DWORD dwIsoTrack, BYTE* sTrackData)
+unsigned long _CALLTYPE_ LPU237_get_data(unsigned long dwBufferIndex, unsigned long dwIsoTrack, unsigned char* sTrackData)
 {
-	DWORD dw_client_result(LPU237_DLL_RESULT_ERROR);
+	unsigned long dw_client_result(LPU237_DLL_RESULT_ERROR);
 
 	static cash_msdata cash;
 	int n_result_index(-1);
@@ -710,7 +727,7 @@ DWORD _CALLTYPE_ LPU237_get_data(DWORD dwBufferIndex, DWORD dwIsoTrack, BYTE* sT
 				std::copy(std::begin(v_iso), std::end(v_iso), sTrackData);
 			}
 
-			_mp::clog::get_instance().log_fmt(L" : RET : %s : %u\n", __WFUNCTION__, static_cast<DWORD>(s_track.length()));
+			_mp::clog::get_instance().log_fmt(L" : RET : %s : %u\n", __WFUNCTION__, static_cast<unsigned long>(s_track.length()));
 			continue;
 		}//end switch
 	} while (0);
@@ -718,9 +735,24 @@ DWORD _CALLTYPE_ LPU237_get_data(DWORD dwBufferIndex, DWORD dwIsoTrack, BYTE* sT
 	return dw_client_result;
 }
 
-DWORD _CALLTYPE_ LPU237_dll_on()
+unsigned long _CALLTYPE_ LPU237_dll_on()
 {
-	DWORD dwResult(LPU237_DLL_RESULT_ERROR);
+#ifndef _WIN32
+	std::wstring s_log_folder_except_backslash = cdef::get_log_folder_except_backslash();
+	std::wstring s_pipe_name_of_trace(_mp::_coffee::CONST_S_COFFEE_MGMT_TRACE_PIPE_NAME);
+
+	//setup tracing system
+	_mp::clog& log(_mp::clog::get_instance());
+	log.enable_trace(s_pipe_name_of_trace, true);
+
+	//setup logging system
+	log.config(s_log_folder_except_backslash, 3);
+	log.remove_log_files_older_then_now_day(3);
+	log.enable(true);
+	log.log_fmt(L"[I] START tg_lpu237_dll so or dll.\n");
+	log.trace(L"[I] - START tg_lpu237_dll so or dll.\n");
+#endif
+	unsigned long dwResult(LPU237_DLL_RESULT_ERROR);
 	_mp::clog::get_instance().log_fmt(L" : CAL : %s.\n", __WFUNCTION__);
 	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
 
@@ -741,9 +773,9 @@ DWORD _CALLTYPE_ LPU237_dll_on()
 	return dwResult;
 }
 
-DWORD _CALLTYPE_ LPU237_dll_off()
+unsigned long _CALLTYPE_ LPU237_dll_off()
 {
-	DWORD dwResult(LPU237_DLL_RESULT_ERROR);
+	unsigned long dwResult(LPU237_DLL_RESULT_ERROR);
 	_mp::clog::get_instance().log_fmt(L" : CAL : %s.\n", __WFUNCTION__);
 	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
 
@@ -766,9 +798,9 @@ DWORD _CALLTYPE_ LPU237_dll_off()
 	return dwResult;
 }
 
-DWORD _CALLTYPE_ LPU237_get_id(HANDLE hDev, BYTE* sId)
+unsigned long _CALLTYPE_ LPU237_get_id(HANDLE hDev, unsigned char* sId)
 {
-	DWORD dwResult(LPU237_DLL_RESULT_ERROR);
+	unsigned long dwResult(LPU237_DLL_RESULT_ERROR);
 	unsigned long n_device_index(PtrToUlong(hDev));
 	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
 
@@ -791,7 +823,7 @@ DWORD _CALLTYPE_ LPU237_get_id(HANDLE hDev, BYTE* sId)
 		}
 		_mp::type_v_buffer v_uid = ptr_device->get_device_id();
 		//
-		std::for_each(std::begin(v_uid), std::end(v_uid), [&](BYTE id) {
+		std::for_each(std::begin(v_uid), std::end(v_uid), [&](unsigned char id) {
 			*sId = id;
 			sId++;
 			});
@@ -820,9 +852,9 @@ DWORD _CALLTYPE_ LPU237_get_id(HANDLE hDev, BYTE* sId)
 * return
 * 	concatenate Status & Error code.
 */
-DWORD _CALLTYPE_ LPU237_SCR_bypass_IccPowerOn(HANDLE hDev, BYTE cPower, BYTE* sRx, LPDWORD lpnRx)
+unsigned long _CALLTYPE_ LPU237_SCR_bypass_IccPowerOn(HANDLE hDev, unsigned char cPower, unsigned char* sRx, unsigned long* lpnRx)
 {
-	DWORD dwResult(0);
+	unsigned long dwResult(0);
 	unsigned long n_device_index(PtrToUlong(hDev));
 	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
 	do {
@@ -846,7 +878,7 @@ DWORD _CALLTYPE_ LPU237_SCR_bypass_IccPowerOn(HANDLE hDev, BYTE cPower, BYTE* sR
 		gemcore_scr_interface::CGemCoreScr_Helper::CResponse rsp(vrx);
 		_mp::type_v_buffer datafield(rsp.getCcidDataField());
 		if (sRx) { std::copy(std::begin(datafield), std::end(datafield), sRx); }
-		if (lpnRx)		*lpnRx = (DWORD)datafield.size();
+		if (lpnRx)		*lpnRx = (unsigned long)datafield.size();
 
 		dwResult = _post_process_for_scr_in_success_case(rsp.getCcidRaw(), __WFUNCTION__);
 	} while (0);
@@ -863,9 +895,9 @@ DWORD _CALLTYPE_ LPU237_SCR_bypass_IccPowerOn(HANDLE hDev, BYTE cPower, BYTE* sR
 * return
 * 	concatenate Status & Error code.
 */
-DWORD _CALLTYPE_ LPU237_SCR_bypass_IccPowerOff(HANDLE hDev)
+unsigned long _CALLTYPE_ LPU237_SCR_bypass_IccPowerOff(HANDLE hDev)
 {
-	DWORD dwResult(0);
+	unsigned long dwResult(0);
 	unsigned long n_device_index(PtrToUlong(hDev));
 	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
 	do {
@@ -909,14 +941,14 @@ DWORD _CALLTYPE_ LPU237_SCR_bypass_IccPowerOff(HANDLE hDev)
 * return
 * 	concatenate Status & Error code.
 */
-DWORD _CALLTYPE_ LPU237_SCR_bypass_XfrBlock(HANDLE hDev, BYTE cBWI,
-	CONST BYTE* sTx,
-	DWORD nTx,
-	BYTE* sRx,
-	LPDWORD lpnRx
+unsigned long _CALLTYPE_ LPU237_SCR_bypass_XfrBlock(HANDLE hDev, unsigned char cBWI,
+	const unsigned char* sTx,
+	unsigned long nTx,
+	unsigned char* sRx,
+	unsigned long* lpnRx
 )
 {
-	DWORD dwResult(0);
+	unsigned long dwResult(0);
 	unsigned long n_device_index(PtrToUlong(hDev));
 	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
 	do {
@@ -942,7 +974,7 @@ DWORD _CALLTYPE_ LPU237_SCR_bypass_XfrBlock(HANDLE hDev, BYTE cBWI,
 		gemcore_scr_interface::CGemCoreScr_Helper::CResponse rsp(vrx);
 		_mp::type_v_buffer datafield(rsp.getCcidDataField());
 		if (sRx) { std::copy(std::begin(datafield), std::end(datafield), sRx); }
-		if (lpnRx)		*lpnRx = (DWORD)datafield.size();
+		if (lpnRx)		*lpnRx = (unsigned long)datafield.size();
 
 		dwResult = _post_process_for_scr_in_success_case(rsp.getCcidRaw(), __WFUNCTION__);
 	} while (0);
@@ -963,9 +995,9 @@ DWORD _CALLTYPE_ LPU237_SCR_bypass_XfrBlock(HANDLE hDev, BYTE cBWI,
 * return
 * 	concatenate Status & Error code.
 */
-DWORD _CALLTYPE_ LPU237_SCR_bypass_GetParameters(HANDLE hDev, BYTE* sRx, LPDWORD lpnRx)
+unsigned long _CALLTYPE_ LPU237_SCR_bypass_GetParameters(HANDLE hDev, unsigned char* sRx, unsigned long* lpnRx)
 {
-	DWORD dwResult(0);
+	unsigned long dwResult(0);
 	unsigned long n_device_index(PtrToUlong(hDev));
 	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
 	do {
@@ -994,7 +1026,7 @@ DWORD _CALLTYPE_ LPU237_SCR_bypass_GetParameters(HANDLE hDev, BYTE* sRx, LPDWORD
 
 			std::copy(std::begin(datafield), std::end(datafield), &sRx[1]);
 		}
-		if (lpnRx)		*lpnRx = (DWORD)datafield.size() + 1;
+		if (lpnRx)		*lpnRx = (unsigned long)datafield.size() + 1;
 
 		dwResult = _post_process_for_scr_in_success_case(rsp.getCcidRaw(), __WFUNCTION__);
 	} while (0);
@@ -1022,17 +1054,17 @@ DWORD _CALLTYPE_ LPU237_SCR_bypass_GetParameters(HANDLE hDev, BYTE* sRx, LPDWORD
 * return
 * 	concatenate Status & Error code.
 */
-DWORD _CALLTYPE_ LPU237_SCR_bypass_SetParameters(
+unsigned long _CALLTYPE_ LPU237_SCR_bypass_SetParameters(
 	HANDLE hDev,
-	BYTE cProtocol,
-	BYTE bmFindexDindex,
-	BYTE bmTCCKST,
-	BYTE bGuardTime,
-	BYTE bWaitingInteger,
-	BYTE bIFSC//T1 only
+	unsigned char cProtocol,
+	unsigned char bmFindexDindex,
+	unsigned char bmTCCKST,
+	unsigned char bGuardTime,
+	unsigned char bWaitingInteger,
+	unsigned char bIFSC//T1 only
 )
 {
-	DWORD dwResult(0);
+	unsigned long dwResult(0);
 	unsigned long n_device_index(PtrToUlong(hDev));
 	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
 	do {
@@ -1068,9 +1100,9 @@ DWORD _CALLTYPE_ LPU237_SCR_bypass_SetParameters(
 * return
 * 	concatenate Status & Error code.
 */
-DWORD _CALLTYPE_ LPU237_SCR_bypass_ResetParameters(HANDLE hDev)
+unsigned long _CALLTYPE_ LPU237_SCR_bypass_ResetParameters(HANDLE hDev)
 {
-	DWORD dwResult(0);
+	unsigned long dwResult(0);
 	unsigned long n_device_index(PtrToUlong(hDev));
 	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
 	do {
@@ -1107,9 +1139,9 @@ DWORD _CALLTYPE_ LPU237_SCR_bypass_ResetParameters(HANDLE hDev)
 * return
 * 	concatenate Status & Error code.
 */
-DWORD _CALLTYPE_ LPU237_SCR_bypass_GetSlotStatus(HANDLE hDev)
+unsigned long _CALLTYPE_ LPU237_SCR_bypass_GetSlotStatus(HANDLE hDev)
 {
-	DWORD dwResult(0);
+	unsigned long dwResult(0);
 	unsigned long n_device_index(PtrToUlong(hDev));
 	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
 	do {
@@ -1156,14 +1188,14 @@ DWORD _CALLTYPE_ LPU237_SCR_bypass_GetSlotStatus(HANDLE hDev)
 * return
 * 	concatenate Status & Error code.
 */
-DWORD _CALLTYPE_ LPU237_SCR_bypass_Escape(HANDLE hDev,
-	CONST BYTE* sTx,
-	DWORD nTx,
-	BYTE* sRx,
-	LPDWORD lpnRx
+unsigned long _CALLTYPE_ LPU237_SCR_bypass_Escape(HANDLE hDev,
+	const unsigned char* sTx,
+	unsigned long nTx,
+	unsigned char* sRx,
+	unsigned long* lpnRx
 )
 {
-	DWORD dwResult(0);
+	unsigned long dwResult(0);
 	unsigned long n_device_index((unsigned long)PtrToUlong(hDev));
 	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
 	do {
@@ -1189,7 +1221,7 @@ DWORD _CALLTYPE_ LPU237_SCR_bypass_Escape(HANDLE hDev,
 		if (sRx) {
 			std::copy(std::begin(datafield), std::end(datafield), sRx);
 		}
-		if (lpnRx)		*lpnRx = (DWORD)datafield.size();
+		if (lpnRx)		*lpnRx = (unsigned long)datafield.size();
 
 		dwResult = _post_process_for_scr_in_success_case(rsp.getCcidRaw(), __WFUNCTION__);
 	} while (0);
@@ -1210,7 +1242,7 @@ DWORD _CALLTYPE_ LPU237_SCR_bypass_Escape(HANDLE hDev,
 * return
 * 	concatenate Status & Error code.
 */
-DWORD LPU237_SCR_helper_GetLastError()
+unsigned long LPU237_SCR_helper_GetLastError()
 {
 	return _last_result_code(0, false);
 }
@@ -1228,11 +1260,11 @@ DWORD LPU237_SCR_helper_GetLastError()
 * 	0 : result is failure.
 *	else : result is success
 */
-BOOL _CALLTYPE_ LPU237_SCR_helper_GetFirmwareVersion(HANDLE hDev, BYTE* sRx, LPDWORD lpnRx)
+BOOL _CALLTYPE_ LPU237_SCR_helper_GetFirmwareVersion(HANDLE hDev, unsigned char* sRx, unsigned long* lpnRx)
 {
 	_mp::clog::get_instance().log_fmt(L" : CAL : LPU237_SCR_helper_GetFirmwareVersion.\n");
 	_mp::type_v_buffer vtx(1, SCR_ESCAPE_CMD_GET_FW_VERSION);
-	DWORD dwResult = LPU237_SCR_bypass_Escape(hDev, &vtx[0], (DWORD)vtx.size(), sRx, lpnRx);
+	unsigned long dwResult = LPU237_SCR_bypass_Escape(hDev, &vtx[0], (unsigned long)vtx.size(), sRx, lpnRx);
 	_mp::clog::get_instance().log_fmt(L" : RET : LPU237_SCR_helper_GetFirmwareVersion.\n");
 
 	_last_result_code(dwResult, true);
@@ -1265,16 +1297,16 @@ BOOL _CALLTYPE_ LPU237_SCR_helper_GetFirmwareVersion(HANDLE hDev, BYTE* sRx, LPD
 * 	0 : result is failure.
 *	else : result is success
 */
-BOOL _CALLTYPE_ LPU237_SCR_helper_GetReaderMode(HANDLE hDev, BYTE* lpcMode)
+BOOL _CALLTYPE_ LPU237_SCR_helper_GetReaderMode(HANDLE hDev, unsigned char* lpcMode)
 {
 	_mp::clog::get_instance().log_fmt(L" : CAL : LPU237_SCR_helper_GetReaderMode.\n");
 
 	_mp::type_v_buffer vtx(2, 0), vrx(1, 0);
-	DWORD nRx(0);
+	unsigned long nRx(0);
 
 	vtx[0] = SCR_ESCAPE_CMD_SLOT_LEVEL;
 	vtx[1] = 0x00;
-	DWORD dwResult = LPU237_SCR_bypass_Escape(hDev, &vtx[0], (DWORD)vtx.size(), &vrx[0], &nRx);
+	unsigned long dwResult = LPU237_SCR_bypass_Escape(hDev, &vtx[0], (unsigned long)vtx.size(), &vrx[0], &nRx);
 	if (lpcMode)
 		*lpcMode = vrx[0];
 
@@ -1307,16 +1339,16 @@ BOOL _CALLTYPE_ LPU237_SCR_helper_GetReaderMode(HANDLE hDev, BYTE* lpcMode)
 * 	0 : result is failure.
 *	else : result is success
 */
-BOOL _CALLTYPE_ LPU237_SCR_helper_SetReaderMode(HANDLE hDev, BYTE cMode, BYTE cPower)
+BOOL _CALLTYPE_ LPU237_SCR_helper_SetReaderMode(HANDLE hDev, unsigned char cMode, unsigned char cPower)
 {
 	_mp::clog::get_instance().log_fmt(L" : CAL : LPU237_SCR_helper_SetReaderMode.\n");
 
 	_mp::type_v_buffer vtx(2, 0), vrx(1, 0);
-	DWORD nRx(0);
+	unsigned long nRx(0);
 
 	vtx[0] = SCR_ESCAPE_CMD_SLOT_LEVEL;
 	vtx[1] = cMode | cPower;
-	DWORD dwResult = LPU237_SCR_bypass_Escape(hDev, &vtx[0], (DWORD)vtx.size(), &vrx[0], &nRx);
+	unsigned long dwResult = LPU237_SCR_bypass_Escape(hDev, &vtx[0], (unsigned long)vtx.size(), &vrx[0], &nRx);
 
 	_mp::clog::get_instance().log_fmt(L" : RET : LPU237_SCR_helper_SetReaderMode.\n");
 
@@ -1339,15 +1371,15 @@ BOOL _CALLTYPE_ LPU237_SCR_helper_SetReaderMode(HANDLE hDev, BYTE cMode, BYTE cP
 * 	concatenate Status & Error code.
 */
 BOOL _CALLTYPE_ LPU237_SCR_helper_XfrBlock(HANDLE hDev,
-	CONST BYTE* sTx,
-	DWORD nTx,
-	BYTE* sRx,
-	LPDWORD lpnRx
+	const unsigned char* sTx,
+	unsigned long nTx,
+	unsigned char* sRx,
+	unsigned long* lpnRx
 )
 {
 	_mp::clog::get_instance().log_fmt(L" : CAL : LPU237_SCR_helper_XfrBlock.\n");
 
-	DWORD dwResult = LPU237_SCR_bypass_XfrBlock(hDev, _last_bwi(0, false), sTx, nTx, sRx, lpnRx);
+	unsigned long dwResult = LPU237_SCR_bypass_XfrBlock(hDev, _last_bwi(0, false), sTx, nTx, sRx, lpnRx);
 
 	_mp::clog::get_instance().log_fmt(L" : RET : LPU237_SCR_helper_XfrBlock.\n");
 
@@ -1378,18 +1410,18 @@ BOOL _CALLTYPE_ LPU237_SCR_helper_XfrBlock(HANDLE hDev,
 * 	0 : result is failure.
 *	else : result is success
 */
-BOOL _CALLTYPE_ LPU237_SCR_helper_SetCardParameters(HANDLE hDev, BYTE cProtocol, BYTE cParameter, BYTE cNewValue)
+BOOL _CALLTYPE_ LPU237_SCR_helper_SetCardParameters(HANDLE hDev, unsigned char cProtocol, unsigned char cParameter, unsigned char cNewValue)
 {
 	_mp::clog::get_instance().log_fmt(L" : CAL : LPU237_SCR_helper_SetCardParameters.\n");
 
 	_mp::type_v_buffer vtx(4, 0), vrx(1, 0);
-	DWORD nRx(0);
+	unsigned long nRx(0);
 
 	vtx[0] = SCR_ESCAPE_CMD_CARD_PARAMETERS;
 	vtx[1] = cProtocol;
 	vtx[2] = cParameter;
 	vtx[3] = cNewValue;
-	DWORD dwResult = LPU237_SCR_bypass_Escape(hDev, &vtx[0], (DWORD)vtx.size(), &vrx[0], &nRx);
+	unsigned long dwResult = LPU237_SCR_bypass_Escape(hDev, &vtx[0], (unsigned long)vtx.size(), &vrx[0], &nRx);
 
 	_mp::clog::get_instance().log_fmt(L" : RET : LPU237_SCR_helper_SetCardParameters.\n");
 
@@ -1413,7 +1445,7 @@ BOOL _CALLTYPE_ LPU237_SCR_helper_ResetCardParameters(HANDLE hDev)
 	_mp::clog::get_instance().log_fmt(L" : CAL : LPU237_SCR_helper_ResetCardParameters.\n");
 
 	_mp::type_v_buffer vtx(1, SCR_ESCAPE_CMD_RESET_CARD_PARAMETERS);
-	DWORD dwResult = LPU237_SCR_bypass_Escape(hDev, &vtx[0], (DWORD)vtx.size(), NULL, NULL);
+	unsigned long dwResult = LPU237_SCR_bypass_Escape(hDev, &vtx[0], (unsigned long)vtx.size(), NULL, NULL);
 
 	_mp::clog::get_instance().log_fmt(L" : RET : LPU237_SCR_helper_ResetCardParameters.\n");
 
@@ -1432,7 +1464,7 @@ BOOL _CALLTYPE_ LPU237_SCR_helper_ResetCardParameters(HANDLE hDev)
 * 	0 : result is failure.
 *	else : result is success
 */
-BOOL _CALLTYPE_ LPU237_SCR_helper_result_is_success(DWORD dwScrResult)
+BOOL _CALLTYPE_ LPU237_SCR_helper_result_is_success(unsigned long dwScrResult)
 {
 	if ((LPU237_DLL_SCR_RESULT_STATUS_CMD_MASK & dwScrResult) == LPU237_DLL_SCR_RESULT_STATUS_CMD_SUCCESS)
 		return TRUE;
@@ -1454,7 +1486,7 @@ BOOL _CALLTYPE_ LPU237_SCR_helper_result_is_success(DWORD dwScrResult)
 * 	0 : result is failure.
 *	else : result is success
 */
-BOOL _CALLTYPE_ LPU237_SCR_helper_SetParameters(HANDLE hDev, CONST BYTE* sAtr, DWORD nAtr)
+BOOL _CALLTYPE_ LPU237_SCR_helper_SetParameters(HANDLE hDev, const unsigned char* sAtr, unsigned long nAtr)
 {
 	_mp::clog::get_instance().log_fmt(L" : CAL : LPU237_SCR_helper_SetParameters.\n");
 
@@ -1474,12 +1506,12 @@ BOOL _CALLTYPE_ LPU237_SCR_helper_SetParameters(HANDLE hDev, CONST BYTE* sAtr, D
 		return FALSE;
 	}
 
-	DWORD dwResult(0);
+	unsigned long dwResult(0);
 
 	_last_bwi(gemcore_scr_interface::CGemCoreScr_Helper::CCardInfo::default_BWI, true);
 	gemcore_scr_interface::CGemCoreScr_Helper::CCardInfo::typeVectorParameters vParameters(card.get_parameters());
 
-	BYTE cProtocol(0), bmFindexDindex(0), bmTCCKST(0), bGuardTime(0), bWaitingInteger(0), bIFSC(0);
+	unsigned char cProtocol(0), bmFindexDindex(0), bmTCCKST(0), bGuardTime(0), bWaitingInteger(0), bIFSC(0);
 
 	if (card.get_TA2()) {
 		_mp::clog::get_instance().log_fmt(L" : INF : LPU237_SCR_helper_SetParameters :  PRESENT TA2.\n");
@@ -1586,7 +1618,7 @@ BOOL _CALLTYPE_ LPU237_SCR_helper_SetParameters(HANDLE hDev, CONST BYTE* sAtr, D
 * 	0 : result is failure.
 *	else : result is success
 */
-BOOL _CALLTYPE_ LPU237_SCR_helper_GetATRParameterString_w(WCHAR* sOut, LPDWORD lpnOut, CONST BYTE* sAtr, DWORD nAtr, WCHAR cDelimiter)
+BOOL _CALLTYPE_ LPU237_SCR_helper_GetATRParameterString_w(wchar_t* sOut, unsigned long* lpnOut, const unsigned char* sAtr, unsigned long nAtr, wchar_t cDelimiter)
 {
 	if (sAtr == NULL || lpnOut == NULL)
 		return FALSE;
@@ -1610,7 +1642,7 @@ BOOL _CALLTYPE_ LPU237_SCR_helper_GetATRParameterString_w(WCHAR* sOut, LPDWORD l
 		std::fill(sOut, &sOut[*lpnOut], 0);
 		std::copy(std::begin(sreport), std::end(sreport), sOut);
 	}
-	*lpnOut = (DWORD)sreport.size();
+	*lpnOut = (unsigned long)sreport.size();
 	return TRUE;
 }
 
@@ -1630,7 +1662,7 @@ BOOL _CALLTYPE_ LPU237_SCR_helper_GetATRParameterString_w(WCHAR* sOut, LPDWORD l
 * 	0 : result is failure.
 *	else : result is success
 */
-BOOL _CALLTYPE_ LPU237_SCR_helper_GetATRParameterString_a(CHAR* sOut, LPDWORD lpnOut, CONST BYTE* sAtr, DWORD nAtr, CHAR cDelimiter)
+BOOL _CALLTYPE_ LPU237_SCR_helper_GetATRParameterString_a(char* sOut, unsigned long* lpnOut, const unsigned char* sAtr, unsigned long nAtr, char cDelimiter)
 {
 	if (sAtr == NULL || lpnOut == NULL)
 		return FALSE;
@@ -1654,10 +1686,10 @@ BOOL _CALLTYPE_ LPU237_SCR_helper_GetATRParameterString_a(CHAR* sOut, LPDWORD lp
 		std::fill(sOut, &sOut[*lpnOut], 0);
 
 		for (size_t i = 0; i < sreport.size(); ++i) {
-			sOut[i] = static_cast<CHAR>(sreport[i]);
+			sOut[i] = static_cast<char>(sreport[i]);
 		}//
 	}
 
-	*lpnOut = (DWORD)sreport.size();
+	*lpnOut = (unsigned long)sreport.size();
 	return TRUE;
 }

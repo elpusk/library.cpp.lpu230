@@ -48,7 +48,7 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 		log.enable_trace(s_pipe_name_of_trace, true);
 
 		//setup logging system
-		log.config(s_log_folder_except_backslash, 3);
+		log.config(s_log_folder_except_backslash, 6);
 		log.remove_log_files_older_then_now_day(3);
 		log.enable(true);
 		log.log_fmt(L"[I] START LOGGING.\n");

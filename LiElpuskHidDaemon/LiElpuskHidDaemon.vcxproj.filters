@@ -43,6 +43,9 @@
     <ClCompile Include="..\shared\common\src\main_remove_cert.cpp">
       <Filter>common</Filter>
     </ClCompile>
+    <ClCompile Include="..\shared\common\src\main_remove_all.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="3thpart">

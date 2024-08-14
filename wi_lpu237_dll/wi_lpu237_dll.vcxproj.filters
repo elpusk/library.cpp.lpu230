@@ -31,6 +31,12 @@
     <Filter Include="3thpart">
       <UniqueIdentifier>{601a171d-f687-4c64-af04-d5dde118d988}</UniqueIdentifier>
     </Filter>
+    <Filter Include="common\lpu230">
+      <UniqueIdentifier>{5842b9bb-b305-43a0-82d8-b9023026442a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common\lpu230\config">
+      <UniqueIdentifier>{8a72d54a-712b-49d1-82b9-72fa8d2a1f73}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -114,6 +120,69 @@
     <ClInclude Include="..\shared\lib\inc\mp_cnamed_pipe_.h">
       <Filter>lib</Filter>
     </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cconsole.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cfile.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_clog.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_coffee.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_coperation.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cqitem_dev.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cqueue.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cstring.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_csystem_.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cwait.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_elpusk.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_type.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_vcpacket.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\server\mp_cio_packet.h">
+      <Filter>lib\svr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\lpu230\compiler.h">
+      <Filter>common\lpu230</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\lpu230\info_msr.h">
+      <Filter>common\lpu230</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\lpu230\info_sys.h">
+      <Filter>common\lpu230</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\lpu230\info_sys_cnst.h">
+      <Filter>common\lpu230</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\lpu230\KBConst.h">
+      <Filter>common\lpu230</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\lpu230\config\cfg_msrlib.h">
+      <Filter>common\lpu230\config</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\cdef.h">
+      <Filter>common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -134,9 +203,6 @@
     <ClCompile Include="..\shared\projects\lpu237_dll\lpu237_of_client.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\shared\3thpart\src\GemCoreScrHelper.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\shared\projects\lpu237_dll\cash_msdata.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -144,6 +210,12 @@
       <Filter>common</Filter>
     </ClCompile>
     <ClCompile Include="..\shared\lib\inc\mp_cnamed_pipe_.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\3thpart\src\GemCoreScrHelper.cpp">
+      <Filter>3thpart</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\lib\inc\mp_csystem_.cpp">
       <Filter>lib</Filter>
     </ClCompile>
   </ItemGroup>

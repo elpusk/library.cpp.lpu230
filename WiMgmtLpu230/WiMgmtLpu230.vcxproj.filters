@@ -92,9 +92,6 @@
     <ClInclude Include="..\shared\lib\inc\hid\mp_clibhid_dev_info.h">
       <Filter>lib\hid</Filter>
     </ClInclude>
-    <ClInclude Include="..\shared\common\inc\dev_lpu237.h">
-      <Filter>common</Filter>
-    </ClInclude>
     <ClInclude Include="..\shared\lib\inc\test\test_tp_hid.h">
       <Filter>test</Filter>
     </ClInclude>

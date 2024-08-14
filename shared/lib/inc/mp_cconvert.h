@@ -60,12 +60,12 @@ namespace _mp{
 					for (size_t i = 0; i < s_str.length(); i++) {
 						p_ss_multi_dst[i] = s_str[i];
 					}//end for
-					p_ss_multi_dst[s_str.length()] = NULL;
+					p_ss_multi_dst[s_str.length()] = L'\0';
 
 					p_ss_multi_dst = &p_ss_multi_dst[s_str.length() + 1];
 					});
 
-				*p_ss_multi_dst = NULL; //make multi string
+				*p_ss_multi_dst = L'\0'; //make multi string
 
 			} while (false);
 			return n_string;
@@ -104,12 +104,12 @@ namespace _mp{
 					for (size_t i = 0; i < s_str.length(); i++) {
 						p_ss_multi_dst[i] = s_str[i];
 					}//end for
-					p_ss_multi_dst[s_str.length()] = NULL;
+					p_ss_multi_dst[s_str.length()] = '\0';
 
 					p_ss_multi_dst = &p_ss_multi_dst[s_str.length() + 1];
 					});
 
-				*p_ss_multi_dst = NULL; //make multi string
+				*p_ss_multi_dst = '\0'; //make multi string
 
 			} while (false);
 			return n_string;
@@ -148,12 +148,12 @@ namespace _mp{
 					for (size_t i = 0; i < s_str.length(); i++) {
 						p_ss_multi_dst[i] = s_str[i];
 					}//end for
-					p_ss_multi_dst[s_str.length()] = NULL;
+					p_ss_multi_dst[s_str.length()] = L'\0';
 
 					p_ss_multi_dst = &p_ss_multi_dst[s_str.length() + 1];
 					});
 
-				*p_ss_multi_dst = NULL; //make multi string
+				*p_ss_multi_dst = L'\0'; //make multi string
 
 			} while (false);
 			return n_string;
@@ -172,7 +172,7 @@ namespace _mp{
 
 				list_s_dst.clear();
 				//
-				while (p_ss_multi_src[nOffset] != NULL) {
+				while (p_ss_multi_src[nOffset] != 0) {
 
 					pDest = &(p_ss_multi_src[nOffset]);
 					stemp = pDest;
@@ -198,7 +198,7 @@ namespace _mp{
 
 				set_s_dst.clear();
 				//
-				while (p_ss_multi_src[nOffset] != NULL) {
+				while (p_ss_multi_src[nOffset] != 0) {
 
 					pDest = &(p_ss_multi_src[nOffset]);
 					stemp = pDest;
@@ -226,7 +226,7 @@ namespace _mp{
 
 				list_s_dst.clear();
 				//
-				while (p_ss_multi_src[nOffset] != NULL) {
+				while (p_ss_multi_src[nOffset] != 0) {
 
 					pDest = &(p_ss_multi_src[nOffset]);
 					stemp = pDest;
@@ -252,7 +252,7 @@ namespace _mp{
 
 				set_s_dst.clear();
 				//
-				while (p_ss_multi_src[nOffset] != NULL) {
+				while (p_ss_multi_src[nOffset] != 0) {
 
 					pDest = &(p_ss_multi_src[nOffset]);
 					stemp = pDest;
@@ -1279,7 +1279,7 @@ namespace _mp{
 
 					v_pair_string.push_back(std::make_pair(ps_st, n_size + 1));
 
-					if (*(ps_cur + 1) == NULL) {
+					if (*(ps_cur + 1) == 0) {
 						//the last is double null. the end of multi string.
 						n_item = v_pair_string.size();
 						break;//exit for

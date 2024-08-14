@@ -175,17 +175,17 @@ bool lpu237_of_client::cmd_bypass(const _mp::type_v_buffer& v_tx, _mp::type_v_bu
                 //the first header
                 c_rx = v_in_packet[2];
                 memcpy(&dw_rx_transaction_counter, &v_in_packet[3], sizeof(dw_rx_transaction_counter));
-                c_chain = v_in_packet[3 + sizeof(DWORD)];
+                c_chain = v_in_packet[3 + sizeof(unsigned long)];
 
-                memcpy(&dw_rx_total, &v_in_packet[3 + sizeof(DWORD) + 1], sizeof(DWORD));
+                memcpy(&dw_rx_total, &v_in_packet[3 + sizeof(unsigned long) + 1], sizeof(unsigned long));
                 if (dw_rx_total == 0) {
                     v_rx.resize(0);
                     b_result = false;
                     break;
                 }
                 rxbuffer.resize(dw_rx_total, 0);
-                n_rx = c_rx - (sizeof(DWORD) + 1 + sizeof(DWORD));
-                memcpy(&rxbuffer[0], &v_in_packet[3 + sizeof(DWORD) + 1 + sizeof(DWORD)], n_rx);
+                n_rx = c_rx - (sizeof(unsigned long) + 1 + sizeof(unsigned long));
+                memcpy(&rxbuffer[0], &v_in_packet[3 + sizeof(unsigned long) + 1 + sizeof(unsigned long)], n_rx);
 
                 n_remainder = dw_rx_total - n_rx;
                 dw_rx_offset = n_rx;
@@ -194,14 +194,14 @@ bool lpu237_of_client::cmd_bypass(const _mp::type_v_buffer& v_tx, _mp::type_v_bu
                 c_rx = v_in_packet[2];
                 memcpy(&dw_rx_transaction_counter, &v_in_packet[3], sizeof(dw_rx_transaction_counter));
 
-                if ((c_chain + 1) != v_in_packet[3 + sizeof(DWORD)]) {
+                if ((c_chain + 1) != v_in_packet[3 + sizeof(unsigned long)]) {
                     v_rx.resize(0);
                     b_result = false;
                     break;
                 }
-                c_chain = v_in_packet[3 + sizeof(DWORD)];
-                n_rx = c_rx - (sizeof(DWORD) + 1);
-                memcpy(&rxbuffer[dw_rx_offset], &v_in_packet[3 + sizeof(DWORD) + 1], n_rx);
+                c_chain = v_in_packet[3 + sizeof(unsigned long)];
+                n_rx = c_rx - (sizeof(unsigned long) + 1);
+                memcpy(&rxbuffer[dw_rx_offset], &v_in_packet[3 + sizeof(unsigned long) + 1], n_rx);
                 n_remainder -= n_rx;
                 dw_rx_offset += n_rx;
             }

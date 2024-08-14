@@ -11,20 +11,45 @@
 #include <codecvt>
 
 namespace _mp{
-/*
+
 #ifdef _WIN32
+
 #define _WIDEN(x) L ## x
 #define _WIDEN2(x) _WIDEN(x)
 #define __WFILE__		_WIDEN2(__FILE__)
 #define __WFUNCTION__	_WIDEN2(__FUNCTION__)
-#else
-#define __WFILE__		std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(__FILE__)
-#define __WFUNCTION__	std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(__FUNCTION__)
-#endif
-*/
 
-#define __WFILE__		(std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(__FILE__).c_str())
-#define __WFUNCTION__	(std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(__FUNCTION__).c_str())
+#else
+
+#define __WFILE__		[=](const std::string& s_mcsc)->std::wstring{   \
+        std::wstring s_unicode; \
+	    do { \
+            if (s_mcsc.empty()) \
+                continue; \
+            size_t size_needed = std::mbstowcs(nullptr, s_mcsc.c_str(), 0); \
+            if (size_needed != (size_t)-1){ \
+                s_unicode.resize(size_needed); \
+                std::mbstowcs(&s_unicode[0], s_mcsc.c_str(), size_needed); \
+            } \
+        } while (false); \
+        return s_unicode; \
+    }(__FILE__).c_str()
+
+#define __WFUNCTION__		[=](const std::string& s_mcsc)->std::wstring{   \
+        std::wstring s_unicode; \
+	    do { \
+            if (s_mcsc.empty()) \
+                continue; \
+            size_t size_needed = std::mbstowcs(nullptr, s_mcsc.c_str(), 0); \
+            if (size_needed != (size_t)-1){ \
+                s_unicode.resize(size_needed); \
+                std::mbstowcs(&s_unicode[0], s_mcsc.c_str(), size_needed); \
+            } \
+        } while (false); \
+        return s_unicode; \
+    }(__FUNCTION__).c_str()
+
+#endif
 
 
 #define	_MP_TOOLS_CT_TYPE_IC_REQUEST_PREFIX		L"{{{{{"
@@ -51,14 +76,23 @@ namespace _mp{
 #define _MP_TOOLS_MAKE_QWORD(hi, lo)    (  (unsigned long long(unsigned long(hi) & 0xffffffff) << 32 ) | unsigned long long(unsigned long(lo) & 0xffffffff)  )
 
 #ifdef _WIN32
-#define _MP_TIMEOUT     INFINITE
-#define _PACK_BYTE
+    #define _MP_TIMEOUT     INFINITE
+    #define _PACK_BYTE
 #else
-#define    _MP_TIMEOUT     -1
-#define _PACK_BYTE  __attribute__((packed))
-#define __stdcall   __attribute__((__stdcall__))
-#define typedef unsigned long HWND
-#define typedef unsigned long UINT
+    #define    _MP_TIMEOUT     -1
+    #define _PACK_BYTE  __attribute__((packed))
+    #define __stdcall   __attribute__((__stdcall__))
+
+    #define PtrToUlong(_a)      ((unsigned long)(_a))
+    #define INVALID_HANDLE_VALUE    ((unsigned long)-1)
+    #define FALSE   0
+    #define TRUE    1
+    typedef unsigned long HWND;
+    typedef unsigned long UINT;
+    typedef unsigned long HANDLE;
+    typedef unsigned long BOOL;
+
+
 #endif // !_WIN32
 
     typedef std::vector<unsigned char> type_v_buffer;

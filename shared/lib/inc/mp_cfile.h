@@ -199,9 +199,7 @@ namespace _mp{
 				return false;
 
 #else // Non-Windows (Assumed POSIX compliant)
-
-			std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
-			std::string utf8_path = converter.to_bytes(s_in_path);
+			std::string utf8_path = cstring::get_mcsc_from_unicode(s_in_path);
 
 			// utf8_path_cstr의 사본을 생성하여 dirname과 basename에서 사용
 			char* utf8_path_cstr_dir = strdup(utf8_path.c_str());
@@ -223,9 +221,9 @@ namespace _mp{
 
 			// 변환 후 리턴
 			s_out_drive = L""; // 드라이브 문자 없음
-			s_out_dir = converter.from_bytes(dir);
-			s_out_file_name = converter.from_bytes(base);
-			s_out_ext = converter.from_bytes(ext);
+			s_out_dir = cstring::get_unicode_from_mcsc(dir);
+			s_out_file_name = cstring::get_unicode_from_mcsc(base);
+			s_out_ext = cstring::get_unicode_from_mcsc(ext);
 
 			// 할당된 메모리 해제
 			free(utf8_path_cstr_dir);

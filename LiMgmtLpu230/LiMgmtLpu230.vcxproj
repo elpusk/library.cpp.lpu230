@@ -139,7 +139,6 @@
     <ClInclude Include="..\shared\3thpart\inc\hidapi.h" />
     <ClInclude Include="..\shared\3thpart\src\linux\hidapi_libusb.h" />
     <ClInclude Include="..\shared\3thpart\src\linux\hidapi_thread_pthread.h" />
-    <ClInclude Include="..\shared\common\inc\dev_lpu237.h" />
     <ClInclude Include="..\shared\lib\inc\cert\mp_ccertificate_.h" />
     <ClInclude Include="..\shared\lib\inc\cert\mp_ccoffee_hlp_cert_.h" />
     <ClInclude Include="..\shared\lib\inc\hid\mp_clibhid.h" />

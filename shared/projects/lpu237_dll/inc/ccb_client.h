@@ -38,7 +38,7 @@ public://this class must be have a static member only.
 	//static 
 
 private:
-	static void _stdcall _resolve(unsigned long n_result, void* p_user)
+	static void __stdcall _resolve(unsigned long n_result, void* p_user)
 	{
 		do {
 			if (n_result != _mp::cclient::RESULT_SUCCESS) {
@@ -47,7 +47,7 @@ private:
 
 		} while (false);
 	}
-	static void _stdcall _connect(unsigned long n_result, void* p_user)
+	static void __stdcall _connect(unsigned long n_result, void* p_user)
 	{
 		do {
 			if (n_result != _mp::cclient::RESULT_SUCCESS) {
@@ -56,7 +56,7 @@ private:
 
 		} while (false);
 	}
-	static void _stdcall _handshake(unsigned long n_result, void* p_user)
+	static void __stdcall _handshake(unsigned long n_result, void* p_user)
 	{
 		do {
 			if (n_result != _mp::cclient::RESULT_SUCCESS) {
@@ -65,7 +65,7 @@ private:
 
 		} while (false);
 	}
-	static void _stdcall _handshake_ssl(unsigned long n_result, void* p_user)
+	static void __stdcall _handshake_ssl(unsigned long n_result, void* p_user)
 	{
 		do {
 			if (n_result != _mp::cclient::RESULT_SUCCESS) {
@@ -74,7 +74,7 @@ private:
 
 		} while (false);
 	}
-	static void _stdcall _read(char c_action_code, unsigned long n_result, unsigned long n_device_index, unsigned char c_in_id, void* p_user, unsigned long n_rx, const unsigned char* s_rx)
+	static void __stdcall _read(char c_action_code, unsigned long n_result, unsigned long n_device_index, unsigned char c_in_id, void* p_user, unsigned long n_rx, const unsigned char* s_rx)
 	{
 		bool b_result(false);
 
@@ -194,7 +194,7 @@ private:
 
 		} while (false);
 	}
-	static void _stdcall _write(unsigned long n_result, void* p_user)
+	static void __stdcall _write(unsigned long n_result, void* p_user)
 	{
 		do {
 			if (n_result != _mp::cclient::RESULT_SUCCESS) {
@@ -203,7 +203,7 @@ private:
 
 		} while (false);
 	}
-	static void _stdcall _close(unsigned long n_result, void* p_user)
+	static void __stdcall _close(unsigned long n_result, void* p_user)
 	{
 		do {
 			if (n_result != _mp::cclient::RESULT_SUCCESS) {

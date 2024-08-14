@@ -141,7 +141,7 @@ namespace _mp {
             CERT_RDN_ATTR subject_cn[1];
             subject_cn[0].pszObjId = s_id;
             subject_cn[0].dwValueType = CERT_RDN_ANY_TYPE;
-            subject_cn[0].Value.cbData = s_common_name.length() * (unsigned long)sizeof(wchar_t);
+            subject_cn[0].Value.cbData = (unsigned long)(s_common_name.length() * sizeof(wchar_t));
             subject_cn[0].Value.pbData = (unsigned char*)s_common_name.c_str();
 
             CERT_RDN rdn;

@@ -1,9 +1,10 @@
-#include "GemCoreScrHelper.h"
-
 #include <algorithm>
 #include <map>
 
 #include <mp_cconvert.h>
+
+#include <GemCoreScrHelper.h>
+
 
 namespace gemcore_scr_interface
 {

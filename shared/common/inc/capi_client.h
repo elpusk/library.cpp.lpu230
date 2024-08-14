@@ -303,29 +303,6 @@ public:
 private:
 	capi_client();
 
-	static std::wstring _get_default_dll_path()
-	{
-		static bool b_first(true);
-#ifdef _DEBUG
-#if defined _M_IX86
-		static std::wstring s_path(L"C:\\job\\framework.coffee\\Debug\\coffee_hlp_client.dll");
-#elif defined _M_X64
-		static std::wstring s_path(L"C:\\job\\framework.coffee\\x64\\Debug\\coffee_hlp_client.dll");
-#else
-#error _M_IX86 or _M_X64 must be defined.
-#endif
-		b_first = false;
-#else
-		static std::wstring s_path(L"%ProgramFiles%\\Elpusk\\00000006\\coffee_manager\\dll\\x86\\coffee_hlp_client.dll");
-		if (b_first) {
-			std::vector<wchar_t> v_ws_data(MAX_PATH + 1, 0);
-			ExpandEnvironmentStrings(s_path.c_str(), &v_ws_data[0], static_cast<DWORD>(v_ws_data.size()));
-			s_path = &v_ws_data[0];
-			b_first = false;
-		}
-#endif	//_DEBUG
-		return s_path;
-	}
 	static size_t _get_string_set_from_multi_string(std::set<std::wstring>&set_s_dst, unsigned long n_src, const unsigned char* s_src)
 	{
 		std::wstring stemp;
@@ -424,12 +401,12 @@ private:
 				for (size_t i = 0; i < s_str.length(); i++) {
 					p_ss_multi_dst[i] = s_str[i];
 				}//end for
-				p_ss_multi_dst[s_str.length()] = NULL;
+				p_ss_multi_dst[s_str.length()] = L'\0';
 
 				p_ss_multi_dst = &p_ss_multi_dst[s_str.length() + 1];
 				});
 
-			*p_ss_multi_dst = NULL; //make multi string
+			*p_ss_multi_dst = L'\0'; //make multi string
 
 		} while (false);
 		return n_string;
@@ -481,12 +458,12 @@ private:
 				for (size_t i = 0; i < s_str.length(); i++) {
 					p_ss_multi_dst[i] = s_str[i];
 				}//end for
-				p_ss_multi_dst[s_str.length()] = NULL;
+				p_ss_multi_dst[s_str.length()] = L'\0';
 
 				p_ss_multi_dst = &p_ss_multi_dst[s_str.length() + 1];
 				});
 
-			*p_ss_multi_dst = NULL; //make multi string
+			*p_ss_multi_dst = L'\0'; //make multi string
 
 		} while (false);
 		return n_string;

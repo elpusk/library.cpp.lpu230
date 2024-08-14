@@ -2882,10 +2882,11 @@ private:
 			case iso1_track:
 				dw_offset = offsetof(SYSINFO, InfoMsr[0].PrivatePrefix[0]);
 				dw_size = sizeofstructmember(SYSINFO, InfoMsr[0].PrivatePrefix[0]);
-				dw_size;
+				break;
 			case iso2_track:
 				dw_offset = offsetof(SYSINFO, InfoMsr[1].PrivatePrefix[0]);
 				dw_size = sizeofstructmember(SYSINFO, InfoMsr[1].PrivatePrefix[0]);
+				break;
 			case iso3_track:
 				dw_offset = offsetof(SYSINFO, InfoMsr[2].PrivatePrefix[0]);
 				dw_size = sizeofstructmember(SYSINFO, InfoMsr[2].PrivatePrefix[0]);
@@ -2914,10 +2915,11 @@ private:
 			case iso1_track:
 				dw_offset = offsetof(SYSINFO, InfoMsr[0].PrivatePostfix[0]);
 				dw_size = sizeofstructmember(SYSINFO, InfoMsr[0].PrivatePostfix[0]);
-				dw_size;
+				break;
 			case iso2_track:
 				dw_offset = offsetof(SYSINFO, InfoMsr[1].PrivatePostfix[0]);
 				dw_size = sizeofstructmember(SYSINFO, InfoMsr[1].PrivatePostfix[0]);
+				break;
 			case iso3_track:
 				dw_offset = offsetof(SYSINFO, InfoMsr[2].PrivatePostfix[0]);
 				dw_size = sizeofstructmember(SYSINFO, InfoMsr[2].PrivatePostfix[0]);
@@ -3133,7 +3135,7 @@ private:
 					b_result = false;
 					break;
 				}
-				out_tag.sTag[out_tag.cSize++] = static_cast<BYTE>(n_val);
+				out_tag.sTag[out_tag.cSize++] = static_cast<unsigned char>(n_val);
 			}//end for
 		} while (false);
 		return b_result;
