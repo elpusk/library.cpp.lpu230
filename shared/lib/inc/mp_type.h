@@ -21,34 +21,27 @@ namespace _mp{
 
 #else
 
-#define __WFILE__		[=](const std::string& s_mcsc)->std::wstring{   \
-        std::wstring s_unicode; \
-	    do { \
-            if (s_mcsc.empty()) \
-                continue; \
-            size_t size_needed = std::mbstowcs(nullptr, s_mcsc.c_str(), 0); \
-            if (size_needed != (size_t)-1){ \
-                s_unicode.resize(size_needed); \
-                std::mbstowcs(&s_unicode[0], s_mcsc.c_str(), size_needed); \
-            } \
-        } while (false); \
-        return s_unicode; \
-    }(__FILE__).c_str()
+    inline std::wstring _mcsc_to_unicode(const std::string& s_mcsc)
+    {
+        std::wstring s_unicode;
+        do {
+            if (s_mcsc.empty()) {
+                continue;
+            }
+            size_t size_needed = std::mbstowcs(nullptr, s_mcsc.c_str(), 0);
+            if (size_needed != (size_t)-1) {
+                s_unicode.resize(size_needed);
+                std::mbstowcs(&s_unicode[0], s_mcsc.c_str(), size_needed);
+                if (!s_unicode.empty()) {
+                    s_unicode.resize(s_unicode.size() - 1);//remove the last null
+                }
+            }
+        } while (false);
+        return s_unicode;
+    }
 
-#define __WFUNCTION__		[=](const std::string& s_mcsc)->std::wstring{   \
-        std::wstring s_unicode; \
-	    do { \
-            if (s_mcsc.empty()) \
-                continue; \
-            size_t size_needed = std::mbstowcs(nullptr, s_mcsc.c_str(), 0); \
-            if (size_needed != (size_t)-1){ \
-                s_unicode.resize(size_needed); \
-                std::mbstowcs(&s_unicode[0], s_mcsc.c_str(), size_needed); \
-            } \
-        } while (false); \
-        return s_unicode; \
-    }(__FUNCTION__).c_str()
-
+#define __WFILE__   _mp::_mcsc_to_unicode(__FILE__).c_str()
+#define __WFUNCTION__   _mp::_mcsc_to_unicode(__FUNCTION__).c_str()
 #endif
 
 
