@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  tg_lpu237_dll initial setting file
+-->
+
+<!--
+using  in version 2.0
+
+-->
+<tg_lpu237_dll
+  version ="2.0"
+  date="20240820">
+
+  <log enable="true">
+    the setting data of logging system.
+  </log>
+
+  <tls enable="true">
+    default is true. "ture" use wss, "false" use ws protocol.
+  </tls>
+
+  <server port="443">
+    on wss, default server port is 443. on ws, 80
+  </server>
+
+</tg_lpu237_dll>

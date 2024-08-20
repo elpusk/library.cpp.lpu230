@@ -52,7 +52,6 @@ namespace _mp{
 				clibhid& lib_hid(_mp::clibhid::get_instance());
 				if (lib_hid.is_ini()) {
 					clibhid_dev_info::type_set st_dev = lib_hid.get_cur_device_set();
-					cworker_ctl::type_ptr ptr(nullptr);
 					unsigned short w_device_index = 0;
 
 					for (const _mp::clibhid_dev_info& item : st_dev) {

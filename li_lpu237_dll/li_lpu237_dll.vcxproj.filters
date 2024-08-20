@@ -28,6 +28,9 @@
     <Filter Include="common\lpu230\config">
       <UniqueIdentifier>{ded65973-ad00-4ee3-9442-676263518c8d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="common\xml">
+      <UniqueIdentifier>{b1b6959e-d58e-4490-91a3-6bf091973283}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\projects\lpu237_dll\inc\tg_lpu237_dll.h">
@@ -197,5 +200,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="li_lpu237_dll.ld" />
+  </ItemGroup>
+  <ItemGroup>
+    <Xml Include="..\shared\projects\lpu237_dll\tg_lpu237_dll.xml">
+      <Filter>common\xml</Filter>
+    </Xml>
   </ItemGroup>
 </Project>

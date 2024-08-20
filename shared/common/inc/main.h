@@ -1,6 +1,7 @@
 #pragma once
 
 #include <mp_type.h>
+#include <mp_coffee.h>
 
 /**
 * shared global variable area.
@@ -11,51 +12,27 @@ class cdef_const {
 public:
 	~cdef_const() {}
 public:
-#ifdef _WIN32
 	static std::wstring get_certificate_file()
 	{
-		static std::wstring s_certificate_file = L"C:\\job\\library.cpp.lpu230\\shared\\data_for_debug\\cert\\coffee_server.crt";
+		static std::wstring s_certificate_file = _mp::_coffee::CONST_S_CERT_ABS_FULL_PATH;
 		return s_certificate_file;
 	}
 	static std::wstring get_private_key_file()
 	{
-		static std::wstring s_private_key_file = L"C:\\job\\library.cpp.lpu230\\shared\\data_for_debug\\cert\\coffee_server.key";
+		static std::wstring s_private_key_file = _mp::_coffee::CONST_S_PRIVATE_KEY_ABS_FULL_PATH;
 		return s_private_key_file;
 	}
 	static std::wstring get_log_folder_except_backslash()
 	{
-		static std::wstring s_log_folder_except_backslash = L"C:\\ProgramData\\Elpusk\\00000006\\elpusk-hid-d\\log";
+		static std::wstring s_log_folder_except_backslash = _mp::_coffee::CONST_S_LOG_DIR_EXCEPT_BACKSLASH;
 		return s_log_folder_except_backslash;
 	}
 
 	static std::wstring get_root_folder_except_backslash()
 	{
-		static std::wstring s_root_folder_except_backslash = L"C:\\job\\library.cpp.lpu230\\shared\\data_for_debug\\win\\ProgramData\\elpusk\\00000006\\vroot";
+		static std::wstring s_root_folder_except_backslash = _mp::_coffee::CONST_S_ROOT_DIR_EXCEPT_BACKSLASH;
 		return s_root_folder_except_backslash;
 	}
-#else
-	static std::wstring get_certificate_file()
-	{
-		static std::wstring s_certificate_file = L"/home/tester/projects/LiElpuskHidDaemon/bin/x64/Debug/coffee_server.crt";
-		return s_certificate_file;
-	}
-	static std::wstring get_private_key_file()
-	{
-		static std::wstring s_private_key_file = L"/home/tester/projects/LiElpuskHidDaemon/bin/x64/Debug/coffee_server.key";
-		return s_private_key_file;
-	}
-	static std::wstring get_log_folder_except_backslash()
-	{
-		static std::wstring s_log_folder_except_backslash = L"/home/tester/fordebug/var/log/elpusk/00000006/elpusk-hid-d";
-		return s_log_folder_except_backslash;
-	}
-
-	static std::wstring get_root_folder_except_backslash()
-	{
-		static std::wstring s_root_folder_except_backslash = L"/home/tester/projects/LiElpuskHidDaemon/bin/x64/vroot";
-		return s_root_folder_except_backslash;
-	}
-#endif //_WIN32
 
 private:
 	cdef_const();

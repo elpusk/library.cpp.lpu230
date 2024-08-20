@@ -143,6 +143,16 @@
     <ClCompile Include="..\shared\lib\src\cert\mp_ccoffee_hlp_cert_.cpp" />
     <ClCompile Include="..\shared\lib\src\server\mp_cctl_svr_.cpp" />
     <ClCompile Include="..\shared\lib\src\server\mp_cdev_ctl_.cpp" />
+    <ClCompile Include="..\shared\lib\src\server\mp_ckernel_ctl_.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x86'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\shared\lib\src\server\mp_cmain_ctl_.cpp" />
     <ClCompile Include="..\shared\lib\src\server\mp_cserver_.cpp" />
     <ClCompile Include="..\shared\projects\ElpuskHidDaemon\elpusk_hid_daemon.cpp" />
@@ -177,6 +187,16 @@
     <ClInclude Include="..\shared\lib\inc\path\mp_cpath.h" />
     <ClInclude Include="..\shared\lib\inc\server\mp_cdev_ctl_.h" />
     <ClInclude Include="..\shared\lib\inc\server\mp_cio_packet.h" />
+    <ClInclude Include="..\shared\lib\inc\server\mp_ckernel_ctl_.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x86'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="..\shared\lib\inc\server\mp_cmain_ctl_.h" />
     <ClInclude Include="..\shared\lib\inc\server\mp_cserver_.h" />
     <ClInclude Include="..\shared\lib\inc\server\mp_cctl_svr_.h" />
@@ -214,6 +234,10 @@
       <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</RemoteCopyFile>
       <RemoteCopyToOutputDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</RemoteCopyToOutputDir>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Xml Include="..\shared\projects\ElpuskHidDaemon\device.xml" />
+    <Xml Include="..\shared\projects\ElpuskHidDaemon\elpusk-hid-d.xml" />
   </ItemGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <Link>

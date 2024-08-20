@@ -83,10 +83,10 @@ namespace _mp {
 				case cio_packet::act_dev_independent_bootloader:
 					b_completet = _execute_independent_bootloader(request, response);
 					break;
+				*/
 				case cio_packet::act_mgmt_dev_kernel_operation:
-					b_completet = _execute_kernel(request, response);
+					b_completet = _execute_kernel(request, response).second;
 					break;
-					*/
 				default:
 					b_completet = _execute_general_error_response(request, response, cio_packet::error_reason_action_code);
 					break;
@@ -126,6 +126,113 @@ namespace _mp {
 				response.set_data_error(cio_packet::get_error_message(n_reason));
 			//
 			return true;//complete with error
+		}
+
+		type_pair_bool_result_bool_complete cdev_ctl::_execute_kernel(const cio_packet& request, cio_packet& response)
+		{
+			type_pair_bool_result_bool_complete pair_bool_result_bool_complete(true, true);
+			return pair_bool_result_bool_complete;
+			/*
+			bool b_complete(true);
+			type_list_wstring list_wstring_data_field;
+			unsigned long n_session = request.get_session_number();
+			cws_server::csession::type_ptr_session ptr_session;
+
+			bool b_result(false);
+
+			do {
+				response = request;
+				response.set_cmd(cio_packet::cmd_response);
+				response.set_data_error();//1'st strng
+
+				if (request.get_data_field_type() != cio_packet::data_field_string_utf8)
+					continue;//not supported format.
+				if (request.get_data_field(list_wstring_data_field) == 0)
+					continue;
+				// packet accept OK.
+				std::wstring s_req = list_wstring_data_field.front();
+				type_list_wstring list_token;
+				if (cconvert::tokenizer(list_token, s_req, L" ") == 0)
+					continue;//not condition
+
+				std::wstring s_action = list_token.front();	//load, unload, execute, cancel, open ,close
+				list_token.pop_front();
+				std::wstring s_type = list_token.front(); //service, device
+				list_token.pop_front();
+				//
+				if (s_type.compare(L"device") == 0) {
+					if (s_action.compare(L"open") == 0) {
+						pair_bool_result_bool_complete = _execute_open_sync(request, response);
+						b_result = pair_bool_result_bool_complete.first;
+						b_complete = pair_bool_result_bool_complete.second;
+						response.set_kernel_device_open(true);
+						continue;
+					}
+					if (s_action.compare(L"close") == 0) {
+						pair_bool_result_bool_complete = _execute_close_sync(request, response);
+						b_result = pair_bool_result_bool_complete.first;
+						b_complete = pair_bool_result_bool_complete.second;
+						response.set_kernel_device_close(true);
+						continue;
+					}
+				}
+
+				if (get_connected_session() != n_session) {
+					response.set_data_error(cio_packet::get_error_message(cio_packet::error_reason_session));
+					//push_info(_ns_tools::ct_color::COLOR_ERROR, L"%s[%c] : mismatched : session = %u", __WFUNCTION__, (wchar_t)request.get_action(), request.get_session_number());
+					continue;
+				}
+				ptr_session = cserver::get_instance().get_session(n_session);
+				if (!ptr_session)
+					continue;
+
+				if (s_type.compare(L"service") == 0) {
+					if (s_action.compare(L"execute") != 0 && s_action.compare(L"cancel") != 0) {
+						continue;
+					}
+					_ws_tools::ckernel_ctl& kernel(ptr_session->get_kernel());
+
+					type_list_wstring list_result;
+					_ns_tools::ct_async_dev& async_dev = _ns_tools::ct_universal_dev_manager::get_instance().get_async_dev(get_composite_dev_path());
+					if (!async_dev.is_open())
+						continue;
+
+					if (s_action.compare(L"execute") == 0) {
+						pair_bool_result_bool_complete = kernel.process_for_device_service_execute(
+							list_wstring_data_field
+							, list_result
+							, cdlg_page_device::_sync_dev_transmit_for_c_language
+							, async_dev.get_device_pointer()
+							, cdlg_page_device::_callback_for_service_execute
+							, this
+						);
+					}
+					else {//s_action == L"cancel"
+						pair_bool_result_bool_complete = kernel.process_for_device_service_cancel(
+							list_wstring_data_field
+							, list_result
+							, cdlg_page_device::_sync_dev_cancel_for_c_language
+							, async_dev.get_device_pointer()
+						);
+					}
+					//
+					b_result = pair_bool_result_bool_complete.first;
+					b_complete = pair_bool_result_bool_complete.second;
+
+					if (b_complete && list_result.empty()) {
+						//when requst is completed, list_result must have the returned strings.
+						continue;
+					}
+					response.set_data_by_utf8(list_result);
+					continue;
+				}
+			} while (false);
+
+			if (b_result) {
+				push_info(_ns_tools::ct_color::COLOR_NORMAL, L"_execute_kernel[%c] : pushed : session = %u", (wchar_t)request.get_action(), request.get_session_number());
+			}
+			return b_complete;//complete
+			*/
 		}
 
 		type_pair_bool_result_bool_complete cdev_ctl::_execute_open_sync(const cio_packet& request, cio_packet& response)

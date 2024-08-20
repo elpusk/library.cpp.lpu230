@@ -50,6 +50,7 @@ namespace _mp {
 		
 		bool _execute_general_error_response(cio_packet& request, cio_packet& response, cio_packet::type_error_reason n_reason = cio_packet::error_reason_none);
 
+		type_pair_bool_result_bool_complete _execute_kernel(const cio_packet& request, cio_packet& response);
 		/**
 		* for pushing request, async response
 		*/

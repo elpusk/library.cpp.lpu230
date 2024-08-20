@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  device filter for cofee manager
+-->
+
+<!--
+using  in version 1.0
+id is decimal from 1
+type is "hid" or "winusb"
+vid, pid is hex 4 digits
+inf is decimal
+-->
+<device_filter
+  version ="1.0"
+  date="01112019">
+
+  <!-- 
+  id attribute - mandotory.
+  type attribute  - mandotory.
+  vid attribute  - mandotory.
+  -->
+
+  <!-- lpu207, lpu208 lpu208d, lpu237 -->
+  <device id ="1" type="hid" vid="134b" pid="0206" inf="1">
+    lpu208d hybrid reader or lpu237 msr reader
+  </device>
+
+  <!-- elpusk hid boot loader 
+  <device id ="2" type="hid" vid="134b" pid="0243">
+    elpusk hid bootloader for LPC1343.
+  </device>
+  -->
+  <!--
+  <device id ="1" type="hid" vid="134b">
+    elpusk Co.,Ltd all usb device.
+  </device>
+ -->
+
+  <device id ="2" type="winusb" vid="0c03" pid="000a">
+    eltek rf reader
+  </device>
+
+  <device id ="3" type="winusb" vid="134b" pid="0214" inf="1">
+    elpusk winusb in only
+  </device>
+
+  <device id ="4" type="winusb" vid="134b" pid="0214" inf="2">
+    elpusk winusb in out
+  </device>
+
+</device_filter>

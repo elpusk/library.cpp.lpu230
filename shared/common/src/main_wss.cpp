@@ -29,11 +29,11 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 	std::wstring s_log_folder_except_backslash = cdef_const::get_log_folder_except_backslash();
 	std::wstring s_root_folder_except_backslash = cdef_const::get_root_folder_except_backslash();
 
-	do {/*
+	do {
 		if (!_mp::csystem::daemonize_on_linux(L"elpusk-hid-daemon", _signal_handler)) {
 			continue;
 		}
-		*/
+		
 		//check single instance
 		ptr_file_lock_for_single_instance = _mp::csystem::get_file_lock_for_single_instance(_mp::_coffee::CONST_S_COFFEE_MGMT_FILE_LOCK_FOR_SINGLE);
 		if (!ptr_file_lock_for_single_instance) {

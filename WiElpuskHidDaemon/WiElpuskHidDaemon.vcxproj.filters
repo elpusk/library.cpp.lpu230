@@ -46,6 +46,9 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
     </Filter>
+    <Filter Include="common\xml">
+      <UniqueIdentifier>{e3edd3bc-c820-4b7e-8292-2556ff8ccd06}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\shared\projects\ElpuskHidDaemon\elpusk_hid_daemon.cpp">
@@ -92,6 +95,9 @@
     </ClCompile>
     <ClCompile Include="..\shared\common\src\main_remove_all.cpp">
       <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\lib\src\server\mp_ckernel_ctl_.cpp">
+      <Filter>lib\svr</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -200,5 +206,16 @@
     <ClInclude Include="..\shared\common\inc\main.h">
       <Filter>common</Filter>
     </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\server\mp_ckernel_ctl_.h">
+      <Filter>lib\svr</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Xml Include="..\shared\projects\ElpuskHidDaemon\elpusk-hid-d.xml">
+      <Filter>common\xml</Filter>
+    </Xml>
+    <Xml Include="..\shared\projects\ElpuskHidDaemon\device.xml">
+      <Filter>common\xml</Filter>
+    </Xml>
   </ItemGroup>
 </Project>

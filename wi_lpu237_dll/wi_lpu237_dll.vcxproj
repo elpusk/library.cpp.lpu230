@@ -252,6 +252,9 @@
   <ItemGroup>
     <None Include="tg_lpu237_dll.def" />
   </ItemGroup>
+  <ItemGroup>
+    <Xml Include="..\shared\projects\lpu237_dll\tg_lpu237_dll.xml" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

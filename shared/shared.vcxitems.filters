@@ -67,6 +67,12 @@
     <Filter Include="lib\inc\_dev">
       <UniqueIdentifier>{ce771d09-a82e-4623-9343-c5b95590824c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="projects\ElpuskHidDaemon">
+      <UniqueIdentifier>{57ace2e6-1d93-4c1b-8ba9-928c4a68d95d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="projects\tg_lpu237_dll">
+      <UniqueIdentifier>{323bdda4-b68d-47dc-b9ec-5ca0a0229399}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)3thpart\src\win\hidapi_descriptor_reconstruct.c">
@@ -127,6 +133,9 @@
       <Filter>common\src</Filter>
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)lib\src\server\mp_cclient_cb.cpp">
+      <Filter>lib\inc\svr</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)lib\src\server\mp_ckernel_ctl_.cpp">
       <Filter>lib\inc\svr</Filter>
     </ClCompile>
   </ItemGroup>
@@ -296,8 +305,22 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\server\mp_cclient_manager.h">
       <Filter>lib\inc\svr</Filter>
     </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\server\mp_ckernel_ctl_.h">
+      <Filter>lib\inc\svr</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)..\README.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <Xml Include="$(MSBuildThisFileDirectory)projects\lpu237_dll\tg_lpu237_dll.xml">
+      <Filter>projects\tg_lpu237_dll</Filter>
+    </Xml>
+    <Xml Include="$(MSBuildThisFileDirectory)projects\ElpuskHidDaemon\device.xml">
+      <Filter>projects\ElpuskHidDaemon</Filter>
+    </Xml>
+    <Xml Include="$(MSBuildThisFileDirectory)projects\ElpuskHidDaemon\elpusk-hid-d.xml">
+      <Filter>projects\ElpuskHidDaemon</Filter>
+    </Xml>
   </ItemGroup>
 </Project>

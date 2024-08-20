@@ -31,6 +31,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)lib\src\server\mp_cclient_cb.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)lib\src\server\mp_cctl_svr_.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)lib\src\server\mp_cdev_ctl_.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)lib\src\server\mp_ckernel_ctl_.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)lib\src\server\mp_cmain_ctl_.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)lib\src\server\mp_cserver_.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)projects\MgmtLpu230\src\mgmt_lpu230.cpp" />
@@ -82,6 +83,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\server\mp_cclient_manager.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\server\mp_cdev_ctl_.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\server\mp_cio_packet.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\server\mp_ckernel_ctl_.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\server\mp_cmain_ctl_.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\server\mp_cserver_.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\server\mp_cctl_svr_.h" />
@@ -94,5 +96,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)..\README.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <Xml Include="$(MSBuildThisFileDirectory)projects\ElpuskHidDaemon\device.xml" />
+    <Xml Include="$(MSBuildThisFileDirectory)projects\ElpuskHidDaemon\elpusk-hid-d.xml" />
+    <Xml Include="$(MSBuildThisFileDirectory)projects\lpu237_dll\tg_lpu237_dll.xml" />
   </ItemGroup>
 </Project>

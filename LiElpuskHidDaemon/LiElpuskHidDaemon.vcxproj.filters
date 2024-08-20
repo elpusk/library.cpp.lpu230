@@ -46,6 +46,9 @@
     <ClCompile Include="..\shared\common\src\main_remove_all.cpp">
       <Filter>common</Filter>
     </ClCompile>
+    <ClCompile Include="..\shared\lib\src\server\mp_ckernel_ctl_.cpp">
+      <Filter>lib\svr</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="3thpart">
@@ -89,6 +92,9 @@
     </Filter>
     <Filter Include="common">
       <UniqueIdentifier>{dc6ae2d9-db0d-4e14-99cc-816614a8a6de}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common\xml">
+      <UniqueIdentifier>{c8f58440-f1a4-4289-85d9-bc7060f68d23}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -206,10 +212,21 @@
     <ClInclude Include="..\shared\common\inc\main.h">
       <Filter>common</Filter>
     </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\server\mp_ckernel_ctl_.h">
+      <Filter>lib\svr</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="elpusk-hid-d.service">
       <Filter>setting\/etc/systemd/system</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Xml Include="..\shared\projects\ElpuskHidDaemon\elpusk-hid-d.xml">
+      <Filter>common\xml</Filter>
+    </Xml>
+    <Xml Include="..\shared\projects\ElpuskHidDaemon\device.xml">
+      <Filter>common\xml</Filter>
+    </Xml>
   </ItemGroup>
 </Project>

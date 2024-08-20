@@ -572,7 +572,7 @@ namespace _mp {
 				}
 
 				// each kernel request is executed.
-				_ws_tools::ckernel& kernel(ptr_session->get_kernel());
+				_ws_tools::ckernel_ctl& kernel(ptr_session->get_kernel());
 
 				type_list_wstring list_result;
 

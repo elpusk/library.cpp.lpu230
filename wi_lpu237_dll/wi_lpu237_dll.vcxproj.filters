@@ -37,6 +37,9 @@
     <Filter Include="common\lpu230\config">
       <UniqueIdentifier>{8a72d54a-712b-49d1-82b9-72fa8d2a1f73}</UniqueIdentifier>
     </Filter>
+    <Filter Include="common\xml">
+      <UniqueIdentifier>{22cf9857-f7fa-49bf-9d10-6129b37a80c6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -228,5 +231,10 @@
     <None Include="tg_lpu237_dll.def">
       <Filter>Source Files</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Xml Include="..\shared\projects\lpu237_dll\tg_lpu237_dll.xml">
+      <Filter>common\xml</Filter>
+    </Xml>
   </ItemGroup>
 </Project>
