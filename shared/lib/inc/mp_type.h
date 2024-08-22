@@ -24,17 +24,16 @@ namespace _mp{
     inline std::wstring _mcsc_to_unicode(const std::string& s_mcsc)
     {
         std::wstring s_unicode;
+        std::vector<wchar_t> v_unicode;
         do {
             if (s_mcsc.empty()) {
                 continue;
             }
             size_t size_needed = std::mbstowcs(nullptr, s_mcsc.c_str(), 0);
             if (size_needed != (size_t)-1) {
-                s_unicode.resize(size_needed);
-                std::mbstowcs(&s_unicode[0], s_mcsc.c_str(), size_needed);
-                if (!s_unicode.empty()) {
-                    s_unicode.resize(s_unicode.size() - 1);//remove the last null
-                }
+                v_unicode.resize(size_needed+1,0);
+                std::mbstowcs(&v_unicode[0], s_mcsc.c_str(), size_needed);
+                s_unicode = &v_unicode[0];
             }
         } while (false);
         return s_unicode;

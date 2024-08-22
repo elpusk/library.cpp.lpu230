@@ -107,8 +107,13 @@ namespace _mp {
 
 	/**
 	* in this funcation, parent process will be terminated with _exit(0)
+	* @parameter s_cur_dir_abs_with_slash - current directory with slash, abs path. 
 	*/
-	bool csystem::daemonize_on_linux(const std::wstring& s_daemon_name,void(*signal_handler)(int))
+	bool csystem::daemonize_on_linux(
+		const std::wstring& s_daemon_pid_file_full_path, 
+		const std::wstring& s_cur_dir_abs_with_slash,
+		void(*signal_handler)(int)
+	)
 	{
 		bool b_result(false);
 
@@ -135,9 +140,11 @@ namespace _mp {
 			if (setsid() < 0) {
 				continue;
 			}
+			signal(SIGCHLD, SIG_IGN);
+			signal(SIGHUP, SIG_IGN); // ignore SIGHUP
+
 			// here
 			// sid == pgid == pid & ppid == 1
-
 			pid = fork();
 			if (pid < 0) {
 				continue;//Fork failed
@@ -150,18 +157,28 @@ namespace _mp {
 			// here
 			// sid == pgid != pid & ppid == 1
 
+			// Change the file mode mask
+			umask(0);
+
 			// Change the current working directory
-			if ((chdir("/")) < 0) {
-				continue;
+			if(!s_cur_dir_abs_with_slash.empty()){
+				std::string s_cur = cstring::get_mcsc_from_unicode(s_cur_dir_abs_with_slash);
+				if (!s_cur.empty()) {
+					if (chdir(s_cur.c_str()) < 0) {
+						continue;
+					}
+				}
+			}
+			else {
+				if (chdir("/") < 0) {
+					continue;
+				}
 			}
 
 			// Close out the standard file descriptors
 			close(STDIN_FILENO);
 			close(STDOUT_FILENO);
 			close(STDERR_FILENO);
-
-            // Change the file mode mask
-            umask(0);
 
             // Redirect standard files to /dev/null
 			stdin = freopen("/dev/null", "r", stdin);
@@ -171,9 +188,16 @@ namespace _mp {
 			signal(SIGTERM, signal_handler);
 			signal(SIGHUP, signal_handler);
 
-			if (!s_daemon_name.empty()) {
+			if (!s_daemon_pid_file_full_path.empty()) {
 				//create PID file
-
+				std::string s_pid = cstring::get_mcsc_from_unicode(s_daemon_pid_file_full_path);
+				if (!s_pid.empty()) {
+					std::ofstream pid_file(s_pid.c_str());
+					if (pid_file.is_open()) {
+						pid_file << getpid() << std::endl;
+						pid_file.close();
+					}
+				}
 			}
 
 			b_result = true;

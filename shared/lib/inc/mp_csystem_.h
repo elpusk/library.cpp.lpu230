@@ -20,8 +20,9 @@ namespace _mp {
 
 		/**
 		* in this funcation, parent process will be terminated with _exit(0)
+		* @parameter s_cur_dir_abs_with_slash - current directory with slash, abs path. 
 		*/
-		static bool daemonize_on_linux(const std::wstring  & s_daemon_name,void(*signal_handler)(int));
+		static bool daemonize_on_linux(const std::wstring  & s_daemon_pid_file_full_path, const std::wstring& s_cur_dir_abs_with_slash, void(*signal_handler)(int));
 
 	public:
 		virtual ~csystem();

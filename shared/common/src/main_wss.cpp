@@ -28,15 +28,18 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 
 	std::wstring s_log_folder_except_backslash = cdef_const::get_log_folder_except_backslash();
 	std::wstring s_root_folder_except_backslash = cdef_const::get_root_folder_except_backslash();
+	std::wstring s_pid_file_full_path = cdef_const::get_pid_file_full_path();
 
 	do {
-		if (!_mp::csystem::daemonize_on_linux(L"elpusk-hid-daemon", _signal_handler)) {
+		if (!_mp::csystem::daemonize_on_linux(s_pid_file_full_path, std::wstring(), _signal_handler)) {
+			n_result = cdef_const::exit_error_daemonize;
 			continue;
 		}
 		
 		//check single instance
 		ptr_file_lock_for_single_instance = _mp::csystem::get_file_lock_for_single_instance(_mp::_coffee::CONST_S_COFFEE_MGMT_FILE_LOCK_FOR_SINGLE);
 		if (!ptr_file_lock_for_single_instance) {
+			n_result = cdef_const::exit_error_already_running;
 			continue;//Another instance is already running.
 		}
 
@@ -57,10 +60,12 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 		if (!gptr_ctl_pipe) {
 			log.log_fmt(L"[E] %ls | create controller pipe.\n", __WFUNCTION__);
 			log.trace(L"[E] - %ls | create controller pipe.\n", __WFUNCTION__);
+			n_result = cdef_const::exit_error_create_ctl_pipe;
 			continue;
 		}
 
 #ifndef _WIN32
+		log.log_fmt(L"[I] - sid: %5d, pgid: %5d, pid: %5d, ppid: %5d.\n", (int)getsid(0), (int)getpgid(0), (int)getpid(), (int)getppid());
 		log.trace(L"[I] - sid: %5d, pgid: %5d, pid: %5d, ppid: %5d.\n", (int)getsid(0), (int)getpgid(0), (int)getpid(), (int)getppid());
 #endif
 
@@ -76,7 +81,8 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 
 		if (!_mp::cserver::get_instance().start(n_thread_for_server, s_root_folder_except_backslash)) {
 			log.log_fmt(L"[E] %ls | cserver::get_instance().start().\n", __WFUNCTION__);
-			//log.trace(L"[E] - %ls | cserver::get_instance().start().\n", __WFUNCTION__);
+			log.trace(L"[E] - %ls | cserver::get_instance().start().\n", __WFUNCTION__);
+			n_result = cdef_const::exit_error_start_server;
 			continue;
 		}
 		n_result = EXIT_SUCCESS;
@@ -89,7 +95,8 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 				if (s_data.compare(_mp::_coffee::CONST_S_COFFEE_MGMT_CTL_REQ) == 0) {
 					gb_run_main_loop = false;
 					log.log_fmt(L"[I] %ls | req - server stop.\n", __WFUNCTION__);
-					//log.trace(L"[I] - %ls | req - server stop.\n", __WFUNCTION__);
+					log.trace(L"[I] - %ls | req - server stop.\n", __WFUNCTION__);
+					n_result = cdef_const::exit_info_ctl_pipe_requst_terminate;
 					continue;
 				}
 				s_data.clear();
@@ -101,7 +108,7 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 
 		_mp::cserver::get_instance().stop();
 		log.log_fmt(L"[I] %ls | cserver::get_instance().stop().\n", __WFUNCTION__);
-		//log.trace(L"[I] - %ls | cserver::get_instance().stop().\n", __WFUNCTION__);
+		log.trace(L"[I] - %ls | cserver::get_instance().stop().\n", __WFUNCTION__);
 
 	} while (false);
 
@@ -117,7 +124,7 @@ void _signal_handler(int signum)
 		if (signum == SIGTERM) {
 			// Handle termination gracefully
 			if (!gptr_ctl_pipe) {
-				exit(EXIT_SUCCESS);
+				_exit(EXIT_SUCCESS);
 			}
 
 			gb_run_main_loop = false;

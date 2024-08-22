@@ -360,8 +360,11 @@ namespace _mp{
 				size_t size_needed = std::wcstombs(nullptr, s_unicode.c_str(), 0);
 				if (size_needed != (size_t)-1)
 				{
-					s_mcsc.resize(size_needed);
-					std::wcstombs(&s_mcsc[0], s_unicode.c_str(), size_needed);
+					std::vector<char> v_mcsc(size_needed+1, 0);
+					if (!v_mcsc.empty()) {
+						std::wcstombs(&v_mcsc[0], s_unicode.c_str(), size_needed);
+						s_mcsc = &v_mcsc[0];
+					}
 				}
 #endif
 				else
@@ -399,8 +402,11 @@ namespace _mp{
 				size_t size_needed = std::mbstowcs(nullptr, s_mcsc.c_str(), 0);
 				if (size_needed != (size_t)-1)
 				{
-					s_unicode.resize(size_needed);
-					std::mbstowcs(&s_unicode[0], s_mcsc.c_str(), size_needed);
+					std::vector<wchar_t> v_unicode(size_needed + 1, 0);
+					if (!v_unicode.empty()) {
+						std::mbstowcs(&v_unicode[0], s_mcsc.c_str(), size_needed);
+						s_unicode = &v_unicode[0];
+					}
 				}
 #endif
 				else

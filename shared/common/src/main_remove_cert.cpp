@@ -11,6 +11,7 @@
  */
 int main_remove_cert(const _mp::type_set_wstring& set_parameters)
 {
+	int n_result(EXIT_FAILURE);
 	std::wstring s_server_certificate_file = cdef_const::get_certificate_file();
 	std::wstring s_server_private_key_file = cdef_const::get_private_key_file();
 
@@ -40,9 +41,11 @@ int main_remove_cert(const _mp::type_set_wstring& set_parameters)
 		}()
 			) {
 		_mp::clog::get_instance().trace(L"[I] - %ls - %ls - remove certificates.\n", __WFILE__, __WFUNCTION__);
+		n_result = EXIT_SUCCESS;
 	}
 	else {
 		_mp::clog::get_instance().trace(L"[E] - %ls - %ls - remove certificates.\n", __WFILE__, __WFUNCTION__);
+		n_result = cdef_const::exit_error_remove_cert;
 	}
 
 	return 0;

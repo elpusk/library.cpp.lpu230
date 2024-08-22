@@ -16,8 +16,29 @@ int main_trace(const _mp::type_set_wstring& set_parameters)
 	do {
 		ptr_ctl_pipe = _mp::clog::get_trace_client(_mp::_coffee::CONST_S_COFFEE_MGMT_TRACE_PIPE_NAME);
 		if (!ptr_ctl_pipe) {
+			n_result = cdef_const::exit_error_get_ctl_pipe;
+			std::wcout << L"Error Server trace source open.\n";
 			continue;
 		}
+
+		if(!ptr_ctl_pipe->is_ini()){
+			//
+			std::wcout << L"None Server trace source.\ncontinue... detecting.\n";
+			std::wcout << L"For stop, Press Ctl+c for breaking.\n";
+
+			do {
+				ptr_ctl_pipe = _mp::clog::get_trace_client(_mp::_coffee::CONST_S_COFFEE_MGMT_TRACE_PIPE_NAME);
+				if (!ptr_ctl_pipe) {
+					std::wcout << L"Error Server trace source open.\n";
+					break;
+				}
+			} while (!ptr_ctl_pipe->is_ini());
+			if (!ptr_ctl_pipe) {
+				continue;
+			}
+		}
+
+		std::wcout << L"Found Server trace source.\n";
 
 		std::wstring s_data;
 		bool b_run = true;
