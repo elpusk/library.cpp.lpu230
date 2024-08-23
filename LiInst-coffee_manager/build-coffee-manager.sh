@@ -15,6 +15,7 @@ CF_ROOT_LOG_DIR="/var/log/elpusk/00000006/coffee_manager"
 
 
 # create directory 
+mkdir -p ${BUILD_DIR}/etc/systemd/system/
 mkdir -p ${BUILD_DIR}${CF_ROOT_PD_DIR}/bin/
 mkdir -p ${BUILD_DIR}${CF_ROOT_PD_DIR}/so/
 mkdir -p ${BUILD_DIR}${CF_ROOT_DD_DIR}/elpusk-hid-d/
@@ -47,13 +48,14 @@ Description: Coffee Manager Package
 EOF
 
 # create coffee-manager.service
-cat <<EOF > /etc/systemd/system/coffee-manager.service
+cat <<EOF > ${BUILD_DIR}/etc/systemd/system/coffee-manager.service
 [Unit]
 Description=coffee manager v2.01
 After=network.target
 
 [Service]
 Type=forking
+PIDFile=/var/run/elpusk-hid-d.pid
 ExecStart=/usr/share/elpusk/program/00000006/coffee_manager/bin/elpusk-hid-d
 Restart=on-failure
 RestartSec=3s
@@ -90,10 +92,9 @@ cat <<EOF > ${DEBIAN_DIR}/prerm
 set -e
 
 # stop daemon and remove daemon
-systemctl stop coffee-manager.service
-systemctl disable coffee-manager.service
-
 if [ -f /etc/systemd/system/coffee-manager.service ]; then
+    systemctl stop coffee-manager.service
+    systemctl disable coffee-manager.service
     rm -f /etc/systemd/system/coffee-manager.service
     systemctl daemon-reload
 fi
@@ -108,6 +109,20 @@ fi
 
 if [ -f ${CF_ROOT_DD_DIR}/data/server/coffee_server.key ]; then
     rm -f ${CF_ROOT_DD_DIR}/data/server/coffee_server.key
+fi
+
+# remove log files
+read -p "Remove log files? (yes/no): " answer
+
+# to lowercase
+answer=\$(echo "\$answer" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')
+
+if [[ "\$answer"=="yes" || "\$answer"=="y" ]]; then
+    rm -rf ${CF_ROOT_LOG_DIR}/elpusk-hid-d/*
+    rm -rf ${CF_ROOT_LOG_DIR}/tg_lpu237_dll/*
+    echo "Log files have been removed."
+else
+    echo "Operation canceled."
 fi
 
 exit 0
