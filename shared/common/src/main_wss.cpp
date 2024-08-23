@@ -1,8 +1,10 @@
 #include <websocket/mp_win_nt.h>
 
+#include <cstdio>
 #include <main.h>
 
 #include <mp_coffee.h>
+#include <mp_cstring.h>
 #include <mp_clog.h>
 #include <mp_csystem_.h>
 #include <websocket/mp_cws_server.h>
@@ -19,6 +21,8 @@ static void _signal_handler(int signum);
 */
 int main_wss(const _mp::type_set_wstring &set_parameters)
 {
+	bool b_need_remove_pid_file(false);
+
 	int n_result(EXIT_FAILURE);
 	std::shared_ptr<boost::interprocess::file_lock> ptr_file_lock_for_single_instance;
 	std::wstring s_pipe_name_of_trace(_mp::_coffee::CONST_S_COFFEE_MGMT_TRACE_PIPE_NAME);
@@ -35,6 +39,8 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 			n_result = cdef_const::exit_error_daemonize;
 			continue;
 		}
+
+		b_need_remove_pid_file = true;
 		
 		//check single instance
 		ptr_file_lock_for_single_instance = _mp::csystem::get_file_lock_for_single_instance(_mp::_coffee::CONST_S_COFFEE_MGMT_FILE_LOCK_FOR_SINGLE);
@@ -112,6 +118,13 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 
 	} while (false);
 
+#ifndef _WIN32
+	//linux only
+	if (b_need_remove_pid_file) {//normally! removed pid file.
+		std::string s_pid_file = _mp::cstring::get_mcsc_from_unicode(s_pid_file_full_path);
+		remove(s_pid_file.c_str());
+	}
+#endif
 	return n_result;
 }
 

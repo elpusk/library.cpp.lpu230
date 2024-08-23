@@ -5,6 +5,7 @@
 #include <iostream>
 #include <fstream>
 #include <stdexcept>
+#include <memory>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -15,6 +16,7 @@
 #include <sys/stat.h>
 #include <signal.h>
 #include <fcntl.h>
+#include <cstdio>  
 #endif
 
 #include <mp_csystem_.h>
@@ -116,20 +118,43 @@ namespace _mp {
 	)
 	{
 		bool b_result(false);
+		std::string s_pid_file = cstring::get_mcsc_from_unicode(s_daemon_pid_file_full_path);
+		std::shared_ptr<std::ofstream> ptr_pid_file;
 
 		do {
 #ifdef _WIN32
             b_result = true;//on windows, nothing to do.
 #else
+			if (!s_pid_file.empty()) {
+				//create PID file
+				ptr_pid_file = std::make_shared<std::ofstream>(s_pid_file.c_str(), std::ofstream::out | std::ofstream::trunc);
+				if (!ptr_pid_file) {
+					continue;
+				}
+				if (!ptr_pid_file->is_open()) {
+					continue;
+				}
+			}
+
             pid_t pid;
 
             // Fork off the parent process
             pid = fork();
             if (pid < 0) {
+				if (ptr_pid_file) {
+					//remove pid file
+					ptr_pid_file->close();
+					remove(s_pid_file.c_str());
+				}
                 continue;//Fork failed
             }
 
             if (pid > 0) {
+				if (ptr_pid_file) {
+					//close pid file
+					ptr_pid_file->close();
+				}
+
 				// If we got a good PID, then we can exit the parent process
 				_exit(EXIT_SUCCESS);//Don't use exit().! Use _exit()
             }
@@ -138,6 +163,11 @@ namespace _mp {
 
 			// Create a new SID for the child process
 			if (setsid() < 0) {
+				if (ptr_pid_file) {
+					//remove pid file
+					ptr_pid_file->close();
+					remove(s_pid_file.c_str());
+				}
 				continue;
 			}
 			signal(SIGCHLD, SIG_IGN);
@@ -147,9 +177,19 @@ namespace _mp {
 			// sid == pgid == pid & ppid == 1
 			pid = fork();
 			if (pid < 0) {
+				if (ptr_pid_file) {
+					//remove pid file
+					ptr_pid_file->close();
+					remove(s_pid_file.c_str());
+				}
 				continue;//Fork failed
 			}
 			if (pid > 0) {
+				if (ptr_pid_file) {
+					//close pid file
+					ptr_pid_file->close();
+				}
+
 				// If we got a good PID, then we can exit the parent process
 				_exit(EXIT_SUCCESS);//Don't use exit().! Use _exit()
 			}
@@ -165,12 +205,22 @@ namespace _mp {
 				std::string s_cur = cstring::get_mcsc_from_unicode(s_cur_dir_abs_with_slash);
 				if (!s_cur.empty()) {
 					if (chdir(s_cur.c_str()) < 0) {
+						if (ptr_pid_file) {
+							//remove pid file
+							ptr_pid_file->close();
+							remove(s_pid_file.c_str());
+						}
 						continue;
 					}
 				}
 			}
 			else {
 				if (chdir("/") < 0) {
+					if (ptr_pid_file) {
+						//remove pid file
+						ptr_pid_file->close();
+						remove(s_pid_file.c_str());
+					}
 					continue;
 				}
 			}
@@ -188,16 +238,9 @@ namespace _mp {
 			signal(SIGTERM, signal_handler);
 			signal(SIGHUP, signal_handler);
 
-			if (!s_daemon_pid_file_full_path.empty()) {
-				//create PID file
-				std::string s_pid = cstring::get_mcsc_from_unicode(s_daemon_pid_file_full_path);
-				if (!s_pid.empty()) {
-					std::ofstream pid_file(s_pid.c_str());
-					if (pid_file.is_open()) {
-						pid_file << getpid() << std::endl;
-						pid_file.close();
-					}
-				}
+			if (ptr_pid_file) {
+				*ptr_pid_file << getpid() << std::endl;
+				ptr_pid_file->close();
 			}
 
 			b_result = true;
