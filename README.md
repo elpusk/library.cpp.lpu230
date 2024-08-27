@@ -42,7 +42,8 @@ lpu23x device c++ library
   - build error "/usr/bin/ld : error : cannot open linker script file ~/projects/li_lpu237_dll/li_lpu237_dll/li_lpu237_dll.ld: No such file or directory"
   - BUT li_lpu237_dll.ld exist in ~/projects/li_lpu237_dll/li_lpu237_dll/.  -_-;;
   - workaround : changing setting, --version-script=/home/tester/projects/li_lpu237_dll/li_lpu237_dll/li_lpu237_dll.ld
-+ when installation, elpusk-hid-d start failure.(exit iwth error)
++ fixed : when installation, elpusk-hid-d start failure.(exit iwth error)
++ fixed : deb pkg install /uninstall
 
 ## coding rules
 + Wherever the file log is, the trace must be present.
