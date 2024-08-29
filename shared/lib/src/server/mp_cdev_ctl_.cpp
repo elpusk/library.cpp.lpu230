@@ -179,7 +179,7 @@ namespace _mp {
 
 				if (get_connected_session() != n_session) {
 					response.set_data_error(cio_packet::get_error_message(cio_packet::error_reason_session));
-					//push_info(_ns_tools::ct_color::COLOR_ERROR, L"%s[%c] : mismatched : session = %u", __WFUNCTION__, (wchar_t)request.get_action(), request.get_session_number());
+					//push_info(_ns_tools::ct_color::COLOR_ERROR, L"%ls[%c] : mismatched : session = %u", __WFUNCTION__, (wchar_t)request.get_action(), request.get_session_number());
 					continue;
 				}
 				ptr_session = cserver::get_instance().get_session(n_session);

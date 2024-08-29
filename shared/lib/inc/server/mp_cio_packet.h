@@ -708,6 +708,9 @@ public:
 		return *this;
 	}
 
+	/**
+	* NOTICE : inner character ':' will be changed to "::".
+	*/
 	cio_packet& set_data_by_utf8(const std::wstring& s_data, bool b_append = false)
 	{
 		do {
@@ -731,7 +734,7 @@ public:
 					continue;
 				//
 				ptr_s_data_bk->replace(n_pos, 1, 2, L':');
-				if ((n_pos + 2) > ptr_s_data_bk->size())
+				if ((n_pos + 2) < ptr_s_data_bk->size())
 					n_pos += 2;
 				else
 					break;//exit while
@@ -752,6 +755,34 @@ public:
 		} while (false);
 		return *this;
 	}
+
+	cio_packet& set_data_by_utf8_without_colron_doubling(const std::wstring& s_data, bool b_append = false)
+	{
+		do {
+			if (m_type_data_field == cio_packet::data_field_binary && b_append)
+				continue;//impossible operation
+
+			m_type_data_field = cio_packet::data_field_string_utf8;
+
+			if (s_data.empty()) {
+				_set_data(type_v_buffer(0), b_append);
+				continue;
+			}
+
+			std::string s;
+			s = cstring::get_mcsc_from_unicode(s_data);
+
+			type_v_buffer v_data_utf8(s.size(), 0);
+			std::transform(s.begin(), s.end(), v_data_utf8.begin(), [](char c)->unsigned char {
+				return (unsigned char)c;
+				});
+
+			_set_data(v_data_utf8, b_append);
+
+		} while (false);
+		return *this;
+	}
+
 	cio_packet& set_data(const type_v_buffer& v_data, bool b_append = false)
 	{
 		do {
@@ -1169,6 +1200,9 @@ private:
 		return v_packet;
 	}
 
+	/**
+	* NOTICE : if the type of data is string in json_obj, the substring "::" of data will be changed to ":".
+	*/
 	static cio_packet::type_ptr _build(const nlohmann::json & json_obj)
 	{
 		cio_packet::type_ptr ptr_cio_packet;

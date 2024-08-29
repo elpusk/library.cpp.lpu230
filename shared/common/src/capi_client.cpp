@@ -550,7 +550,7 @@ bool capi_client::open(unsigned long n_client_index, const std::wstring & s_devi
 			.set_session_number(p_client->get_session_number_from_server())
 			.set_owner(_mp::cio_packet::owner_device, 0)
 			.set_action(_mp::cio_packet::act_dev_open)
-			.set_data_by_utf8(std::wstring(s_device_path));
+			.set_data_by_utf8_without_colron_doubling(std::wstring(s_device_path));
 
 		_mp::type_v_buffer v_tx;
 		packet.get_packet_by_json_format(v_tx);

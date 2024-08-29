@@ -182,9 +182,6 @@
     <ClCompile Include="..\shared\projects\lpu237_dll\cash_msdata.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\shared\common\src\capi_client.cpp">
-      <Filter>common</Filter>
-    </ClCompile>
     <ClCompile Include="..\shared\lib\inc\mp_cnamed_pipe_.cpp">
       <Filter>lib</Filter>
     </ClCompile>
@@ -196,6 +193,9 @@
     </ClCompile>
     <ClCompile Include="..\shared\lib\inc\mp_csystem_.cpp">
       <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\common\src\capi_client.cpp">
+      <Filter>common</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

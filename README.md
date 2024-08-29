@@ -44,6 +44,7 @@ lpu23x device c++ library
   - workaround : changing setting, --version-script=/home/tester/projects/li_lpu237_dll/li_lpu237_dll/li_lpu237_dll.ld
 + fixed : when installation, elpusk-hid-d start failure.(exit iwth error)
 + fixed : deb pkg install /uninstall
++ fixed : conversion string data of "::" and ":".( Now native app can read a ms-card)
 
 ## coding rules
 + Wherever the file log is, the trace must be present.
@@ -54,4 +55,10 @@ lpu23x device c++ library
 + run as like, sudo sh build-coffee-manager.sh
 + installation, sudo dpkg -i coffee-manager_x.y-z_amd64.deb
 + uninstallation, sudo dpkg -r coffee-manager
+
+### remove forcefully
+sudo dpkg --remove --force-remove-reinstreq coffee-manager
+sudo rm /var/lib/dpkg/info/coffee-manager*
+
+
 

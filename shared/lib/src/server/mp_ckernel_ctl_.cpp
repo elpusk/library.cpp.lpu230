@@ -224,7 +224,7 @@ namespace _mp
 
 			if (get_connected_session() != n_session) {
 				response.set_data_error(cio_packet::get_error_message(cio_packet::error_reason_session));
-				push_info(_ns_tools::ct_color::COLOR_ERROR, L"%s[%c] : mismatched : session = %u", __WFUNCTION__, (wchar_t)request.get_action(), request.get_session_number());
+				push_info(_ns_tools::ct_color::COLOR_ERROR, L"%ls[%c] : mismatched : session = %u", __WFUNCTION__, (wchar_t)request.get_action(), request.get_session_number());
 				continue;
 			}
 			ptr_session = cserver::get_instance().get_session(n_session);
@@ -305,7 +305,7 @@ namespace _mp
 			list_result.push_back(L"error");
 
 			if (req_data_field.empty()) {
-				ATLTRACE(L"%s :E: req_data_field.empty() : .\n", __WFUNCTION__);
+				ATLTRACE(L"%ls :E: req_data_field.empty() : .\n", __WFUNCTION__);
 				continue;//not condition
 			}
 			//req_data_field ~ the starting string of this list are load x, unload x, or execute x.
@@ -313,7 +313,7 @@ namespace _mp
 
 			type_list_wstring list_token;
 			if (cconvert::tokenizer(list_token, s_req, L" ") != 3) {
-				ATLTRACE(L"%s :E: data field has not 3 tokens : .\n", __WFUNCTION__);
+				ATLTRACE(L"%ls :E: data field has not 3 tokens : .\n", __WFUNCTION__);
 				continue;//not condition
 			}
 			std::wstring s_action = list_token.front();	//load, unload, execute, cancel, open ,close
@@ -328,13 +328,13 @@ namespace _mp
 			}
 
 			if (s_type.compare(L"service") != 0) {
-				ATLTRACE(L"%s :E: type must be service : .\n", __WFUNCTION__);
+				ATLTRACE(L"%ls :E: type must be service : .\n", __WFUNCTION__);
 				continue;
 			}
 			if (s_action.compare(L"load") == 0) {
 				std::lock_guard<std::mutex> lock(m_mutex_for_path);
 				if (!_service_dll_load_with_abs_path(s_path)) {
-					ATLTRACE(L"%s :E: _service_dll_load_with_abs_path() : .\n", __WFUNCTION__);
+					ATLTRACE(L"%ls :E: _service_dll_load_with_abs_path() : .\n", __WFUNCTION__);
 					continue;//not condition
 				}
 				list_result.clear();
@@ -345,7 +345,7 @@ namespace _mp
 			if (s_action.compare(L"unload") == 0) {
 				std::lock_guard<std::mutex> lock(m_mutex_for_path);
 				if (!_service_dll_unload(s_path)) {
-					ATLTRACE(L"%s :E: _service_dll_unload() : .\n", __WFUNCTION__);
+					ATLTRACE(L"%ls :E: _service_dll_unload() : .\n", __WFUNCTION__);
 					continue;//not condition
 				}
 				list_result.clear();
@@ -357,7 +357,7 @@ namespace _mp
 				std::lock_guard<std::mutex> lock(m_mutex_for_path);
 				//not used device, thesefore p_fun_sd_device_cancel and p_dev is null.
 				if (!_service_dll_cancel(s_path, nullptr, nullptr)) {
-					ATLTRACE(L"%s :E: _service_dll_cancel() : .\n", __WFUNCTION__);
+					ATLTRACE(L"%ls :E: _service_dll_cancel() : .\n", __WFUNCTION__);
 					continue;//not condition
 				}
 				list_result.clear();
@@ -366,7 +366,7 @@ namespace _mp
 				continue;
 			}
 			if (s_action.compare(L"execute") != 0) {
-				ATLTRACE(L"%s :E: action must be execute : .\n", __WFUNCTION__);
+				ATLTRACE(L"%ls :E: action must be execute : .\n", __WFUNCTION__);
 				continue;//not condition
 			}
 			//execute part
@@ -377,7 +377,7 @@ namespace _mp
 			list_parameters.pop_front();
 			//not used device, thesefore p_fun_sd_device_io and p_dev is null.
 			if (!_service_dll_execute(s_path, nullptr, nullptr, list_parameters, cb, p_user)) {
-				ATLTRACE(L"%s :E: _service_dll_execute() : .\n", __WFUNCTION__);
+				ATLTRACE(L"%ls :E: _service_dll_execute() : .\n", __WFUNCTION__);
 				continue;//not condition
 			}
 			//
@@ -419,11 +419,11 @@ namespace _mp
 			list_result.push_back(L"error");
 
 			if (req_data_field.empty()) {
-				ATLTRACE(L"%s :E: req_data_field.empty() : .\n", __WFUNCTION__);
+				ATLTRACE(L"%ls :E: req_data_field.empty() : .\n", __WFUNCTION__);
 				continue;//not condition
 			}
 			if (p_fun_sd_device_io == nullptr) {
-				ATLTRACE(L"%s :E: p_fun_sd_device_io == nullptr : .\n", __WFUNCTION__);
+				ATLTRACE(L"%ls :E: p_fun_sd_device_io == nullptr : .\n", __WFUNCTION__);
 				continue;//not condition
 			}
 
@@ -432,7 +432,7 @@ namespace _mp
 
 			type_list_wstring list_token;
 			if (cconvert::tokenizer(list_token, s_req, L" ") != 3) {
-				ATLTRACE(L"%s :E: data field has not 3 tokens : .\n", __WFUNCTION__);
+				ATLTRACE(L"%ls :E: data field has not 3 tokens : .\n", __WFUNCTION__);
 				continue;//not condition
 			}
 			std::wstring s_action = list_token.front();	//execute
@@ -447,11 +447,11 @@ namespace _mp
 			}
 
 			if (s_action.compare(L"execute") != 0) {
-				ATLTRACE(L"%s :E: action must be execute : .\n", __WFUNCTION__);
+				ATLTRACE(L"%ls :E: action must be execute : .\n", __WFUNCTION__);
 				continue;
 			}
 			if (s_type.compare(L"service") != 0) {
-				ATLTRACE(L"%s :E: type must be service : .\n", __WFUNCTION__);
+				ATLTRACE(L"%ls :E: type must be service : .\n", __WFUNCTION__);
 				continue;
 			}
 
@@ -462,7 +462,7 @@ namespace _mp
 			list_parameters = req_data_field;
 			list_parameters.pop_front();
 			if (!_service_dll_execute(s_path, p_fun_sd_device_io, p_dev, list_parameters, cb, p_user)) {
-				ATLTRACE(L"%s :E: _service_dll_execute() : .\n", __WFUNCTION__);
+				ATLTRACE(L"%ls :E: _service_dll_execute() : .\n", __WFUNCTION__);
 				continue;//not condition
 			}
 			//
@@ -501,11 +501,11 @@ namespace _mp
 			list_result.push_back(L"error");
 
 			if (req_data_field.empty()) {
-				ATLTRACE(L"%s :E: req_data_field.empty() : .\n", __WFUNCTION__);
+				ATLTRACE(L"%ls :E: req_data_field.empty() : .\n", __WFUNCTION__);
 				continue;//not condition
 			}
 			if (p_fun_sd_device_cancel == nullptr) {
-				ATLTRACE(L"%s :E: p_fun_sd_device_cancel == nullptr : .\n", __WFUNCTION__);
+				ATLTRACE(L"%ls :E: p_fun_sd_device_cancel == nullptr : .\n", __WFUNCTION__);
 				continue;//not condition
 			}
 
@@ -514,7 +514,7 @@ namespace _mp
 
 			type_list_wstring list_token;
 			if (cconvert::tokenizer(list_token, s_req, L" ") != 3) {
-				ATLTRACE(L"%s :E: data field has not 3 tokens : .\n", __WFUNCTION__);
+				ATLTRACE(L"%ls :E: data field has not 3 tokens : .\n", __WFUNCTION__);
 				continue;//not condition
 			}
 			std::wstring s_action = list_token.front();	//execute
@@ -529,18 +529,18 @@ namespace _mp
 			}
 
 			if (s_action.compare(L"cancel") != 0) {
-				ATLTRACE(L"%s :E: action must be cancel : .\n", __WFUNCTION__);
+				ATLTRACE(L"%ls :E: action must be cancel : .\n", __WFUNCTION__);
 				continue;
 			}
 			if (s_type.compare(L"service") != 0) {
-				ATLTRACE(L"%s :E: type must be service : .\n", __WFUNCTION__);
+				ATLTRACE(L"%ls :E: type must be service : .\n", __WFUNCTION__);
 				continue;
 			}
 
 			//cancel part
 			std::lock_guard<std::mutex> lock(m_mutex_for_path);
 			if (!_service_dll_cancel(s_path, p_fun_sd_device_cancel, p_dev)) {
-				ATLTRACE(L"%s :E: _service_dll_cancel() : .\n", __WFUNCTION__);
+				ATLTRACE(L"%ls :E: _service_dll_cancel() : .\n", __WFUNCTION__);
 				continue;//not condition
 			}
 			//
@@ -567,45 +567,45 @@ namespace _mp
 			bool b_default(true);
 			std::wstring s_file = _check_service_path(b_default, s_dll);
 			if (s_file.empty()) {
-				ATLTRACE(L"%s :E: _check_service_path() : .\n", __WFUNCTION__);
+				ATLTRACE(L"%ls :E: _check_service_path() : .\n", __WFUNCTION__);
 				continue;
 			}
 			//
 			if (b_default) {
 				auto found_it = m_map_default_path_pair_ref_cnt_ptr_dll.find(s_dll);
 				if (found_it == std::end(m_map_default_path_pair_ref_cnt_ptr_dll)) {
-					ATLTRACE(L"%s :E: not sd_dll : %s.\n", __WFUNCTION__, s_dll.c_str());
+					ATLTRACE(L"%ls :E: not sd_dll : %ls.\n", __WFUNCTION__, s_dll.c_str());
 					continue;
 				}
 				if (found_it->second.first > 1) {
 					found_it->second.first--;//decrease reference counter
 					b_result = true;
-					ATLTRACE(L"%s :I: UNLOADED(%d) : %s.\n", __WFUNCTION__, found_it->second.first, s_dll.c_str());
+					ATLTRACE(L"%ls :I: UNLOADED(%d) : %ls.\n", __WFUNCTION__, found_it->second.first, s_dll.c_str());
 					continue;
 				}
 
 				_service_dll_removed(s_dll);
 				m_map_default_path_pair_ref_cnt_ptr_dll.erase(found_it);
 				m_set_loaded_dll_path.erase(s_dll);
-				ATLTRACE(L"%s :I: UNLOADED(%d) : %s.\n", __WFUNCTION__, 0, s_dll.c_str());
+				ATLTRACE(L"%ls :I: UNLOADED(%d) : %ls.\n", __WFUNCTION__, 0, s_dll.c_str());
 			}
 			else {
 				auto found_it = m_map_3th_path_pair_ref_cnt_ptr_dll.find(s_dll);
 				if (found_it == std::end(m_map_3th_path_pair_ref_cnt_ptr_dll)) {
-					ATLTRACE(L"%s :E: not sd_dll : %s.\n", __WFUNCTION__, s_dll.c_str());
+					ATLTRACE(L"%ls :E: not sd_dll : %ls.\n", __WFUNCTION__, s_dll.c_str());
 					continue;
 				}
 				if (found_it->second.first > 1) {
 					found_it->second.first--;//decrease reference counter
 					b_result = true;
-					ATLTRACE(L"%s :I: UNLOADED(%d) : %s.\n", __WFUNCTION__, found_it->second.first, s_dll.c_str());
+					ATLTRACE(L"%ls :I: UNLOADED(%d) : %ls.\n", __WFUNCTION__, found_it->second.first, s_dll.c_str());
 					continue;
 				}
 
 				_service_dll_removed(s_dll);
 				m_map_3th_path_pair_ref_cnt_ptr_dll.erase(found_it);
 				m_set_loaded_dll_path.erase(s_dll);
-				ATLTRACE(L"%s :I: UNLOADED(%d) : %s.\n", __WFUNCTION__, 0, s_dll.c_str());
+				ATLTRACE(L"%ls :I: UNLOADED(%d) : %ls.\n", __WFUNCTION__, 0, s_dll.c_str());
 			}
 			//
 			b_result = true;
@@ -630,7 +630,7 @@ namespace _mp
 			bool b_default(true);
 			std::wstring s_file = _check_service_path(b_default, s_dll);
 			if (s_file.empty()) {
-				ATLTRACE(L"%s :E: _check_service_path() : .\n", __WFUNCTION__);
+				ATLTRACE(L"%ls :E: _check_service_path() : .\n", __WFUNCTION__);
 				continue;
 			}
 
@@ -641,11 +641,11 @@ namespace _mp
 			if (b_default) {
 				auto found_it = m_map_default_path_pair_ref_cnt_ptr_dll.find(s_dll);
 				if (found_it == std::end(m_map_default_path_pair_ref_cnt_ptr_dll)) {
-					ATLTRACE(L"%s :E: not sd_dll : %s.\n", __WFUNCTION__, s_dll.c_str());
+					ATLTRACE(L"%ls :E: not sd_dll : %ls.\n", __WFUNCTION__, s_dll.c_str());
 					continue;
 				}
 				if (!found_it->second.second) {
-					ATLTRACE(L"%s :E: not sd_dll instance : %s.\n", __WFUNCTION__, s_dll.c_str());
+					ATLTRACE(L"%ls :E: not sd_dll instance : %ls.\n", __WFUNCTION__, s_dll.c_str());
 					continue;
 				}
 				b_result = found_it->second.second->sd_cancel(m_n_session, s_device_path, p_fun_sd_device_cancel, p_dev);
@@ -653,11 +653,11 @@ namespace _mp
 			else {
 				auto found_it = m_map_3th_path_pair_ref_cnt_ptr_dll.find(s_dll);
 				if (found_it == std::end(m_map_3th_path_pair_ref_cnt_ptr_dll)) {
-					ATLTRACE(L"%s :E: not sd_dll : %s.\n", __WFUNCTION__, s_dll.c_str());
+					ATLTRACE(L"%ls :E: not sd_dll : %ls.\n", __WFUNCTION__, s_dll.c_str());
 					continue;
 				}
 				if (!found_it->second.second) {
-					ATLTRACE(L"%s :E: not sd_dll instance : %s.\n", __WFUNCTION__, s_dll.c_str());
+					ATLTRACE(L"%ls :E: not sd_dll instance : %ls.\n", __WFUNCTION__, s_dll.c_str());
 					continue;
 				}
 				b_result = found_it->second.second->sd_cancel(m_n_session, s_device_path, p_fun_sd_device_cancel, p_dev);
@@ -693,7 +693,7 @@ namespace _mp
 			bool b_default(true);
 			std::wstring s_file = _check_service_path(b_default, s_dll);
 			if (s_file.empty()) {
-				ATLTRACE(L"%s :E: _check_service_path() : .\n", __WFUNCTION__);
+				ATLTRACE(L"%ls :E: _check_service_path() : .\n", __WFUNCTION__);
 				continue;
 			}
 
@@ -704,11 +704,11 @@ namespace _mp
 			if (b_default) {
 				auto found_it = m_map_default_path_pair_ref_cnt_ptr_dll.find(s_dll);
 				if (found_it == std::end(m_map_default_path_pair_ref_cnt_ptr_dll)) {
-					ATLTRACE(L"%s :E: not sd_dll : %s.\n", __WFUNCTION__, s_dll.c_str());
+					ATLTRACE(L"%ls :E: not sd_dll : %ls.\n", __WFUNCTION__, s_dll.c_str());
 					continue;
 				}
 				if (!found_it->second.second) {
-					ATLTRACE(L"%s :E: not sd_dll instance : %s.\n", __WFUNCTION__, s_dll.c_str());
+					ATLTRACE(L"%ls :E: not sd_dll instance : %ls.\n", __WFUNCTION__, s_dll.c_str());
 					continue;
 				}
 				b_result = found_it->second.second->sd_execute(m_n_session, s_device_path, p_fun_sd_device_io, p_dev, list_parameters, cb, p_user);
@@ -716,11 +716,11 @@ namespace _mp
 			else {
 				auto found_it = m_map_3th_path_pair_ref_cnt_ptr_dll.find(s_dll);
 				if (found_it == std::end(m_map_3th_path_pair_ref_cnt_ptr_dll)) {
-					ATLTRACE(L"%s :E: not sd_dll : %s.\n", __WFUNCTION__, s_dll.c_str());
+					ATLTRACE(L"%ls :E: not sd_dll : %ls.\n", __WFUNCTION__, s_dll.c_str());
 					continue;
 				}
 				if (!found_it->second.second) {
-					ATLTRACE(L"%s :E: not sd_dll instance : %s.\n", __WFUNCTION__, s_dll.c_str());
+					ATLTRACE(L"%ls :E: not sd_dll instance : %ls.\n", __WFUNCTION__, s_dll.c_str());
 					continue;
 				}
 				b_result = found_it->second.second->sd_execute(m_n_session, s_device_path, p_fun_sd_device_io, p_dev, list_parameters, cb, p_user);
@@ -742,18 +742,18 @@ namespace _mp
 			bool b_default(true);
 			std::wstring s_file = _check_service_path(b_default, s_dll);
 			if (s_file.empty()) {
-				ATLTRACE(L"%s :E: _check_service_path() : .\n", __WFUNCTION__);
+				ATLTRACE(L"%ls :E: _check_service_path() : .\n", __WFUNCTION__);
 				continue;
 			}
 
 			if (b_default) {
 				auto found_it = m_map_default_path_pair_ref_cnt_ptr_dll.find(s_dll);
 				if (found_it == std::end(m_map_default_path_pair_ref_cnt_ptr_dll)) {
-					ATLTRACE(L"%s :E: not sd_dll : %s.\n", __WFUNCTION__, s_dll.c_str());
+					ATLTRACE(L"%ls :E: not sd_dll : %ls.\n", __WFUNCTION__, s_dll.c_str());
 					continue;
 				}
 				if (!found_it->second.second) {
-					ATLTRACE(L"%s :E: not sd_dll instance : %s.\n", __WFUNCTION__, s_dll.c_str());
+					ATLTRACE(L"%ls :E: not sd_dll instance : %ls.\n", __WFUNCTION__, s_dll.c_str());
 					continue;
 				}
 				found_it->second.second->sd_removed(m_n_session);
@@ -761,11 +761,11 @@ namespace _mp
 			else {
 				auto found_it = m_map_3th_path_pair_ref_cnt_ptr_dll.find(s_dll);
 				if (found_it == std::end(m_map_3th_path_pair_ref_cnt_ptr_dll)) {
-					ATLTRACE(L"%s :E: not sd_dll : %s.\n", __WFUNCTION__, s_dll.c_str());
+					ATLTRACE(L"%ls :E: not sd_dll : %ls.\n", __WFUNCTION__, s_dll.c_str());
 					continue;
 				}
 				if (!found_it->second.second) {
-					ATLTRACE(L"%s :E: not sd_dll instance : %s.\n", __WFUNCTION__, s_dll.c_str());
+					ATLTRACE(L"%ls :E: not sd_dll instance : %ls.\n", __WFUNCTION__, s_dll.c_str());
 					continue;
 				}
 				found_it->second.second->sd_removed(m_n_session);
@@ -787,7 +787,7 @@ namespace _mp
 
 		do {
 			if (s_dll.empty()) {
-				ATLTRACE(L"%s :E: s_dll.empty(): .\n", __WFUNCTION__);
+				ATLTRACE(L"%ls :E: s_dll.empty(): .\n", __WFUNCTION__);
 				continue;
 			}
 			//
@@ -798,15 +798,15 @@ namespace _mp
 
 			cfile::split_path(s_dll, s_out_drive, s_out_dir, s_out_file_name, s_out_ext);
 			if (!s_out_drive.empty()) {
-				ATLTRACE(L"%s :E: !s_out_drive.empty() : .\n", __WFUNCTION__);
+				ATLTRACE(L"%ls :E: !s_out_drive.empty() : .\n", __WFUNCTION__);
 				continue;
 			}
 			if (s_out_file_name.empty()) {
-				ATLTRACE(L"%s :E: s_out_file_name.empty() : .\n", __WFUNCTION__);
+				ATLTRACE(L"%ls :E: s_out_file_name.empty() : .\n", __WFUNCTION__);
 				continue;
 			}
 			if (s_out_ext.compare(L".dll") != 0) {
-				ATLTRACE(L"%s :E: s_out_ext is not dll : .\n", __WFUNCTION__);
+				ATLTRACE(L"%ls :E: s_out_ext is not dll : .\n", __WFUNCTION__);
 				continue;
 			}
 			if (s_out_dir.compare(L"default/") == 0)
@@ -817,7 +817,7 @@ namespace _mp
 				b_default = false;
 			}
 			else {
-				ATLTRACE(L"%s :E: dir is not default/ or 3thpart/ : .\n", __WFUNCTION__);
+				ATLTRACE(L"%ls :E: dir is not default/ or 3thpart/ : .\n", __WFUNCTION__);
 				continue;
 			}
 			//
@@ -843,7 +843,7 @@ namespace _mp
 			bool b_default(true);
 			std::wstring s_file = _check_service_path(b_default, s_dll_short);
 			if (s_file.empty()) {
-				ATLTRACE(L"%s :E: _check_service_path() : .\n", __WFUNCTION__);
+				ATLTRACE(L"%ls :E: _check_service_path() : .\n", __WFUNCTION__);
 				continue;
 			}
 
@@ -855,7 +855,7 @@ namespace _mp
 				if (found_it != std::end(m_map_default_path_pair_ref_cnt_ptr_dll)) {
 					found_it->second.first++;//increased reference counter.
 					b_result = true;//alreay loaded.
-					ATLTRACE(L"%s :I: LOADED(%d) : %s.\n", __WFUNCTION__, found_it->second.first, s_full_path.c_str());
+					ATLTRACE(L"%ls :I: LOADED(%d) : %ls.\n", __WFUNCTION__, found_it->second.first, s_full_path.c_str());
 					continue;
 				}
 
@@ -865,19 +865,19 @@ namespace _mp
 
 #ifndef _DEBUG
 				if (!csystem::verify_embedded_signature(s_full_path)) {
-					clog::get_instance().log_fmt(L"[E] %s | verify_embedded_signature().\n", __WFUNCTION__);
-					ATLTRACE(L"%s :E: verify code signature : %s.\n", __WFUNCTION__, s_full_path.c_str());
+					clog::get_instance().log_fmt(L"[E] %ls | verify_embedded_signature().\n", __WFUNCTION__);
+					ATLTRACE(L"%ls :E: verify code signature : %ls.\n", __WFUNCTION__, s_full_path.c_str());
 					continue;
 				}
 #endif _DEBUG
 				ptr_sdll.swap(std::make_shared<cdll_service>());
 				if (!ptr_sdll->load(s_full_path)) {
 					ptr_sdll.reset();
-					ATLTRACE(L"%s :E: LOADING : %s.\n", __WFUNCTION__, s_full_path.c_str());
+					ATLTRACE(L"%ls :E: LOADING : %ls.\n", __WFUNCTION__, s_full_path.c_str());
 					continue;
 				}
 				else {
-					ATLTRACE(L"%s :I: LOADED(%d) : %s.\n", __WFUNCTION__, 1, s_full_path.c_str());
+					ATLTRACE(L"%ls :I: LOADED(%d) : %ls.\n", __WFUNCTION__, 1, s_full_path.c_str());
 				}
 				m_map_default_path_pair_ref_cnt_ptr_dll[s_dll_short] = std::make_pair(1, ptr_sdll);
 			}
@@ -887,7 +887,7 @@ namespace _mp
 				if (found_it != std::end(m_map_3th_path_pair_ref_cnt_ptr_dll)) {
 					found_it->second.first++;//increased reference counter.
 					b_result = true;//alreay loaded.
-					ATLTRACE(L"%s :I: LOADED(%d) : %s.\n", __WFUNCTION__, found_it->second.first, s_full_path.c_str());
+					ATLTRACE(L"%ls :I: LOADED(%d) : %ls.\n", __WFUNCTION__, found_it->second.first, s_full_path.c_str());
 					continue;
 				}
 
@@ -896,19 +896,19 @@ namespace _mp
 				s_full_path += s_file;
 #ifndef _DEBUG
 				if (!csystem::verify_embedded_signature(s_full_path)) {
-					clog::get_instance().log_fmt(L"[E] %s | verify_embedded_signature().\n", __WFUNCTION__);
-					ATLTRACE(L"%s :E: verify code signature : %s.\n", __WFUNCTION__, s_full_path.c_str());
+					clog::get_instance().log_fmt(L"[E] %ls | verify_embedded_signature().\n", __WFUNCTION__);
+					ATLTRACE(L"%ls :E: verify code signature : %ls.\n", __WFUNCTION__, s_full_path.c_str());
 					continue;
 				}
 #endif _DEBUG
 				ptr_sdll.swap(std::make_shared<cdll_service>());
 				if (!ptr_sdll->load(s_full_path)) {
 					ptr_sdll.reset();
-					ATLTRACE(L"%s :E: LOADING : %s.\n", __WFUNCTION__, s_full_path.c_str());
+					ATLTRACE(L"%ls :E: LOADING : %ls.\n", __WFUNCTION__, s_full_path.c_str());
 					continue;
 				}
 				else {
-					ATLTRACE(L"%s :I: LOADED : %s.\n", __WFUNCTION__, s_full_path.c_str());
+					ATLTRACE(L"%ls :I: LOADED : %ls.\n", __WFUNCTION__, s_full_path.c_str());
 				}
 				m_map_3th_path_pair_ref_cnt_ptr_dll[s_dll_short] = std::make_pair(1, ptr_sdll);
 			}

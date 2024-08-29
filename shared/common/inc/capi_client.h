@@ -238,7 +238,8 @@ public:
 					//null terminatred string
 					if (stemp.empty())
 						continue;
-					set_s_dst.insert(stemp);
+					
+					set_s_dst.insert(capi_client::_remove_colron_doubling(stemp));//"::" -> ":"
 					stemp.clear();
 					continue;
 				}
@@ -258,7 +259,14 @@ public:
 
 			if (v_receive.empty())
 				continue;
-			n_item = capi_client::_get_string_set_from_multi_string(set_s_dst, (unsigned long)(v_receive.size()), &v_receive[0]);
+
+			std::set<std::wstring> set_t;
+			n_item = capi_client::_get_string_set_from_multi_string(set_t, (unsigned long)(v_receive.size()), &v_receive[0]);
+			if (n_item > 0) {
+				for (auto item : set_t) {
+					set_s_dst.insert(capi_client::_remove_colron_doubling(item));//"::" -> ":"
+				}
+			}
 
 		} while (false);
 		return n_item;
@@ -272,7 +280,14 @@ public:
 
 			if (v_receive.empty())
 				continue;
-			n_item = capi_client::_get_string_list_from_multi_string(list_s_dst, (unsigned long)(v_receive.size()), &v_receive[0]);
+
+			std::list<std::wstring> list_t;
+			n_item = capi_client::_get_string_list_from_multi_string(list_t, (unsigned long)(v_receive.size()), &v_receive[0]);
+			if (n_item > 0) {
+				for (auto item : list_t) {
+					list_s_dst.push_back(capi_client::_remove_colron_doubling(item));//"::" -> ":"
+				}
+			}
 
 		} while (false);
 		return n_item;
@@ -303,6 +318,29 @@ public:
 private:
 	capi_client();
 
+	/**
+	* change "::" to ":" in s_src
+	*/
+	static std::wstring _remove_colron_doubling(const std::wstring& s_src)
+	{
+		std::wstring s_dst;
+
+		int n_col = 0;//colron counter
+		for (auto c_item : s_src) {
+			if (c_item == L':') {
+				if (n_col != 0) {
+					n_col = 0;
+					continue;//bypass ':'
+				}
+				++n_col;
+			}
+			else {
+				n_col = 0;
+			}
+			s_dst.push_back(c_item);
+		}//end for
+		return s_dst;
+	}
 	static size_t _get_string_set_from_multi_string(std::set<std::wstring>&set_s_dst, unsigned long n_src, const unsigned char* s_src)
 	{
 		std::wstring stemp;

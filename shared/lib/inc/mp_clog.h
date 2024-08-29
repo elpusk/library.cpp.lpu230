@@ -20,6 +20,7 @@
 #include <mp_cfile.h>
 #include <mp_cconvert.h>
 #include <mp_cnamed_pipe_.h>
+#include <mp_cstring.h>
 
 namespace _mp
 {
@@ -260,11 +261,7 @@ namespace _mp
 		void log_string(const wchar_t* s_msg)
 		{
 			if (s_msg) {
-#ifdef _WIN32
-				log_fmt(L"%s", s_msg);
-#else
 				log_fmt(L"%ls", s_msg);
-#endif
 			}
 		}
 		void log_string(const char* s_msg)
@@ -577,7 +574,7 @@ namespace _mp
 				t = time(NULL);
 				localtime_s(&dt, &t);
 				//
-				cstring::format(s_full_abs_path, L"%s\\%02d%02d%02d%02d%02d.txt", s_in_folder_path_without_backslash.c_str(), dt.tm_mon + 1, dt.tm_mday, dt.tm_hour, dt.tm_min, dt.tm_sec);
+				cstring::format(s_full_abs_path, L"%ls\\%02d%02d%02d%02d%02d.txt", s_in_folder_path_without_backslash.c_str(), dt.tm_mon + 1, dt.tm_mday, dt.tm_hour, dt.tm_min, dt.tm_sec);
 #else
 				struct tm* p_dt = NULL;
 				p_dt = std::localtime(&t);
@@ -712,7 +709,8 @@ namespace _mp
 				if (_wfopen_s(&p_stream, m_s_log_file_path.c_str(), L"a+") != 0)
 					continue;
 #else
-				p_stream = std::fopen(std::string(m_s_log_file_path.begin(), m_s_log_file_path.end()).c_str(), "a+");
+				std::string s = cstring::get_mcsc_from_unicode(m_s_log_file_path);
+				p_stream = std::fopen(s.c_str(), "a+");
 				if (!p_stream)
 					continue;
 #endif

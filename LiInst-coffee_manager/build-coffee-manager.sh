@@ -45,6 +45,7 @@ cat <<EOF > ${gDEBIAN_DIR}/control
 Package: ${gPACKAGE_NAME}
 Version: ${gPACKAGE_VERSION}
 Architecture: ${gARCHITECTURE}
+Pre-Depends: libnss3-tools
 Maintainer: Elpusk<elpusk@naver.com>
 Description: Coffee Manager Package
 EOF
@@ -136,14 +137,6 @@ cat <<EOF > ${gDEBIAN_DIR}/prerm
 #!/bin/bash
 set -e
 
-# stop daemon and remove daemon
-if [ -f /etc/systemd/system/coffee-manager.service ]; then
-    systemctl stop coffee-manager.service
-    systemctl disable coffee-manager.service
-    rm -f /etc/systemd/system/coffee-manager.service
-    systemctl daemon-reload
-fi
-
 # unregister self-signed ca-root certificate from Chromium & Firefox.
 # loop for all user
 for USER_HOME in /home/*; do
@@ -178,6 +171,14 @@ for USER_HOME in /home/*; do
 
     fi
 done
+
+# stop daemon and remove daemon
+if [ -f /etc/systemd/system/coffee-manager.service ]; then
+    systemctl stop coffee-manager.service
+    systemctl disable coffee-manager.service
+    rm -f /etc/systemd/system/coffee-manager.service
+    systemctl daemon-reload
+fi
 
 # run elpusk-hid-d with /removecert option. remove certificate
 ${gCF_ROOT_PD_DIR}/bin/elpusk-hid-d /removecert
