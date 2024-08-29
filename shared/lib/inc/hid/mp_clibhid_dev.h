@@ -21,7 +21,7 @@ namespace _mp {
 
     private:
         enum {
-            _const_dev_io_check_interval_mmsec = 3
+            _const_dev_io_check_interval_mmsec = 10
         };
 
     public:
