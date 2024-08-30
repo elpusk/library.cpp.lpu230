@@ -280,6 +280,131 @@ namespace _test{
 				return 0;
 			}
 
+			static bool _cb_rx(_mp::cqitem_dev& item, void* p_user)
+			{
+				bool b_complete(true);
+				_mp::cqitem_dev::type_result r;
+				_mp::type_v_buffer v;
+				std::wstring s;
+
+				std::pair<_mp::cwait*, int>* p_pair = (std::pair<_mp::cwait*, int>*)p_user;
+
+				do {
+					std::tie(r, v, s) = item.get_result_all();
+					switch (r) {
+					case _mp::cqitem_dev::result_not_yet:
+						b_complete = false;
+						printf(" ++ _cb_rx : result_not_yet.\n");
+						continue;//more processing
+					case _mp::cqitem_dev::result_success:
+						printf(" ++ _cb_rx : result_success.\n");
+						printf(" ++ %u : %02x,%02x,%02x.\n", v.size(), v[0], v[1], v[2]);
+						break;
+					case _mp::cqitem_dev::result_error:
+						printf(" ++ _cb_rx : result_error.\n");
+						break;
+					case _mp::cqitem_dev::result_cancel:
+						printf(" ++ _cb_rx : result_cancel.\n");
+						break;
+					default:
+						printf(" ++ _cb_rx : unknown.\n");
+						break;
+					}//end switch
+				} while (false);
+
+				fflush(stdout);
+
+				p_pair->first->set(p_pair->second);
+				return b_complete;
+			}
+			/**
+			* rx 1000 times
+			*/
+			static int test2_1()
+			{
+				_mp::cwait waiter;
+				int n_event = waiter.generate_new_event();
+				std::pair<_mp::cwait*, int> pair_p(&waiter, n_event);
+#ifndef _WIN32
+				setvbuf(stdout, NULL, _IONBF, 0);
+
+#endif // !_WIN32
+
+				do {
+					_mp::clibhid& lib_hid(_mp::clibhid::get_instance());
+					if (!lib_hid.is_ini()) {
+						std::wcout << L"ERROR\n";
+						continue;
+					}
+					std::wcout << L"Lib started.\n";
+					for (int i = 3; i >= 0; i--) {
+						std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+						std::wcout << i << L'.' << std::flush;
+					}//end for
+
+					std::wcout << std::endl;
+					std::wcout << L"Start test." << std::endl;
+
+					_mp::clibhid_dev_info::type_set st = lib_hid.get_cur_device_set();
+					if (st.empty()) {
+						std::cout << "none device" << std::endl;
+						break;
+					}
+					else {
+						for (auto item : st) {
+							std::wcout << std::hex << item.get_vendor_id() << L":";
+							std::wcout << std::hex << item.get_product_id() << L":";
+							std::wcout << std::hex << item.get_interface_number() << std::endl;
+						}//end for
+						std::wcout << std::dec;
+					}
+
+					const _mp::clibhid_dev_info& item(*st.begin());
+					std::wcout << std::hex << item.get_vendor_id() << L", " << item.get_product_id() << L" : ";
+					std::wcout << item.get_path_by_wstring() << std::endl;
+					std::wcout << item.get_interface_number() << std::endl;
+					//
+					for (int i = 0; i < 1000; i++) {
+						std::cout << "TEST" << i+1 << std::endl;
+						_mp::clibhid_dev::type_wptr wptr_dev = lib_hid.get_device(item);
+						if (wptr_dev.expired()) {
+							std::cout << "device is expired" << std::endl;
+							break;
+						}
+
+						//
+						pair_p.first->reset(pair_p.second);
+						wptr_dev.lock()->start_read(tp_hid::_cb_rx, &pair_p);
+						auto start = std::chrono::high_resolution_clock::now();
+
+						int n_evt = _mp::cwait::const_event_timeout;
+
+						do {
+							n_evt = _mp::cwait::const_event_timeout;
+							n_evt = pair_p.first->wait_for_one_at_time(0);
+							if (n_evt == pair_p.second) {
+								std::wcout << L"RX DON" << std::endl;
+								break;
+							}
+							if (wptr_dev.expired()) {
+								std::cout << "device is expired" << std::endl;
+								i = 1000;
+								break;
+							}
+
+							std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+							std::wcout << L"-_-;;" << std::endl;
+						} while (true);
+
+						auto end = std::chrono::high_resolution_clock::now();
+						std::chrono::duration<double> elapsed = end - start;
+						std::cout << "Elapsed time: " << elapsed.count() << " seconds" << std::endl;
+					}
+				} while (false);
+
+				return 0;
+			}
+
 			static int test3()
 			{
 #ifdef _WIN32
