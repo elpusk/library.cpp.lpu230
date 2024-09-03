@@ -91,49 +91,49 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
-    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/openssl-1.1.1s;/usr/local/libusb/include/libusb-1.0;/usr/local/json/include;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc</IncludePath>
+    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/openssl-1.1.1s;/usr/local/libusb/include/libusb-1.0;/usr/local/json/include;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc;/usr/local/openssl-1.1.1s/include</IncludePath>
     <LibraryPath>/usr/local/openssl-1.1.1s/lib;;C:\local\boost_1_80_0\stage\debug\lib;$(LibraryPath);C:\local\libusb\out\lib;C:\local\libusb\out\lib;/usr/local/lib;C:\local\libusb\out\lib;/usr/local/libusb/lib</LibraryPath>
     <TargetName>libtg_lpu237_dll</TargetName>
     <TargetExt>.so.6.0.0</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
-    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/openssl-1.1.1s;/usr/local/libusb/include/libusb-1.0;/usr/local/json/include;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc</IncludePath>
+    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/openssl-1.1.1s;/usr/local/libusb/include/libusb-1.0;/usr/local/json/include;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc;/usr/local/openssl-1.1.1s/include</IncludePath>
     <LibraryPath>/usr/local/openssl-1.1.1s/lib;C:\local\boost_1_80_0\stage\release\lib;$(LibraryPath);C:\local\libusb\out\lib;C:\local\libusb\out\lib;/usr/local/lib;C:\local\libusb\out\lib;/usr/local/libusb/lib</LibraryPath>
     <TargetName>libtg_lpu237_dll</TargetName>
     <TargetExt>.so.6.0.0</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
-    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/openssl-1.1.1s;/usr/local/libusb/include/libusb-1.0;/usr/local/json/include;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc</IncludePath>
+    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/openssl-1.1.1s;/usr/local/libusb/include/libusb-1.0;/usr/local/json/include;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc;/usr/local/openssl-1.1.1s/include</IncludePath>
     <LibraryPath>/usr/local/openssl-1.1.1s/lib;;C:\local\boost_1_80_0\stage\debug\lib;$(LibraryPath);C:\local\libusb\out\lib;C:\local\libusb\out\lib;/usr/local/lib;C:\local\libusb\out\lib;/usr/local/libusb/lib</LibraryPath>
     <TargetName>libtg_lpu237_dll</TargetName>
     <TargetExt>.so.6.0.0</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
-    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/openssl-1.1.1s;/usr/local/libusb/include/libusb-1.0;/usr/local/json/include;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc</IncludePath>
+    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/openssl-1.1.1s;/usr/local/libusb/include/libusb-1.0;/usr/local/json/include;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc;/usr/local/openssl-1.1.1s/include</IncludePath>
     <LibraryPath>/usr/local/openssl-1.1.1s/lib;C:\local\boost_1_80_0\stage\release\lib;$(LibraryPath);C:\local\libusb\out\lib;C:\local\libusb\out\lib;/usr/local/lib;C:\local\libusb\out\lib;/usr/local/libusb/lib</LibraryPath>
     <TargetName>libtg_lpu237_dll</TargetName>
     <TargetExt>.so.6.0.0</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/openssl-1.1.1s;/usr/local/libusb/include/libusb-1.0;/usr/local/json/include;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc</IncludePath>
+    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/openssl-1.1.1s;/usr/local/libusb/include/libusb-1.0;/usr/local/json/include;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc;/usr/local/openssl-1.1.1s/include</IncludePath>
     <LibraryPath>/usr/local/openssl-1.1.1s/lib;;C:\local\boost_1_80_0\stage\debug\lib;$(LibraryPath);C:\local\libusb\out\lib;C:\local\libusb\out\lib;/usr/local/lib;C:\local\libusb\out\lib;/usr/local/libusb/lib</LibraryPath>
     <TargetName>libtg_lpu237_dll</TargetName>
     <TargetExt>.so.6.0.0</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/openssl-1.1.1s;/usr/local/libusb/include/libusb-1.0;/usr/local/json/include;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc</IncludePath>
+    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/openssl-1.1.1s;/usr/local/libusb/include/libusb-1.0;/usr/local/json/include;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc;/usr/local/openssl-1.1.1s/include</IncludePath>
     <LibraryPath>/usr/local/openssl-1.1.1s/lib;C:\local\boost_1_80_0\stage\release\lib;$(LibraryPath);C:\local\libusb\out\lib;C:\local\libusb\out\lib;/usr/local/lib;C:\local\libusb\out\lib;/usr/local/libusb/lib</LibraryPath>
     <TargetName>libtg_lpu237_dll</TargetName>
     <TargetExt>.so.6.0.0</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
-    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/openssl-1.1.1s;/usr/local/libusb/include/libusb-1.0;/usr/local/json/include;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc</IncludePath>
+    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/openssl-1.1.1s;/usr/local/libusb/include/libusb-1.0;/usr/local/json/include;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc;/usr/local/openssl-1.1.1s/include</IncludePath>
     <LibraryPath>/usr/local/openssl-1.1.1s/lib;;C:\local\boost_1_80_0\stage\debug\lib;$(LibraryPath);C:\local\libusb\out\lib;C:\local\libusb\out\lib;/usr/local/lib;C:\local\libusb\out\lib;/usr/local/libusb/lib</LibraryPath>
     <TargetName>libtg_lpu237_dll</TargetName>
     <TargetExt>.so.6.0.0</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
-    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/openssl-1.1.1s;/usr/local/libusb/include/libusb-1.0;/usr/local/json/include;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc</IncludePath>
+    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/openssl-1.1.1s;/usr/local/libusb/include/libusb-1.0;/usr/local/json/include;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc;/usr/local/openssl-1.1.1s/include</IncludePath>
     <LibraryPath>/usr/local/openssl-1.1.1s/lib;C:\local\boost_1_80_0\stage\release\lib;$(LibraryPath);C:\local\libusb\out\lib;C:\local\libusb\out\lib;/usr/local/lib;C:\local\libusb\out\lib;/usr/local/libusb/lib</LibraryPath>
     <TargetName>libtg_lpu237_dll</TargetName>
     <TargetExt>.so.6.0.0</TargetExt>
@@ -261,7 +261,7 @@
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>/usr/local/libusb/lib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <LibraryDependencies>crypto;ssl;boost_filesystem</LibraryDependencies>
+      <LibraryDependencies>ssl;crypto;boost_filesystem</LibraryDependencies>
       <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_lpu237_dll/li_lpu237_dll/li_lpu237_dll.ld,-soname,libtg_lpu237_dll.so.6 %(AdditionalOptions)</AdditionalOptions>
       <Version>false</Version>
     </Link>
@@ -279,7 +279,7 @@
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>/usr/local/libusb/lib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <LibraryDependencies>crypto;ssl;boost_filesystem</LibraryDependencies>
+      <LibraryDependencies>ssl;crypto;boost_filesystem</LibraryDependencies>
       <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_lpu237_dll/li_lpu237_dll/li_lpu237_dll.ld,-soname,libtg_lpu237_dll.so.6 %(AdditionalOptions)</AdditionalOptions>
       <Version>false</Version>
     </Link>
@@ -297,7 +297,7 @@
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>/usr/local/libusb/lib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <LibraryDependencies>crypto;ssl;boost_filesystem</LibraryDependencies>
+      <LibraryDependencies>ssl;crypto;boost_filesystem</LibraryDependencies>
       <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_lpu237_dll/li_lpu237_dll/li_lpu237_dll.ld,-soname,libtg_lpu237_dll.so.6 %(AdditionalOptions)</AdditionalOptions>
       <Version>false</Version>
     </Link>
@@ -315,7 +315,7 @@
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>/usr/local/libusb/lib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <LibraryDependencies>crypto;ssl;boost_filesystem</LibraryDependencies>
+      <LibraryDependencies>ssl;crypto;boost_filesystem</LibraryDependencies>
       <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_lpu237_dll/li_lpu237_dll/li_lpu237_dll.ld,-soname,libtg_lpu237_dll.so.6 %(AdditionalOptions)</AdditionalOptions>
       <Version>false</Version>
     </Link>
@@ -333,7 +333,7 @@
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>/usr/local/libusb/lib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <LibraryDependencies>crypto;ssl;boost_filesystem</LibraryDependencies>
+      <LibraryDependencies>ssl;crypto;boost_filesystem</LibraryDependencies>
       <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_lpu237_dll/li_lpu237_dll/li_lpu237_dll.ld,-soname,libtg_lpu237_dll.so.6 %(AdditionalOptions)</AdditionalOptions>
       <Version>false</Version>
     </Link>
@@ -351,7 +351,7 @@
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>/usr/local/libusb/lib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <LibraryDependencies>crypto;ssl;boost_filesystem</LibraryDependencies>
+      <LibraryDependencies>ssl;crypto;boost_filesystem</LibraryDependencies>
       <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_lpu237_dll/li_lpu237_dll/li_lpu237_dll.ld,-soname,libtg_lpu237_dll.so.6 %(AdditionalOptions)</AdditionalOptions>
       <Version>false</Version>
     </Link>
@@ -369,7 +369,7 @@
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>/usr/local/libusb/lib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <LibraryDependencies>crypto;ssl;boost_filesystem</LibraryDependencies>
+      <LibraryDependencies>ssl;crypto;boost_filesystem</LibraryDependencies>
       <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_lpu237_dll/li_lpu237_dll/li_lpu237_dll.ld,-soname,libtg_lpu237_dll.so.6 %(AdditionalOptions)</AdditionalOptions>
       <Version>false</Version>
     </Link>
@@ -387,7 +387,7 @@
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>/usr/local/libusb/lib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <LibraryDependencies>crypto;ssl;boost_filesystem</LibraryDependencies>
+      <LibraryDependencies>ssl;crypto;boost_filesystem</LibraryDependencies>
       <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_lpu237_dll/li_lpu237_dll/li_lpu237_dll.ld,-soname,libtg_lpu237_dll.so.6 %(AdditionalOptions)</AdditionalOptions>
       <Version>false</Version>
     </Link>

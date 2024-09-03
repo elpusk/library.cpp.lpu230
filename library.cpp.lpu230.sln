@@ -24,8 +24,14 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test_msr", "test_msr", "{24EC6C29-6F90-48B0-92E5-72B2EDD1EB70}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tp_wi_lpu237", "tp_wi_lpu237\tp_wi_lpu237.vcxproj", "{C017FBDF-D47E-40B8-8770-1255E00BBFE6}"
+	ProjectSection(ProjectDependencies) = postProject
+		{8C939C11-693B-4AE5-901F-56749442D6E0} = {8C939C11-693B-4AE5-901F-56749442D6E0}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tp_li_lpu237", "tp_li_lpu237\tp_li_lpu237.vcxproj", "{A494BFCA-3EB1-455C-82B3-1291A9F8BF90}"
+	ProjectSection(ProjectDependencies) = postProject
+		{4BE6BA6E-4B98-4530-93B4-7EB01B19F009} = {4BE6BA6E-4B98-4530-93B4-7EB01B19F009}
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test_lib", "test_lib", "{11B70C7B-8D49-45EB-BCF9-CE15D930BC0E}"
 EndProject

@@ -3,11 +3,61 @@ lpu23x device c++ library
 
 ## env
 + vs2022
-+ debian12 remote
++ debian12 remote - user id : tester
++ use static link library. 
 + boost 1.80 lib
-+ nlohmann json lib
-+ openssl-1.1.1s lib
-+ libusb1.0 lib
++ nlohmann json lib - path : /usr/local/json/
++ openssl-1.1.1s lib - path : /usr/local/openssl-1.1.1s/
++ libusb1.0 lib - path : /usr/local/libusb/
++ deb package directory : /home/tester/build_deb/
+
+## build on debian12.
++ notice
+  - when linking the library, -lssl must be in front of -lcrypto.
+    * as like linker error - ... undefined reference to COMP_CTX_...
+  - udev must be linked the last order.
+    * as like linker error - ... undefined reference to udev...
+  - add path on /etc/profile file.
+    * export PATH=$PATH:/usr/sbin:/usr/local/sbin:/sbin:/usr/local/openssl-1.1.1s/bin
+
++ boost library
+  - use version 1.80.0.0, static lib
+  - build
+    * wget https://boostorg.jfrog.io/artifactory/main/release/1.80.0/source/boost_1_80_0.tar.bz2
+    * tar --bzip2 -xf boost_1_80_0.tar.bz2
+    * cd boost_1_80_0
+    * ./bootstrap.sh
+    * ./b2 -j4 -a --build-dir=build/debug --stagedir=stage/debug --toolset=gcc --architecture=x86_64 variant=debug link=static threading=multi address-model=64 runtime-link=static
+    * ./b2 -j4 -a --build-dir=build/release --stagedir=stage/release --toolset=gcc --architecture=x86_64 variant=release link=static threading=multi address-model=64 runtime-link=static
+    * sudo cp -r ./boost /usr/local/include/
+    * sudo cp -r ./stage/release/lib/* /usr/local/lib/
++ libusb
+  - use version 1.0, static lib
+  - build
+    * git clone https://github.com/libusb/libusb.git
+    * ./autogen.sh
+    * ./configure --prefix=/usr/local/libusb  --enable-static --disable-shared
+    * make
+    * sudo make install
+    * sudo cp -r /usr/local/libusb/include/* /usr/local/include/
+    * sudo cp -r /usr/local/libusb/lib/* /usr/local/lib/
+            
++ openssl
+  - use version 1.1.1s, static lib
+  - buid
+    * wget https://www.openssl.org/source/openssl-1.1.1s.tar.gz
+    * tar xvfz openssl-1.1.1s.tar.gz
+    * ./Configure linux-x86_64 no-shared  no-md2 no-mdc2 no-rc5 no-rc4  --prefix=/usr/local/openssl-1.1.1s
+    * make depend
+    * make
+    * sudo make install
+
++ nlohmann/json
+  - build : no need compile, develop branch, 
+    * cd /usr/local
+    * sudo git clone https://github.com/nlohmann/json.git
+
+
 
 ## run
 + Windows11 - with admin permision.
