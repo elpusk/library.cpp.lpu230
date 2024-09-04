@@ -227,10 +227,20 @@ namespace _mp {
                 v_rx.resize(n_report, 0);
 
                 int n_result = hid_read(m_p_dev, &v_rx[n_offset], v_rx.size() - n_offset);
-                if (n_result == 0 && n_offset == 0) {
-                    v_rx.resize(0);
-                    b_result = true;
-                    continue;//exit none data
+                if (n_result == 0) {
+                    if (n_offset == 0) {
+                        v_rx.resize(0);
+                        b_result = true;
+                        continue;//exit none data
+                    }
+                    if (n_offset >= v_rx.size()) {
+                        b_result = true;
+                        continue;//exit complete
+                    }
+                    else {
+                        b_continue = true;
+                        continue;//retry rx
+                    }
                 }
 
                 if (n_result < 0) {
@@ -238,16 +248,19 @@ namespace _mp {
                     continue;//error exit
                 }
 
-                if (n_result > (v_rx.size() - n_offset)) {
+                //here! n_result > 0
+                n_offset += n_result;
+                //
+                if (n_offset > v_rx.size()) {
                     continue;//error exit
                 }
-                if (n_result < (v_rx.size() - n_offset)) {
+                if (n_offset < v_rx.size()) {
                     //need more 
-                    n_offset += n_result;
                     b_continue = true;
                     continue;
                 }
-
+                //here! n_result == v_rx.size()
+                // complete read
                 b_result = true;
             } while (b_continue);
 

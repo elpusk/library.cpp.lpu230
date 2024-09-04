@@ -60,8 +60,13 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 		log.config(s_log_folder_except_backslash, 6);
 		log.remove_log_files_older_then_now_day(3);
 		log.enable(true);
-		log.log_fmt(L"[I] START LOGGING.\n");
-		log.trace(L"[I] - START TRACING.\n");
+#ifdef _DEBUG
+		log.log_fmt(L"[I] START LOGGING ON DEBUG.\n");
+		log.trace(L"[I] - START TRACING ON DEBUG.\n");
+#else
+		log.log_fmt(L"[I] START LOGGING ON RELEASE.\n");
+		log.trace(L"[I] - START TRACING ON RELEASE.\n");
+#endif
 
 		if (!gptr_ctl_pipe) {
 			log.log_fmt(L"[E] %ls | create controller pipe.\n", __WFUNCTION__);
