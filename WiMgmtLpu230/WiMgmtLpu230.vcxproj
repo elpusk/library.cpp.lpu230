@@ -104,33 +104,33 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <TargetName>mgmt_lpu230</TargetName>
-    <IncludePath>C:\local\boost_1_80_0;$(SolutionDir)shared/lib/inc;$(SolutionDir)shared/common/inc;$(SolutionDir)shared\3thpart\src\win;C:\local\openssl-1.1.1s\x86\OpenSSL\include;$(IncludePath);$(SolutionDir)../shared/projects/MgmtLpu230/inc;C:\local\libusb\out\include</IncludePath>
-    <LibraryPath>C:\local\boost_1_80_0\stage\lib;C:\local\openssl-1.1.1s\x86\OpenSSL\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\local\libusb\libusb;$(SolutionDir)shared/lib/inc;$(SolutionDir)shared/common/inc;$(SolutionDir)shared\3thpart\src\win;$(IncludePath);$(SolutionDir)../shared/projects/MgmtLpu230/inc;C:\local\libusb\out\include;C:\local\boost_1_80_0;C:\local\openssl-1.1.1s\x86\OpenSSL\include</IncludePath>
+    <LibraryPath>C:\local\boost_1_80_0\stage\lib;C:\local\openssl-1.1.1s\x86\OpenSSL\lib;C:\local\libusb\build\v143\Win32\Debug-MT\lib;$(LibraryPath)</LibraryPath>
     <SourcePath>C:\local\boost_1_80_0\boost;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <TargetName>mgmt_lpu230</TargetName>
-    <IncludePath>C:\local\boost_1_80_0;$(SolutionDir)shared/lib/inc;$(SolutionDir)shared/common/inc;$(SolutionDir)shared\3thpart\src\win;C:\local\openssl-1.1.1s\x86\OpenSSL\include;$(IncludePath);$(SolutionDir)../shared/projects/MgmtLpu230/inc;C:\local\libusb\out\include</IncludePath>
-    <LibraryPath>C:\local\boost_1_80_0\stage\lib;C:\local\openssl-1.1.1s\x86\OpenSSL\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\local\libusb\libusb;$(SolutionDir)shared/lib/inc;$(SolutionDir)shared/common/inc;$(SolutionDir)shared\3thpart\src\win;$(IncludePath);$(SolutionDir)../shared/projects/MgmtLpu230/inc;C:\local\libusb\out\include;C:\local\boost_1_80_0;C:\local\openssl-1.1.1s\x86\OpenSSL\include</IncludePath>
+    <LibraryPath>C:\local\boost_1_80_0\stage\lib;C:\local\openssl-1.1.1s\x86\OpenSSL\lib;C:\local\libusb\build\v143\Win32\Release-MT\lib;$(LibraryPath)</LibraryPath>
     <SourcePath>C:\local\boost_1_80_0\boost;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <TargetName>mgmt_lpu230</TargetName>
-    <IncludePath>C:\local\boost_1_80_0;$(SolutionDir)shared/lib/inc;$(SolutionDir)shared/common/inc;$(SolutionDir)shared\3thpart\src\win;C:\local\openssl-1.1.1s\x64\OpenSSL\include;$(IncludePath);$(SolutionDir)../shared/projects/MgmtLpu230/inc;C:\local\libusb\out\include</IncludePath>
-    <LibraryPath>C:\local\boost_1_80_0\stage\lib;C:\local\openssl-1.1.1s\x64\OpenSSL\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\local\libusb\libusb;$(SolutionDir)shared/lib/inc;$(SolutionDir)shared/common/inc;$(SolutionDir)shared\3thpart\src\win;$(IncludePath);$(SolutionDir)../shared/projects/MgmtLpu230/inc;C:\local\libusb\out\include;C:\local\boost_1_80_0;C:\local\openssl-1.1.1s\x64\OpenSSL\include</IncludePath>
+    <LibraryPath>C:\local\boost_1_80_0\stage\lib;C:\local\openssl-1.1.1s\x64\OpenSSL\lib;C:\local\libusb\build\v143\x64\Debug-MT\lib;$(LibraryPath)</LibraryPath>
     <SourcePath>C:\local\boost_1_80_0\boost;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <TargetName>mgmt_lpu230</TargetName>
-    <IncludePath>C:\local\boost_1_80_0;$(SolutionDir)shared/lib/inc;$(SolutionDir)shared/common/inc;$(SolutionDir)shared\3thpart\src\win;C:\local\openssl-1.1.1s\x64\OpenSSL\include;$(IncludePath);$(SolutionDir)../shared/projects/MgmtLpu230/inc;C:\local\libusb\out\include</IncludePath>
-    <LibraryPath>C:\local\boost_1_80_0\stage\lib;C:\local\openssl-1.1.1s\x64\OpenSSL\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\local\libusb\libusb;$(SolutionDir)shared/lib/inc;$(SolutionDir)shared/common/inc;$(SolutionDir)shared\3thpart\src\win;$(IncludePath);$(SolutionDir)../shared/projects/MgmtLpu230/inc;C:\local\libusb\out\include;C:\local\boost_1_80_0;C:\local\openssl-1.1.1s\x64\OpenSSL\include</IncludePath>
+    <LibraryPath>C:\local\boost_1_80_0\stage\lib;C:\local\openssl-1.1.1s\x64\OpenSSL\lib;C:\local\libusb\build\v143\x64\Release-MT\lib;$(LibraryPath)</LibraryPath>
     <SourcePath>C:\local\boost_1_80_0\boost;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions);_WIN32_WINNT=0x0A00;HID_API_NO_EXPORT_DEFINE</PreprocessorDefinitions>
+      <PreprocessorDefinitions>HID_API_NO_EXPORT_DEFINE;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
@@ -139,7 +139,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libusb-1.0.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>
       </AdditionalLibraryDirectories>
     </Link>
@@ -150,7 +150,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions);_WIN32_WINNT=0x0A00;HID_API_NO_EXPORT_DEFINE</PreprocessorDefinitions>
+      <PreprocessorDefinitions>HID_API_NO_EXPORT_DEFINE;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
@@ -161,7 +161,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libusb-1.0.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>
       </AdditionalLibraryDirectories>
     </Link>
@@ -170,7 +170,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions);_WIN32_WINNT=0x0A00;HID_API_NO_EXPORT_DEFINE</PreprocessorDefinitions>
+      <PreprocessorDefinitions>HID_API_NO_EXPORT_DEFINE;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
@@ -179,7 +179,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libusb-1.0.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>
       </AdditionalLibraryDirectories>
     </Link>
@@ -190,7 +190,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions);_WIN32_WINNT=0x0A00;HID_API_NO_EXPORT_DEFINE</PreprocessorDefinitions>
+      <PreprocessorDefinitions>HID_API_NO_EXPORT_DEFINE;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
@@ -201,7 +201,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libusb-1.0.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>
       </AdditionalLibraryDirectories>
     </Link>

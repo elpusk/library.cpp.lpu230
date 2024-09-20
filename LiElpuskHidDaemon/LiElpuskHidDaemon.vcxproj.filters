@@ -96,6 +96,9 @@
     <Filter Include="common\xml">
       <UniqueIdentifier>{c8f58440-f1a4-4289-85d9-bc7060f68d23}</UniqueIdentifier>
     </Filter>
+    <Filter Include="lib\usb">
+      <UniqueIdentifier>{fc7ae626-77b0-4b42-aea4-b647f3fd20a6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\3thpart\src\linux\hidapi_libusb.h">
@@ -214,6 +217,9 @@
     </ClInclude>
     <ClInclude Include="..\shared\lib\inc\server\mp_ckernel_ctl_.h">
       <Filter>lib\svr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\usb\mp_clibusb.h">
+      <Filter>lib\usb</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

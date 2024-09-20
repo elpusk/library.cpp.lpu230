@@ -29,6 +29,12 @@ namespace _mp{
             return true;
         }
 
+        void clear()
+        {
+            std::lock_guard<std::mutex> lock(m_mutex);
+            std::queue<T> q;
+            m_q.swap(q);
+        }
     private:
         std::queue<T> m_q;
         std::mutex m_mutex;

@@ -1,5 +1,10 @@
 #include <websocket/mp_win_nt.h>
 
+#ifdef _WIN32
+    #include <boost/asio.hpp>
+    #include <windows.h>
+#endif // _WIN32
+
 #include <iostream>
 #include <thread>
 #include <chrono>

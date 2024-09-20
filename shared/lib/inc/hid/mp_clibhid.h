@@ -37,7 +37,7 @@ namespace _mp{
 
     private:
         enum {
-            _const_dev_pluginout_check_interval_mmsec = 30
+            _const_dev_pluginout_check_interval_mmsec = 5// 30
         };
     public:
         static clibhid& get_instance()
@@ -59,6 +59,8 @@ namespace _mp{
                 }
                 hid_exit();
             }
+
+            m_ptr_usb_lib.reset();
         }
 
         bool is_ini() const
@@ -103,6 +105,8 @@ namespace _mp{
             m_set_usb_filter.emplace(_elpusk::const_usb_vid, _elpusk::_lpu238::const_usb_pid, _elpusk::_lpu238::const_usb_inf_hid);
             m_set_usb_filter.emplace(_elpusk::const_usb_vid, _elpusk::const_usb_pid_hidbl, _elpusk::const_usb_inf_hidbl);
 
+            m_ptr_usb_lib = std::make_shared<clibusb>();
+
             if (hid_init() == 0) {
                 m_b_ini = true;
 
@@ -114,7 +118,7 @@ namespace _mp{
                 m_set_cur_dev_info = _get_device_set();
 
                 for (const clibhid_dev_info& item : m_set_cur_dev_info) {
-                    auto ptr_dev = std::make_shared<clibhid_dev>(item);
+                    auto ptr_dev = std::make_shared<clibhid_dev>(item, m_ptr_usb_lib);
                     if (!ptr_dev) {
                         continue;
                     }
@@ -132,19 +136,6 @@ namespace _mp{
         
         }
 
-        clibhid_dev::type_wptr _get_device(const clibhid_dev_info& dev_info)
-        {
-            clibhid_dev::type_wptr wptr;
-            std::string s_path(dev_info.get_path_by_string());
-
-            do {
-                auto it = m_map_ptrs.find(s_path);
-                if (it != m_map_ptrs.end()) {
-                    wptr = it->second.first;
-                }
-            } while (false);
-            return wptr;
-        }
         clibhid_dev::type_wptr _get_device(const std::string& s_path)
         {
             clibhid_dev::type_wptr wptr;
@@ -155,6 +146,11 @@ namespace _mp{
                 }
             } while (false);
             return wptr;
+        }
+
+        clibhid_dev::type_wptr _get_device(const clibhid_dev_info& dev_info)
+        {
+            return _get_device(dev_info.get_path_by_string());
         }
 
         clibhid_dev::type_wptr _get_device(const std::wstring & sw_path)
@@ -187,6 +183,12 @@ namespace _mp{
 
                 std::this_thread::sleep_for(std::chrono::milliseconds(clibhid::_const_dev_pluginout_check_interval_mmsec));
             }//end while
+
+            std::wstringstream ss;
+            ss << std::this_thread::get_id();
+            std::wstring s_id = ss.str();
+            _mp::clog::get_instance().log_fmt_in_debug_mode(L"[D] exit : %ls : id = %ls.\n", __WFUNCTION__, s_id.c_str());
+
         }
 
         /**
@@ -220,10 +222,12 @@ namespace _mp{
 
                 for (auto item : m_set_removed_dev_info) {
                     clog::get_instance().trace(L"[I] - %ls - removed : %ls.\n", __WFUNCTION__, item.get_path_by_wstring().c_str());
+                    clog::get_instance().log_fmt(L"[I] - %ls - removed : %ls.\n", __WFUNCTION__, item.get_path_by_wstring().c_str());
                 }
 
                 for (auto item : m_set_inserted_dev_info) {
                     clog::get_instance().trace(L"[I] - %ls - inserted : %ls.\n", __WFUNCTION__, item.get_path_by_wstring().c_str());
+                    clog::get_instance().log_fmt(L"[I] - %ls - inserted : %ls.\n", __WFUNCTION__, item.get_path_by_wstring().c_str());
                 }
 
                 if (m_set_cur_dev_info.empty()) {
@@ -253,6 +257,8 @@ namespace _mp{
                 st = clibhid_dev_info::get_dev_info_set(devs);
                 hid_free_enumeration(devs);
             }
+
+            m_ptr_usb_lib->update_device_list();
 
             if (!m_set_usb_filter.empty()) {
                 //filtering.. 
@@ -284,7 +290,7 @@ namespace _mp{
 
                 //insert
                 for (const clibhid_dev_info & item : m_set_inserted_dev_info) {
-                    auto ptr_dev = std::make_shared<clibhid_dev>(item);
+                    auto ptr_dev = std::make_shared<clibhid_dev>(item, m_ptr_usb_lib);
                     if (!ptr_dev) {
                         continue;
                     }
@@ -298,6 +304,8 @@ namespace _mp{
         }
 
     private:
+        clibusb::type_ptr m_ptr_usb_lib;
+
         void* m_p_user;
         clibhid::type_callback_pluginout m_cb;
 

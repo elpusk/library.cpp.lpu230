@@ -34,6 +34,9 @@
     <Filter Include="lib\_dev">
       <UniqueIdentifier>{ca82276f-54c6-4e5f-9c87-929758cc1df8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="lib\usb">
+      <UniqueIdentifier>{40f3002a-42f1-44c3-a895-8a358f83701c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\shared\3thpart\src\linux\hid.c">
@@ -175,6 +178,9 @@
     </ClInclude>
     <ClInclude Include="..\shared\lib\inc\mp_cnamed_pipe_.h">
       <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\usb\mp_clibusb.h">
+      <Filter>lib\usb</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

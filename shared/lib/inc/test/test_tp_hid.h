@@ -298,7 +298,7 @@ namespace _test{
 						continue;//more processing
 					case _mp::cqitem_dev::result_success:
 						printf(" ++ _cb_rx : result_success.\n");
-						printf(" ++ %u : %02x,%02x,%02x.\n", v.size(), v[0], v[1], v[2]);
+						printf(" ++ %u : %02x,%02x,%02x.\n", (unsigned int)v.size(), v[0], v[1], v[2]);
 						break;
 					case _mp::cqitem_dev::result_error:
 						printf(" ++ _cb_rx : result_error.\n");

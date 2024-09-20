@@ -131,12 +131,18 @@ namespace _mp{
             return out.size();
         }
     public: //constructor & destructor      
-        clibhid_dev_info() : m_dev_info({0,}), m_n_size_in_report(0), m_n_size_out_report(0)
+        clibhid_dev_info() : 
+            m_dev_info({0,}),
+            m_n_size_in_report(0),
+            m_n_size_out_report(0)
         {
 
         }
 
-        clibhid_dev_info(struct hid_device_info *p_dev_info) : m_dev_info({0,}), m_n_size_in_report(0), m_n_size_out_report(0)
+        clibhid_dev_info(struct hid_device_info *p_dev_info) :
+            m_dev_info({0,}), 
+            m_n_size_in_report(0),
+            m_n_size_out_report(0)
         {
             if(p_dev_info){
                 m_dev_info = *p_dev_info;

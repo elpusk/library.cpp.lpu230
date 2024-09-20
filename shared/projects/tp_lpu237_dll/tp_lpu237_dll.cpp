@@ -7,6 +7,8 @@
 
 #include "clpu237_msr.h"
 
+static std::atomic_bool gb_need_resetup(false);
+
 static void _CALLTYPE_ cb_msr(void* p_user)
 {
 	std::atomic_bool* p_b_complete = (std::atomic_bool*)p_user;
@@ -31,6 +33,7 @@ static void _CALLTYPE_ cb_msr(void* p_user)
 		std::tie(b_result, ar_result) = lib.LPU237_get_data(n_index, ar_s_iso);
 		if (!b_result) {
 			std::wcout << L"[E] reading system error" << std::endl;
+			gb_need_resetup = true;
 			continue;
 		}
 
@@ -55,6 +58,55 @@ static void _CALLTYPE_ cb_msr(void* p_user)
 	}
 }
 
+static std::pair<bool, HANDLE> _get_list_open_enable(clpu237_msr& lib)
+{
+	HANDLE h_dev(NULL);
+	bool b_result(false);
+	bool b_need_close(false);
+
+	std::list<std::wstring> list_dev;
+
+	do {
+		if (!lib.LPU237_get_list(list_dev)) {
+			std::wcout << L" : E : LPU237_get_list : none device." << std::endl;
+			continue;
+		}
+		std::wcout << L" : I : LPU237_get_list." << std::endl;
+
+		if (list_dev.empty()) {
+			std::wcout << L" : I : None device." << std::endl;
+			continue;
+		}
+
+		std::wcout << L" : I : selected device : " << *(list_dev.begin()) << std::endl;
+
+		if (!lib.LPU237_open(*(list_dev.begin()), h_dev)) {
+			std::wcout << L" : E : _fun_open_first_device : ." << std::endl;
+			continue;
+		}
+		std::wcout << L" : I : _fun_open_first_device." << std::endl;
+		b_need_close = true;
+
+		if (!lib.LPU237_enable(h_dev)) {
+			std::wcout << L" : E : LPU237_enable : ." << std::endl;
+			continue;
+		}
+
+		b_result = true;
+	}while(false);
+
+	if (!b_result && b_need_close) {
+		if (!lib.LPU237_close(h_dev)) {
+			std::wcout << L" : E : _fun_close_first_device : ." << std::endl;
+		}
+		else {
+			std::wcout << L" : I : _fun_close_first_device." << std::endl;
+		}
+
+	}
+	return std::make_pair(b_result, h_dev);
+}
+
 int main()
 {
     std::wcout << L"Hello World!\n";
@@ -69,6 +121,7 @@ int main()
 #endif // _WIN32
 
 	clpu237_msr& lib(clpu237_msr::get_instance());
+	bool b_result(false);
 
 	do {
 
@@ -83,40 +136,34 @@ int main()
 			continue;
 		}
 		std::wcout << L" : I : LPU237_dll_on." << std::endl;
+				
 
-		std::list<std::wstring> list_dev;
-		if (!lib.LPU237_get_list(list_dev)) {
-			std::wcout << L" : E : LPU237_get_list : none device." << std::endl;
+		std::tie(b_result, h_dev)=_get_list_open_enable(lib);
+		if (!b_result) {
 			continue;
 		}
-		std::wcout << L" : I : LPU237_get_list." << std::endl;
-
-		if (list_dev.empty()) {
-			std::wcout << L" : I : None device." << std::endl;
-			continue;
-		}
-
-		std::wcout << L" : I : selected device : "<< *(list_dev.begin())<< std::endl;
-
-		if (!lib.LPU237_open(*(list_dev.begin()), h_dev)) {
-			std::wcout << L" : E : _fun_open_first_device : ." << std::endl;
-			continue;
-		}
-		std::wcout << L" : I : _fun_open_first_device." << std::endl;
 		b_need_close = true;
-
-		if (!lib.LPU237_enable(h_dev)) {
-			std::wcout << L" : E : LPU237_enable : ." << std::endl;
-			continue;
-		}
-
-		bool b_result(false);
+		
 		unsigned long n_buffer_index(LPU237_DLL_RESULT_ERROR);
-		int n_loop = 10;
+		int n_loop = 1000;
+		int n = 1;
 
 		std::atomic_bool b_complete(false);
 
 		do {
+			if (gb_need_resetup) {
+				//system error resetup need.
+				lib.LPU237_disable(h_dev);
+				lib.LPU237_close(h_dev);
+
+				std::tie(b_result, h_dev) = _get_list_open_enable(lib);
+				if (!b_result) {
+					std::this_thread::sleep_for(std::chrono::milliseconds(500));
+					continue;//retry recovering
+				}
+				gb_need_resetup = false;
+			}
+
 			b_complete = false;
 			std::tie(b_result, n_buffer_index ) = lib.LPU237_wait_swipe_with_callback(h_dev, cb_msr, &b_complete);
 			if (!b_result) {
@@ -124,7 +171,7 @@ int main()
 				break;
 			}
 			lib.push_buffer_index(n_buffer_index);
-			std::wcout << L"READ MSR :" << std::endl;
+			std::wcout << L"READ MSR" << n++ << L" : " << std::endl;
 
 			int n_max = 10;
 			int n_progress = 0;
@@ -155,6 +202,7 @@ int main()
 				}
 				std::this_thread::sleep_for(std::chrono::milliseconds(500));
 			}//the end of while
+
 			//
 			--n_loop;
 		} while (n_loop > 0);

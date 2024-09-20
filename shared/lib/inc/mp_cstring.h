@@ -272,7 +272,9 @@ namespace _mp{
 		{
 			s_out.clear();
 			va_list ap;
-			va_start(ap, s_fmt.c_str());
+			const wchar_t* ps_fmt = s_fmt.c_str();
+
+			va_start(ap, ps_fmt);
 
 			do {
 				if (s_fmt.empty())
@@ -301,7 +303,9 @@ namespace _mp{
 		{
 			s_out.clear();
 			va_list ap;
-			va_start(ap, s_fmt.c_str());
+			const wchar_t* ps_fmt = s_fmt.c_str();
+
+			va_start(ap, ps_fmt);
 
 			do {
 				if (s_fmt.empty())

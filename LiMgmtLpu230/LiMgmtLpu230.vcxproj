@@ -167,6 +167,7 @@
     <ClInclude Include="..\shared\lib\inc\server\mp_cserver_.h" />
     <ClInclude Include="..\shared\lib\inc\server\mp_cworker_ctl.h" />
     <ClInclude Include="..\shared\lib\inc\test\test_tp_hid.h" />
+    <ClInclude Include="..\shared\lib\inc\usb\mp_clibusb.h" />
     <ClInclude Include="..\shared\lib\inc\websocket\mp_cws_server.h" />
     <ClInclude Include="..\shared\lib\inc\websocket\mp_win_nt.h" />
     <ClInclude Include="..\shared\lib\inc\websocket\mp_ws_tools.h" />
