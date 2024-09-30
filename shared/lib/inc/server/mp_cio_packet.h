@@ -112,6 +112,33 @@ public:
 											// only this is used for indicating the last of error code.
 	};
 
+	static std::wstring get_action_code_by_string(type_act a)
+	{
+		std::wstring s(L"undefined_action_code");
+
+		switch (a)
+		{
+		case cio_packet::act_mgmt_unknown: s = L"act_mgmt_unknown";	break;
+		case cio_packet::act_mgmt_get_echo: s = L"act_mgmt_get_echo";	break;
+		case cio_packet::act_mgmt_get_device_list: s = L"act_mgmt_get_device_list";	break;
+		case cio_packet::act_mgmt_ctl_show: s = L"act_mgmt_ctl_show";	break;
+		case cio_packet::act_mgmt_file_operation: s = L"act_mgmt_file_operation";	break;
+		case cio_packet::act_mgmt_dev_plug_in: s = L"act_mgmt_dev_plug_in";	break;
+		case cio_packet::act_mgmt_advance_operation: s = L"act_mgmt_advance_operation";	break;
+		case cio_packet::act_mgmt_dev_kernel_operation: s = L"act_mgmt_dev_kernel_operation";	break;
+		case cio_packet::act_dev_independent_bootloader: s = L"act_dev_independent_bootloader";	break;
+		case cio_packet::act_dev_open: s = L"act_dev_open";	break;
+		case cio_packet::act_dev_close: s = L"act_dev_close";	break;
+		case cio_packet::act_dev_write: s = L"act_dev_write";	break;
+		case cio_packet::act_dev_read: s = L"act_dev_read";	break;
+		case cio_packet::act_dev_transmit: s = L"act_dev_transmit";	break;
+		case cio_packet::act_dev_cancel: s = L"act_dev_cancel";	break;
+		case cio_packet::act_dev_sub_bootloader: s = L"act_dev_sub_bootloader";	break;
+		default:
+			break;
+		}//end switch
+		return s;
+	}
 	static std::wstring get_error_message(type_error_reason reason)
 	{
 		static std::wstring ss_message_map[] =
@@ -137,7 +164,7 @@ public:
 			L"overflow_buffer"
 		};
 
-		std::wstring s_message;
+		std::wstring s_message(L"unknown_error");
 
 		if (reason < error_reason_last_error_code && reason >= error_reason_json) {
 			s_message = ss_message_map[reason];

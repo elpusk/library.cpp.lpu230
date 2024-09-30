@@ -58,29 +58,39 @@ static void _CALLTYPE_ cb_msr(void* p_user)
 	}
 }
 
-static std::pair<bool, HANDLE> _get_list_open_enable(clpu237_msr& lib)
+static std::tuple<bool, HANDLE, std::wstring> _get_list_open_enable(clpu237_msr& lib, const std::wstring &s_dev)
 {
 	HANDLE h_dev(NULL);
 	bool b_result(false);
 	bool b_need_close(false);
 
 	std::list<std::wstring> list_dev;
+	std::wstring s_path;
 
 	do {
-		if (!lib.LPU237_get_list(list_dev)) {
-			std::wcout << L" : E : LPU237_get_list : none device." << std::endl;
-			continue;
+
+		if (s_dev.empty()) {
+			if (!lib.LPU237_get_list(list_dev)) {
+				std::wcout << L" : E : LPU237_get_list : none device." << std::endl;
+				continue;
+			}
+			std::wcout << L" : I : LPU237_get_list." << std::endl;
+
+			if (list_dev.empty()) {
+				std::wcout << L" : I : None device." << std::endl;
+				continue;
+			}
+
+			std::wcout << L" : I : selected device : " << *(list_dev.begin()) << std::endl;
+			s_path = *(list_dev.begin());
 		}
-		std::wcout << L" : I : LPU237_get_list." << std::endl;
-
-		if (list_dev.empty()) {
-			std::wcout << L" : I : None device." << std::endl;
-			continue;
+		else {
+			s_path = s_dev;
 		}
 
-		std::wcout << L" : I : selected device : " << *(list_dev.begin()) << std::endl;
+		
 
-		if (!lib.LPU237_open(*(list_dev.begin()), h_dev)) {
+		if (!lib.LPU237_open(s_path, h_dev)) {
 			std::wcout << L" : E : _fun_open_first_device : ." << std::endl;
 			continue;
 		}
@@ -104,7 +114,7 @@ static std::pair<bool, HANDLE> _get_list_open_enable(clpu237_msr& lib)
 		}
 
 	}
-	return std::make_pair(b_result, h_dev);
+	return std::make_tuple(b_result, h_dev,s_path);
 }
 
 int main()
@@ -122,6 +132,7 @@ int main()
 
 	clpu237_msr& lib(clpu237_msr::get_instance());
 	bool b_result(false);
+	std::wstring s_path;
 
 	do {
 
@@ -138,7 +149,7 @@ int main()
 		std::wcout << L" : I : LPU237_dll_on." << std::endl;
 				
 
-		std::tie(b_result, h_dev)=_get_list_open_enable(lib);
+		std::tie(b_result, h_dev, s_path)=_get_list_open_enable(lib, s_path);
 		if (!b_result) {
 			continue;
 		}
@@ -153,13 +164,19 @@ int main()
 		do {
 			if (gb_need_resetup) {
 				//system error resetup need.
+
+				std::wcout << L" : I : RESETUP :LPU237_disable." << std::endl;
 				lib.LPU237_disable(h_dev);
+
+				std::wcout << L" : I : RESETUP :LPU237_close." << std::endl;
 				lib.LPU237_close(h_dev);
 
-				std::tie(b_result, h_dev) = _get_list_open_enable(lib);
+				std::tie(b_result, h_dev, s_path) = _get_list_open_enable(lib, s_path);
 				if (!b_result) {
 					std::this_thread::sleep_for(std::chrono::milliseconds(500));
-					continue;//retry recovering
+					std::wcout << L" : I : FAIL : RESETUP." << std::endl;
+					break;//recover fail
+					//continue;//retry recovering
 				}
 				gb_need_resetup = false;
 			}

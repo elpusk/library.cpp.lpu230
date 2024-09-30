@@ -37,7 +37,7 @@ namespace _mp{
 
     private:
         enum {
-            _const_dev_pluginout_check_interval_mmsec = 5// 30
+            _const_dev_pluginout_check_interval_mmsec = 30
         };
     public:
         static clibhid& get_instance()
@@ -107,6 +107,8 @@ namespace _mp{
 
             m_ptr_usb_lib = std::make_shared<clibusb>();
 
+            m_ptr_mutex_hidapi = std::make_shared<std::mutex>();
+
             if (hid_init() == 0) {
                 m_b_ini = true;
 
@@ -118,7 +120,7 @@ namespace _mp{
                 m_set_cur_dev_info = _get_device_set();
 
                 for (const clibhid_dev_info& item : m_set_cur_dev_info) {
-                    auto ptr_dev = std::make_shared<clibhid_dev>(item, m_ptr_usb_lib);
+                    auto ptr_dev = std::make_shared<clibhid_dev>(item, m_ptr_usb_lib, m_ptr_mutex_hidapi);
                     if (!ptr_dev) {
                         continue;
                     }
@@ -175,7 +177,7 @@ namespace _mp{
                         //device list is changed
                         lib._update_device_map();
 
-                        if (lib.m_cb) {//call callback
+                        if (lib.m_cb) {//call callback.. for dev_ctl
                             lib.m_cb(lib.m_set_inserted_dev_info, lib.m_set_removed_dev_info, lib.m_set_cur_dev_info, lib.m_p_user);
                         }
                     }
@@ -187,7 +189,7 @@ namespace _mp{
             std::wstringstream ss;
             ss << std::this_thread::get_id();
             std::wstring s_id = ss.str();
-            _mp::clog::get_instance().log_fmt_in_debug_mode(L"[D] exit : %ls : id = %ls.\n", __WFUNCTION__, s_id.c_str());
+            _mp::clog::get_instance().log_fmt(L"[I] exit : %ls : id = %ls.\n", __WFUNCTION__, s_id.c_str());
 
         }
 
@@ -251,29 +253,51 @@ namespace _mp{
         clibhid_dev_info::type_set _get_device_set()
         {
             clibhid_dev_info::type_set st;
-            struct hid_device_info* devs = hid_enumerate(0x0, 0x0);
+            struct hid_device_info* devs = NULL;
 
-            if (devs) {
-                st = clibhid_dev_info::get_dev_info_set(devs);
-                hid_free_enumeration(devs);
-            }
+            do {
+                std::lock_guard<std::mutex> lock(*m_ptr_mutex_hidapi);
+                devs = hid_enumerate(0x0, 0x0);
+
+                if (devs) {
+                    st = clibhid_dev_info::get_dev_info_set(devs);
+                    hid_free_enumeration(devs);
+                }
+            } while (false);
 
             m_ptr_usb_lib->update_device_list();
 
+            // checks the device critial error 
+            clibhid_dev_info::type_set st_must_be_removed;
+            for (auto item : m_map_ptrs) {
+                if (!item.second.first) {
+                    continue;
+                }
+                if (!item.second.first->is_detect_replugin()) {
+                    continue;
+                }
+                //critical error .. remove device forcelly
+                if (item.second.second) {
+                    st_must_be_removed.insert(*item.second.second);
+                }
+            }//end for
+
+            clibhid_dev_info::type_set st_after_removed = coperation::subtract<clibhid_dev_info>(st, st_must_be_removed);
+            //
             if (!m_set_usb_filter.empty()) {
                 //filtering.. 
                 clibhid_dev_info::type_set set_union_found;
                 std::for_each(std::begin(m_set_usb_filter), std::end(m_set_usb_filter), [&](const type_tuple_usb_filter& filter) {
                     clibhid_dev_info::type_set set_found;
-                    if (clibhid_dev_info::filter_dev_info_set(set_found, st, filter) > 0) {
+                    if (clibhid_dev_info::filter_dev_info_set(set_found, st_after_removed, filter) > 0) {
                         set_union_found.insert(std::begin(set_found), std::end(set_found));
                     }
                     });
 
-                st.swap(set_union_found);
+                st_after_removed.swap(set_union_found);
             }
 
-            return st;
+            return st_after_removed;
         }
 
         /**
@@ -290,7 +314,7 @@ namespace _mp{
 
                 //insert
                 for (const clibhid_dev_info & item : m_set_inserted_dev_info) {
-                    auto ptr_dev = std::make_shared<clibhid_dev>(item, m_ptr_usb_lib);
+                    auto ptr_dev = std::make_shared<clibhid_dev>(item, m_ptr_usb_lib, m_ptr_mutex_hidapi);
                     if (!ptr_dev) {
                         continue;
                     }
@@ -309,6 +333,7 @@ namespace _mp{
         void* m_p_user;
         clibhid::type_callback_pluginout m_cb;
 
+        std::shared_ptr<std::mutex> m_ptr_mutex_hidapi;//mutex for hidapi library
         bool m_b_ini;
         std::mutex m_mutex;
         clibhid::type_map_ptrs m_map_ptrs;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <queue>
+#include <deque>
 #include <mutex>
 #include <condition_variable>
 #include <vector>
@@ -15,7 +15,7 @@ namespace _mp{
         void push(const T& value) 
         {
             std::lock_guard<std::mutex> lock(m_mutex);
-            m_q.push(value);
+            m_q.push_back(value);
         }
 
         bool try_pop(T& value) 
@@ -25,18 +25,18 @@ namespace _mp{
                 return false;
             }
             value = m_q.front();
-            m_q.pop();
+            m_q.pop_front();
             return true;
         }
 
         void clear()
         {
             std::lock_guard<std::mutex> lock(m_mutex);
-            std::queue<T> q;
+            std::deque<T> q;
             m_q.swap(q);
         }
     private:
-        std::queue<T> m_q;
+        std::deque<T> m_q;
         std::mutex m_mutex;
     };
 

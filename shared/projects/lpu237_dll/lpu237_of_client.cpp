@@ -1,5 +1,7 @@
 #include <websocket/mp_win_nt.h>
 #include <mp_casync_result_manager.h>
+#include <mp_clog.h>
+
 
 #include "tg_lpu237_dll.h"
 #include "lpu237_of_client.h"
@@ -264,12 +266,15 @@ bool lpu237_of_client::_cmd_get( cprotocol_lpu237::type_cmd c_cmd)
     int n_result_index(-1);
 
     do {
-        if (is_null_device() )
+        if (is_null_device()) {
+            _mp::clog::get_instance().log_fmt_in_debug_mode(L" : DEB : %ls : error : is_null_device().\n", __WFUNCTION__);
             continue;
+        }
 
         if (!_mp::casync_result_manager::get_instance(get_class_name()).empty_queue(m_n_device_index)) {
             //cancel operation.
             if (!_reset()) {
+                _mp::clog::get_instance().log_fmt_in_debug_mode(L" : DEB : %ls : error : _reset().\n", __WFUNCTION__);
                 continue;
             }
         }
@@ -294,8 +299,10 @@ bool lpu237_of_client::_cmd_get( cprotocol_lpu237::type_cmd c_cmd)
             break;
         }//end switch
 
-        if (!b_result)
+        if (!b_result) {
+            _mp::clog::get_instance().log_fmt_in_debug_mode(L" : DEB : %ls : error : generate_x().\n", __WFUNCTION__);
             continue;
+        }
 
         b_result = false;
         //
@@ -303,24 +310,40 @@ bool lpu237_of_client::_cmd_get( cprotocol_lpu237::type_cmd c_cmd)
         _mp::type_v_buffer v_rx(0);
 
         size_t n_remainder_transaction = m_protocol.get_tx_transaction(v_tx);
-        if (v_tx.size() == 0)
+        if (v_tx.size() == 0) {
+            _mp::clog::get_instance().log_fmt_in_debug_mode(L" : DEB : %ls : error : v_tx is empty().\n", __WFUNCTION__);
             continue;
+        }
         //
         n_result_index = _create_async_result_for_transaction(nullptr,nullptr,NULL,0);
-        if (n_result_index < 0)
+        if (n_result_index < 0) {
+            _mp::clog::get_instance().log_fmt_in_debug_mode(L" : DEB : %ls : error : _create_async_result_for_transaction().\n", __WFUNCTION__);
             continue;
-        if (!capi_client::get_instance().transmit(m_n_client_index, m_n_device_index, 0, 0, v_tx))
+        }
+        if (!capi_client::get_instance().transmit(m_n_client_index, m_n_device_index, 0, 0, v_tx)) {
+            _mp::clog::get_instance().log_fmt_in_debug_mode(L" : DEB : %ls : error : transmit().\n", __WFUNCTION__);
             continue;
+        }
+        _mp::clog::get_instance().log_fmt_in_debug_mode(L" : DEB : %ls : n_result_index = %d.\n", __WFUNCTION__, n_result_index);
+        _mp::clog::get_instance().log_data_in_debug_mode(v_tx, L"v_tx = ", L"\n");
         //
         _mp::casync_parameter_result::type_ptr_ct_async_parameter_result& ptr_async_parameter_result = _mp::casync_result_manager::get_instance(get_class_name()).get_async_parameter_result(m_n_device_index,n_result_index);
-        if (!ptr_async_parameter_result->waits())
+        if (!ptr_async_parameter_result->waits()) {
+            _mp::clog::get_instance().log_fmt_in_debug_mode(L" : DEB : %ls : error : waits().\n", __WFUNCTION__);
             continue;
-        if (!ptr_async_parameter_result->get_result(v_rx))
+        }
+        if (!ptr_async_parameter_result->get_result(v_rx)) {
+            _mp::clog::get_instance().log_fmt_in_debug_mode(L" : DEB : %ls : error : get_result().\n", __WFUNCTION__);
             continue;
-        if (!m_protocol.set_rx_transaction(v_rx))
+        }
+        if (!m_protocol.set_rx_transaction(v_rx)) {
+            _mp::clog::get_instance().log_fmt_in_debug_mode(L" : DEB : %ls : error : set_rx_transaction().\n", __WFUNCTION__);
             continue;
-        if (!m_protocol.set_from_rx())
+        }
+        if (!m_protocol.set_from_rx()) {
+            _mp::clog::get_instance().log_fmt_in_debug_mode(L" : DEB : %ls : error : set_from_rx().\n", __WFUNCTION__);
             continue;
+        }
         //        
         b_result = true;
     } while (false);

@@ -12,6 +12,8 @@
 #include <usb/mp_clibusb.h>
 #include <hid/mp_clibhid_dev_info.h>
 
+//#define _USE_BLOCKING_MODE_IN_CLIBHID_DEV
+
 namespace _mp {
     class clibhid_dev
     {
@@ -32,7 +34,10 @@ namespace _mp {
             _const_dev_rx_check_interval_mmsec = 50
         };
         enum {
-            _const_dev_rx_recover_interval_mmsec = 50
+            _const_dev_rx_recover_interval_mmsec = 1
+        };
+        enum {
+            _const_dev_rx_flush_interval_mmsec = 2
         };
 
         enum {
@@ -40,13 +45,25 @@ namespace _mp {
         };
 
     public:
-        clibhid_dev(const clibhid_dev_info & info,clibusb::type_ptr & ptr_libusb) :
-            m_p_dev(nullptr), m_b_run_th_worker(false), m_dev_info(info), m_wptr_libusb(ptr_libusb)
+        clibhid_dev(
+            const clibhid_dev_info & info,
+            clibusb::type_ptr & ptr_libusb,
+            std::shared_ptr<std::mutex> ptr_mutex_hidpai
+        ) :
+            m_p_dev(nullptr), 
+            m_b_run_th_worker(false),
+            m_dev_info(info), m_wptr_libusb(ptr_libusb),
+            m_b_detect_replugin(false),
+            m_ptr_mutex_hidpai(ptr_mutex_hidpai)
         {
             hid_device* p_dev = hid_open_path(info.get_path_by_string().c_str());
             if (p_dev) {
-                // Set the hid_read() function to be disable non-blocking.
-                if (hid_set_nonblocking(p_dev, 0) == 0) {
+#ifdef _USE_BLOCKING_MODE_IN_CLIBHID_DEV
+                int n_none_blocking = 0;//disable non-blocking.
+#else
+                int n_none_blocking = 1;
+#endif // _USE_BLOCKING_MODE_IN_CLIBHID_DEV
+                if (hid_set_nonblocking(p_dev, n_none_blocking) == 0) {
                     m_p_dev = p_dev;
                     m_b_run_th_worker = true;
                     m_ptr_th_worker = std::shared_ptr<std::thread>(new std::thread(clibhid_dev::_worker_using_thread, std::ref(*this)));
@@ -72,9 +89,14 @@ namespace _mp {
             m_p_dev = nullptr;
         }
 
+        bool is_detect_replugin()
+        {
+            return m_b_detect_replugin;
+        }
+
         bool is_open()
         {
-            std::lock_guard<std::mutex> lock(m_mutex);
+            std::lock_guard<std::mutex> lock(*m_ptr_mutex_hidpai);
             if (m_p_dev)
                 return true;
             else
@@ -86,7 +108,7 @@ namespace _mp {
             std::vector<unsigned char> v(4096,0);//HID_API_MAX_REPORT_DESCRIPTOR_SIZE
 
             do {
-                std::lock_guard<std::mutex> lock(m_mutex);
+                std::lock_guard<std::mutex> lock(*m_ptr_mutex_hidpai);
 
                 int n_result = 0;
                 n_result = hid_get_report_descriptor(m_p_dev, &v[0], v.size());
@@ -145,6 +167,77 @@ namespace _mp {
         }
 
     private:
+
+        /**
+        * called by _worker_using_thread()
+        */
+        std::pair<bool, bool> _pump()
+        {
+            bool b_read_is_normal = true;
+            bool b_expected_replugin = false;
+
+            int n_size_in_report(m_dev_info.get_size_in_report());
+            _mp::type_v_buffer v_rx(n_size_in_report, 0);
+
+            std::tie(b_read_is_normal, b_expected_replugin) = _read_using_thread(v_rx);//pumpping.
+            m_q_rx_ptr_v.clear();//pumpping.
+
+            if (!b_read_is_normal) {
+                clog::get_instance().trace(L"[W] - %ls - obj._read_using_thread() in pump.\n", __WFUNCTION__);
+                clog::get_instance().log_fmt(L"[W] - %ls - obj._read_using_thread() in pump.\n", __WFUNCTION__);
+                if (b_expected_replugin) {
+                    m_b_detect_replugin = true;//need this device instance removed
+                }
+            }
+            return std::make_pair(b_read_is_normal, b_expected_replugin);
+        }
+        /**
+        * called by _worker_using_thread()
+        * @return true - need more processing, false - complete transaction with or without error.
+        */
+        bool _tx_and_check_need_more_processing(cqitem_dev::type_ptr & ptr_req)
+        {
+            bool b_need_more_processing(false);
+
+            do {
+                _clear_rx_q();//flush rx q
+
+                if (!ptr_req->is_empty_tx()) {
+#ifndef _USE_BLOCKING_MODE_IN_CLIBHID_DEV
+                    std::lock_guard<std::mutex> lock(*m_ptr_mutex_hidpai);//guard write
+#endif //!_USE_BLOCKING_MODE_IN_CLIBHID_DEV
+                    if (!_write(ptr_req->get_tx())) {//ERROR TX
+                        clog::get_instance().trace(L"[E] - %ls - obj._write().\n", __WFUNCTION__);
+                        clog::get_instance().log_fmt(L"[E] - %ls - obj._write().\n", __WFUNCTION__);
+                        ptr_req->set_result(cqitem_dev::result_error, type_v_buffer(0), L"TX");
+                        continue;
+                    }
+                }
+                if (!ptr_req->is_need_rx()) {
+                    //map be cancel request.......
+                    // none TX & no need rx!
+                    ptr_req->set_result(cqitem_dev::result_success, type_v_buffer(0));
+                    continue;
+                }
+
+                b_need_more_processing = true;
+            } while (false);
+            return b_need_more_processing;
+        }
+
+        void _clear_rx_q()
+        {
+            int n_flush = 0;
+            _mp::type_ptr_v_buffer ptr_flush_buffer;
+
+            while (m_q_rx_ptr_v.try_pop(ptr_flush_buffer)) {
+                n_flush++;
+                std::this_thread::sleep_for(std::chrono::milliseconds(clibhid_dev::_const_dev_rx_flush_interval_mmsec));
+            }//end while
+            m_q_rx_ptr_v.clear();//reset rx queue.
+            clog::get_instance().log_fmt_in_debug_mode(L"[D] - %ls - flush cnt = %d.\n", __WFUNCTION__, n_flush);
+
+        }
         bool _deep_recover_rx()
         {
             bool b_result(false);
@@ -219,6 +312,7 @@ namespace _mp {
                     continue;
                 }
 
+                //the number of tx reports.
                 size_t n_loop = v_tx.size() / n_report;
                 if ( v_tx.size() % n_report ) {
                     ++n_loop;
@@ -242,14 +336,22 @@ namespace _mp {
                     }
                 
                     n_result = hid_write(m_p_dev, &v_report[0], v_report.size());
+                    _mp::clog::get_instance().log_data_in_debug_mode(v_report, L"v_report = ", L"\n");
                     if (n_result < 0) {
                         b_result = false;
+                        _mp::clog::get_instance().log_fmt(L"[E] hid_write() < 0(n_result : n_offset : v_tx.size()) = (%d,%d,%u).\n", n_result, n_offset, v_tx.size());
                         break;
                     }
                     if (n_result != v_report.size()) {
+                        _mp::clog::get_instance().log_fmt(L"[E] hid_write() != v_report.size() (n_result : n_offset : v_tx.size()) = (%d,%d,%u).\n", n_result, n_offset, v_tx.size());
                         b_result = false;
                         break;
                     }
+
+                    _mp::clog::get_instance().log_fmt_in_debug_mode(L"[D] (n_result : n_offset : v_tx.size()) = (%d,%d,%u).\n", n_result, n_offset, v_tx.size());
+
+                    n_offset += n_result;
+
                 }//end for
                 
             } while (false);
@@ -319,7 +421,7 @@ namespace _mp {
 
                 if (n_result < 0) {
 #ifdef _DEBUG
-                    _mp::clog::get_instance().log_fmt(L"[D] 3(n_result : n_offset : v_rx.size()) = (%d,%d,%u).\n", n_result, n_offset, v_rx.size());
+                    _mp::clog::get_instance().log_fmt(L"[E] 3(n_result : n_offset : v_rx.size()) = (%d,%d,%u).\n", n_result, n_offset, v_rx.size());
 #endif
                     v_rx.resize(0);
                     continue;//error exit
@@ -354,10 +456,15 @@ namespace _mp {
             return b_result;
         }
 
-        bool _read_using_thread(std::vector<unsigned char>& v_rx)
+        /**
+        *
+        * @return first true - rx success, second true - mayne device is plug out and in at error status.  
+        */
+        std::pair<bool,bool> _read_using_thread(std::vector<unsigned char>& v_rx)
         {
             bool b_result(false);
             bool b_continue(false);
+            bool b_expected_replugin(false);//only meaned in b_result is false
 #ifdef _WIN32            
             int n_start_offset = 0;//none for report ID
 #else
@@ -368,7 +475,8 @@ namespace _mp {
 
             size_t n_report = m_dev_info.get_size_in_report();
             if (n_report <= 0) {
-                return b_result;//error
+                _mp::clog::get_instance().log_fmt_in_debug_mode(L"[D] get_size_in_report = 0.\n");
+                return std::make_pair(b_result, b_expected_replugin);//error
             }
 
             v_rx.resize(n_report + n_start_offset,0);
@@ -430,6 +538,7 @@ namespace _mp {
                 if (n_result < 0) {
                     if (n_result == -1) {
                         _mp::clog::get_instance().log_fmt_in_debug_mode(L"[D] 3critical(n_result : n_offset : v_rx.size()) = (%d,%d,%u).\n", n_result, n_offset, v_rx.size());
+                        b_expected_replugin = true;
                     }
                     if (n_result == -2) {
                         _mp::clog::get_instance().log_fmt_in_debug_mode(L"[D] 3lost(n_result : n_offset : v_rx.size()) = (%d,%d,%u).\n", n_result, n_offset, v_rx.size());
@@ -445,9 +554,8 @@ namespace _mp {
                 if (n_offset > v_rx.size()) {
                     //here may be some packet is losted, and get another packet!. error
                     _mp::clog::get_instance().log_fmt_in_debug_mode(L"[D] 4(n_result : n_offset : v_rx.size()) = (%d,%d,%u).\n", n_result, n_offset, v_rx.size());
-
-                    _mp::type_v_buffer v(&v_rx[n_offset - n_result], &v_rx[n_offset]);
-                    _mp::clog::get_instance().log_data_in_debug_mode(v, std::wstring(), L"\n");
+                    //_mp::type_v_buffer v(&v_rx[n_offset - n_result], &v_rx[n_offset]);
+                    //_mp::clog::get_instance().log_data_in_debug_mode(v, std::wstring(), L"\n");
                     v_rx.resize(0);
                     continue;//error exit
                 }
@@ -455,8 +563,8 @@ namespace _mp {
                 if (n_offset < v_rx.size()) {
                     _mp::clog::get_instance().log_fmt_in_debug_mode(L"[D] 5(n_result : n_offset : v_rx.size()) = (%d,%d,%u).\n", n_result, n_offset, v_rx.size());
 
-                    _mp::type_v_buffer v(&v_rx[n_offset - n_result], &v_rx[n_offset]);
-                    _mp::clog::get_instance().log_data_in_debug_mode(v, std::wstring(), L"\n");
+                    //_mp::type_v_buffer v(&v_rx[n_offset - n_result], &v_rx[n_offset]);
+                    //_mp::clog::get_instance().log_data_in_debug_mode(v, std::wstring(), L"\n");
  
                     //need more 
                     std::this_thread::sleep_for(std::chrono::milliseconds(clibhid_dev::_const_dev_rx_check_interval_mmsec));
@@ -466,14 +574,14 @@ namespace _mp {
                 }
                 //here! n_result == v_rx.size()
                 _mp::clog::get_instance().log_fmt_in_debug_mode(L"[D] 6(n_result : n_offset : v_rx.size()) = (%d,%d,%u).\n", n_result, n_offset, v_rx.size());
-                _mp::type_v_buffer v(&v_rx[n_offset - n_result], &v_rx[n_offset]);
-                _mp::clog::get_instance().log_data_in_debug_mode(v, std::wstring(), L"\n");
+                //_mp::type_v_buffer v(&v_rx[n_offset - n_result], &v_rx[n_offset]);
+                //_mp::clog::get_instance().log_data_in_debug_mode(v, std::wstring(), L"\n");
 
                 // complete read
                 b_result = true;
             } while (b_continue);
 
-            return b_result;
+            return std::make_pair(b_result, b_expected_replugin);
         }
 
     private:
@@ -494,21 +602,9 @@ namespace _mp {
                 if (b_need_deep_recover) {
                     std::this_thread::sleep_for(std::chrono::milliseconds(clibhid_dev::_const_dev_rx_recover_interval_mmsec));
                     continue;//recover is impossible!
-                    /*
-                    std::lock_guard<std::mutex> lock(obj.m_mutex);
-                    if (obj._deep_recover_rx()) {
-                        b_need_deep_recover = false;
-                        b_need_recover = true;
-                        _mp::clog::get_instance().log_fmt_in_debug_mode(L"[D] deep recovered rx.\n");
-                    }
-                    else {
-                        std::this_thread::sleep_for(std::chrono::milliseconds(clibhid_dev::_const_dev_rx_recover_interval_mmsec));
-                        continue;//retry recover.......
-                    }
-                    */
                 }
                 if (b_need_recover) {
-                    std::lock_guard<std::mutex> lock(obj.m_mutex);
+                    std::lock_guard<std::mutex> lock(*obj.m_ptr_mutex_hidpai);
                     if (obj._recover_rx()) {
                         b_need_recover = false;
                         _mp::clog::get_instance().log_fmt_in_debug_mode(L"[D] recovered rx.\n");
@@ -520,10 +616,21 @@ namespace _mp {
                 }
 
                 v_rx.resize(n_report, 0);
-                int n_result = hid_read_timeout(obj.m_p_dev, &v_rx[0], v_rx.size(), -1);//wait block
+                int n_result = 0;
+                do {
+#ifndef _USE_BLOCKING_MODE_IN_CLIBHID_DEV
+                    std::lock_guard<std::mutex> lock(*obj.m_ptr_mutex_hidpai);//read guard
+#endif // !_USE_BLOCKING_MODE_IN_CLIBHID_DEV
+                    n_result = hid_read(obj.m_p_dev, &v_rx[0], v_rx.size());//wait block or not by initialization
+                } while (false);
+
                 if (n_result > 0) {
                     v_rx.resize(n_result);
                     obj.m_q_rx_ptr_v.push(std::make_shared<_mp::type_v_buffer>(v_rx));
+
+                    _mp::clog::get_instance().log_fmt_in_debug_mode(L"[H] v_rx.size() = %u.\n", v_rx.size());
+                    _mp::clog::get_instance().log_data_in_debug_mode(v_rx, std::wstring(), L"\n");
+
                     continue;
                 }
 
@@ -538,12 +645,14 @@ namespace _mp {
                     obj.m_q_rx_ptr_v.push(_mp::type_ptr_v_buffer());//indicate error of device usb io.
                 }
                 else {
+#ifdef _USE_BLOCKING_MODE_IN_CLIBHID_DEV
                     //timeout here!. maybe some problems.. will be generated a lost packet
-                    b_need_recover = true;
-                    //obj.m_q_rx_ptr_v.push(std::make_shared<_mp::type_v_buffer>(0));//indicate error of lost packet
+                    //b_need_recover = true;
+                    obj.m_q_rx_ptr_v.push(std::make_shared<_mp::type_v_buffer>(0));//indicate error of lost packet
                     //
                     std::wstring s_error(hid_error(obj.m_p_dev));
                     _mp::clog::get_instance().log_fmt_in_debug_mode(L"[D] timeout rx. - %ls.\n", s_error.c_str());
+#endif //_USE_BLOCKING_MODE_IN_CLIBHID_DEV
                 }
                 std::this_thread::sleep_for(std::chrono::milliseconds(clibhid_dev::_const_dev_rx_recover_interval_mmsec));
             }//end while
@@ -551,7 +660,7 @@ namespace _mp {
             std::wstringstream ss;
             ss << std::this_thread::get_id();
             std::wstring s_id = ss.str();
-            _mp::clog::get_instance().log_fmt_in_debug_mode(L"[D] exit : %ls : id = %ls.\n", __WFUNCTION__, s_id.c_str());
+            _mp::clog::get_instance().log_fmt(L"[I] exit : %ls : id = %ls.\n", __WFUNCTION__, s_id.c_str());
         }
         /**
         * device io worker
@@ -564,6 +673,7 @@ namespace _mp {
 
             std::shared_ptr<std::thread> ptr_th_rx(new std::thread(clibhid_dev::_worker_rx, std::ref(obj) ));
             bool b_read_is_normal = true;
+            bool b_expected_replugin = false;
 
             while (obj.m_b_run_th_worker) {
 
@@ -571,56 +681,40 @@ namespace _mp {
                     if (!ptr_cur) {
                         //pumpping mode....... none processing request.
                         if (!obj.m_q_ptr.try_pop(ptr_new) || !ptr_new) {
-                            b_read_is_normal = obj._read_using_thread(v_rx);//pumpping.
-                            obj.m_q_rx_ptr_v.clear();//pumpping.
-
-                            if (!b_read_is_normal) {
-                                clog::get_instance().trace(L"[W] - %ls - obj._read_using_thread() in pump.\n", __WFUNCTION__);
-                                clog::get_instance().log_fmt(L"[W] - %ls - obj._read_using_thread() in pump.\n", __WFUNCTION__);
-                            }
+                            std::tie(b_read_is_normal, b_expected_replugin) = obj._pump();//pumpping.
                             continue;
                         }
-
-                        obj.m_q_rx_ptr_v.clear();//reset rx queue.
 
                         //processing new request.
-                        if (!ptr_new->is_empty_tx()) {
-                            if (!obj._write(ptr_new->get_tx())) {//ERROR TX
-                                clog::get_instance().trace(L"[E] - %ls - obj._write().\n", __WFUNCTION__);
-                                clog::get_instance().log_fmt(L"[E] - %ls - obj._write().\n", __WFUNCTION__);
-                                ptr_new->set_result(cqitem_dev::result_error, type_v_buffer(0), L"TX");
-                                continue;
-                            }
+                        if (!obj._tx_and_check_need_more_processing(ptr_new)) {
+                            continue;//complete or error
                         }
-                        if (!ptr_new->is_need_rx()) {
-                            //map be cancel request.......
-                            // none TX & no need rx!
-                            ptr_new->set_result(cqitem_dev::result_success, type_v_buffer(0));
+
+                        if (!b_read_is_normal) {
+                            // new request but read is error status -_-;;
+                            clog::get_instance().trace(L"[E] - %ls - new request but read is error status.\n", __WFUNCTION__);
+                            clog::get_instance().log_fmt(L"[E] - %ls - new request but read is error status.\n", __WFUNCTION__);
+                            ptr_new->set_result(cqitem_dev::result_error, type_v_buffer(0), L"RX");
                             continue;
                         }
+
                         //need response....... re-read at next loop.
                         ptr_cur = ptr_new;
-
-                        if (b_read_is_normal) {
-                            ptr_new.reset();
-                            continue;
-                        }
-
-                        // new request but read is error status -_-;;
-                        clog::get_instance().trace(L"[E] - %ls - new request but read is error status.\n", __WFUNCTION__);
-                        clog::get_instance().log_fmt(L"[E] - %ls - new request but read is error status.\n", __WFUNCTION__);
-                        ptr_cur->set_result(cqitem_dev::result_error, type_v_buffer(0), L"RX");
-                        continue;
+                        ptr_new.reset();
                     }
 
                     //////////////////////////////////////
                     // here current request exist.......
-                    //ready for rx mode.
-                    b_read_is_normal = obj._read_using_thread(v_rx);
+                    // ready for rx mode.
+                    std::tie(b_read_is_normal, b_expected_replugin) = obj._read_using_thread(v_rx);
                     if (!b_read_is_normal) {//ERROR RX
                         clog::get_instance().trace(L"[E] - %ls - obj._read_using_thread().\n", __WFUNCTION__);
                         clog::get_instance().log_fmt(L"[E] - %ls - obj._read_using_thread().\n", __WFUNCTION__);
                         ptr_cur->set_result(cqitem_dev::result_error, type_v_buffer(0), L"RX");
+
+                        if (b_expected_replugin) {
+                            obj.m_b_detect_replugin = true;//need this device instance removed
+                        }
                         continue;
                     }
 
@@ -640,17 +734,9 @@ namespace _mp {
                     ptr_cur->run_callback();//impossible re-read
                     ptr_cur.reset();
                     //
-                    //processing new request.
-                    obj.m_q_rx_ptr_v.clear();//reset rx queue.
 
-                    if (!ptr_new->is_empty_tx()) {
-                        if (!obj._write(ptr_new->get_tx())) {//ERROR TX
-                            ptr_new->set_result(cqitem_dev::result_error, type_v_buffer(0), L"TX");
-                            continue;
-                        }
-                    }
-                    if (!ptr_new->is_need_rx()) {
-                        ptr_new->set_result(cqitem_dev::result_success, type_v_buffer(0));
+                    //processing new request.
+                    if (!obj._tx_and_check_need_more_processing(ptr_new)) {
                         continue;
                     }
                     //need response....... re-read at next loop.
@@ -677,7 +763,7 @@ namespace _mp {
                 }
 
                 std::this_thread::sleep_for(std::chrono::milliseconds(clibhid_dev::_const_dev_io_check_interval_mmsec));
-            }//end while
+            }//end while - worker main loop
 
             if (ptr_th_rx) {
                 if (ptr_th_rx->joinable()) {
@@ -689,112 +775,11 @@ namespace _mp {
             std::wstringstream ss;
             ss << std::this_thread::get_id();
             std::wstring s_id = ss.str();
-            _mp::clog::get_instance().log_fmt_in_debug_mode(L"[D] exit : %ls : id = %ls.\n", __WFUNCTION__, s_id.c_str());
-        }
-
-        static void _worker(clibhid_dev& obj)
-        {
-            cqitem_dev::type_ptr ptr_new, ptr_cur;
-            _mp::type_v_buffer v_rx;
-            int n_size_in_report(obj.m_dev_info.get_size_in_report());
-
-            while (obj.m_b_run_th_worker) {
-                v_rx.resize(n_size_in_report, 0);//reset rx buffer
-
-                do {
-                    std::lock_guard<std::mutex> lock(obj.m_mutex);
-                    if (!ptr_cur) {
-                        //pumpping mode....... none processing request.
-                        if (!obj.m_q_ptr.try_pop(ptr_new)|| !ptr_new) {
-                            obj._read(v_rx);//pumpping.
-                            continue;
-                        }
-
-                        //processing new request.
-                        if (!ptr_new->is_empty_tx()) {
-                            if (!obj._write(ptr_new->get_tx())) {//ERROR TX
-                                clog::get_instance().trace(L"[E] - %ls - obj._write().\n", __WFUNCTION__);
-                                ptr_new->set_result(cqitem_dev::result_error,type_v_buffer(0),L"TX");
-                                continue;
-                            }
-                        }
-                        if (!ptr_new->is_need_rx()) {
-                            //map be cancel request.......
-                            // none TX & no need rx!
-                            ptr_new->set_result(cqitem_dev::result_success,type_v_buffer(0));
-                            continue;
-                        }
-                        //need response....... re-read at next loop.
-                        ptr_cur = ptr_new;
-                        ptr_new.reset();
-                        continue;
-                    }
-
-                    //////////////////////////////////////
-                    // here current request exist.......
-                    //ready for rx mode.
-                    if (!obj._read(v_rx)) {//ERROR RX
-                        clog::get_instance().trace(L"[E] - %ls - obj._read().\n", __WFUNCTION__);
-                        ptr_cur->set_result(cqitem_dev::result_error,type_v_buffer(0), L"RX");
-                        continue;
-                    }
-
-                    if (v_rx.size() != 0) {
-                        //RX OK.
-                        ptr_cur->set_result(cqitem_dev::result_success, v_rx);
-                        continue;
-                    }
-
-                    //need more waits
-                    if (!obj.m_q_ptr.try_pop(ptr_new) || !ptr_new) {
-                        continue;//No new request
-                    }
-
-                    //the current reuqest canceled.
-                    ptr_cur->set_result(cqitem_dev::result_cancel, type_v_buffer(0), L"CANCELLED BY ANOTHER REQ");
-                    ptr_cur->run_callback();//impossible re-read
-                    ptr_cur.reset();
-                    //
-                    //processing new request.
-                    if (!ptr_new->is_empty_tx()) {
-                        if (!obj._write(ptr_new->get_tx())) {//ERROR TX
-                            ptr_new->set_result(cqitem_dev::result_error, type_v_buffer(0), L"TX");
-                            continue;
-                        }
-                    }
-                    if (!ptr_new->is_need_rx()) {
-                        ptr_new->set_result(cqitem_dev::result_success, type_v_buffer(0));
-                        continue;
-                    }
-                    //need response....... re-read at next loop.
-                    ptr_cur = ptr_new;
-                    ptr_new.reset();
-
-                } while (false);//the end of lock_guard
-
-                if (ptr_new) {
-                    if (ptr_new->is_complete()) {
-                        ptr_new->run_callback();//impossible re-read
-                    }
-                    ptr_new.reset();
-                }
-                if (ptr_cur) {
-                    if (ptr_cur->is_complete()) {
-                        if (ptr_cur->run_callback()) {
-                            ptr_cur.reset();
-                        }
-                        else {//re read more
-                            //user want to read more operation.
-                        }
-                    }
-                }
-
-                std::this_thread::sleep_for(std::chrono::milliseconds(clibhid_dev::_const_dev_io_check_interval_mmsec));
-            }//end while
+            _mp::clog::get_instance().log_fmt(L"[I] exit : %ls : id = %ls.\n", __WFUNCTION__, s_id.c_str());
         }
 
     private:
-        std::mutex m_mutex;
+        std::shared_ptr<std::mutex> m_ptr_mutex_hidpai;
         hid_device* m_p_dev;
         clibhid_dev_info m_dev_info;
 
@@ -805,6 +790,8 @@ namespace _mp {
         _mp::clibhid_dev::type_q_ptr m_q_ptr;//thread safty
 
         _mp::clibhid_dev::_type_q_rx_ptr_v m_q_rx_ptr_v;//for rx worker
+
+        std::atomic<bool> m_b_detect_replugin;// critical error
 
     private:
         clibhid_dev();

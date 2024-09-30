@@ -6,6 +6,7 @@
 #include <mp_cversion.h>
 #include <mp_icprotocol.h>
 #include <mp_cconvert.h>
+#include <mp_clog.h>
 #include <ckey_map.h>
 
 #include <lpu230/KBConst.h>
@@ -1441,8 +1442,10 @@ public:
 	{
 		bool b_result(false);
 		do {
-			if (m_deque_generated_tx.empty())
+			if (m_deque_generated_tx.empty()) {
+				_mp::clog::get_instance().log_fmt_in_debug_mode(L" : DEB : %ls : error : m_deque_generated_tx.empty().\n", __WFUNCTION__);
 				continue;
+			}
 
 			_generated_tx_type tx_type(m_deque_generated_tx.front());
 			m_deque_generated_tx.pop_front();
@@ -1712,11 +1715,16 @@ private:
 
 		do {
 			_mp::type_v_buffer v_response;
-			if (!is_success_rx(v_response))
+			if (!is_success_rx(v_response)) {
+				_mp::clog::get_instance().log_fmt_in_debug_mode(L" : DEB : %ls : error : is_success_rx().\n", __WFUNCTION__);
 				continue;
+			}
 			_type_response* p_response = (_type_response*)&v_response[0];
-			if (p_response->c_size != the_size_of_uid)
+			if (p_response->c_size != the_size_of_uid) {
+				_mp::clog::get_instance().log_fmt_in_debug_mode(L" : DEB : %ls : error : p_response->c_size = 0x%x.\n", __WFUNCTION__, p_response->c_size);
+				_mp::clog::get_instance().log_data_in_debug_mode(v_response, L"v_response = ",L"\n");
 				continue;
+			}
 			m_v_uid.resize(p_response->c_size, 0);
 			std::copy(&p_response->s_data[0], &p_response->s_data[p_response->c_size], std::begin(m_v_uid));
 			b_result = true;

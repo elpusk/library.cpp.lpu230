@@ -136,8 +136,8 @@ namespace _mp {
 					++m_w_new_device_index;
 				}
 
-				p_log->log_fmt(L"[I] - %ls | inserted : %ls.\n", __WFUNCTION__, item.get_path_by_wstring().c_str());
-				p_log->trace(L"[I] - %ls | inserted : %ls.\n", __WFUNCTION__, item.get_path_by_wstring().c_str());
+				p_log->log_fmt(L"[I] - %ls | inserted(%u) : %ls.\n", __WFUNCTION__, w_result,item.get_path_by_wstring().c_str());
+				p_log->trace(L"[I] - %ls | inserted(%u) : %ls.\n", __WFUNCTION__, w_result,item.get_path_by_wstring().c_str());
 			} while (false);
 			return w_result;
 		}
@@ -397,8 +397,8 @@ namespace _mp {
 
 					if (!_push_back_request_to_dev_ctl(ptr_request, s_path)) {
 						s_error_reason = cio_packet::get_error_message(cio_packet::error_reason_device_object);
-						clog::get_instance().log_fmt(L"[E] - %ls | no device page object | %ls.\n", __WFUNCTION__, s_path.c_str());
-						clog::get_instance().trace(L"[E] - %ls | no device page object | %ls.\n", __WFUNCTION__, s_path.c_str());
+						clog::get_instance().log_fmt(L"[E] - %ls | %ls | no device page object | %ls.\n", __WFUNCTION__, cio_packet::get_action_code_by_string(ptr_request->get_action()).c_str(),s_path.c_str());
+						clog::get_instance().trace(L"[E] - %ls | %ls |no device page object | %ls.\n", __WFUNCTION__, cio_packet::get_action_code_by_string(ptr_request->get_action()).c_str(),s_path.c_str());
 						continue;
 					}
 					break;
@@ -410,8 +410,8 @@ namespace _mp {
 				case cio_packet::act_dev_sub_bootloader:
 					if (!_push_back_request_to_dev_ctl(ptr_request)) {
 						s_error_reason = cio_packet::get_error_message(cio_packet::error_reason_device_object);
-						clog::get_instance().log_fmt(L"[E] - %ls | no device page object : device index = %u.\n", __WFUNCTION__, ptr_request->get_device_index());
-						clog::get_instance().trace(L"[E] - %ls | no device page object : device index = %u.\n", __WFUNCTION__, ptr_request->get_device_index());
+						clog::get_instance().log_fmt(L"[E] - %ls | %ls | no device page object : device index = %u.\n", __WFUNCTION__, cio_packet::get_action_code_by_string(ptr_request->get_action()).c_str(), ptr_request->get_device_index());
+						clog::get_instance().trace(L"[E] - %ls | %ls | no device page object : device index = %u.\n", __WFUNCTION__, cio_packet::get_action_code_by_string(ptr_request->get_action()).c_str(),ptr_request->get_device_index());
 						continue;
 					}
 					break;
@@ -436,8 +436,8 @@ namespace _mp {
 
 					if (!_push_back_request_to_dev_ctl(ptr_request)) {
 						s_error_reason = cio_packet::get_error_message(cio_packet::error_reason_device_object);
-						clog::get_instance().log_fmt(L"[E] - %ls | no device page object : device index = %u.\n", __WFUNCTION__, ptr_request->get_device_index());
-						clog::get_instance().trace(L"[E] - %ls | no device page object : device index = %u.\n", __WFUNCTION__, ptr_request->get_device_index());
+						clog::get_instance().log_fmt(L"[E] - %ls | %ls | no device page object : device index = %u.\n", __WFUNCTION__, cio_packet::get_action_code_by_string(ptr_request->get_action()).c_str(),ptr_request->get_device_index());
+						clog::get_instance().trace(L"[E] - %ls | %ls | no device page object : device index = %u.\n", __WFUNCTION__, cio_packet::get_action_code_by_string(ptr_request->get_action()).c_str(), ptr_request->get_device_index());
 						continue;
 					}
 					break;
