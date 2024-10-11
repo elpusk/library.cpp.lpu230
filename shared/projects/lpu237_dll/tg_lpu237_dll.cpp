@@ -300,12 +300,6 @@ HANDLE _CALLTYPE_ LPU237_open(const wchar_t* sDevPath)
 		}
 		_mp::clog::get_instance().log_fmt_in_debug_mode(L" : DEB : %ls : success : cmd_get_id.\n", __WFUNCTION__);
 
-		if (!ptr_new_device->cmd_enter_opos()) {
-			_mp::clog::get_instance().log_fmt(L" : RET : %ls : error : cmd_enter_opos.\n", __WFUNCTION__);
-			continue;
-		}
-		_mp::clog::get_instance().log_fmt_in_debug_mode(L" : DEB : %ls : success : cmd_enter_opos.\n", __WFUNCTION__);
-
 		b_need_close = false;
 		h_dev = (HANDLE)(ptr_new_device->get_device_index());
 		_mp::clog::get_instance().log_fmt(L" : RET : %ls : 0x%x\n", __WFUNCTION__, h_dev);
@@ -365,6 +359,13 @@ unsigned long _CALLTYPE_ LPU237_close(HANDLE hDev)
 		if (!ptr_device->cmd_leave_opos()) {
 			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : cmd_leave_opos\n", __WFUNCTION__);
 		}
+		if (!ptr_device->cmd_enter_config()) {//for redetecting decoder.
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : cmd_enter_config\n", __WFUNCTION__);
+		}
+		if (!ptr_device->cmd_leave_config()) {//for redetecting decoder.
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : cmd_leave_config\n", __WFUNCTION__);
+		}
+
 		if (!ptr_manager_of_device_of_client->remove_device(n_device_index)) {
 			_mp::clog::get_instance().log_fmt(L" : RET : %ls : remove_device\n", __WFUNCTION__);
 			continue;

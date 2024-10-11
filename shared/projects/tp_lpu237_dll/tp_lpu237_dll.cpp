@@ -165,9 +165,6 @@ int main()
 			if (gb_need_resetup) {
 				//system error resetup need.
 
-				std::wcout << L" : I : RESETUP :LPU237_disable." << std::endl;
-				lib.LPU237_disable(h_dev);
-
 				std::wcout << L" : I : RESETUP :LPU237_close." << std::endl;
 				lib.LPU237_close(h_dev);
 

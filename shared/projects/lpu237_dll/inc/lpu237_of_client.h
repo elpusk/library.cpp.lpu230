@@ -14,6 +14,11 @@ public:
 	{
 		return std::wstring(L"lpu237_of_client");
 	}
+
+private:
+	enum : unsigned long {
+		_const_default_mmsec_timeout_of_response = 1000
+	};
 public:
 	lpu237_of_client();
 	lpu237_of_client(unsigned long n_client_index, const std::wstring & s_device_path);

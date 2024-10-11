@@ -32,8 +32,7 @@ namespace _mp{
         void clear()
         {
             std::lock_guard<std::mutex> lock(m_mutex);
-            std::deque<T> q;
-            m_q.swap(q);
+            m_q.clear();
         }
     private:
         std::deque<T> m_q;

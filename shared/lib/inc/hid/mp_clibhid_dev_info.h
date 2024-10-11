@@ -150,17 +150,6 @@ namespace _mp{
                     m_vs_path.assign(p_dev_info->path, p_dev_info->path + strlen(p_dev_info->path));
                 }
 
-                if(p_dev_info->serial_number){
-                    m_vws_serial_number.assign(p_dev_info->serial_number, p_dev_info->serial_number + wcslen(p_dev_info->serial_number));
-                }
-
-                if(p_dev_info->manufacturer_string){
-                    m_vws_manufacturer_string.assign(p_dev_info->manufacturer_string, p_dev_info->manufacturer_string + wcslen(p_dev_info->manufacturer_string));
-                }
-
-                if(p_dev_info->product_string){
-                    m_vws_product_string.assign(p_dev_info->product_string, p_dev_info->product_string + wcslen(p_dev_info->product_string));
-                }
                 //assign data of known device
                 if (p_dev_info->vendor_id == _elpusk::const_usb_vid) {
                     if (p_dev_info->product_id == _elpusk::_lpu237::const_usb_pid && p_dev_info->interface_number == _elpusk::_lpu237::const_usb_inf_hid) {
@@ -192,16 +181,6 @@ namespace _mp{
             return std::string(m_vs_path.begin(), m_vs_path.end());
         }
 
-        const std::wstring get_serial_number() const
-        {
-            return std::wstring(m_vws_serial_number.begin(), m_vws_serial_number.end());
-        }
-
-        const std::wstring get_manufacturer_string() const
-        {
-            return std::wstring(m_vws_manufacturer_string.begin(), m_vws_manufacturer_string.end());
-        }
-
         unsigned short get_vendor_id() const
         {
             return m_dev_info.vendor_id;
@@ -212,33 +191,9 @@ namespace _mp{
             return m_dev_info.product_id;
         }
 
-        unsigned short get_release_number() const
-        {
-            return m_dev_info.release_number;
-        }
-
         int get_interface_number() const
         {
             return m_dev_info.interface_number;
-        }
-
-        hid_bus_type get_bus_type() const
-        {
-            return m_dev_info.bus_type;
-        }
-
-        std::wstring get_bus_type_by_string() const
-        {
-            std::wstring s;
-            switch(m_dev_info.bus_type){
-                case HID_API_BUS_USB: s = L"USB"; break;
-                case HID_API_BUS_BLUETOOTH: s = L"Bluetooth"; break;
-                case HID_API_BUS_I2C: s = L"I2C"; break;
-                case HID_API_BUS_SPI: s = L"SPI"; break;
-                case HID_API_BUS_UNKNOWN:
-                default: s = L"Unknown"; break;
-            }
-            return s;
         }
 
         int get_size_in_report() const
@@ -282,9 +237,6 @@ namespace _mp{
         int m_n_size_in_report, m_n_size_out_report;//the size is less then equal zero. used not  report 
         //
         _mp::type_v_s_buffer m_vs_path;
-        _mp::type_v_ws_buffer m_vws_serial_number;
-        _mp::type_v_ws_buffer m_vws_manufacturer_string;
-        _mp::type_v_ws_buffer m_vws_product_string;
     };
 
 }//the end of namespace _mp

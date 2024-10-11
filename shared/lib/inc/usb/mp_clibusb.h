@@ -27,13 +27,23 @@ namespace _mp {
         class cdev{
         public:
             typedef std::shared_ptr< cdev > type_ptr;
+            enum {
+                _const_default_mmsec_timeout_tx = 500
+            };
         public:
             cdev(libusb_device* p_libusb_device, int n_interface_number) : 
                 m_p_usb_handle(NULL),
-                m_n_interface_number(n_interface_number)
+                m_n_interface_number(n_interface_number),
+                m_active_endpt_address_out(0xFF),
+                m_active_endpt_address_in(0xFF),
+                m_b_active_endpt_out_bulk_transfer(true),
+                m_b_active_endpt_in_bulk_transfer(true)
             {
                 bool b_result(false);
                 do {
+                    if (!_get_default_endpoint_address(p_libusb_device)) {
+                        continue;
+                    }
                     if (libusb_open(p_libusb_device, &m_p_usb_handle)) {
                         //libusb_open is return zero succcess
                         // here error
@@ -57,10 +67,17 @@ namespace _mp {
             }
             cdev(libusb_device* p_libusb_device) :
                 m_p_usb_handle(NULL),
-                m_n_interface_number(-1)
+                m_n_interface_number(-1),
+                m_active_endpt_address_out(0xFF),
+                m_active_endpt_address_in(0xFF),
+                m_b_active_endpt_out_bulk_transfer(true),
+                m_b_active_endpt_in_bulk_transfer(true)
             {
                 bool b_result(false);
                 do {
+                    if (!_get_default_endpoint_address(p_libusb_device)) {
+                        continue;
+                    }
                     if (libusb_open(p_libusb_device, &m_p_usb_handle)) {
                         //libusb_open is return zero succcess
                         // here error
@@ -82,6 +99,13 @@ namespace _mp {
             ~cdev()
             {
                 if (m_p_usb_handle) {
+
+                    for (auto item : m_map_rx) {
+                        if (item.first) {
+                            libusb_free_transfer(item.first);
+                        }
+                    }//end for
+
                     if (m_n_interface_number >= 0) {
                         libusb_release_interface(m_p_usb_handle, m_n_interface_number);
                     }
@@ -89,19 +113,122 @@ namespace _mp {
                 }
             }
 
-            bool is_open() const
+            bool is_open()
             {
+                std::lock_guard<std::mutex> lock(m_mutex);
                 if (m_p_usb_handle)
                     return true;
                 else
                     return false;
             }
 
+            void set_active_endpoint_out(unsigned char c_endpoint,bool b_bulk_transfer)
+            {
+                std::lock_guard<std::mutex> lock(m_mutex);
+                m_active_endpt_address_out = c_endpoint;
+                m_b_active_endpt_out_bulk_transfer = b_bulk_transfer;
+            }
+            void set_active_endpoint_in(unsigned char c_endpoint, bool b_bulk_transfer)
+            {
+                std::lock_guard<std::mutex> lock(m_mutex);
+                m_active_endpt_address_in = c_endpoint;
+                m_b_active_endpt_in_bulk_transfer = b_bulk_transfer;
+            }
+            unsigned char get_active_endpoint_out()
+            {
+                std::lock_guard<std::mutex> lock(m_mutex);
+                return m_active_endpt_address_out;
+            }
+            unsigned char get_active_endpoint_in()
+            {
+                std::lock_guard<std::mutex> lock(m_mutex);
+                return m_active_endpt_address_in;
+            }
+
+            bool tx(const _mp::type_v_buffer& v_tx)
+            {
+                bool b_result(false);
+
+                do {
+                    std::lock_guard<std::mutex> lock(m_mutex);
+
+                    int n_result(0);
+                    int n_tx(0);
+
+                    if (!v_tx.empty()) {
+                        _mp::type_v_buffer v(v_tx);
+                        if (m_b_active_endpt_out_bulk_transfer) {
+                            n_result = libusb_bulk_transfer(m_p_usb_handle, m_active_endpt_address_out, &v[0], v.size(), &n_tx, cdev::_const_default_mmsec_timeout_tx);
+                        }
+                        else {
+                            n_result = libusb_interrupt_transfer(m_p_usb_handle, m_active_endpt_address_out, &v[0], v.size(), &n_tx, cdev::_const_default_mmsec_timeout_tx);
+                        }
+
+                        if (n_result != LIBUSB_SUCCESS) {
+                            continue;
+                        }
+                        if (n_tx != (int)v.size()) {
+                            continue;
+                        }
+                    }
+                    //
+                    b_result = true;
+                } while (false);
+                return b_result;
+
+            }
+
+            bool start_rx(int n_timeout)
+            {
+                bool b_result(false);
+                int n_result(0);
+                struct libusb_transfer* in_transfer(nullptr);
+
+                do {
+                    std::lock_guard<std::mutex> lock(m_mutex);
+
+                    struct libusb_transfer* in_transfer = libusb_alloc_transfer(0);
+                    if (!in_transfer) {
+                        continue;
+                    }
+
+                    _mp::type_ptr_v_buffer ptr_v(std::make_shared<_mp::type_v_buffer>(64, 0));
+                    if (m_b_active_endpt_in_bulk_transfer) {
+                        libusb_fill_bulk_transfer(in_transfer, m_p_usb_handle, m_active_endpt_address_in, &(*ptr_v)[0], ptr_v->size(), cdev::_transfer_callback, this, n_timeout);
+                    }
+                    else {
+                        libusb_fill_interrupt_transfer(in_transfer, m_p_usb_handle, m_active_endpt_address_in, &(*ptr_v)[0], ptr_v->size(), cdev::_transfer_callback, this, n_timeout);
+                    }
+                    //
+                    n_result = libusb_submit_transfer(in_transfer);
+                    if (n_result < 0) {
+                        continue;
+                    }
+
+                    m_map_rx.emplace(in_transfer, ptr_v);
+                    b_result = true;
+                }while(false);
+
+                if (!b_result && in_transfer!=nullptr) {
+                    libusb_free_transfer(in_transfer);
+                }
+                return b_result;
+            }
+
+            void looper_event(libusb_context* ctx)
+            {
+                std::lock_guard<std::mutex> lock(m_mutex);
+                int n_result = libusb_handle_events(ctx);
+                if (n_result < 0) {
+                    //printf("libusb_handle_events failed\n");
+                }
+            }
             bool clear_halt(unsigned char c_endpoint)
             {
                 bool b_result(false);
 
                 do {
+                    std::lock_guard<std::mutex> lock(m_mutex);
                     if (m_p_usb_handle == NULL)
                         continue;
                     if (libusb_clear_halt(m_p_usb_handle, c_endpoint))
@@ -117,6 +244,7 @@ namespace _mp {
                 bool b_result(false);
 
                 do {
+                    std::lock_guard<std::mutex> lock(m_mutex);
                     if (m_p_usb_handle == NULL)
                         continue;
                     if (libusb_reset_device(m_p_usb_handle))
@@ -129,8 +257,128 @@ namespace _mp {
             }
 
         private:
-            libusb_device_handle *m_p_usb_handle;
+
+            /**
+            * this callback will be called by looper_event().
+            * therefore this callback is guarded by m_mutex
+            */
+            static void LIBUSB_CALL _transfer_callback(struct libusb_transfer* transfer)
+            {
+                if (transfer->status == LIBUSB_TRANSFER_COMPLETED) {
+                   /*printf("Transfer completed: %d bytes transferred\n", transfer->actual_length);
+                    if (transfer->endpoint == ENDPOINT_IN) {
+                        printf("Data received: ");
+                        for (int i = 0; i < transfer->actual_length; i++) {
+                            printf("%02x ", transfer->buffer[i]);
+                        }
+                        printf("\n");
+                    }
+                    */
+                }
+                else {
+                    //printf("Transfer failed: %d\n", transfer->status);
+                }
+
+                // free transfer
+                libusb_free_transfer(transfer);
+                //
+                clibusb::cdev* p_obj = (clibusb::cdev*)transfer->user_data;
+                if (p_obj) {
+                    p_obj->m_map_rx.erase(transfer);
+                }
+            }
+
+            bool _get_default_endpoint_address(libusb_device* p_libusb_device)
+            {
+                bool b_result(false);
+                int n_result(0);
+                unsigned char c_default_endpt_in(0xFF);
+                unsigned char c_default_endpt_out(0xFF);
+
+                struct libusb_device_descriptor desc {0,};
+                struct libusb_config_descriptor* p_conf_desc = NULL;
+
+                do {
+                    if (!p_libusb_device) {
+                        continue;
+                    }
+                    //
+
+                    n_result = libusb_get_device_descriptor(p_libusb_device, &desc);
+                    if (n_result < 0) {
+                        continue;
+                    }
+
+                    n_result = libusb_get_active_config_descriptor(p_libusb_device, &p_conf_desc);
+                    if (n_result < 0) {
+                        libusb_get_config_descriptor(p_libusb_device, 0, &p_conf_desc);
+                    }
+                    if (!p_conf_desc) {
+                        continue;
+                    }
+
+                    for (int i = 0; i < p_conf_desc->bNumInterfaces; i++) {
+                        const struct libusb_interface* intf = &p_conf_desc->interface[i];
+                        for (int j = 0; j < intf->num_altsetting; j++) {
+                            const struct libusb_interface_descriptor* intf_desc = &intf->altsetting[j];
+
+                            for (int k = 0; k < intf_desc->bNumEndpoints; j++) {
+                                const struct libusb_endpoint_descriptor* endpt_desc = &intf_desc->endpoint[k];
+
+                                if (endpt_desc->bEndpointAddress & 0x80) {
+                                    //in endpoint
+                                    if (c_default_endpt_in == 0xFF) {
+                                        //not yet setting
+                                        m_active_endpt_address_in = c_default_endpt_in = endpt_desc->bEndpointAddress;
+
+                                        if ((endpt_desc->bmAttributes & 0x03) == 0x02) {
+                                            m_b_active_endpt_in_bulk_transfer = true;
+                                        }
+                                        else {
+                                            m_b_active_endpt_in_bulk_transfer = false;//interrupt 0x03, control 0x00, isochronous 0x01
+                                        }
+                                    }
+                                }
+                                else {
+                                    //out endpoint
+                                    if (c_default_endpt_out == 0xFF) {
+                                        //not yet setting
+                                        m_active_endpt_address_out =  c_default_endpt_out = endpt_desc->bEndpointAddress;
+
+                                        if ((endpt_desc->bmAttributes & 0x03) == 0x02) {
+                                            m_b_active_endpt_out_bulk_transfer = true;
+                                        }
+                                        else {
+                                            m_b_active_endpt_out_bulk_transfer = false;//interrupt 0x03, control 0x00, isochronous 0x01
+                                        }
+                                    }
+                                }
+                            }//end for k
+
+                        }//end for j
+                    }//end for i
+                    
+                    //
+                    b_result = true;
+                } while (false);
+
+                if (p_conf_desc) {
+                    libusb_free_config_descriptor(p_conf_desc);
+                }
+                return b_result;
+            }
+
+        private:
+            std::mutex m_mutex;
+            libusb_device_handle *m_p_usb_handle;//guard by m_mutex
             int m_n_interface_number;
+            unsigned char m_active_endpt_address_out;//0x0x , guard by m_mutex
+            unsigned char m_active_endpt_address_in;//0x8x , guard by m_mutex
+
+            bool m_b_active_endpt_out_bulk_transfer;//guard by m_mutex, false ->interrupt transfer
+            bool m_b_active_endpt_in_bulk_transfer;//guard by m_mutex, false ->interrupt transfer
+
+            std::map<struct libusb_transfer*, _mp::type_ptr_v_buffer> m_map_rx;
 
         private://don't call these methods
             cdev();
@@ -140,21 +388,74 @@ namespace _mp {
 
     public:
         clibusb() : 
-            m_p_ctx(NULL), m_pp_devs(NULL), m_n_dev(-1)
+            m_b_ini(false),
+            m_p_ctx(NULL), m_pp_devs(NULL), m_n_dev(-1),
+            m_b_registered_hotpluginout(false), m_cb_handle_pluginout(0)
         {
-            libusb_init(&m_p_ctx);
+            if (libusb_init_context(&m_p_ctx, NULL, 0) == LIBUSB_SUCCESS) {
+                m_b_ini = true;
+            }
+            else {
+                return;
+            }
+
+            //register hot plugin out
+            /*
+            do {
+                if (!libusb_has_capability(LIBUSB_CAP_HAS_HOTPLUG)) {
+                    continue;
+                }
+                int rc = libusb_hotplug_register_callback(
+                    m_p_ctx,
+                    LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT,
+                    LIBUSB_HOTPLUG_ENUMERATE,
+                    LIBUSB_HOTPLUG_MATCH_ANY,
+                    LIBUSB_HOTPLUG_MATCH_ANY,
+                    LIBUSB_HOTPLUG_MATCH_ANY,
+                    clibusb::_cb_hotpluginout,
+                    this,
+                    &m_cb_handle_pluginout
+                    );
+                if (rc != LIBUSB_SUCCESS) {
+                    continue;
+                }
+
+                m_b_registered_hotpluginout = true;
+            } while (false);
+            */
         }
 
         virtual ~clibusb()
         {
+            if (!m_b_ini) {
+                return;
+            }
+            if (m_b_registered_hotpluginout) {
+                libusb_hotplug_deregister_callback(m_p_ctx, m_cb_handle_pluginout);
+            }
+
             if (m_pp_devs) {
                 libusb_free_device_list(m_pp_devs, 1);
             }
             libusb_exit(m_p_ctx);
         }
 
+        bool is_ini() const
+        {
+            return m_b_ini;
+        }
+
+        libusb_context* get_context()
+        {
+            return m_p_ctx;
+        }
+        /**
+        * update m_pp_devs
+        */
         ssize_t update_device_list()
         {
+            //libusb_handle_events_completed(m_p_ctx, NULL);
+
             std::lock_guard<std::mutex>lock(m_mutex);
 
             if (m_pp_devs) {
@@ -171,6 +472,8 @@ namespace _mp {
             libusb_device* p_dev(NULL);
 
             do {
+                std::lock_guard<std::mutex>lock(m_mutex);
+
                 if (m_n_dev <= 0) {
                     _mp::clog::get_instance().log_fmt_in_debug_mode(L"[D] get_device : m_n_dev <= 0.\n");
                     continue;
@@ -237,6 +540,8 @@ namespace _mp {
                 if (p_d == NULL) {
                     continue;
                 }
+
+                //open device temporarily
                 clibusb::cdev::type_ptr ptr(new clibusb::cdev(p_d, n_interface_number));
                 if (!ptr) {
                     continue;
@@ -287,11 +592,36 @@ namespace _mp {
         }
 
     private:
+        static int LIBUSB_CALL _cb_hotpluginout(
+            libusb_context* ctx, 
+            libusb_device* device,
+            libusb_hotplug_event event, 
+            void* user_data
+        ) {
+            clibusb* p_libusb = (clibusb*)user_data;
+
+            struct libusb_device_descriptor desc;
+            libusb_get_device_descriptor(device, &desc);
+
+            if (event == LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED) {
+                _mp::clog::get_instance().log_fmt_in_debug_mode(L"[D] _cb_hotpluginout : USB connected: VendorID=%04x, ProductID=%04x\n", desc.idVendor, desc.idProduct);
+            }
+            else if (event == LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT) {
+                _mp::clog::get_instance().log_fmt_in_debug_mode(L"[D] _cb_hotpluginout : USB removed: VendorID=%04x, ProductID=%04x\n", desc.idVendor, desc.idProduct);
+            }
+            return 0;
+        }
+
+    private:
         std::mutex m_mutex;
+
+        bool m_b_ini;
 
         libusb_context* m_p_ctx;
         libusb_device** m_pp_devs;
         ssize_t m_n_dev;
+        bool m_b_registered_hotpluginout;
+        libusb_hotplug_callback_handle m_cb_handle_pluginout;
 
     private://don't call these functions.
         clibusb(const clibusb&);

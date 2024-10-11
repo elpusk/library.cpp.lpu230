@@ -120,7 +120,7 @@ namespace _mp{
                 m_set_cur_dev_info = _get_device_set();
 
                 for (const clibhid_dev_info& item : m_set_cur_dev_info) {
-                    auto ptr_dev = std::make_shared<clibhid_dev>(item, m_ptr_usb_lib, m_ptr_mutex_hidapi);
+                    auto ptr_dev = std::make_shared<clibhid_dev>(item, m_ptr_mutex_hidapi);
                     if (!ptr_dev) {
                         continue;
                     }
@@ -172,6 +172,7 @@ namespace _mp{
 
             while (lib.m_b_run_th_pluginout) {
                 do {
+                    
                     std::lock_guard<std::mutex> lock(lib.m_mutex);
                     if (lib._update_dev_set()) {
                         //device list is changed
@@ -181,6 +182,7 @@ namespace _mp{
                             lib.m_cb(lib.m_set_inserted_dev_info, lib.m_set_removed_dev_info, lib.m_set_cur_dev_info, lib.m_p_user);
                         }
                     }
+                    
                 } while (false);
 
                 std::this_thread::sleep_for(std::chrono::milliseconds(clibhid::_const_dev_pluginout_check_interval_mmsec));
@@ -204,6 +206,9 @@ namespace _mp{
 
             do {
                 set_dev = _get_device_set();
+
+                //set_dev = m_set_cur_dev_info;//for debugging
+                //m_ptr_usb_lib->update_device_list();//for debugging
                 //
                 if (set_dev.size() == m_set_cur_dev_info.size()) {
                     if (set_dev.empty()) {
@@ -248,24 +253,176 @@ namespace _mp{
         }
 
         /**
-        * for _worker_pluginout
+          Max length of the result: "000-000.000.000.000.000.000.000:000.000" (39 chars).
+          64 is used for simplicity/alignment.
         */
+        static void _hidapi_get_path(char (*result)[64], libusb_device* dev, int config_number, int interface_number)
+        {
+            char* str = *result;
+
+            /* Note that USB3 port count limit is 7; use 8 here for alignment */
+            uint8_t port_numbers[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+            int num_ports = libusb_get_port_numbers(dev, port_numbers, 8);
+
+            if (num_ports > 0) {
+                int n = snprintf(str, sizeof("000-000"), "%u-%u", libusb_get_bus_number(dev), port_numbers[0]);
+                for (uint8_t i = 1; i < num_ports; i++) {
+                    n += snprintf(&str[n], sizeof(".000"), ".%u", port_numbers[i]);
+                }
+                n += snprintf(&str[n], sizeof(":000.000"), ":%u.%u", (uint8_t)config_number, (uint8_t)interface_number);
+                str[n] = '\0';
+            }
+            else {
+                /* Likely impossible, but check: USB3.0 specs limit number of ports to 7 and buffer size here is 8 */
+                if (num_ports == LIBUSB_ERROR_OVERFLOW) {
+                    //LOG("make_path() failed. buffer overflow error\n");
+                }
+                else {
+                    //LOG("make_path() failed. unknown error\n");
+                }
+                str[0] = '\0';
+            }
+        }
+
+        //modified make_path of hidapi
+        static char* _hidapi_make_path(libusb_device* dev, int config_number, int interface_number)
+        {
+            char str[64];
+            _hidapi_get_path(&str, dev, config_number, interface_number);
+#ifdef _WIN32
+            return _strdup(str);
+#else
+            return strdup(str);
+#endif
+            
+        }
+
+        //modified create_device_info_for_device of hidapi
+        static struct hid_device_info* _hidapi_create_device_info_for_device(libusb_device* device, struct libusb_device_descriptor* desc, int config_number, int interface_num)
+        {
+            struct hid_device_info* cur_dev = (struct hid_device_info*)calloc(1, sizeof(struct hid_device_info));
+            if (cur_dev == NULL) {
+                return NULL;
+            }
+
+            /* VID/PID */
+            cur_dev->vendor_id = desc->idVendor;
+            cur_dev->product_id = desc->idProduct;
+
+            cur_dev->release_number = desc->bcdDevice;
+
+            cur_dev->interface_number = interface_num;
+
+            cur_dev->bus_type = HID_API_BUS_USB;
+
+            cur_dev->path = _hidapi_make_path(device, config_number, interface_num);
+
+            return cur_dev;
+        }
+
+        struct hid_device_info* _hid_enumerate(libusb_context* usb_context,unsigned short w_vid, unsigned short w_pid)
+        {
+            libusb_device** devs;
+            libusb_device* dev;
+            libusb_device_handle* handle = NULL;
+            ssize_t num_devs;
+            int i = 0;
+
+            struct hid_device_info* root = NULL; /* return object */
+            struct hid_device_info* cur_dev = NULL;
+
+            if (hid_init() < 0)
+                return NULL;
+
+            num_devs = libusb_get_device_list(usb_context, &devs);
+            if (num_devs < 0)
+                return NULL;
+            while ((dev = devs[i++]) != NULL) {
+                struct libusb_device_descriptor desc;
+                struct libusb_config_descriptor* conf_desc = NULL;
+                int j, k;
+
+                int res = libusb_get_device_descriptor(dev, &desc);
+                if (res < 0)
+                    continue;
+
+                unsigned short dev_vid = desc.idVendor;
+                unsigned short dev_pid = desc.idProduct;
+
+                if ((w_vid != 0x0 && w_vid != dev_vid) ||
+                    (w_pid != 0x0 && w_pid != dev_pid)) {
+                    continue;
+                }
+
+                res = libusb_get_active_config_descriptor(dev, &conf_desc);
+                if (res < 0)
+                    libusb_get_config_descriptor(dev, 0, &conf_desc);
+                if (conf_desc) {
+                    for (j = 0; j < conf_desc->bNumInterfaces; j++) {
+                        const struct libusb_interface* intf = &conf_desc->interface[j];
+                        for (k = 0; k < intf->num_altsetting; k++) {
+                            const struct libusb_interface_descriptor* intf_desc;
+                            intf_desc = &intf->altsetting[k];
+
+                            if (intf_desc->bInterfaceClass == LIBUSB_CLASS_HID) {
+                                struct hid_device_info* tmp;
+                                //
+                                tmp = _hidapi_create_device_info_for_device(dev, &desc, conf_desc->bConfigurationValue, intf_desc->bInterfaceNumber);
+
+                                if (tmp) {
+                                    if (cur_dev) {
+                                        cur_dev->next = tmp;
+                                    }
+                                    else {
+                                        root = tmp;
+                                    }
+                                    cur_dev = tmp;
+                                }
+                                break;
+                            }
+                        } /* altsettings */
+                    } /* interfaces */
+                    libusb_free_config_descriptor(conf_desc);
+                }
+            }
+
+            libusb_free_device_list(devs, 1);
+
+            return root;
+        }
+
+        void  _hid_free_enumeration(struct hid_device_info* devs)
+        {
+            struct hid_device_info* d = devs;
+            while (d) {
+                struct hid_device_info* next = d->next;
+                free(d->path);
+                free(d->serial_number);
+                free(d->manufacturer_string);
+                free(d->product_string);
+                free(d);
+                d = next;
+            }
+        }
+
         clibhid_dev_info::type_set _get_device_set()
         {
             clibhid_dev_info::type_set st;
+
             struct hid_device_info* devs = NULL;
 
             do {
                 std::lock_guard<std::mutex> lock(*m_ptr_mutex_hidapi);
-                devs = hid_enumerate(0x0, 0x0);
+                devs = _hid_enumerate(m_ptr_usb_lib->get_context(),0x0, 0x0);
 
                 if (devs) {
                     st = clibhid_dev_info::get_dev_info_set(devs);
-                    hid_free_enumeration(devs);
+                    _hid_free_enumeration(devs);
                 }
             } while (false);
 
-            m_ptr_usb_lib->update_device_list();
+            //m_ptr_usb_lib->update_device_list();
+            //TODO. you must assign st.
 
             // checks the device critial error 
             clibhid_dev_info::type_set st_must_be_removed;
@@ -314,7 +471,7 @@ namespace _mp{
 
                 //insert
                 for (const clibhid_dev_info & item : m_set_inserted_dev_info) {
-                    auto ptr_dev = std::make_shared<clibhid_dev>(item, m_ptr_usb_lib, m_ptr_mutex_hidapi);
+                    auto ptr_dev = std::make_shared<clibhid_dev>(item, m_ptr_mutex_hidapi);
                     if (!ptr_dev) {
                         continue;
                     }

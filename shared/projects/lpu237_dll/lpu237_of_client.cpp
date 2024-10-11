@@ -103,7 +103,7 @@ bool lpu237_of_client::cmd_bypass(const _mp::type_v_buffer& v_tx, _mp::type_v_bu
                 }
             }
             _mp::casync_parameter_result::type_ptr_ct_async_parameter_result& ptr_async_parameter_result = get_async_parameter_result_for_transaction(n_result_index);
-            if (!ptr_async_parameter_result->waits()) {
+            if (!ptr_async_parameter_result->waits(lpu237_of_client::_const_default_mmsec_timeout_of_response)) {
                 b_result = false;
                 break;
             }
@@ -147,7 +147,7 @@ bool lpu237_of_client::cmd_bypass(const _mp::type_v_buffer& v_tx, _mp::type_v_bu
                 break;
             }
             _mp::casync_parameter_result::type_ptr_ct_async_parameter_result& ptr_async_parameter_result = get_async_parameter_result_for_transaction(n_result_index);
-            if (!ptr_async_parameter_result->waits()) {
+            if (!ptr_async_parameter_result->waits(lpu237_of_client::_const_default_mmsec_timeout_of_response)) {
                 b_result = false;
                 break;
             }
@@ -315,7 +315,7 @@ bool lpu237_of_client::_cmd_get( cprotocol_lpu237::type_cmd c_cmd)
             continue;
         }
         //
-        n_result_index = _create_async_result_for_transaction(nullptr,nullptr,NULL,0);
+        n_result_index = _create_async_result_for_transaction(nullptr, nullptr, NULL, 0);
         if (n_result_index < 0) {
             _mp::clog::get_instance().log_fmt_in_debug_mode(L" : DEB : %ls : error : _create_async_result_for_transaction().\n", __WFUNCTION__);
             continue;
@@ -327,8 +327,8 @@ bool lpu237_of_client::_cmd_get( cprotocol_lpu237::type_cmd c_cmd)
         _mp::clog::get_instance().log_fmt_in_debug_mode(L" : DEB : %ls : n_result_index = %d.\n", __WFUNCTION__, n_result_index);
         _mp::clog::get_instance().log_data_in_debug_mode(v_tx, L"v_tx = ", L"\n");
         //
-        _mp::casync_parameter_result::type_ptr_ct_async_parameter_result& ptr_async_parameter_result = _mp::casync_result_manager::get_instance(get_class_name()).get_async_parameter_result(m_n_device_index,n_result_index);
-        if (!ptr_async_parameter_result->waits()) {
+        _mp::casync_parameter_result::type_ptr_ct_async_parameter_result& ptr_async_parameter_result = _mp::casync_result_manager::get_instance(get_class_name()).get_async_parameter_result(m_n_device_index, n_result_index);
+        if (!ptr_async_parameter_result->waits(lpu237_of_client::_const_default_mmsec_timeout_of_response)) {
             _mp::clog::get_instance().log_fmt_in_debug_mode(L" : DEB : %ls : error : waits().\n", __WFUNCTION__);
             continue;
         }
