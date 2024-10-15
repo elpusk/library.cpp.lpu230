@@ -7,6 +7,24 @@
 #include <atomic>
 #include <functional>
 
+#ifdef _WIN32
+#include <cfgmgr32.h>
+
+extern "C"
+{
+#include <hidsdi.h>
+}
+
+#include <setupapi.h>
+#include <dbt.h>
+
+#pragma comment(lib, "hid.lib")
+#pragma comment(lib, "setupapi.lib")
+#pragma comment(lib, "Cfgmgr32.lib")
+
+#endif //_WIN32
+
+#include <mp_cstring.h>
 #include <mp_clog.h>
 #include <mp_elpusk.h>
 #include <mp_coperation.h>
@@ -252,11 +270,177 @@ namespace _mp{
             return b_changed;
         }
 
+
+#ifdef _WIN32
+        //////////////////////////////////////////////////////////
+        // for windows
+
+        struct hid_device_info* _hid_internal_get_device_info(const wchar_t* path)
+        {
+            struct hid_device_info* dev = NULL; /* return object */
+
+            unsigned short w_v(0), w_p(0);
+            int n_v(0), n_p(0), n_inf(0);
+
+            std::wstring s_low_path(path);
+            _mp::cstring::to_lower(s_low_path);
+
+            n_v = _mp::coperation::get_usb_vid_from_path(s_low_path);
+            if (n_v < 0) {
+                return NULL;
+            }
+            n_p = _mp::coperation::get_usb_pid_from_path(s_low_path);
+            if (n_p < 0) {
+                return NULL;
+            }
+            w_v = (unsigned short)n_v;
+            w_p = (unsigned short)n_p;
+
+            n_inf = _mp::coperation::get_usb_inf_from_path(s_low_path);
+
+            /* Create the record. */
+            dev = (struct hid_device_info*)calloc(1, sizeof(struct hid_device_info));
+
+            if (dev == NULL) {
+                return NULL;
+            }
+
+            /* Fill out the record */
+            dev->next = NULL;
+
+            std::string spath = _mp::cstring::get_mcsc_from_unicode(std::wstring(path));
+            dev->path = (char*)calloc(spath.size()+1, sizeof(char));
+            memset(dev->path, 0, spath.size() + 1);
+            memcpy(dev->path, spath.c_str(), spath.size());
+            dev->interface_number = n_inf;
+
+            /* VID/PID */
+            dev->vendor_id = w_v;
+            dev->product_id = w_p;
+
+            /* detect bus type before reading string descriptors */
+            dev->bus_type = HID_API_BUS_USB;
+
+            return dev;
+        }
+
+        struct hid_device_info * _hid_enumerate(libusb_context* usb_context, unsigned short vendor_id, unsigned short product_id)
+        {
+            struct hid_device_info* root = NULL; /* return object */
+            struct hid_device_info* cur_dev = NULL;
+            GUID interface_class_guid;
+            CONFIGRET cr;
+            //wchar_t* device_interface_list = NULL;
+            std::vector<wchar_t> v_device_interface_list;
+            DWORD len;
+
+            if (hid_init() < 0) {
+                /* register_global_error: global error is reset by hid_init */
+                return NULL;
+            }
+
+            /* Retrieve HID Interface Class GUID */
+            HidD_GetHidGuid(&interface_class_guid);
+
+            /* Get the list of all device interfaces belonging to the HID class. */
+            /* Retry in case of list was changed between calls to
+              CM_Get_Device_Interface_List_SizeW and CM_Get_Device_Interface_ListW */
+            do {
+                cr = CM_Get_Device_Interface_List_SizeW(&len, &interface_class_guid, NULL, CM_GET_DEVICE_INTERFACE_LIST_PRESENT);
+                if (cr != CR_SUCCESS) {
+                    _mp::clog::get_instance().log_fmt(L"[E] %ls : Failed to get size of HID device interface list.\n", __WFUNCTION__);
+                    break;
+                }
+
+                v_device_interface_list.resize(len, 0);
+                std::fill(v_device_interface_list.begin(), v_device_interface_list.end(), 0);
+
+                cr = CM_Get_Device_Interface_ListW(&interface_class_guid, NULL, &v_device_interface_list[0], v_device_interface_list.size(), CM_GET_DEVICE_INTERFACE_LIST_PRESENT);
+                if (cr != CR_SUCCESS && cr != CR_BUFFER_SMALL) {
+                    _mp::clog::get_instance().log_fmt(L"[E] %ls : Failed to get HID device interface list.\n", __WFUNCTION__);
+                }
+            } while (cr == CR_BUFFER_SMALL);
+
+            if (cr != CR_SUCCESS) {
+                return root;
+            }
+
+            std::set<std::wstring> set_before_filter, set_after_filter;
+            /* Iterate over each device interface in the HID class, looking for the right one. */
+            for (wchar_t* device_interface = &v_device_interface_list[0]; *device_interface; device_interface += wcslen(device_interface) + 1) {
+                unsigned short w_v(0), w_p(0);
+                int n_v(0), n_p(0);
+
+                std::wstring s_low_path(device_interface);
+                _mp::cstring::to_lower(s_low_path);
+
+                n_v = _mp::coperation::get_usb_vid_from_path(s_low_path);
+                if (n_v < 0) {
+                    continue;
+                }
+                n_p = _mp::coperation::get_usb_pid_from_path(s_low_path);
+                if (n_p < 0) {
+                    continue;
+                }
+
+                set_before_filter.insert(s_low_path);
+                if (s_low_path.size() >= 3) {
+                    if (s_low_path.compare(s_low_path.size() - 3, 3, L"kbd") == 0) {
+                        // the last string of s_low_path is "kbd".
+                        continue;//ignore keyboard device
+                    }
+                    if (s_low_path.compare(s_low_path.size() - 3, 3, L"mou") == 0) {
+                        // the last string of s_low_path is "mou".
+                        continue;//ignore mouse device
+                    }
+                }
+                set_after_filter.insert(s_low_path);
+
+                w_v = (unsigned short)n_v;
+                w_p = (unsigned short)n_p;
+
+
+                /* Check the VID/PID to see if we should add this
+                   device to the enumeration list. */
+                if ((vendor_id == 0x0 || w_v == vendor_id) &&
+                    (product_id == 0x0 || w_p == product_id)) {
+
+                    /* VID/PID match. Create the record. */
+                    struct hid_device_info* tmp = _hid_internal_get_device_info(device_interface);
+
+                    if (tmp == NULL) {
+                        continue;
+                    }
+
+                    if (cur_dev) {
+                        cur_dev->next = tmp;
+                    }
+                    else {
+                        root = tmp;
+                    }
+                    cur_dev = tmp;
+                }
+            }//end for
+
+            if (root == NULL) {
+                if (vendor_id == 0 && product_id == 0) {
+                    _mp::clog::get_instance().log_fmt(L"[W] %ls : No HID devices found in the system.\n", __WFUNCTION__);
+                }
+                else {
+                    _mp::clog::get_instance().log_fmt(L"[W] %ls : No HID devices with requested VID/PID found in the system.\n", __WFUNCTION__);
+                }
+            }
+
+            return root;
+        }
+#else
+        //////////////////////////////////////////////////////////
+        // for linux
         /**
           Max length of the result: "000-000.000.000.000.000.000.000:000.000" (39 chars).
           64 is used for simplicity/alignment.
         */
-        static void _hidapi_get_path(char (*result)[64], libusb_device* dev, int config_number, int interface_number)
+        void _hidapi_get_path(char (*result)[64], libusb_device* dev, int config_number, int interface_number)
         {
             char* str = *result;
 
@@ -285,20 +469,16 @@ namespace _mp{
         }
 
         //modified make_path of hidapi
-        static char* _hidapi_make_path(libusb_device* dev, int config_number, int interface_number)
+        char* _hidapi_make_path(libusb_device* dev, int config_number, int interface_number)
         {
             char str[64];
             _hidapi_get_path(&str, dev, config_number, interface_number);
-#ifdef _WIN32
-            return _strdup(str);
-#else
             return strdup(str);
-#endif
-            
+           
         }
 
         //modified create_device_info_for_device of hidapi
-        static struct hid_device_info* _hidapi_create_device_info_for_device(libusb_device* device, struct libusb_device_descriptor* desc, int config_number, int interface_num)
+        struct hid_device_info* _hidapi_create_device_info_for_device(libusb_device* device, struct libusb_device_descriptor* desc, int config_number, int interface_num)
         {
             struct hid_device_info* cur_dev = (struct hid_device_info*)calloc(1, sizeof(struct hid_device_info));
             if (cur_dev == NULL) {
@@ -390,7 +570,7 @@ namespace _mp{
 
             return root;
         }
-
+#endif //_WIN32
         void  _hid_free_enumeration(struct hid_device_info* devs)
         {
             struct hid_device_info* d = devs;
@@ -412,6 +592,9 @@ namespace _mp{
             struct hid_device_info* devs = NULL;
 
             do {
+                /**
+                * don't use the hid_enumerate() of hidapi. it will occur packer-losting. 
+                */
                 std::lock_guard<std::mutex> lock(*m_ptr_mutex_hidapi);
                 devs = _hid_enumerate(m_ptr_usb_lib->get_context(),0x0, 0x0);
 
@@ -420,9 +603,6 @@ namespace _mp{
                     _hid_free_enumeration(devs);
                 }
             } while (false);
-
-            //m_ptr_usb_lib->update_device_list();
-            //TODO. you must assign st.
 
             // checks the device critial error 
             clibhid_dev_info::type_set st_must_be_removed;

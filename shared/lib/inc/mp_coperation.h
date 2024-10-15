@@ -25,6 +25,62 @@ namespace _mp{
 			return set_result;
 		}
 
+#ifdef _WIN32
+		static int get_usb_vid_from_path(const std::wstring& s_path)
+		{
+			int nVal = -1;// const_no_exist;
+
+			size_t nfound = s_path.find(L"vid_"); //vid_XXXX ==> xxxx hexcimal is vender ID.
+			if (nfound == std::wstring::npos)
+				return nVal;
+
+			nfound += 4;
+
+			std::wstring sVal = s_path.substr(nfound, 4);
+
+			if (!sVal.empty())
+				nVal = std::wcstol(sVal.c_str(), NULL, 16);
+
+			return nVal;
+		}
+
+		static int get_usb_pid_from_path(const std::wstring& s_path)
+		{
+			int nVal = -1;// const_no_exist;
+
+			size_t nfound = s_path.find(L"pid_"); //vid_XXXX ==> xxxx  hexcimal is product ID.
+			if (nfound == std::wstring::npos)
+				return nVal;
+
+			nfound += 4;
+
+			std::wstring sVal = s_path.substr(nfound, 4);
+
+			if (!sVal.empty())
+				nVal = std::wcstol(sVal.c_str(), NULL, 16);
+
+			return nVal;
+		}
+
+		static int get_usb_inf_from_path(const std::wstring& s_path)
+		{
+			int nVal = -1;// const_no_exist;
+
+			size_t nfound = s_path.find(L"mi_"); //mi_XX ==> xx is interface number( interface number is started from zero-base )
+			if (nfound == std::wstring::npos)
+				return nVal;
+
+			nfound += 3;
+
+			std::wstring sVal = s_path.substr(nfound, 2);
+
+			if (!sVal.empty())
+				nVal = std::wcstol(sVal.c_str(), NULL, 16);
+
+			return nVal;
+		}
+
+#endif
 		static bool copy_btb(unsigned char* ps_dst, unsigned int n_dst, const unsigned char* ps_src, unsigned int n_src, bool b_right_arrange = false)
 		{
 			bool b_result(false);
