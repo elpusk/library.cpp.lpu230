@@ -69,10 +69,10 @@ namespace _mp {
 					request.get_data_field(list_wstring_data_field);
 					b_completet = _execute_mgmt_get_device_list(list_wstring_data_field, request, response);
 					break;
-					/*
 				case cio_packet::act_mgmt_ctl_show:
 					b_completet = _execute_mgmt_ctl_show(request, response);
 					break;
+					/*
 				case cio_packet::act_mgmt_file_operation:
 					b_completet = _execute_file_operation(request, response);
 					break;
@@ -205,7 +205,7 @@ namespace _mp {
 			response.set_data_by_utf8(set_dev_path);
 			return true;//complete
 		}
-		/*
+		
 		bool cmain_ctl::_execute_mgmt_ctl_show(cio_packet& request, cio_packet& response)
 		{
 			bool b_error(false);
@@ -223,12 +223,18 @@ namespace _mp {
 				}
 				else {
 					if (set_wstring_data_field.find(L"show") != std::end(set_wstring_data_field)) {
+						//TODO. run display information process
+						/*
 						if (m_h_root_dlg)
 							::PostMessage(m_h_root_dlg, _shared_const::WM_MSG_SHOW, 0, 0);
+							*/
 					}
 					else if (set_wstring_data_field.find(L"hide") != std::end(set_wstring_data_field)) {
+						//TODO. kill display information process
+						/*
 						if (m_h_root_dlg)
 							::PostMessage(m_h_root_dlg, _shared_const::WM_MSG_HIDE, 0, 0);
+							*/
 					}
 					else {
 						b_error = true;
@@ -244,7 +250,7 @@ namespace _mp {
 
 			return true;//complete
 		}
-
+		/*
 		bool cmain_ctl::_execute_file_operation(cio_packet& request, cio_packet& response)
 		{
 			CcoffeemanagerDlg* p_dlg_parent(nullptr);
