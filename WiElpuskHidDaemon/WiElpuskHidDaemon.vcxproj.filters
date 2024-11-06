@@ -218,4 +218,7 @@
       <Filter>common\xml</Filter>
     </Xml>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="ClassDiagram.cd" />
+  </ItemGroup>
 </Project>

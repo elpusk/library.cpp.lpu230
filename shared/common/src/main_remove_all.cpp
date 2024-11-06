@@ -7,6 +7,7 @@
 
 /**
  * remove all installed file and paths.
+ * TODO. not yet!
  */
 int main_remove_all(const _mp::type_set_wstring& set_parameters)
 {

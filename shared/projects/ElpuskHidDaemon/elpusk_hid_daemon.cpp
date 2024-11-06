@@ -34,6 +34,12 @@
 
 /**
 * this program must be on admin mode. 
+* command line option
+* "/server"(default) - run as security web socket server. the process of this option can be executed only one instance.
+* "/trace" - display trace message of the process of "/server".
+* "/cert" - generates the self signed certificate and register it for using in web-browser.
+* "/removecert" - unregister the self signed certificate and delete it.
+* "/removeall" - remove all logging files.
 */
 int main(int argc, char* argv[])
 {

@@ -1,0 +1,603 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="cdef_const" Collapsed="true">
+    <Position X="20.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAgAAAAAgAAAAAgAAAAAAAAIAEAAgAAAAAgAAgAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\common\inc\main.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="_mp::cconsole" Collapsed="true">
+    <Position X="15.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAEgAAAAAAAAAAAAAAQAAAAAAAAAAgAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_cconsole.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="_mp::cconvert" Collapsed="true">
+    <Position X="17.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAUAEAEAAAAgAAAAAAIAEAAAAQAAIAQAwAEAAABA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_cconvert.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="_mp::cfile" Collapsed="true">
+    <Position X="13.75" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAIABAAAAAACAAAAAAAQDABAAAAAAIDAgAQAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_cfile.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="_mp::cnamed_pipe" Collapsed="true">
+    <Position X="12" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>GAACAAAAJAAAAAAAACAAAAAAAAAAAAAARQggAIAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_cnamed_pipe_.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="_mp::coperation" Collapsed="true">
+    <Position X="13.75" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAIABAABIAAAAAAAAAAAAAAoIAAAAABAAgAACAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_coperation.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="_mp::cqitem_dev" Collapsed="true">
+    <Position X="17.25" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AIAiAgIAAAQCIAAoEAAABAgAhIAAABAAAYAgIAAIAIA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_cqitem_dev.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="_mp::cqueue&lt;T&gt;" Collapsed="true">
+    <Position X="19" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AEAAAAAAAAAAAACAAAAAAAAAQAAAAAAAAAAIAAAIAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_cqueue.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="_mp::cstring" Collapsed="true">
+    <Position X="12" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAQAAAACgAAAAIACAQAACCASAAAAAAoAAAEAiA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_cstring.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="_mp::csystem" Collapsed="true">
+    <Position X="13.75" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAmQAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_csystem_.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="_mp::cwait" Collapsed="true">
+    <Position X="15.5" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAkAAACAAAAAAQQAAAAAEAJAAAAAIAgkAAIAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_cwait.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="_mp::clog" Collapsed="true">
+    <Position X="20.75" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>CAQKCCAAAAjEUMAIWAgAiICAXXIQJTAAAEAsIIACYEA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_clog.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="_mp::vcpacket" Collapsed="true">
+    <Position X="0.5" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAACAACAAAQAAAAAAAAAACAgAgAAAAAAAgAAAAEAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_vcpacket.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="_mp::vcworker&lt;T&gt;" Collapsed="true">
+    <Position X="3" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAQEACAAAAAQABAAAAgCAAgAAACgEA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_vcworker.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="_mp::clibhid" Collapsed="true">
+    <Position X="15.5" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>KAAEShFABAEEAAYQgAEAAAAAwAAAABAACQAwIBCKABI=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\hid\mp_clibhid.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="_mp::clibhid_dev" Collapsed="true">
+    <Position X="17.25" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>CECICQEBAAAAIAEAAAAAAAAggoRQCCAAmAIgAAABgAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\hid\mp_clibhid_dev.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="_mp::clibhid_dev_info" Collapsed="true">
+    <Position X="19" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AIAAAAAIAQAEAABAAAAQCQAABAAgAiAAAAAgQEAAGIA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\hid\mp_clibhid_dev_info.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="_mp::cws_server" Collapsed="true">
+    <Position X="17.25" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>KBGAA4AQAACoAikqAA0gAYAEIAIhAAgBAIBBIAEIAAQ=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\websocket\mp_cws_server.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="_mp::cdev_ctl" Collapsed="true">
+    <Position X="5.25" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>QBAQACAAAEAAAAAAAACAAgECAkAAACAAABBgAhAICCA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\server\mp_cdev_ctl_.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="_mp::cio_packet" Collapsed="true">
+    <Position X="0.5" Y="6.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>oJAAhVAUCUiESAAAwBIIgEoATAjDoRAkBogiJiAgEAQ=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\server\mp_cio_packet.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="_mp::ckernel_ctl" Collapsed="true">
+    <Position X="0.75" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ACIAAAAECAAAAAAgAAiAABEAAgAAUSAgABAgIAABCIA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\server\mp_ckernel_ctl_.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="_mp::cmain_ctl" Collapsed="true">
+    <Position X="3" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAQAAEAAAACAAAEAAABAAAAAAAAgACAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\server\mp_cmain_ctl_.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="_mp::cserver" Collapsed="true">
+    <Position X="20.75" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAEAEZACBAggBAEyACsAAgAAYBQhgAAAAAAjCAiEAEA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\server\mp_cserver_.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="_mp::cctl_svr" Collapsed="true">
+    <Position X="19" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>QCAZAgAAAACCBBABAACwCAADwCEAAAECAiIiAAUAgCA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\server\mp_cctl_svr_.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="_mp::cworker_ctl" Collapsed="true">
+    <Position X="3" Y="2.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAAEAABAAAAAAAAAAAiAAEAAAgAAAAAgAACgAAAQAAQ=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\server\mp_cworker_ctl.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="_mp::cpath" Collapsed="true">
+    <Position X="15.5" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAQAAAAAAAAAAAAIAAAACAAAAAAAAAgAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\path\mp_cpath.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="_mp::ccertificate" Collapsed="true">
+    <Position X="12" Y="0.5" Width="1.5" />
+    <NestedTypes>
+      <Typedef Name="_mp::ccertificate::type_ptr_EVP_PKEY" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\job\library.cpp.lpu230\shared\lib\inc\cert\mp_ccertificate_.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Typedef>
+      <Typedef Name="_mp::ccertificate::type_ptr_X509" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\job\library.cpp.lpu230\shared\lib\inc\cert\mp_ccertificate_.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Typedef>
+      <Typedef Name="_mp::ccertificate::type_ptr_X509_REQ" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\job\library.cpp.lpu230\shared\lib\inc\cert\mp_ccertificate_.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Typedef>
+      <Typedef Name="_mp::ccertificate::type_ptr_X509_EXTENSION" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\job\library.cpp.lpu230\shared\lib\inc\cert\mp_ccertificate_.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Typedef>
+      <Typedef Name="_mp::ccertificate::type_ptr_X509_STORE" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\job\library.cpp.lpu230\shared\lib\inc\cert\mp_ccertificate_.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Typedef>
+      <Enum Name="_mp::ccertificate::__unnamed_enum_043c_1" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\job\library.cpp.lpu230\shared\lib\inc\cert\mp_ccertificate_.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>AAAAAAUAAAAAAEAAAAAAAAAFAAACAAAAAEAgCAMACaA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\cert\mp_ccertificate_.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="_mp::ccoffee_hlp_cert" Collapsed="true">
+    <Position X="13.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAIAAAAAAAAABAEAAAAkAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\cert\mp_ccoffee_hlp_cert_.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="_mp::cdev_util" Collapsed="true">
+    <Position X="12" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAiAAAAgAAAAAAAhAAAAAAQAEAgAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\_dev\mp_cdev_util.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="_test::tp_hid" Collapsed="true">
+    <Position X="19" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>QAAAAAhAAAAAAAAAQAgAAABAABQgAgAAAAIAAAAAAIA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\test\test_tp_hid.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Struct Name="hid_device_" Collapsed="true">
+    <Position X="9.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AgAAAggAAAAAAgAAAABAAAAAAACICAAgAAAAAAACEAQ=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\3thpart\src\win\hid.c</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="hid_internal_detect_bus_type_result_" Collapsed="true">
+    <Position X="8.5" Y="10.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAgAAAAQAAAAAACAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\3thpart\src\win\hid.c</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="hid_api_version" Collapsed="true">
+    <Position X="12" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAIAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAIAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\3thpart\inc\hidapi.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="hid_device_info" Collapsed="true">
+    <Position X="13.75" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>gAAAAAAgAAAAAAAQAARCAAEAAAAAAAAAAFAABAIgAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\3thpart\inc\hidapi.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Typedef Name="NTSTATUS" Collapsed="true">
+    <Position X="17.25" Y="7.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\3thpart\src\win\hid.c</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="hid_internal_detect_bus_type_result" Collapsed="true">
+    <Position X="8.5" Y="12.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\3thpart\src\win\hid.c</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="hid_device" Collapsed="true">
+    <Position X="9.5" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\3thpart\inc\hidapi.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="hid_bus_type" Collapsed="true">
+    <Position X="8.5" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\3thpart\inc\hidapi.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="_mp::HWND" Collapsed="true">
+    <Position X="15.5" Y="7.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_type.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="_mp::UINT" Collapsed="true">
+    <Position X="17.25" Y="11.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_type.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="_mp::HANDLE" Collapsed="true">
+    <Position X="13.75" Y="7.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_type.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="_mp::BOOL" Collapsed="true">
+    <Position X="12" Y="7.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_type.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="_mp::type_v_buffer" Collapsed="true">
+    <Position X="20.75" Y="10.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_type.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="_mp::type_ptr_v_buffer" Collapsed="true">
+    <Position X="15.5" Y="10" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_type.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="_mp::type_v_ul_buffer" Collapsed="true">
+    <Position X="13.75" Y="11.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_type.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="_mp::type_v_s_buffer" Collapsed="true">
+    <Position X="12" Y="11.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_type.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="_mp::type_v_ws_buffer" Collapsed="true">
+    <Position X="15.5" Y="11.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_type.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="_mp::type_set_wstring" Collapsed="true">
+    <Position X="15.5" Y="10.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_type.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="_mp::type_set_string" Collapsed="true">
+    <Position X="12" Y="10.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_type.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="_mp::type_tuple_usb_filter" Collapsed="true">
+    <Position X="17.25" Y="10.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_type.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="_mp::type_set_usb_filter" Collapsed="true">
+    <Position X="13.75" Y="10.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_type.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="_mp::type_list_wstring" Collapsed="true">
+    <Position X="17.25" Y="8.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_type.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="_mp::type_list_string" Collapsed="true">
+    <Position X="15.5" Y="8.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_type.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="_mp::type_ptr_wfstream" Collapsed="true">
+    <Position X="17.25" Y="10" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_type.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="_mp::type_ptr_fstream" Collapsed="true">
+    <Position X="13.75" Y="10" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_type.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="_mp::type_pair_wfilename_ptr_wfstream" Collapsed="true">
+    <Position X="12" Y="10" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_type.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="_mp::type_pair_filename_ptr_fstream" Collapsed="true">
+    <Position X="17.25" Y="9.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_type.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="_mp::type_pair_wfilename_ptr_fstream" Collapsed="true">
+    <Position X="20.75" Y="9.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_type.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="_mp::type_pair_bool_result_bool_complete" Collapsed="true">
+    <Position X="15.5" Y="9.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_type.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="_mp::type_pair_string_bool" Collapsed="true">
+    <Position X="19" Y="9.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_type.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="_mp::type_set_pair_wfilename_ptr_wfstream" Collapsed="true">
+    <Position X="20.75" Y="10" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_type.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="_mp::type_set_pair_filename_ptr_fstream" Collapsed="true">
+    <Position X="19" Y="10" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_type.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="_mp::type_map_wstring_wstring" Collapsed="true">
+    <Position X="13.75" Y="9.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_type.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="_mp::type_map_wfilename_ptr_wfstream" Collapsed="true">
+    <Position X="12" Y="9.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_type.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="_mp::type_map_filename_ptr_fstream" Collapsed="true">
+    <Position X="19" Y="8.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_type.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="_mp::type_map_wfilename_ptr_fstream" Collapsed="true">
+    <Position X="20.75" Y="8.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_type.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="_mp::type_deque_wstring" Collapsed="true">
+    <Position X="20.75" Y="7.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_type.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="_mp::type_deque_string" Collapsed="true">
+    <Position X="19" Y="7.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_type.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="_mp::type_dequeu_v_buffer" Collapsed="true">
+    <Position X="13.75" Y="8.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_type.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="_mp::type_dequeu_ptr_v_buffer" Collapsed="true">
+    <Position X="12" Y="8.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_type.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="_mp::type_bm_dev" Collapsed="true">
+    <Position X="4.5" Y="9.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_type.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="_mp::type_v_bm_dev" Collapsed="true">
+    <Position X="19" Y="10.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_type.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Enum Name="__unnamed_enum_0439_1" Collapsed="true">
+    <Position X="8.5" Y="7.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAgACAAAAAAAAACAAAAAEBAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\3thpart\inc\hidapi.h</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="_mp::__unnamed_enum_0425_1" Collapsed="true">
+    <Position X="4.5" Y="7.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAQAAAAAEAAAABAABABIAAAAAAAIAEAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_type.h</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="_mp::_elpusk::__unnamed_enum_0423_1" Collapsed="true">
+    <Position X="12" Y="6" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_elpusk.h</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="_mp::_elpusk::__unnamed_enum_0423_2" Collapsed="true">
+    <Position X="13.75" Y="6" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_elpusk.h</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="_mp::_elpusk::__unnamed_enum_0423_3" Collapsed="true">
+    <Position X="15.5" Y="6" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_elpusk.h</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="_mp::_elpusk::__unnamed_enum_0423_4" Collapsed="true">
+    <Position X="17.25" Y="6" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_elpusk.h</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="_mp::_elpusk::_lpu237::__unnamed_enum_0423_5" Collapsed="true">
+    <Position X="19" Y="6" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAQAACAIAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_elpusk.h</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="_mp::_elpusk::_lpu238::__unnamed_enum_0423_6" Collapsed="true">
+    <Position X="20.75" Y="6" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAQAACAIAAAAAAAAAAAAAAAIAAAAAAAAAAAAAQAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_elpusk.h</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="_mp::_ws_tools::__unnamed_enum_042f_1" Collapsed="true">
+    <Position X="12" Y="6.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AgAAAAAAAAAAAAAEAAAAAAAAAAAAAAAIIAAAAAACAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\websocket\mp_ws_tools.h</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Font Name="Malgun Gothic" Size="9" />
+</ClassDiagram>

@@ -111,4 +111,51 @@ sudo dpkg --remove --force-remove-reinstreq coffee-manager
 sudo rm /var/lib/dpkg/info/coffee-manager*
 
 
+## running environment
+
+### elpusk-hid-d file.(elpusk-hid-d.exe on Windows)
+
+#### common
++ trace pipe name : _mp::_coffee::CONST_S_COFFEE_MGMT_TRACE_PIPE_NAME = L"PIPE_NAME_COFFEE_MGMT_TRACE_036423FC_2189_423D_8D0E_75992725F843"
++ for single instance, file lock : _mp::_coffee::CONST_S_COFFEE_MGMT_FILE_LOCK_FOR_SINGLE = L"FILE_LOCK_COFFEE_MGMT_E0A38B4D_DBE7_4F77_A657_45BD8A19B923"
++ for controll object, pipe name : _mp::_coffee::CONST_S_COFFEE_MGMT_CTL_PIPE_NAME = L"PIPE_NAME_COFFEE_MGMT_CTL_6B092EC7_0D20_4123_8165_2C1DE27C9AAF"
++ security websocket port : mp::_ws_tools::WEBSOCKET_SECURITY_SERVER_PORT_COFFEE_MANAGER =  443
+
+
+#### Windows x86 and x64
++ common
+  - PID file path : none
++ debug build
+  - certificate file : _mp::_coffee::CONST_S_CERT_ABS_FULL_PATH = L"C:\\job\\library.cpp.lpu230\\shared\\data_for_debug\\cert\\coffee_server.crt"
+  - private key file : _mp::_coffee::CONST_S_PRIVATE_KEY_ABS_FULL_PATH = L"C:\\job\\library.cpp.lpu230\\shared\\data_for_debug\\cert\\coffee_server.key"
+  - log directory : _mp::_coffee::CONST_S_LOG_DIR_EXCEPT_BACKSLASH = L"C:\\ProgramData\\Elpusk\\00000006\\elpusk-hid-d\\log"
+  - virtual drive root directory : _mp::_coffee::CONST_S_ROOT_DIR_EXCEPT_BACKSLASH = L"C:\\job\\library.cpp.lpu230\\shared\\data_for_debug\\win\\ProgramData\\elpusk\\00000006\\vroot"
+  
++ release build
+  - certificate file : _mp::_coffee::CONST_S_CERT_ABS_FULL_PATH = L"%ProgramData%\\elpusk\\programdata\\00000006\\coffee_manager\\data\\server\\coffee_server.crt"
+  - private key file : _mp::_coffee::CONST_S_PRIVATE_KEY_ABS_FULL_PATH = L"%ProgramData%\\elpusk\\programdata\\00000006\\coffee_manager\\data\\server\\coffee_server.key"
+  - log directory : _mp::_coffee::CONST_S_LOG_DIR_EXCEPT_BACKSLASH = L"%ProgramData%\\elpusk\\00000006\\coffee_manager\\elpusk-hid-d\\log"
+  - virtual drive root directory : _mp::_coffee::CONST_S_ROOT_DIR_EXCEPT_BACKSLASH = L"%ProgramData%\\elpusk\\programdata\\00000006\\coffee_manager\\root"
+
+#### Linux build x86 and x64
++ common
+  - PID file path : _mp::_coffee::CONST_S_PID_FILE_FULL_PATH = L"/var/run/elpusk-hid-d.pid"
+
++ debug build
+  - certificate file : _mp::_coffee::CONST_S_CERT_ABS_FULL_PATH = L"/home/tester/projects/LiElpuskHidDaemon/bin/x64/Debug/coffee_server.crt"
+  - private key file : _mp::_coffee::CONST_S_PRIVATE_KEY_ABS_FULL_PATH = L"/home/tester/projects/LiElpuskHidDaemon/bin/x64/Debug/coffee_server.key"
+  - log directory : _mp::_coffee::CONST_S_LOG_DIR_EXCEPT_BACKSLASH = L"/home/tester/projects/LiElpuskHidDaemon/bin/x64/Debug"
+  - virtual drive root directory : _mp::_coffee::CONST_S_ROOT_DIR_EXCEPT_BACKSLASH = L"/home/tester/projects/LiElpuskHidDaemon/bin/x64/Debug"
+  
++ release build
+  - certificate file : _mp::_coffee::CONST_S_CERT_ABS_FULL_PATH = L"/usr/share/elpusk/programdata/00000006/coffee_manager/data/server/coffee_server.crt"
+  - private key file : _mp::_coffee::CONST_S_PRIVATE_KEY_ABS_FULL_PATH = L"/usr/share/elpusk/programdata/00000006/coffee_manager/data/server/coffee_server.key"
+  - log directory : _mp::_coffee::CONST_S_LOG_DIR_EXCEPT_BACKSLASH = L"/var/log/elpusk/00000006/coffee_manager/elpusk-hid-d"
+  - virtual drive root directory : _mp::_coffee::CONST_S_ROOT_DIR_EXCEPT_BACKSLASH = L"/usr/share/elpusk/programdata/00000006/coffee_manager/root"
+
+
+### tg_lpu27_dll.so file.(tg_lpu27_dll.dll on Windows)
+
+#### common
++ log directory : L"."
 
