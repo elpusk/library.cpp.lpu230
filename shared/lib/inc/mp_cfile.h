@@ -161,6 +161,28 @@ namespace _mp{
 		}
 
 #endif //_WIN32
+
+#ifdef _WIN32
+		static bool delete_file(const std::wstring &s_file)
+		{
+			if (s_file.empty())
+				return false;
+			if (DeleteFile(s_file.c_str()))
+				return true;
+			else
+				return false;
+		}
+#else
+		static bool delete_file(const std::wstring& s_file)
+		{
+			//
+			std::string ps = _mp::cstring::get_mcsc_from_unicode(s_file);
+			if (unlink(ps.c_str()) != 0) {
+				return false;
+			}
+			return true;
+		}
+#endif
 		static bool split_path(
 			const std::wstring& s_in_path
 			, std::wstring& s_out_drive
@@ -486,6 +508,26 @@ namespace _mp{
 			return n_find;
 		}
 
+		static std::wstring get_file_name_and_extention_only_from_path(const std::wstring& s_path)
+		{
+			std::wstring file_name_only;
+
+			do {
+				if (s_path.empty())
+					continue;
+
+				std::wstring s_out_drive;
+				std::wstring s_out_dir;
+				std::wstring s_out_file_name;
+				std::wstring s_out_ext;
+
+				if (!cfile::split_path(s_path, s_out_drive, s_out_dir, s_out_file_name, s_out_ext))
+					continue;
+
+				file_name_only = s_out_file_name + s_out_ext;
+			} while (false);
+			return file_name_only;
+		}
 
 #ifdef _WIN32
 		/**

@@ -44,9 +44,9 @@ namespace _mp {
 		bool _execute_mgmt_get_device_list(const type_list_wstring& list_wstring_filter, cio_packet& request, cio_packet& response);
 		
 		bool _execute_mgmt_ctl_show(cio_packet& request, cio_packet& response);
-		/*
+		
 		bool _execute_file_operation(cio_packet& request, cio_packet& response);
-
+		/*
 		bool _execute_advance_operation(cio_packet& request, cio_packet& response, cio_packet& response_for_the_other_session);
 
 		bool _execute_kernel_operation(cio_packet& request, cio_packet& response);

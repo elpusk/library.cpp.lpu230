@@ -2,6 +2,7 @@
 
 #include <mp_type.h>
 #include <mp_coffee.h>
+#include <mp_coffee_path.h>
 
 /**
 * shared global variable area.
@@ -44,7 +45,7 @@ public:
 
 	static std::wstring get_root_folder_except_backslash()
 	{
-		static std::wstring s = _mp::_coffee::CONST_S_ROOT_DIR_EXCEPT_BACKSLASH;
+		static std::wstring s = _mp::ccoffee_path::get_path_of_virtual_drive_root_except_backslash();
 		return s;
 	}
 

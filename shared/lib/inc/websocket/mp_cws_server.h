@@ -402,15 +402,12 @@ namespace _mp
 						continue;
 #ifdef _WIN32
 					std::wstring s_deleted_file_abs_path(m_s_root_folder_except_backslash + L"\\" + m_s_virtual_full_path_of_temp_file);
-					if (!DeleteFile(s_deleted_file_abs_path.c_str()))
-						continue;
 #else
 					std::wstring s_deleted_file_abs_path(m_s_root_folder_except_backslash + L"/" + m_s_virtual_full_path_of_temp_file);
-					std::string ps = _mp::cstring::get_mcsc_from_unicode(s_deleted_file_abs_path);
-					if (unlink(ps.c_str()) != 0) {
-						continue;
-					}
 #endif
+					if (!cfile::delete_file(s_deleted_file_abs_path))
+						continue;
+					//
 					b_result = true;
 				} while (false);
 				clog::get_instance().log_fmt(L"[I] - %ls : %u : X.\n", __WFUNCTION__, m_n_session);
@@ -512,15 +509,12 @@ namespace _mp
 						in_f.close();
 #ifdef _WIN32
 						std::wstring s_del_file = m_s_root_folder_except_backslash + L"\\" + s_virtual_abs_file;
-						if (!DeleteFile(s_del_file.c_str()))
-							continue;
 #else
 						std::wstring s_del_file = m_s_root_folder_except_backslash + L"/" + s_virtual_abs_file;
-						std::string ps = _mp::cstring::get_mcsc_from_unicode(s_del_file);
-						if (unlink(ps.c_str()) != 0) {
-							continue;
-						}
 #endif
+						if (!cfile::delete_file(s_del_file))
+							continue;
+
 						b_result = true;
 					}
 				} while (false);

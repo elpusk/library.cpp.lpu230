@@ -3,6 +3,7 @@
 
 #include <memory>
 
+#include <mp_coffee_path.h>
 #include <server/mp_cio_packet.h>
 #include <server/mp_cserver_.h>
 #include <server/mp_cctl_svr_.h>
@@ -326,7 +327,7 @@ namespace _mp{
 					continue;
 				}
 
-				//p_obj->get_session(n_session)->set_virtual_full_path_of_temp_file(ccoffee_path::get_virtual_path_of_temp_rom_file_of_session(n_session));
+				p_obj->get_session(n_session)->set_virtual_full_path_of_temp_file(ccoffee_path::get_virtual_path_of_temp_rom_file_of_session(n_session));
 				s_info = L"_cb_svr_accept : accepted : session = " + std::to_wstring(n_session);
 				p_obj->_dp_n(s_info);
 

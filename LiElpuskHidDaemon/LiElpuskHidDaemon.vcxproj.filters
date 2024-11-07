@@ -221,6 +221,9 @@
     <ClInclude Include="..\shared\lib\inc\usb\mp_clibusb.h">
       <Filter>lib\usb</Filter>
     </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_coffee_path.h">
+      <Filter>lib</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="elpusk-hid-d.service">

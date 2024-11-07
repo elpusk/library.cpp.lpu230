@@ -880,16 +880,9 @@ namespace _mp
 				//delete only files
 				std::for_each(std::begin(list_pair_found), std::end(list_pair_found), [&](const cfile::type_pair_find_data & pair_data) {
 					if (!pair_data.first.empty()) {
-#ifdef _WIN32
-						if (!DeleteFile(pair_data.first.c_str())) {
+						if (!cfile::delete_file(pair_data.first)) {
 							b_result = false;
 						}
-#else
-						std::string ps = _mp::cstring::get_mcsc_from_unicode(pair_data.first);
-						if (unlink(ps.c_str())!=0) {
-							b_result = false;
-						}
-#endif
 					}
 					});
 			} while (false);

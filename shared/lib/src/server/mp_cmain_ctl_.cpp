@@ -9,6 +9,7 @@
 
 #include <mp_type.h>
 #include <mp_cqueue.h>
+#include <mp_coffee_path.h>
 
 #include <server/mp_cmain_ctl_.h>
 #include <server/mp_cserver_.h>
@@ -72,10 +73,10 @@ namespace _mp {
 				case cio_packet::act_mgmt_ctl_show:
 					b_completet = _execute_mgmt_ctl_show(request, response);
 					break;
-					/*
 				case cio_packet::act_mgmt_file_operation:
 					b_completet = _execute_file_operation(request, response);
 					break;
+					/*
 				case cio_packet::act_mgmt_advance_operation:
 					b_completet = _execute_advance_operation(request, response, response_for_the_other_session);
 					break;
@@ -250,13 +251,12 @@ namespace _mp {
 
 			return true;//complete
 		}
-		/*
+		
 		bool cmain_ctl::_execute_file_operation(cio_packet& request, cio_packet& response)
 		{
-			CcoffeemanagerDlg* p_dlg_parent(nullptr);
-			_ns_tools::type_deque_wstring deque_wstring_data_field;
+			_mp::type_deque_wstring deque_wstring_data_field;
 			unsigned long n_session = request.get_session_number();
-			_ws_tools::cws_server::csession::type_ptr_session ptr_session;
+			_mp::cws_server::csession::type_ptr_session ptr_session;
 			std::wstring s_file, s_sub;
 
 			do {
@@ -272,7 +272,7 @@ namespace _mp {
 				}
 				if (request.get_data_field_type() == cio_packet::data_field_binary) {
 					//append mode
-					_ns_tools::type_v_buffer v_data(0);
+					_mp::type_v_buffer v_data(0);
 					if (request.get_data_field(v_data) == 0) {
 						m_p_log->log_fmt(L"[E] - %ls | get_data_field() == empty.\n", __WFUNCTION__);
 						m_p_log->trace(L"[E] - %ls | get_data_field() == empty.\n", __WFUNCTION__);
@@ -375,11 +375,15 @@ namespace _mp {
 						continue;
 					}
 					s_file = ccoffee_path::get_path_of_virtual_drive_root_except_backslash();
+#ifdef _WIN32
 					s_file += L"\\";
+#else
+					s_file += L"/";
+#endif
 					s_file += deque_wstring_data_field[1];
-					if (!DeleteFile(s_file.c_str())) {
-						m_p_log->log_fmt(L"[E] - %ls | DeleteFile(%ls).\n", __WFUNCTION__, s_file.c_str());
-						m_p_log->trace(L"[E] - %ls | DeleteFile(%ls).\n", __WFUNCTION__, s_file.c_str());
+					if (!cfile::delete_file(s_file)) {
+						m_p_log->log_fmt(L"[E] - %ls | delete_file(%ls).\n", __WFUNCTION__, s_file.c_str());
+						m_p_log->trace(L"[E] - %ls | delete_file(%ls).\n", __WFUNCTION__, s_file.c_str());
 						continue;
 					}
 					//
@@ -434,13 +438,13 @@ namespace _mp {
 						std::wstring s_root = ccoffee_path::get_path_of_virtual_drive_root_except_backslash();
 						type_list_wstring list_found;
 						//find only files.
-						_ns_tools::ct_file::get_find_file_list(list_found, s_root, L"*", _ns_tools::ct_file::folder_area_current_folder, false);
+						cfile::get_find_file_list(list_found, s_root, L"*", cfile::folder_area_current_folder, false);
 
 						//extraction file name & extention from result.
 						response.set_data_by_utf8(L"success", false);
 
 						for (type_list_wstring::iterator it = std::begin(list_found); it != std::end(list_found); ++it) {
-							*it = _ns_tools::ct_file::get_file_name_and_extention_only_from_path(*it);
+							*it = cfile::get_file_name_and_extention_only_from_path(*it);
 							response.set_data_by_utf8(*it, true);
 						}//end for
 						continue;
@@ -453,7 +457,7 @@ namespace _mp {
 
 			return true;//complete
 		}
-
+		/*
 		bool cmain_ctl::_execute_advance_operation(cio_packet& request, cio_packet& response, cio_packet& response_for_the_other_session)
 		{
 			CcoffeemanagerDlg* p_dlg_parent(nullptr);
