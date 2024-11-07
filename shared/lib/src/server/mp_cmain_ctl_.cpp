@@ -13,6 +13,8 @@
 
 #include <server/mp_cmain_ctl_.h>
 #include <server/mp_cserver_.h>
+
+#include <server/mp_cctl_svr_.h>
 #include <hid/mp_clibhid.h>
 #include <_dev/mp_cdev_util.h>
 
@@ -76,10 +78,10 @@ namespace _mp {
 				case cio_packet::act_mgmt_file_operation:
 					b_completet = _execute_file_operation(request, response);
 					break;
-					/*
 				case cio_packet::act_mgmt_advance_operation:
 					b_completet = _execute_advance_operation(request, response, response_for_the_other_session);
 					break;
+					/*
 				case cio_packet::act_mgmt_dev_kernel_operation:
 					b_completet = _execute_kernel_operation(request, response);
 					break;
@@ -457,13 +459,12 @@ namespace _mp {
 
 			return true;//complete
 		}
-		/*
+
 		bool cmain_ctl::_execute_advance_operation(cio_packet& request, cio_packet& response, cio_packet& response_for_the_other_session)
 		{
-			CcoffeemanagerDlg* p_dlg_parent(nullptr);
-			_ns_tools::type_deque_wstring deque_wstring_data_field;
+			_mp::type_deque_wstring deque_wstring_data_field;
 			unsigned long n_session = request.get_session_number();
-			_ws_tools::cws_server::csession::type_ptr_session ptr_session;
+			_mp::cws_server::csession::type_ptr_session ptr_session;
 			std::wstring s_file, s_sub, s_session_name;
 
 			do {
@@ -487,10 +488,10 @@ namespace _mp {
 					if (deque_wstring_data_field.size() > 2)
 						continue;
 					if (deque_wstring_data_field.size() == 1)
-						s_session_name = ccontroller::get_instance().generate_session_name(n_session);//auto generated session name.
+						s_session_name = cctl_svr::get_instance().generate_session_name(n_session);//auto generated session name.
 					else
 						s_session_name = deque_wstring_data_field[1];
-					if (!ccontroller::get_instance().set_session_name(n_session, s_session_name)) {
+					if (!cctl_svr::get_instance().set_session_name(n_session, s_session_name)) {
 						continue;//already session has a name.
 					}
 					//
@@ -500,7 +501,7 @@ namespace _mp {
 				if (deque_wstring_data_field[0].compare(L"get_session_name") == 0) {
 					if (deque_wstring_data_field.size() != 1)
 						continue;
-					s_session_name = ccontroller::get_instance().get_session_name(n_session);
+					s_session_name = cctl_svr::get_instance().get_session_name(n_session);
 					if (s_session_name.empty())
 						continue;
 					//
@@ -512,13 +513,13 @@ namespace _mp {
 					if (deque_wstring_data_field.size() < 3)
 						continue;
 					s_session_name = deque_wstring_data_field[1];//target session name
-					unsigned long n_session_dest(ccontroller::get_instance().get_session_number_from_session_name(s_session_name));
-					if (n_session_dest == _NS_TOOLS_INVALID_SESSION_NUMBER)
+					unsigned long n_session_dest(cctl_svr::get_instance().get_session_number_from_session_name(s_session_name));
+					if (n_session_dest == _MP_TOOLS_INVALID_SESSION_NUMBER)
 						continue;
 					if (n_session == n_session_dest)
 						continue;//source and destination cannot be equal.
 
-					s_session_name = ccontroller::get_instance().get_session_name(n_session);
+					s_session_name = cctl_svr::get_instance().get_session_name(n_session);
 					if (s_session_name.empty())
 						continue;
 					// redirect to n_session_dest session.
@@ -529,7 +530,7 @@ namespace _mp {
 				if (deque_wstring_data_field[0].compare(L"send_data_to_all") == 0) {
 					if (deque_wstring_data_field.size() < 2)
 						continue;
-					s_session_name = ccontroller::get_instance().get_session_name(n_session);
+					s_session_name = cctl_svr::get_instance().get_session_name(n_session);
 					if (s_session_name.empty())
 						continue;
 					// redirect to boardcast
@@ -542,7 +543,7 @@ namespace _mp {
 
 			return true;//complete
 		}
-
+		/*
 		bool cmain_ctl::_execute_kernel_operation(cio_packet& request, cio_packet& response)
 		{
 			bool b_complete(true);
