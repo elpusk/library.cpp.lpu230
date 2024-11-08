@@ -11,6 +11,7 @@
 #include <server/mp_cserver_.h>
 #include <server/mp_cctl_svr_.h>
 #include <server/mp_cmain_ctl_.h>
+#include <server/mp_ckernel_ctl_.h>
 #include <server/mp_cdev_ctl_.h>
 #include <hid/mp_clibhid.h>
 
@@ -28,9 +29,28 @@ namespace _mp {
 		{
 		}
 
+		cctl_svr& cctl_svr::create_kernel_ctl(clog* p_log, unsigned long n_session)
+		{
+			std::lock_guard<std::mutex> lock(m_mutex_map_session_to_kernel);
+			if (m_map_session_to_ptr_kernel_ctl.find(n_session) == std::end(m_map_session_to_ptr_kernel_ctl)) {
+				m_map_session_to_ptr_kernel_ctl[n_session] = cworker_ctl::type_ptr(new ckernel_ctl(p_log));
+			}
+			return *this;
+		}
+
+		void cctl_svr::remove_kernel_ctl(unsigned long n_session)
+		{
+			std::lock_guard<std::mutex> lock(m_mutex_map_session_to_kernel);
+			auto it = m_map_session_to_ptr_kernel_ctl.find(n_session);
+			if ( it != std::end(m_map_session_to_ptr_kernel_ctl)) {
+				m_map_session_to_ptr_kernel_ctl.erase(it);
+			}
+		}
+
 		cctl_svr& cctl_svr::create_main_ctl_and_set_callack(clog* p_log)
 		{
 			m_ptr_main_ctl = cworker_ctl::type_ptr(new cmain_ctl(p_log));
+			
 
 			clibhid::get_instance().set_callback_pluginout(cctl_svr::_cb_dev_pluginout, this);
 			return *this;
@@ -356,6 +376,13 @@ namespace _mp {
 					continue;
 				}
 
+				if (ptr_request->get_action() == cio_packet::act_mgmt_dev_kernel_operation) {
+					_push_back_request_to_kernel_ctl(ptr_request);
+					b_result = true;
+					continue;
+				}
+
+
 				if (ptr_request->is_owner_manager()) {
 					switch (ptr_request->get_action())
 					{
@@ -364,13 +391,12 @@ namespace _mp {
 					case cio_packet::act_mgmt_ctl_show:
 					case cio_packet::act_mgmt_file_operation:
 					case cio_packet::act_mgmt_advance_operation:
-					case cio_packet::act_mgmt_dev_kernel_operation:
 						_push_back_request_to_main_ctl(ptr_request);
 						break;
 					default:
 						s_error_reason = cio_packet::get_error_message(cio_packet::error_reason_action_code);
-						//clog::get_instance().log_fmt(L"[E] - %ls | unknown action_code of manager.\n", __WFUNCTION__);
-						//clog::get_instance().trace(L"[E] - %ls | unknown action_code of manager.\n", __WFUNCTION__);
+						clog::get_instance().log_fmt(L"[E] - %ls | unknown action_code of manager.\n", __WFUNCTION__);
+						clog::get_instance().trace(L"[E] - %ls | unknown action_code of manager.\n", __WFUNCTION__);
 						continue;
 					}//end switch
 
@@ -498,6 +524,25 @@ namespace _mp {
 		//
 		cctl_svr::cctl_svr() : m_w_new_device_index(1)
 		{
+		}
+
+		bool cctl_svr::_push_back_request_to_kernel_ctl(cio_packet::type_ptr& ptr_cio_packet)
+		{
+			bool b_result(false);
+
+			do {
+				auto n_session_number = ptr_cio_packet->get_session_number();
+				std::lock_guard<std::mutex> lock(m_mutex_map_session_to_kernel);
+				auto iter = m_map_session_to_ptr_kernel_ctl.find(n_session_number);
+				if (iter == std::end(m_map_session_to_ptr_kernel_ctl))
+					continue;
+				if (!iter->second)
+					continue;
+				//
+				iter->second->push_back_request(ptr_cio_packet);
+				b_result = true;
+			} while (false);
+			return b_result;
 		}
 
 		bool cctl_svr::_push_back_request_to_main_ctl(cio_packet::type_ptr& ptr_cio_packet)

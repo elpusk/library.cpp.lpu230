@@ -345,6 +345,8 @@ namespace _mp{
 					, nullptr
 				);
 
+				cctl_svr::get_instance().create_kernel_ctl(p_obj->m_p_log, n_session);
+
 				if (!cctl_svr::get_instance().push_request_to_worker_ctl(ptr_request_echo, s_error_reason)) {//automatic cancel device
 					p_obj->m_p_log->log_fmt(L"[E] - %ls | _push_request_of_client() of echo[for sending session number].\n", __WFUNCTION__);
 					p_obj->m_p_log->trace(L"[E] - %ls | _push_request_of_client() of echo[for sending session number].\n", __WFUNCTION__);
@@ -371,6 +373,7 @@ namespace _mp{
 
 				cctl_svr::get_instance().close_all_device_of_session(n_session);
 				cctl_svr::get_instance().remove_session_name(n_session);
+				cctl_svr::get_instance().remove_kernel_ctl(n_session);
 			} while (false);
 		}
 

@@ -10,19 +10,21 @@
 #include <mp_type.h>
 #include <mp_cqueue.h>
 
+#include <mp_coffee_path.h>
+
 #include <server/mp_cserver_.h>
 #include <server/mp_ckernel_ctl_.h>
 
+#include <hid/mp_clibhid.h>
+#include <_dev/mp_cdev_util.h>
+
 namespace _mp
 {
-	ckernel_ctl::ckernel_ctl(unsigned long n_session) : m_n_session(n_session)
+	ckernel_ctl::ckernel_ctl(clog* p_log) : cworker_ctl(p_log), cmain_ctl_fn(), cdev_ctl_fn()
 	{
 	}
 	ckernel_ctl::~ckernel_ctl()
 	{
-		for (auto s_item : m_set_loaded_dll_path) {
-			_service_dll_removed(s_item);
-		}//end for
 	}
 
 	/**
@@ -150,20 +152,16 @@ namespace _mp
 			list_token.pop_front();
 			if (s_type.compare(L"device") == 0 && s_action.compare(L"list") == 0) {
 				list_wstring_data_field.pop_front();//remove the first string
-				b_complete = _execute_mgmt_get_device_list(list_wstring_data_field, request, response);
+				b_complete = _execute_mgmt_get_device_list(m_p_log,list_wstring_data_field, request, response);
 				continue;
 			}
 
-			// each kernel request is executed.
-			ckernel_ctl& kernel(ptr_session->get_kernel());
-
+			// each kernel request is executed. 
+			// TODO. NOt yet supported
 			type_list_wstring list_result;
-
-			// process_for_manager_service process service type.
-			type_pair_bool_result_bool_complete pair_bool_result_bool_complete;
-			pair_bool_result_bool_complete = kernel.process_for_manager_service(list_wstring_data_field, list_result, cdlg_page_main::_callback_for_service_execute, this);
-			b_result = pair_bool_result_bool_complete.first;
-			b_complete = pair_bool_result_bool_complete.second;
+			list_result.push_back(L"error");
+			b_result = false;
+			b_complete = true;
 
 			if (b_complete && list_result.empty()) {
 				continue;
@@ -207,14 +205,14 @@ namespace _mp
 			//
 			if (s_type.compare(L"device") == 0) {
 				if (s_action.compare(L"open") == 0) {
-					pair_bool_result_bool_complete = _execute_open_sync(request, response);
+					pair_bool_result_bool_complete = _execute_open_sync(m_p_log, request, response);
 					b_result = pair_bool_result_bool_complete.first;
 					b_complete = pair_bool_result_bool_complete.second;
 					response.set_kernel_device_open(true);
 					continue;
 				}
 				if (s_action.compare(L"close") == 0) {
-					pair_bool_result_bool_complete = _execute_close_sync(request, response);
+					pair_bool_result_bool_complete = _execute_close_sync(m_p_log, request, response,get_connected_session(), get_dev_path());
 					b_result = pair_bool_result_bool_complete.first;
 					b_complete = pair_bool_result_bool_complete.second;
 					response.set_kernel_device_close(true);
@@ -224,7 +222,7 @@ namespace _mp
 
 			if (get_connected_session() != n_session) {
 				response.set_data_error(cio_packet::get_error_message(cio_packet::error_reason_session));
-				push_info(_ns_tools::ct_color::COLOR_ERROR, L"%ls[%c] : mismatched : session = %u", __WFUNCTION__, (wchar_t)request.get_action(), request.get_session_number());
+				//push_info(_ns_tools::ct_color::COLOR_ERROR, L"%ls[%c] : mismatched : session = %u", __WFUNCTION__, (wchar_t)request.get_action(), request.get_session_number());
 				continue;
 			}
 			ptr_session = cserver::get_instance().get_session(n_session);
@@ -235,687 +233,16 @@ namespace _mp
 				if (s_action.compare(L"execute") != 0 && s_action.compare(L"cancel") != 0) {
 					continue;
 				}
-				_ws_tools::ckernel_ctl& kernel(ptr_session->get_kernel());
 
-				_ns_tools::type_list_wstring list_result;
-				_ns_tools::ct_async_dev& async_dev = _ns_tools::ct_universal_dev_manager::get_instance().get_async_dev(get_composite_dev_path());
-				if (!async_dev.is_open())
-					continue;
-
-				if (s_action.compare(L"execute") == 0) {
-					pair_bool_result_bool_complete = kernel.process_for_device_service_execute(
-						list_wstring_data_field
-						, list_result
-						, cdlg_page_device::_sync_dev_transmit_for_c_language
-						, async_dev.get_device_pointer()
-						, cdlg_page_device::_callback_for_service_execute
-						, this
-					);
-				}
-				else {//s_action == L"cancel"
-					pair_bool_result_bool_complete = kernel.process_for_device_service_cancel(
-						list_wstring_data_field
-						, list_result
-						, cdlg_page_device::_sync_dev_cancel_for_c_language
-						, async_dev.get_device_pointer()
-					);
-				}
-				//
-				b_result = pair_bool_result_bool_complete.first;
-				b_complete = pair_bool_result_bool_complete.second;
-
-				if (b_complete && list_result.empty()) {
-					//when requst is completed, list_result must have the returned strings.
-					continue;
-				}
-				response.set_data_by_utf8(list_result);
+				//TODO. not yet supported
 				continue;
 			}
 		} while (false);
 
 		if (b_result) {
-			push_info(_ns_tools::ct_color::COLOR_NORMAL, L"_execute_kernel[%c] : pushed : session = %u", (wchar_t)request.get_action(), request.get_session_number());
+			//push_info(_ns_tools::ct_color::COLOR_NORMAL, L"_execute_kernel[%c] : pushed : session = %u", (wchar_t)request.get_action(), request.get_session_number());
 		}
 		return b_complete;//complete
-	}
-
-	unsigned long ckernel_ctl::get_session_number() const
-	{
-		return m_n_session;
-	}
-
-	/**
-		* process_for_manager_service.
-		*
-		* \param req_data_field - the data field of request.
-		* \param list_result - if return value must be started with "success", "pending" or "error"
-		* \param cb
-		* \param p_user
-		* \return
-		*/
-	type_pair_bool_result_bool_complete ckernel_ctl::process_for_manager_service(
-		const type_list_wstring& req_data_field, type_list_wstring& list_result, const type_cb_sd_execute cb, void* p_user
-	)
-	{
-		bool b_result(false);
-		bool b_complete(true);
-
-		do {
-			list_result.clear();
-			list_result.push_back(L"error");
-
-			if (req_data_field.empty()) {
-				ATLTRACE(L"%ls :E: req_data_field.empty() : .\n", __WFUNCTION__);
-				continue;//not condition
-			}
-			//req_data_field ~ the starting string of this list are load x, unload x, or execute x.
-			std::wstring s_req = req_data_field.front();
-
-			type_list_wstring list_token;
-			if (cconvert::tokenizer(list_token, s_req, L" ") != 3) {
-				ATLTRACE(L"%ls :E: data field has not 3 tokens : .\n", __WFUNCTION__);
-				continue;//not condition
-			}
-			std::wstring s_action = list_token.front();	//load, unload, execute, cancel, open ,close
-			list_token.pop_front();
-			std::wstring s_type = list_token.front(); //service, device
-			list_token.pop_front();
-
-			std::wstring s_path;
-			if (!list_token.empty()) {
-				s_path = list_token.front(); //default/xxx.dll, 3thpart/xxx.dll
-				list_token.pop_front();
-			}
-
-			if (s_type.compare(L"service") != 0) {
-				ATLTRACE(L"%ls :E: type must be service : .\n", __WFUNCTION__);
-				continue;
-			}
-			if (s_action.compare(L"load") == 0) {
-				std::lock_guard<std::mutex> lock(m_mutex_for_path);
-				if (!_service_dll_load_with_abs_path(s_path)) {
-					ATLTRACE(L"%ls :E: _service_dll_load_with_abs_path() : .\n", __WFUNCTION__);
-					continue;//not condition
-				}
-				list_result.clear();
-				list_result.push_back(L"success");//1'th string complete
-				b_result = true;
-				continue;
-			}
-			if (s_action.compare(L"unload") == 0) {
-				std::lock_guard<std::mutex> lock(m_mutex_for_path);
-				if (!_service_dll_unload(s_path)) {
-					ATLTRACE(L"%ls :E: _service_dll_unload() : .\n", __WFUNCTION__);
-					continue;//not condition
-				}
-				list_result.clear();
-				list_result.push_back(L"success");//1'th string compete
-				b_result = true;
-				continue;
-			}
-			if (s_action.compare(L"cancel") == 0) {
-				std::lock_guard<std::mutex> lock(m_mutex_for_path);
-				//not used device, thesefore p_fun_sd_device_cancel and p_dev is null.
-				if (!_service_dll_cancel(s_path, nullptr, nullptr)) {
-					ATLTRACE(L"%ls :E: _service_dll_cancel() : .\n", __WFUNCTION__);
-					continue;//not condition
-				}
-				list_result.clear();
-				list_result.push_back(L"success");//1'th string compete
-				b_result = true;
-				continue;
-			}
-			if (s_action.compare(L"execute") != 0) {
-				ATLTRACE(L"%ls :E: action must be execute : .\n", __WFUNCTION__);
-				continue;//not condition
-			}
-			//execute part
-			std::lock_guard<std::mutex> lock(m_mutex_for_path);
-			type_list_wstring list_parameters;
-
-			list_parameters = req_data_field;
-			list_parameters.pop_front();
-			//not used device, thesefore p_fun_sd_device_io and p_dev is null.
-			if (!_service_dll_execute(s_path, nullptr, nullptr, list_parameters, cb, p_user)) {
-				ATLTRACE(L"%ls :E: _service_dll_execute() : .\n", __WFUNCTION__);
-				continue;//not condition
-			}
-			//
-			// here!
-			list_result.clear();
-			list_result.push_back(L"pending");
-
-			b_result = true;
-			b_complete = false;
-		} while (false);
-
-		return std::make_pair(b_result, b_complete);
-	}
-
-	/**
-		* process_for_device_service_execute.
-		*
-		* \param req_data_field - the data field of request.
-		* \param list_result - if return value must be started with "success", "pending" or "error"
-		* \param p_fun_sd_device_io - device io function pointer
-		* \param cb
-		* \param p_user
-		* \return
-		*/
-	type_pair_bool_result_bool_complete ckernel_ctl::process_for_device_service_execute(
-		const type_list_wstring& req_data_field
-		, type_list_wstring& list_result
-		, const type_fun_sd_device_io p_fun_sd_device_io
-		, ct_i_dev* p_dev
-		, const type_cb_sd_execute cb
-		, void* p_user
-	)
-	{
-		bool b_result(false);
-		bool b_complete(true);
-
-		do {
-			list_result.clear();
-			list_result.push_back(L"error");
-
-			if (req_data_field.empty()) {
-				ATLTRACE(L"%ls :E: req_data_field.empty() : .\n", __WFUNCTION__);
-				continue;//not condition
-			}
-			if (p_fun_sd_device_io == nullptr) {
-				ATLTRACE(L"%ls :E: p_fun_sd_device_io == nullptr : .\n", __WFUNCTION__);
-				continue;//not condition
-			}
-
-			//req_data_field ~ the starting string of this list are execute x.
-			std::wstring s_req = req_data_field.front();
-
-			type_list_wstring list_token;
-			if (cconvert::tokenizer(list_token, s_req, L" ") != 3) {
-				ATLTRACE(L"%ls :E: data field has not 3 tokens : .\n", __WFUNCTION__);
-				continue;//not condition
-			}
-			std::wstring s_action = list_token.front();	//execute
-			list_token.pop_front();
-			std::wstring s_type = list_token.front(); //service, device
-			list_token.pop_front();
-
-			std::wstring s_path;
-			if (!list_token.empty()) {
-				s_path = list_token.front(); //default/xxx.dll, 3thpart/xxx.dll
-				list_token.pop_front();
-			}
-
-			if (s_action.compare(L"execute") != 0) {
-				ATLTRACE(L"%ls :E: action must be execute : .\n", __WFUNCTION__);
-				continue;
-			}
-			if (s_type.compare(L"service") != 0) {
-				ATLTRACE(L"%ls :E: type must be service : .\n", __WFUNCTION__);
-				continue;
-			}
-
-			//execute part
-			std::lock_guard<std::mutex> lock(m_mutex_for_path);
-			type_list_wstring list_parameters;
-
-			list_parameters = req_data_field;
-			list_parameters.pop_front();
-			if (!_service_dll_execute(s_path, p_fun_sd_device_io, p_dev, list_parameters, cb, p_user)) {
-				ATLTRACE(L"%ls :E: _service_dll_execute() : .\n", __WFUNCTION__);
-				continue;//not condition
-			}
-			//
-			// here!
-			list_result.clear();
-			list_result.push_back(L"pending");
-			b_complete = false;
-			b_result = true;
-		} while (false);
-
-		return std::make_pair(b_result, b_complete);
-	}
-
-	/**
-		* process_for_device_service_cancel.
-		*
-		* \param req_data_field - the data field of request.
-		* \param list_result - if return value must be started with "success", "pending" or "error"
-		* \param p_fun_sd_device_io - device io function pointer
-		* \param cb
-		* \param p_user
-		* \return
-		*/
-	type_pair_bool_result_bool_complete ckernel_ctl::process_for_device_service_cancel(
-		const type_list_wstring& req_data_field
-		, type_list_wstring& list_result
-		, const type_fun_sd_device_cancel p_fun_sd_device_cancel
-		, ct_i_dev* p_dev
-	)
-	{
-		bool b_result(false);
-		bool b_complete(true);
-
-		do {
-			list_result.clear();
-			list_result.push_back(L"error");
-
-			if (req_data_field.empty()) {
-				ATLTRACE(L"%ls :E: req_data_field.empty() : .\n", __WFUNCTION__);
-				continue;//not condition
-			}
-			if (p_fun_sd_device_cancel == nullptr) {
-				ATLTRACE(L"%ls :E: p_fun_sd_device_cancel == nullptr : .\n", __WFUNCTION__);
-				continue;//not condition
-			}
-
-			//req_data_field ~ the starting string of this list are execute x.
-			std::wstring s_req = req_data_field.front();
-
-			type_list_wstring list_token;
-			if (cconvert::tokenizer(list_token, s_req, L" ") != 3) {
-				ATLTRACE(L"%ls :E: data field has not 3 tokens : .\n", __WFUNCTION__);
-				continue;//not condition
-			}
-			std::wstring s_action = list_token.front();	//execute
-			list_token.pop_front();
-			std::wstring s_type = list_token.front(); //service, device
-			list_token.pop_front();
-
-			std::wstring s_path;
-			if (!list_token.empty()) {
-				s_path = list_token.front(); //default/xxx.dll, 3thpart/xxx.dll
-				list_token.pop_front();
-			}
-
-			if (s_action.compare(L"cancel") != 0) {
-				ATLTRACE(L"%ls :E: action must be cancel : .\n", __WFUNCTION__);
-				continue;
-			}
-			if (s_type.compare(L"service") != 0) {
-				ATLTRACE(L"%ls :E: type must be service : .\n", __WFUNCTION__);
-				continue;
-			}
-
-			//cancel part
-			std::lock_guard<std::mutex> lock(m_mutex_for_path);
-			if (!_service_dll_cancel(s_path, p_fun_sd_device_cancel, p_dev)) {
-				ATLTRACE(L"%ls :E: _service_dll_cancel() : .\n", __WFUNCTION__);
-				continue;//not condition
-			}
-			//
-			// here!
-			list_result.clear();
-			list_result.push_back(L"success");
-			b_result = true;
-		} while (false);
-
-		return std::make_pair(b_result, b_complete);
-	}
-
-	/**
-		* _service_dll_unload.
-		*
-		* \param
-		*		- s_dll : default/xxx.dll or 3thpart/xxx.dll
-		* \return
-		*/
-	bool ckernel_ctl::_service_dll_unload(const std::wstring& s_dll)
-	{
-		bool b_result(false);
-		do {
-			bool b_default(true);
-			std::wstring s_file = _check_service_path(b_default, s_dll);
-			if (s_file.empty()) {
-				ATLTRACE(L"%ls :E: _check_service_path() : .\n", __WFUNCTION__);
-				continue;
-			}
-			//
-			if (b_default) {
-				auto found_it = m_map_default_path_pair_ref_cnt_ptr_dll.find(s_dll);
-				if (found_it == std::end(m_map_default_path_pair_ref_cnt_ptr_dll)) {
-					ATLTRACE(L"%ls :E: not sd_dll : %ls.\n", __WFUNCTION__, s_dll.c_str());
-					continue;
-				}
-				if (found_it->second.first > 1) {
-					found_it->second.first--;//decrease reference counter
-					b_result = true;
-					ATLTRACE(L"%ls :I: UNLOADED(%d) : %ls.\n", __WFUNCTION__, found_it->second.first, s_dll.c_str());
-					continue;
-				}
-
-				_service_dll_removed(s_dll);
-				m_map_default_path_pair_ref_cnt_ptr_dll.erase(found_it);
-				m_set_loaded_dll_path.erase(s_dll);
-				ATLTRACE(L"%ls :I: UNLOADED(%d) : %ls.\n", __WFUNCTION__, 0, s_dll.c_str());
-			}
-			else {
-				auto found_it = m_map_3th_path_pair_ref_cnt_ptr_dll.find(s_dll);
-				if (found_it == std::end(m_map_3th_path_pair_ref_cnt_ptr_dll)) {
-					ATLTRACE(L"%ls :E: not sd_dll : %ls.\n", __WFUNCTION__, s_dll.c_str());
-					continue;
-				}
-				if (found_it->second.first > 1) {
-					found_it->second.first--;//decrease reference counter
-					b_result = true;
-					ATLTRACE(L"%ls :I: UNLOADED(%d) : %ls.\n", __WFUNCTION__, found_it->second.first, s_dll.c_str());
-					continue;
-				}
-
-				_service_dll_removed(s_dll);
-				m_map_3th_path_pair_ref_cnt_ptr_dll.erase(found_it);
-				m_set_loaded_dll_path.erase(s_dll);
-				ATLTRACE(L"%ls :I: UNLOADED(%d) : %ls.\n", __WFUNCTION__, 0, s_dll.c_str());
-			}
-			//
-			b_result = true;
-		} while (false);
-		return b_result;
-	}
-
-	/**
-		* _service_dll_cancel.
-		*
-		* \param
-		*		- s_dll : default/xxx.dll or 3thpart/xxx.dll
-		*		- p_fun_sd_device_cancel : device cancel fnuction pointer
-		*		- p_dev : p_fun_sd_device_cancel()'s the first parameter.
-		* \return
-		*/
-	bool ckernel_ctl::_service_dll_cancel(const std::wstring& s_dll, const type_fun_sd_device_cancel p_fun_sd_device_cancel, ct_i_dev* p_dev)
-	{
-		bool b_result(false);
-
-		do {
-			bool b_default(true);
-			std::wstring s_file = _check_service_path(b_default, s_dll);
-			if (s_file.empty()) {
-				ATLTRACE(L"%ls :E: _check_service_path() : .\n", __WFUNCTION__);
-				continue;
-			}
-
-			std::wstring s_device_path;
-			if (p_dev)
-				s_device_path = p_dev->dev_get_path();
-
-			if (b_default) {
-				auto found_it = m_map_default_path_pair_ref_cnt_ptr_dll.find(s_dll);
-				if (found_it == std::end(m_map_default_path_pair_ref_cnt_ptr_dll)) {
-					ATLTRACE(L"%ls :E: not sd_dll : %ls.\n", __WFUNCTION__, s_dll.c_str());
-					continue;
-				}
-				if (!found_it->second.second) {
-					ATLTRACE(L"%ls :E: not sd_dll instance : %ls.\n", __WFUNCTION__, s_dll.c_str());
-					continue;
-				}
-				b_result = found_it->second.second->sd_cancel(m_n_session, s_device_path, p_fun_sd_device_cancel, p_dev);
-			}
-			else {
-				auto found_it = m_map_3th_path_pair_ref_cnt_ptr_dll.find(s_dll);
-				if (found_it == std::end(m_map_3th_path_pair_ref_cnt_ptr_dll)) {
-					ATLTRACE(L"%ls :E: not sd_dll : %ls.\n", __WFUNCTION__, s_dll.c_str());
-					continue;
-				}
-				if (!found_it->second.second) {
-					ATLTRACE(L"%ls :E: not sd_dll instance : %ls.\n", __WFUNCTION__, s_dll.c_str());
-					continue;
-				}
-				b_result = found_it->second.second->sd_cancel(m_n_session, s_device_path, p_fun_sd_device_cancel, p_dev);
-			}
-			//
-		} while (false);
-		return b_result;
-	}
-
-	/**
-		* _service_dll_execute.
-		*
-		* \param s_dll - default/xxx.dll or 3thpart/xxx.dll
-		* \param list_parameters[in] -  wstring list
-		* \param p_fun_sd_device_io[in] - device io function poniter
-		* \param p_dev[in] - p_fun_sd_device_io() 's the first parameter.
-		* \param cb
-		* \param p_user
-		* \return : true - start success.
-		*		   : else - error
-		*/
-	bool ckernel_ctl::_service_dll_execute(
-		const std::wstring& s_dll
-		, const type_fun_sd_device_io p_fun_sd_device_io
-		, ct_i_dev* p_dev
-		, const type_list_wstring& list_parameters
-		, const type_cb_sd_execute cb, void* p_user
-	)
-	{
-		bool b_result(false);
-
-		do {
-			bool b_default(true);
-			std::wstring s_file = _check_service_path(b_default, s_dll);
-			if (s_file.empty()) {
-				ATLTRACE(L"%ls :E: _check_service_path() : .\n", __WFUNCTION__);
-				continue;
-			}
-
-			std::wstring s_device_path;
-			if (p_dev)
-				s_device_path = p_dev->dev_get_path();
-
-			if (b_default) {
-				auto found_it = m_map_default_path_pair_ref_cnt_ptr_dll.find(s_dll);
-				if (found_it == std::end(m_map_default_path_pair_ref_cnt_ptr_dll)) {
-					ATLTRACE(L"%ls :E: not sd_dll : %ls.\n", __WFUNCTION__, s_dll.c_str());
-					continue;
-				}
-				if (!found_it->second.second) {
-					ATLTRACE(L"%ls :E: not sd_dll instance : %ls.\n", __WFUNCTION__, s_dll.c_str());
-					continue;
-				}
-				b_result = found_it->second.second->sd_execute(m_n_session, s_device_path, p_fun_sd_device_io, p_dev, list_parameters, cb, p_user);
-			}
-			else {
-				auto found_it = m_map_3th_path_pair_ref_cnt_ptr_dll.find(s_dll);
-				if (found_it == std::end(m_map_3th_path_pair_ref_cnt_ptr_dll)) {
-					ATLTRACE(L"%ls :E: not sd_dll : %ls.\n", __WFUNCTION__, s_dll.c_str());
-					continue;
-				}
-				if (!found_it->second.second) {
-					ATLTRACE(L"%ls :E: not sd_dll instance : %ls.\n", __WFUNCTION__, s_dll.c_str());
-					continue;
-				}
-				b_result = found_it->second.second->sd_execute(m_n_session, s_device_path, p_fun_sd_device_io, p_dev, list_parameters, cb, p_user);
-			}
-			//
-		} while (false);
-		return b_result;
-	}
-
-	/**
-		* _service_dll_removed. - you must call this function when session is removed.
-		*
-		* \param s_dll - default/xxx.dll or 3thpart/xxx.dll
-		* \return : none
-		*/
-	void ckernel_ctl::_service_dll_removed(const std::wstring& s_dll)
-	{
-		do {
-			bool b_default(true);
-			std::wstring s_file = _check_service_path(b_default, s_dll);
-			if (s_file.empty()) {
-				ATLTRACE(L"%ls :E: _check_service_path() : .\n", __WFUNCTION__);
-				continue;
-			}
-
-			if (b_default) {
-				auto found_it = m_map_default_path_pair_ref_cnt_ptr_dll.find(s_dll);
-				if (found_it == std::end(m_map_default_path_pair_ref_cnt_ptr_dll)) {
-					ATLTRACE(L"%ls :E: not sd_dll : %ls.\n", __WFUNCTION__, s_dll.c_str());
-					continue;
-				}
-				if (!found_it->second.second) {
-					ATLTRACE(L"%ls :E: not sd_dll instance : %ls.\n", __WFUNCTION__, s_dll.c_str());
-					continue;
-				}
-				found_it->second.second->sd_removed(m_n_session);
-			}
-			else {
-				auto found_it = m_map_3th_path_pair_ref_cnt_ptr_dll.find(s_dll);
-				if (found_it == std::end(m_map_3th_path_pair_ref_cnt_ptr_dll)) {
-					ATLTRACE(L"%ls :E: not sd_dll : %ls.\n", __WFUNCTION__, s_dll.c_str());
-					continue;
-				}
-				if (!found_it->second.second) {
-					ATLTRACE(L"%ls :E: not sd_dll instance : %ls.\n", __WFUNCTION__, s_dll.c_str());
-					continue;
-				}
-				found_it->second.second->sd_removed(m_n_session);
-			}
-			//
-		} while (false);
-	}
-
-	/**
-		* _check_service_path.
-		*
-		* \param s_dll - default/xxx.dll or 3thpart/xxx.dll
-		* \return dll name( dll name & extention only )
-		*/
-	std::wstring ckernel_ctl::_check_service_path(bool& b_default, const std::wstring& s_dll)
-	{
-		bool b_result(false);
-		std::wstring s_file;
-
-		do {
-			if (s_dll.empty()) {
-				ATLTRACE(L"%ls :E: s_dll.empty(): .\n", __WFUNCTION__);
-				continue;
-			}
-			//
-			std::wstring s_out_drive;
-			std::wstring s_out_dir;
-			std::wstring s_out_file_name;
-			std::wstring s_out_ext;
-
-			cfile::split_path(s_dll, s_out_drive, s_out_dir, s_out_file_name, s_out_ext);
-			if (!s_out_drive.empty()) {
-				ATLTRACE(L"%ls :E: !s_out_drive.empty() : .\n", __WFUNCTION__);
-				continue;
-			}
-			if (s_out_file_name.empty()) {
-				ATLTRACE(L"%ls :E: s_out_file_name.empty() : .\n", __WFUNCTION__);
-				continue;
-			}
-			if (s_out_ext.compare(L".dll") != 0) {
-				ATLTRACE(L"%ls :E: s_out_ext is not dll : .\n", __WFUNCTION__);
-				continue;
-			}
-			if (s_out_dir.compare(L"default/") == 0)
-				b_default = true;
-			else if (s_out_dir.empty())
-				b_default = true;
-			else if (s_out_dir.compare(L"3thpart/") == 0) {
-				b_default = false;
-			}
-			else {
-				ATLTRACE(L"%ls :E: dir is not default/ or 3thpart/ : .\n", __WFUNCTION__);
-				continue;
-			}
-			//
-			s_file = s_out_file_name + s_out_ext;
-			b_result = true;
-		} while (false);
-		return s_file;
-	}
-
-	/**
-		* _service_dll_load_with_abs_path.
-		*
-		* \param
-		*		- s_dll : default/xxx.dll or 3thpart/xxx.dll
-		* \return
-		*/
-	bool ckernel_ctl::_service_dll_load_with_abs_path(const std::wstring& s_dll_short)
-	{
-		bool b_result(false);
-		cdll_service::type_ptr_cdll_service ptr_sdll;
-
-		do {
-			bool b_default(true);
-			std::wstring s_file = _check_service_path(b_default, s_dll_short);
-			if (s_file.empty()) {
-				ATLTRACE(L"%ls :E: _check_service_path() : .\n", __WFUNCTION__);
-				continue;
-			}
-
-			std::wstring s_full_path;
-			ckernel_ctl::_type_map_path_pair_ref_cnt_ptr_dll::iterator found_it;
-
-			if (b_default) {
-				found_it = m_map_default_path_pair_ref_cnt_ptr_dll.find(s_dll_short);
-				if (found_it != std::end(m_map_default_path_pair_ref_cnt_ptr_dll)) {
-					found_it->second.first++;//increased reference counter.
-					b_result = true;//alreay loaded.
-					ATLTRACE(L"%ls :I: LOADED(%d) : %ls.\n", __WFUNCTION__, found_it->second.first, s_full_path.c_str());
-					continue;
-				}
-
-				s_full_path = ccoffee_path::get_path_of_elpusk_service_dll_folder_except_backslash(L"coffee_manager");
-				s_full_path += L"\\";
-				s_full_path += s_file;
-
-#ifndef _DEBUG
-				if (!csystem::verify_embedded_signature(s_full_path)) {
-					clog::get_instance().log_fmt(L"[E] %ls | verify_embedded_signature().\n", __WFUNCTION__);
-					ATLTRACE(L"%ls :E: verify code signature : %ls.\n", __WFUNCTION__, s_full_path.c_str());
-					continue;
-				}
-#endif _DEBUG
-				ptr_sdll.swap(std::make_shared<cdll_service>());
-				if (!ptr_sdll->load(s_full_path)) {
-					ptr_sdll.reset();
-					ATLTRACE(L"%ls :E: LOADING : %ls.\n", __WFUNCTION__, s_full_path.c_str());
-					continue;
-				}
-				else {
-					ATLTRACE(L"%ls :I: LOADED(%d) : %ls.\n", __WFUNCTION__, 1, s_full_path.c_str());
-				}
-				m_map_default_path_pair_ref_cnt_ptr_dll[s_dll_short] = std::make_pair(1, ptr_sdll);
-			}
-			else {
-				//3thpart dll
-				found_it = m_map_3th_path_pair_ref_cnt_ptr_dll.find(s_dll_short);
-				if (found_it != std::end(m_map_3th_path_pair_ref_cnt_ptr_dll)) {
-					found_it->second.first++;//increased reference counter.
-					b_result = true;//alreay loaded.
-					ATLTRACE(L"%ls :I: LOADED(%d) : %ls.\n", __WFUNCTION__, found_it->second.first, s_full_path.c_str());
-					continue;
-				}
-
-				s_full_path = ccoffee_path::get_path_of_not_elpusk_service_dll_folder_except_backslash(L"coffee_manager");
-				s_full_path += L"\\";
-				s_full_path += s_file;
-#ifndef _DEBUG
-				if (!csystem::verify_embedded_signature(s_full_path)) {
-					clog::get_instance().log_fmt(L"[E] %ls | verify_embedded_signature().\n", __WFUNCTION__);
-					ATLTRACE(L"%ls :E: verify code signature : %ls.\n", __WFUNCTION__, s_full_path.c_str());
-					continue;
-				}
-#endif _DEBUG
-				ptr_sdll.swap(std::make_shared<cdll_service>());
-				if (!ptr_sdll->load(s_full_path)) {
-					ptr_sdll.reset();
-					ATLTRACE(L"%ls :E: LOADING : %ls.\n", __WFUNCTION__, s_full_path.c_str());
-					continue;
-				}
-				else {
-					ATLTRACE(L"%ls :I: LOADED : %ls.\n", __WFUNCTION__, s_full_path.c_str());
-				}
-				m_map_3th_path_pair_ref_cnt_ptr_dll[s_dll_short] = std::make_pair(1, ptr_sdll);
-			}
-			m_set_loaded_dll_path.insert(s_dll_short);
-			b_result = true;
-		} while (false);
-		return b_result;
 	}
 
 }//_mp

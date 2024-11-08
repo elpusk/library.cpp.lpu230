@@ -34,6 +34,7 @@ namespace _mp {
 	private:
 		typedef	std::map<unsigned short, cworker_ctl::type_wptr>	_type_map_device_index_to_wptr_dev_ctl;
 		typedef	std::map<unsigned short, cworker_ctl::type_ptr>	_type_map_device_index_to_ptr_dev_ctl;
+		typedef	std::map<unsigned long, cworker_ctl::type_ptr>	_type_map_session_to_ptr_kernel_ctl;
 		typedef	std::map<unsigned long, type_set_device_index>	_type_map_session_to_set_of_device_index;
 		typedef	std::map<unsigned long, unsigned short>	_type_map_session_to_device_index;
 		typedef	std::map<unsigned long, std::wstring>	_type_map_session_to_name;
@@ -46,6 +47,10 @@ namespace _mp {
 		}
 
 		virtual ~cctl_svr();
+
+		cctl_svr& create_kernel_ctl(clog* p_log, unsigned long n_session);
+
+		void remove_kernel_ctl(unsigned long n_session);
 
 		cctl_svr& create_main_ctl_and_set_callack(clog* p_log);
 
@@ -115,6 +120,7 @@ namespace _mp {
 	private:
 		cctl_svr();
 
+		bool _push_back_request_to_kernel_ctl(cio_packet::type_ptr& ptr_cio_packet);
 		bool _push_back_request_to_main_ctl(cio_packet::type_ptr& ptr_cio_packet);
 		bool _push_back_request_to_dev_ctl(cio_packet::type_ptr& ptr_cio_packet);
 		bool _push_back_request_to_dev_ctl(cio_packet::type_ptr& ptr_cio_packet, const std::wstring& s_device_path);
@@ -140,6 +146,9 @@ namespace _mp {
 		//for session
 		cctl_svr::_type_map_session_to_name m_map_session_to_name;	//save the name of session
 
+		std::mutex m_mutex_map_session_to_kernel;
+		cctl_svr::_type_map_session_to_ptr_kernel_ctl m_map_session_to_ptr_kernel_ctl;
+		
 		//for device
 		cworker_ctl::type_ptr m_ptr_main_ctl;//for main worker ctl
 

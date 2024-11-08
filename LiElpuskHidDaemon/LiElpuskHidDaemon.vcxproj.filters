@@ -49,6 +49,12 @@
     <ClCompile Include="..\shared\lib\src\server\mp_ckernel_ctl_.cpp">
       <Filter>lib\svr</Filter>
     </ClCompile>
+    <ClCompile Include="..\shared\lib\src\server\mp_cmain_ctl_fn_.cpp">
+      <Filter>lib\svr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\lib\src\server\mp_cdev_ctl_fn_.cpp">
+      <Filter>lib\svr</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="3thpart">
@@ -223,6 +229,18 @@
     </ClInclude>
     <ClInclude Include="..\shared\lib\inc\mp_coffee_path.h">
       <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\dll_service.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\cdll_service.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\server\mp_cmain_ctl_fn_.h">
+      <Filter>lib\svr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\server\mp_cdev_ctl_fn_.h">
+      <Filter>lib\svr</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

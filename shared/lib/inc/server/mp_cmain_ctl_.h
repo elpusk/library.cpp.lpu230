@@ -11,10 +11,11 @@
 #include <mp_cqueue.h>
 #include <server/mp_cio_packet.h>
 #include <server/mp_cworker_ctl.h>
+#include <server/mp_cmain_ctl_fn_.h>
 
 
 namespace _mp {
-	class cmain_ctl : public _mp::cworker_ctl
+	class cmain_ctl : public _mp::cworker_ctl, cmain_ctl_fn
 	{
 
 	public:
@@ -36,21 +37,6 @@ namespace _mp {
 		*/
 		virtual bool _execute(cio_packet& request);
 
-	private:
-		bool _execute_general_error_response(cio_packet& request, cio_packet& response, cio_packet::type_error_reason n_reason /*= cio_packet::error_reason_none*/);
-
-		bool _execute_mgmt_get_echo(cio_packet& request, cio_packet& response);
-		
-		bool _execute_mgmt_get_device_list(const type_list_wstring& list_wstring_filter, cio_packet& request, cio_packet& response);
-		
-		bool _execute_mgmt_ctl_show(cio_packet& request, cio_packet& response);
-		
-		bool _execute_file_operation(cio_packet& request, cio_packet& response);
-
-		bool _execute_advance_operation(cio_packet& request, cio_packet& response, cio_packet& response_for_the_other_session);
-
-		//bool _execute_kernel_operation(cio_packet& request, cio_packet& response);
-		//
 	private://don't call these methods
 		cmain_ctl();
 		cmain_ctl(const cmain_ctl&);
