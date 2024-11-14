@@ -67,8 +67,10 @@ namespace _mp {
 			cio_packet& response,
 			unsigned long n_conected_session_number, const std::wstring& s_dev_path
 		);
+
 		
 		bool _execute_general_error_response(clog* p_log, cio_packet& request, cio_packet& response, cio_packet::type_error_reason n_reason = cio_packet::error_reason_none);
+
 		/**
 		* for pushing request, async response
 		*/

@@ -55,6 +55,21 @@
     <ClCompile Include="..\shared\lib\src\server\mp_cdev_ctl_fn_.cpp">
       <Filter>lib\svr</Filter>
     </ClCompile>
+    <ClCompile Include="..\shared\lib\src\hid\mp_clibhid.cpp">
+      <Filter>lib\hid</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\lib\src\hid\mp_clibhid_dev.cpp">
+      <Filter>lib\hid</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\lib\src\hid\mp_clibhid_dev_info.cpp">
+      <Filter>lib\hid</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\lib\src\hid\_hid_api_briage.cpp">
+      <Filter>lib\hid</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\lib\src\hid\_vhid_api_briage.cpp">
+      <Filter>lib\hid</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="3thpart">
@@ -241,6 +256,12 @@
     </ClInclude>
     <ClInclude Include="..\shared\lib\inc\server\mp_cdev_ctl_fn_.h">
       <Filter>lib\svr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\hid\_hid_api_briage.h">
+      <Filter>lib\hid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\hid\_vhid_api_briage.h">
+      <Filter>lib\hid</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

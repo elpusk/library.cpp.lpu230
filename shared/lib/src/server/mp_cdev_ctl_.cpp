@@ -13,8 +13,6 @@
 #include <server/mp_cserver_.h>
 #include <server/mp_cdev_ctl_.h>
 
-#include <hid/mp_clibhid.h>
-
 namespace _mp {
 		cdev_ctl::~cdev_ctl()
 		{
@@ -80,10 +78,11 @@ namespace _mp {
 				case cio_packet::act_dev_read:
 					b_completet = _execute_read(m_p_log, request, response, get_connected_session(), get_dev_path()).second;
 					break;
-				/*
+				
 				case cio_packet::act_dev_sub_bootloader:
-					std::tie(b_completet, p_event_start_worker_for_next_step) = _execute_sub_bootloader(request, response);
+					//std::tie(b_completet, p_event_start_worker_for_next_step) = _execute_sub_bootloader(request, response);
 					break;
+				/*
 				case cio_packet::act_dev_independent_bootloader:
 					b_completet = _execute_independent_bootloader(request, response);
 					break;

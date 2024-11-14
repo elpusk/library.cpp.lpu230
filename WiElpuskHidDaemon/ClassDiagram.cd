@@ -24,7 +24,7 @@
   <Class Name="_mp::cfile" Collapsed="true">
     <Position X="13.75" Y="1.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAAAAIABAAAAAACAAAAAAAQDABAAAAAAIDAgAQAAAAA=</HashCode>
+      <HashCode>AAAAAIABAAAAgACBAAAAAAQDABAAAEAAIDAgAQAAAAA=</HashCode>
       <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_cfile.h</FileName>
     </TypeIdentifier>
   </Class>
@@ -128,8 +128,20 @@
   </Class>
   <Class Name="_mp::cdev_ctl" Collapsed="true">
     <Position X="5.25" Y="4.25" Width="1.5" />
+    <NestedTypes>
+      <Typedef Name="_mp::cdev_ctl::type_wptr" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\job\library.cpp.lpu230\shared\lib\inc\server\mp_cdev_ctl_.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Typedef>
+      <Typedef Name="_mp::cdev_ctl::type_ptr" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\job\library.cpp.lpu230\shared\lib\inc\server\mp_cdev_ctl_.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Typedef>
+    </NestedTypes>
     <TypeIdentifier>
-      <HashCode>QBAQACAAAEAAAAAAAACAAgECAkAAACAAABBgAhAICCA=</HashCode>
+      <HashCode>AAAAAAAAAAAAAAAAAACAAAAAAkAAAAAAAAAgAAAAAAA=</HashCode>
       <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\server\mp_cdev_ctl_.h</FileName>
     </TypeIdentifier>
   </Class>
@@ -142,15 +154,49 @@
   </Class>
   <Class Name="_mp::ckernel_ctl" Collapsed="true">
     <Position X="0.75" Y="4.25" Width="1.5" />
+    <NestedTypes>
+      <Typedef Name="_mp::ckernel_ctl::_type_pair_ref_cnt_ptr_dll" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\job\library.cpp.lpu230\shared\lib\inc\server\mp_ckernel_ctl_.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Typedef>
+      <Typedef Name="_mp::ckernel_ctl::_type_map_path_pair_ref_cnt_ptr_dll" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\job\library.cpp.lpu230\shared\lib\inc\server\mp_ckernel_ctl_.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Typedef>
+      <Typedef Name="_mp::ckernel_ctl::type_wptr" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\job\library.cpp.lpu230\shared\lib\inc\server\mp_ckernel_ctl_.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Typedef>
+      <Typedef Name="_mp::ckernel_ctl::type_ptr" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\job\library.cpp.lpu230\shared\lib\inc\server\mp_ckernel_ctl_.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Typedef>
+    </NestedTypes>
     <TypeIdentifier>
-      <HashCode>ACIAAAAECAAAAAAgAAiAABEAAgAAUSAgABAgIAABCIA=</HashCode>
+      <HashCode>AAAAAAAECAAAAAAAAACAABEAAAAAUCAgABAgAAABAAA=</HashCode>
       <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\server\mp_ckernel_ctl_.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="_mp::cmain_ctl" Collapsed="true">
     <Position X="3" Y="4.25" Width="1.5" />
+    <NestedTypes>
+      <Typedef Name="_mp::cmain_ctl::type_wptr" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\job\library.cpp.lpu230\shared\lib\inc\server\mp_cmain_ctl_.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Typedef>
+      <Typedef Name="_mp::cmain_ctl::type_ptr" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\job\library.cpp.lpu230\shared\lib\inc\server\mp_cmain_ctl_.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Typedef>
+    </NestedTypes>
     <TypeIdentifier>
-      <HashCode>AAAAAAAAAAQAAEAAAACAAAEAAABAAAAAAAAgACAAAAA=</HashCode>
+      <HashCode>AAAAAAAAAAQAAAAAAACAAAAAAAAAAAAAAAAgACAAAAA=</HashCode>
       <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\server\mp_cmain_ctl_.h</FileName>
     </TypeIdentifier>
   </Class>
@@ -164,7 +210,7 @@
   <Class Name="_mp::cctl_svr" Collapsed="true">
     <Position X="19" Y="0.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>QCAZAgAAAACCBBABAACwCAADwCEAAAECAiIiAAUAgCA=</HashCode>
+      <HashCode>SCAZAiAAAACCBBABAACwCAADwDEAAAECACIiAIUAiCA=</HashCode>
       <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\server\mp_cctl_svr_.h</FileName>
     </TypeIdentifier>
   </Class>
@@ -184,38 +230,6 @@
   </Class>
   <Class Name="_mp::ccertificate" Collapsed="true">
     <Position X="12" Y="0.5" Width="1.5" />
-    <NestedTypes>
-      <Typedef Name="_mp::ccertificate::type_ptr_EVP_PKEY" Collapsed="true">
-        <TypeIdentifier>
-          <NewMemberFileName>C:\job\library.cpp.lpu230\shared\lib\inc\cert\mp_ccertificate_.h</NewMemberFileName>
-        </TypeIdentifier>
-      </Typedef>
-      <Typedef Name="_mp::ccertificate::type_ptr_X509" Collapsed="true">
-        <TypeIdentifier>
-          <NewMemberFileName>C:\job\library.cpp.lpu230\shared\lib\inc\cert\mp_ccertificate_.h</NewMemberFileName>
-        </TypeIdentifier>
-      </Typedef>
-      <Typedef Name="_mp::ccertificate::type_ptr_X509_REQ" Collapsed="true">
-        <TypeIdentifier>
-          <NewMemberFileName>C:\job\library.cpp.lpu230\shared\lib\inc\cert\mp_ccertificate_.h</NewMemberFileName>
-        </TypeIdentifier>
-      </Typedef>
-      <Typedef Name="_mp::ccertificate::type_ptr_X509_EXTENSION" Collapsed="true">
-        <TypeIdentifier>
-          <NewMemberFileName>C:\job\library.cpp.lpu230\shared\lib\inc\cert\mp_ccertificate_.h</NewMemberFileName>
-        </TypeIdentifier>
-      </Typedef>
-      <Typedef Name="_mp::ccertificate::type_ptr_X509_STORE" Collapsed="true">
-        <TypeIdentifier>
-          <NewMemberFileName>C:\job\library.cpp.lpu230\shared\lib\inc\cert\mp_ccertificate_.h</NewMemberFileName>
-        </TypeIdentifier>
-      </Typedef>
-      <Enum Name="_mp::ccertificate::__unnamed_enum_043c_1" Collapsed="true">
-        <TypeIdentifier>
-          <NewMemberFileName>C:\job\library.cpp.lpu230\shared\lib\inc\cert\mp_ccertificate_.h</NewMemberFileName>
-        </TypeIdentifier>
-      </Enum>
-    </NestedTypes>
     <TypeIdentifier>
       <HashCode>AAAAAAUAAAAAAEAAAAAAAAAFAAACAAAAAEAgCAMACaA=</HashCode>
       <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\cert\mp_ccertificate_.h</FileName>
@@ -240,6 +254,34 @@
     <TypeIdentifier>
       <HashCode>QAAAAAhAAAAAAAAAQAgAAABAABQgAgAAAAIAAAAAAIA=</HashCode>
       <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\test\test_tp_hid.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="cdll_service" Collapsed="true">
+    <Position X="5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AIIAAACgoIAAgAAAAAAACAAAIgAAAAAAAYAgAAAIAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\cdll_service.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="_mp::ccoffee_path" Collapsed="true">
+    <Position X="3.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAEAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_coffee_path.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="_mp::cdev_ctl_fn" Collapsed="true">
+    <Position X="0.75" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>QFARACAAAEAAAAAAAAAAAgECAAAAACAAAABgAhAICCA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\server\mp_cdev_ctl_fn_.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="_mp::cmain_ctl_fn" Collapsed="true">
+    <Position X="0.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAIAAAAAAIAAAEAAAAAQAAEAAABAAAAAEAAgAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\server\mp_cmain_ctl_fn_.h</FileName>
     </TypeIdentifier>
   </Class>
   <Struct Name="hid_device_" Collapsed="true">
@@ -534,6 +576,27 @@
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
       <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\mp_type.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="type_fun_sd_device_io" Collapsed="true">
+    <Position X="5.75" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\dll_service.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="type_fun_sd_device_cancel" Collapsed="true">
+    <Position X="7.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\dll_service.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="type_cb_sd_execute" Collapsed="true">
+    <Position X="5.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\job\library.cpp.lpu230\shared\lib\inc\dll_service.h</FileName>
     </TypeIdentifier>
   </Typedef>
   <Enum Name="__unnamed_enum_0439_1" Collapsed="true">

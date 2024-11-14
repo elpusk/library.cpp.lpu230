@@ -24,6 +24,11 @@
     <ClCompile Include="..\shared\lib\inc\mp_csystem_.cpp" />
     <ClCompile Include="..\shared\lib\src\cert\mp_ccertificate_.cpp" />
     <ClCompile Include="..\shared\lib\src\cert\mp_ccoffee_hlp_cert_.cpp" />
+    <ClCompile Include="..\shared\lib\src\hid\mp_clibhid.cpp" />
+    <ClCompile Include="..\shared\lib\src\hid\mp_clibhid_dev.cpp" />
+    <ClCompile Include="..\shared\lib\src\hid\mp_clibhid_dev_info.cpp" />
+    <ClCompile Include="..\shared\lib\src\hid\_hid_api_briage.cpp" />
+    <ClCompile Include="..\shared\lib\src\hid\_vhid_api_briage.cpp" />
     <ClCompile Include="..\shared\projects\MgmtLpu230\src\mgmt_lpu230.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -34,11 +39,14 @@
     <ClInclude Include="..\shared\lib\inc\hid\mp_clibhid.h" />
     <ClInclude Include="..\shared\lib\inc\hid\mp_clibhid_dev.h" />
     <ClInclude Include="..\shared\lib\inc\hid\mp_clibhid_dev_info.h" />
+    <ClInclude Include="..\shared\lib\inc\hid\_hid_api_briage.h" />
+    <ClInclude Include="..\shared\lib\inc\hid\_vhid_api_briage.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cconsole.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cconvert.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cfile.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cnamed_pipe_.h" />
     <ClInclude Include="..\shared\lib\inc\mp_coffee.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_coffee_path.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cstring.h" />
     <ClInclude Include="..\shared\lib\inc\mp_csystem_.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cwait.h" />

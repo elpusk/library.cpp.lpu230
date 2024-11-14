@@ -29,6 +29,11 @@
     <ClCompile Include="..\shared\lib\inc\mp_csystem_.cpp" />
     <ClCompile Include="..\shared\lib\src\cert\mp_ccertificate_.cpp" />
     <ClCompile Include="..\shared\lib\src\cert\mp_ccoffee_hlp_cert_.cpp" />
+    <ClCompile Include="..\shared\lib\src\hid\mp_clibhid.cpp" />
+    <ClCompile Include="..\shared\lib\src\hid\mp_clibhid_dev.cpp" />
+    <ClCompile Include="..\shared\lib\src\hid\mp_clibhid_dev_info.cpp" />
+    <ClCompile Include="..\shared\lib\src\hid\_hid_api_briage.cpp" />
+    <ClCompile Include="..\shared\lib\src\hid\_vhid_api_briage.cpp" />
     <ClCompile Include="..\shared\lib\src\server\mp_cctl_svr_.cpp" />
     <ClCompile Include="..\shared\lib\src\server\mp_cdev_ctl_.cpp" />
     <ClCompile Include="..\shared\lib\src\server\mp_cdev_ctl_fn_.cpp" />
@@ -54,6 +59,8 @@
     <ClInclude Include="..\shared\lib\inc\hid\mp_clibhid.h" />
     <ClInclude Include="..\shared\lib\inc\hid\mp_clibhid_dev.h" />
     <ClInclude Include="..\shared\lib\inc\hid\mp_clibhid_dev_info.h" />
+    <ClInclude Include="..\shared\lib\inc\hid\_hid_api_briage.h" />
+    <ClInclude Include="..\shared\lib\inc\hid\_vhid_api_briage.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cconsole.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cconvert.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cfile.h" />

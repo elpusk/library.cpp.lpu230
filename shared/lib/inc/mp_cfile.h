@@ -92,6 +92,11 @@ namespace _mp{
 		}
 #endif
 
+		static bool is_exist_file(const std::wstring& s_file_path)
+		{
+			return boost::filesystem::exists(s_file_path);
+		}
+
 #ifdef _WIN32
 		static bool is_exist_folder(const std::wstring& s_abs_path, bool b_if_not_exist_then_create_folder = false)
 		{

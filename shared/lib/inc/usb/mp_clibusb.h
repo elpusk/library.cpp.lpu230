@@ -7,13 +7,15 @@
 #include <atomic>
 #include <functional>
 
-#if defined(_WIN32)
-#include <windows.h>
-#endif
-
-#include <libusb.h>
 #include <mp_clog.h>
 #include <mp_cstring.h>
+
+/**
+* 경고 - libusb.h 는 안에서 Windows.h 를 include 하고, interface 가 정의되어 있으면, #undef 하므로
+* Windows 에서 사용하는 모든 interface type 에 대해 에러라 발생한다.
+* 따라서 편하게 #include <libusb.h> 이 후에 어떤것도 include 하지 말자.
+*/
+#include <libusb.h>
 
 namespace _mp {
 

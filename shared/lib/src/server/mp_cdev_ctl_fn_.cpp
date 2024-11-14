@@ -9,6 +9,7 @@
 
 #include <mp_type.h>
 #include <mp_cqueue.h>
+#include <mp_coffee_path.h>
 
 #include <server/mp_cserver_.h>
 #include <server/mp_cdev_ctl_fn_.h>
@@ -341,7 +342,7 @@ namespace _mp {
 				response.get_packet_by_json_format(v_rsp);
 
 				if (!cserver::get_instance().send_data_to_client_by_ip4(v_rsp, n_session)) {
-					//p_obj->push_info(_ns_tools::ct_color::COLOR_ERROR, L"_callback_request_result : error send data : session = %u : device_index = %u", n_session, n_device_index);
+					//p_obj->p_log->trace( L"_callback_request_result : error send data : session = %u : device_index = %u", n_session, n_device_index);
 				}
 
 			} while (false);

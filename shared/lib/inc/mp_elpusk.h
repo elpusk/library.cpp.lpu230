@@ -7,7 +7,7 @@ namespace _mp{
             const_usb_vid = 0x134b
         };
         enum : int {
-            const_usb_pid_hidbl = 0x0fff, //elpusk hid bootloader vid
+            const_usb_pid_hidbl = 0x0243, //0x0fff, //elpusk hid bootloader vid
             const_usb_inf_hidbl = -1 //elpusk hid bootloader inteface(none)
         };
         enum : int {

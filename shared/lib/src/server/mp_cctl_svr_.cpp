@@ -162,7 +162,7 @@ namespace _mp {
 			return w_result;
 		}
 
-		std::pair<unsigned long, unsigned short> cctl_svr::clear_dev_ctl(const std::wstring& s_device_path)
+		std::pair<unsigned long, unsigned short> cctl_svr::remove_dev_ctl(const std::wstring& s_device_path)
 		{
 			unsigned short w_device_index(0);
 			unsigned long n_session(_MP_TOOLS_INVALID_SESSION_NUMBER);
