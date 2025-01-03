@@ -94,9 +94,8 @@ namespace _mp {
 
 					//get composite type path
 					clibhid_dev_info::type_set set_dev = lib_hid.get_cur_device_set();
-					n_dev = set_dev.size();
+					n_dev = clibhid_dev_info::filter_dev_info_set(set_dev, set_dev, v_type);//filtering
 					set_dev_path = clibhid_dev_info::get_dev_path_by_wstring(set_dev);
-					//n_dev = _ns_tools::ct_universal_dev_manager::get_instance().get_dev_set(set_dev_path, type_set_wstring(), v_type);
 					continue;
 				}
 				if (!cio_packet::adjust_device_filter(out_set_wstring_filter))

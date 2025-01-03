@@ -1,5 +1,6 @@
 #include <mp_cstring.h>
 #include <hid/_hid_api_briage.h>
+#include <hid/_vhid_info.h>
 
 #ifdef _WIN32
 
@@ -361,10 +362,14 @@ void  _hid_free_enumeration(struct hid_device_info* devs)
     }
 }
 
+
 /**
 * member function bodies
 */
-_hid_api_briage::_hid_api_briage() : m_b_ini(false), m_n_map_index(-1)
+_hid_api_briage::_hid_api_briage() :
+    m_s_class_name(L"_hid_api_briage"),
+    m_b_ini(false), 
+    m_n_map_index(_vhid_info::const_map_index_invalid)
 {
     m_ptr_usb_lib = std::make_shared<_mp::clibusb>();
 
@@ -384,7 +389,8 @@ _hid_api_briage::~_hid_api_briage()
 {
     if (m_b_ini) {
         for (auto item : m_map_hid_dev) {
-            hid_close(item.second);
+            item.second.second = false;
+            hid_close(item.second.first);
         }//end for
 
         hid_exit();
@@ -398,13 +404,14 @@ bool _hid_api_briage::is_ini() const
     return m_b_ini;
 }
 
-std::set< std::tuple<std::string, unsigned short, unsigned short, int> > _hid_api_briage::hid_enumerate()
+std::set< std::tuple<std::string, unsigned short, unsigned short, int,std::string> > _hid_api_briage::hid_enumerate()
 {
-    std::set< std::tuple<std::string, unsigned short, unsigned short, int> > st;
+    std::set< std::tuple<std::string, unsigned short, unsigned short, int, std::string> > st;
 
     struct hid_device_info* p_devs = NULL;
 
     do {
+        std::lock_guard<std::mutex> lock(_hid_api_briage::get_mutex_for_hidapi());
         if (!m_b_ini) {
             continue;
         }
@@ -414,14 +421,13 @@ std::set< std::tuple<std::string, unsigned short, unsigned short, int> > _hid_ap
         p_devs = _hid_enumerate(m_ptr_usb_lib->get_context(), 0x0, 0x0);
 
         while (p_devs) {
-            auto item = std::make_tuple(
+            st.emplace(
                 std::string(p_devs->path),
                 p_devs->vendor_id,
                 p_devs->product_id,
-                p_devs->interface_number
-                );
-
-            st.insert(item);
+                p_devs->interface_number,
+                std::string()
+            );
             p_devs = p_devs->next;
         }
         _hid_free_enumeration(p_devs);
@@ -431,26 +437,83 @@ std::set< std::tuple<std::string, unsigned short, unsigned short, int> > _hid_ap
 }
 
 /**
+* @brief check is open or not
+* @param path - primitive path
+* @return first true - open, false not open or error, second - the opened device of the index of map. third - true(exclusive open), false(shared open or not open )
+*/
+std::tuple<bool, int, bool> _hid_api_briage::is_open(const char* path) const
+{
+    bool b_result(false);
+    int n_index(-1);
+    bool b_exclusive_open(false);
+
+    do {
+        std::lock_guard<std::mutex> lock(_hid_api_briage::get_mutex_for_hidapi());
+
+        if (path == nullptr) {
+            continue;
+        }
+        for (auto item : m_map_hid_dev) {
+            hid_device* p_hid = item.second.first;
+            if (p_hid == nullptr) {
+                continue;
+            }
+            //
+            hid_device_info* p_info = hid_get_device_info(p_hid);
+            if (p_info == NULL) {
+                continue;
+            }
+            if (p_info->path == NULL) {
+                continue;
+            }
+            //
+            std::string s(p_info->path);
+            if (s.compare(path) == 0) {
+                n_index = item.first;
+                b_exclusive_open = item.second.second;
+                b_result = true;
+                break; //opened device exit while
+            }
+        }//end for
+
+    } while (false);
+    return std::make_tuple(b_result,n_index,b_exclusive_open);
+}
+
+
+/**
+* open device
+* In windows, open with FILE_SHARE_READ|FILE_SHARE_WRITE flag
+* In linux, open by libusb_open() -> 
 * return the index of map(m_map_hid_dev)
 */
 int _hid_api_briage::api_open_path(const char* path)
 {
+    std::lock_guard<std::mutex> lock(_hid_api_briage::get_mutex_for_hidapi());
+
     if (!m_b_ini) {
         return -1;
     }
 
-    int n_map_index = m_n_map_index + 1;
+    int n_map_index = m_n_map_index;
     hid_device* p_dev = hid_open_path(path);
     if (p_dev) {
-        if (n_map_index < 0) {
-            n_map_index = 0;
+        if (n_map_index == _vhid_info::const_map_index_invalid) {
+            n_map_index = _vhid_info::const_map_index_min;
+        }
+        else if (n_map_index == _vhid_info::const_map_index_max) {
+            n_map_index = _vhid_info::const_map_index_min;
+        }
+        else {
+            n_map_index += _vhid_info::const_map_index_inc_unit;
         }
         
         if (m_map_hid_dev.find(n_map_index) != std::end(m_map_hid_dev)) {
-            hid_close(m_map_hid_dev[n_map_index]);
+            hid_close(m_map_hid_dev[n_map_index].first);
             m_map_hid_dev.erase(n_map_index);
         }
-        m_map_hid_dev[n_map_index] = p_dev;
+        m_map_hid_dev[n_map_index].first = p_dev;
+        m_map_hid_dev[n_map_index].second = false;//primitive device always exclusive mode
         m_n_map_index = n_map_index;
         return n_map_index;
     }
@@ -458,90 +521,91 @@ int _hid_api_briage::api_open_path(const char* path)
         return -1;
     }
 }
-int _hid_api_briage::api_set_nonblocking(int n_map_index, int nonblock)
-{
-    hid_device* p_dev = nullptr;
-    if (m_map_hid_dev.find(n_map_index) != std::end(m_map_hid_dev)) {
-        p_dev = m_map_hid_dev[n_map_index];
-    }
-    return hid_set_nonblocking(p_dev, nonblock);
-}
 
 void _hid_api_briage::api_close(int n_map_index)
 {
+    std::lock_guard<std::mutex> lock(_hid_api_briage::get_mutex_for_hidapi());
+
     if (!m_b_ini) {
         return;
     }
 
     hid_device* p_dev = nullptr;
     if (m_map_hid_dev.find(n_map_index) != std::end(m_map_hid_dev)) {
-        p_dev = m_map_hid_dev[n_map_index];
+        p_dev = m_map_hid_dev[n_map_index].first;
         m_map_hid_dev.erase(n_map_index);
+        hid_close(p_dev);
     }
-    return hid_close(p_dev);
 }
+
+int _hid_api_briage::api_set_nonblocking(int n_map_index, int nonblock)
+{
+    std::lock_guard<std::mutex> lock(_hid_api_briage::get_mutex_for_hidapi());
+
+    hid_device* p_dev = nullptr;
+    if (m_map_hid_dev.find(n_map_index) != std::end(m_map_hid_dev)) {
+        p_dev = m_map_hid_dev[n_map_index].first;
+    }
+    return hid_set_nonblocking(p_dev, nonblock);
+}
+
 
 int _hid_api_briage::api_get_report_descriptor(int n_map_index, unsigned char* buf, size_t buf_size)
 {
+    std::lock_guard<std::mutex> lock(_hid_api_briage::get_mutex_for_hidapi());
+
     if (!m_b_ini) {
         return -1;
     }
 
     hid_device* p_dev = nullptr;
     if (m_map_hid_dev.find(n_map_index) != std::end(m_map_hid_dev)) {
-        p_dev = m_map_hid_dev[n_map_index];
+        p_dev = m_map_hid_dev[n_map_index].first;
     }
     return hid_get_report_descriptor(p_dev, buf, buf_size);
 }
 
-int _hid_api_briage::api_write(int n_map_index, const unsigned char* data, size_t length)
+int _hid_api_briage::api_write(int n_map_index, const unsigned char* data, size_t length, _hid_api_briage::type_next_io next)
 {
+    std::lock_guard<std::mutex> lock(_hid_api_briage::get_mutex_for_hidapi());
+
     if (!m_b_ini) {
         return -1;
     }
 
     hid_device* p_dev = nullptr;
     if (m_map_hid_dev.find(n_map_index) != std::end(m_map_hid_dev)) {
-        p_dev = m_map_hid_dev[n_map_index];
+        p_dev = m_map_hid_dev[n_map_index].first;
     }
     return hid_write(p_dev, data, length);
 }
 
-int _hid_api_briage::api_read_timeout(int n_map_index, unsigned char* data, size_t length, int milliseconds)
+int _hid_api_briage::api_read(int n_map_index, unsigned char* data, size_t length, size_t n_report)
 {
+    std::lock_guard<std::mutex> lock(_hid_api_briage::get_mutex_for_hidapi());
+
     if (!m_b_ini) {
         return -1;
     }
 
     hid_device* p_dev = nullptr;
     if (m_map_hid_dev.find(n_map_index) != std::end(m_map_hid_dev)) {
-        p_dev = m_map_hid_dev[n_map_index];
-    }
-    return hid_read_timeout(p_dev, data, length, milliseconds);
-}
-
-int _hid_api_briage::api_read(int n_map_index, unsigned char* data, size_t length)
-{
-    if (!m_b_ini) {
-        return -1;
-    }
-
-    hid_device* p_dev = nullptr;
-    if (m_map_hid_dev.find(n_map_index) != std::end(m_map_hid_dev)) {
-        p_dev = m_map_hid_dev[n_map_index];
+        p_dev = m_map_hid_dev[n_map_index].first;
     }
     return hid_read(p_dev, data, length);
 }
 
 const wchar_t* _hid_api_briage::api_error(int n_map_index)
 {
+    std::lock_guard<std::mutex> lock(_hid_api_briage::get_mutex_for_hidapi());
+
     if (!m_b_ini) {
         return NULL;
     }
 
     hid_device* p_dev = nullptr;
     if (m_map_hid_dev.find(n_map_index) != std::end(m_map_hid_dev)) {
-        p_dev = m_map_hid_dev[n_map_index];
+        p_dev = m_map_hid_dev[n_map_index].first;
     }
     return hid_error(p_dev);
 }

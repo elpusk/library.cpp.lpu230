@@ -10,8 +10,14 @@
 #include <mp_clog.h>
 
 #include <hid/mp_clibhid_dev_info.h>
+#include <hid/_vhid_api_briage.h>
 
 namespace _mp {
+    /**
+	* @brief HID device class
+	* support async io by thread. - _worker()
+    * support rx pumpping for linux by thread. - _worker_rx()
+    */
     class clibhid_dev
     {
     public:
@@ -42,15 +48,19 @@ namespace _mp {
         };
 
     public:
-        clibhid_dev(
-            const clibhid_dev_info& info,
-            std::shared_ptr<std::mutex> ptr_mutex_hidpai
-        );
+
+        /**
+		* @brief constructor.
+		* when the instance is created, the device is opened. and the worker thread is started.(receiving is started automatically.)
+		* @param info - device information
+		* @param p_vhid_api_briage - virtual HID API bridge
+        */
+        clibhid_dev(const clibhid_dev_info& info, _vhid_api_briage *p_vhid_api_briage);
         ~clibhid_dev();
 
         bool is_detect_replugin();
 
-        bool is_open();
+        bool is_open() const;
 
         std::vector<unsigned char> get_report_desciptor();
 
@@ -84,61 +94,75 @@ namespace _mp {
     protected:
 
         /**
-        * called by _worker_using_thread()
+        * @brief called by _worker()
         */
         std::pair<bool, bool> _pump();
-        /**
-        * called by _worker_using_thread()
-        * @return first( true - need more processing, false - complete transaction with or without error.)
-        * @return second( true - request is tx, rx pair, false - else), if first is complete, second must be false.
-        */
-        std::pair<bool, bool> _tx_and_check_need_more_processing_with_set_result(cqitem_dev::type_ptr& ptr_req, std::mutex& mutex_rx);
 
-        void _clear_rx_q();
+        /**
+		* @brief clear all queue item of the received data.
+        */
+        void _clear_rx_q_with_lock();
 
         /**
         * @brief Write an Output report to a HID device.
         * the fist byte must be report ID.(automatic add 
         * @param v_tx - this will be sent by split-send as in-report size
+        * @param b_req_is_tx_rx_pair - true(after done tx, need to receive response.)
         */
-        bool _write(const std::vector<unsigned char>& v_tx);
+        bool _write_with_lock(const std::vector<unsigned char>& v_tx, bool b_req_is_tx_rx_pair);
 
         /**
-        * @brief Read an Input report from a HID device.
-        * Input reports are returned
-        * to the host through the INTERRUPT IN endpoint. The first byte will
-        * contain the Report number if the device uses numbered reports.
-        * @param the size of v_rx will be set in report size after receiving successfully.
-        * @return
-        * If no packet was available to be reads, this function returns true with size is zero.
-        */
-        bool _read(std::vector<unsigned char>& v_rx);
-
-        /**
-        * read by report unit
+        * @brief read by report unit
         * @return first true - rx success, second true - mayne device is plug out and in at error status.  
         */
         std::pair<bool, bool> _read_using_thread(std::vector<unsigned char>& v_rx);
 
-    protected:
-        static void _worker_rx(clibhid_dev& obj, std::mutex& mutex_rx);
+        bool _process_new_request_and_set_result(cqitem_dev::type_ptr& ptr_req);
+
+        bool _process_only_tx(cqitem_dev::type_ptr& ptr_req);
+
         /**
-        * device io worker
+        * @brief receving data
+        * @return
+        *   first : processing result( true - none error ),
+        *   second : processing complete(true), need more processing(false. in this case. first must be true)
+        *   third : rx data from device.
         */
-        static void _worker_using_thread(clibhid_dev& obj);
+        std::tuple<bool, bool, _mp::type_v_buffer> _process_only_rx(cqitem_dev::type_ptr& ptr_req);
+
+        /**
+        * @brief transmit and receving data
+        * @return
+        *   first : processing result( true - none error ),
+        *   second : processing complete(true), need more processing(false. in this case. first must be true)
+        *   third : rx data from device.
+        */
+        std::tuple<bool, bool, _mp::type_v_buffer> _process_tx_rx(cqitem_dev::type_ptr& ptr_req);
 
     protected:
-        std::shared_ptr<std::mutex> m_ptr_mutex_hidpai;
-        int m_n_dev;//valid is zero or positive
+        /**
+        * @brief receiving worker thread. this thread will be construct & destruct on _worker().
+        * from device, receving a data by in-report size unit. and it enqueue to m_q_ptr.
+        */
+        void _worker_rx();
+        /**
+        * @brief device io worker
+        */
+        void _worker();
+
+    protected:
+        _vhid_api_briage* m_p_vhid_api_briage;//virtual hidapi library instance
+
+		int m_n_dev;//valid is zero or positive. map index of primitive or composite map.
         clibhid_dev_info m_dev_info;
 
-        std::shared_ptr<std::thread> m_ptr_th_worker;
+		std::shared_ptr<std::thread> m_ptr_th_worker;//thread for io worker(_worker())
         std::atomic<bool> m_b_run_th_worker;
-        _mp::clibhid_dev::type_q_ptr m_q_ptr;//thread safty
+		_mp::clibhid_dev::type_q_ptr m_q_ptr;//for io worker(m_ptr_th_worker,_worker()  ), request queue
 
-        _mp::clibhid_dev::_type_q_rx_ptr_v m_q_rx_ptr_v;//for rx worker
+		_mp::clibhid_dev::_type_q_rx_ptr_v m_q_rx_ptr_v;//for rx worker, receive queue
 
-        std::atomic<bool> m_b_detect_replugin;// critical error
+		std::atomic<bool> m_b_detect_replugin;// error status. if true, need to remove this instance.
 
     private:
         clibhid_dev();

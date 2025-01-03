@@ -1,6 +1,12 @@
 
 #include <hid/mp_clibhid.h>
-#include <hid/_vhid_api_briage.h>
+
+
+#ifdef _WIN32
+#ifdef _DEBUG
+#include <atltrace.h>
+#endif
+#endif
 
 namespace _mp{
 
@@ -8,22 +14,6 @@ namespace _mp{
         {
             static clibhid obj;
             return obj;
-        }
-
-        clibhid::~clibhid()
-        {
-            m_map_ptrs.clear();
-
-            if(m_b_ini){
-                if (m_ptr_th_pluginout) {
-                    m_b_run_th_pluginout = false;
-                    if (m_ptr_th_pluginout->joinable()) {
-                        m_ptr_th_pluginout->join();
-                    }
-                }
-            }
-
-            _vhid_api_briage::get_instance(true); //remove briage
         }
 
         bool clibhid::is_ini() const
@@ -63,29 +53,27 @@ namespace _mp{
         clibhid::clibhid() : m_b_ini(false), m_b_run_th_pluginout(false), m_p_user(NULL), m_cb(nullptr)
         {
             //setup usb filter
+			//default - support lpu237, lpu238, hidbootloader
             m_set_usb_filter.emplace(_elpusk::const_usb_vid, _elpusk::_lpu237::const_usb_pid, _elpusk::_lpu237::const_usb_inf_hid);
             m_set_usb_filter.emplace(_elpusk::const_usb_vid, _elpusk::_lpu238::const_usb_pid, _elpusk::_lpu238::const_usb_inf_hid);
             m_set_usb_filter.emplace(_elpusk::const_usb_vid, _elpusk::const_usb_pid_hidbl, _elpusk::const_usb_inf_hidbl);
 
-            
-            auto ptr_usb_api = _vhid_api_briage::get_instance(false);
+            m_ptr_vhid_api_briage = std::make_shared<_vhid_api_briage>();
 
-            m_ptr_mutex_hidapi = std::make_shared<std::mutex>();
-
-            if (ptr_usb_api->is_ini()) {
+            if (m_ptr_vhid_api_briage->is_ini()) {
                 m_b_ini = true;
 
                 m_set_cur_dev_info = _get_device_set();
 
                 for (const clibhid_dev_info& item : m_set_cur_dev_info) {
-                    auto ptr_dev = std::make_shared<clibhid_dev>(item, m_ptr_mutex_hidapi);
+                    auto ptr_dev = std::make_shared<clibhid_dev>(item, m_ptr_vhid_api_briage.get());// create & open clibhid_dev.
                     if (!ptr_dev) {
                         continue;
                     }
                     if (!ptr_dev->is_open()) {
                         continue;
                     }
-                    auto ptr_info = std::make_shared< clibhid_dev_info>(item);
+                    auto ptr_info = std::make_shared<clibhid_dev_info>(item);
                     m_map_ptrs.emplace(item.get_path_by_string(), std::make_pair(ptr_dev, ptr_info));
                 }//end for
 
@@ -94,6 +82,27 @@ namespace _mp{
                 m_ptr_th_pluginout = std::shared_ptr<std::thread>(new std::thread(clibhid::_worker_pluginout, std::ref(*this)));
             }
         
+        }
+
+        clibhid::~clibhid()
+        {
+            if (m_b_ini) {
+                if (m_ptr_th_pluginout) {
+                    m_b_run_th_pluginout = false;
+                    if (m_ptr_th_pluginout->joinable()) {
+                        m_ptr_th_pluginout->join();
+                    }
+                }
+            }
+
+            // 
+            for (auto item : m_map_ptrs) {
+                item.second.first.reset();
+                item.second.second.reset();
+            }//
+            m_map_ptrs.clear();
+
+            m_ptr_vhid_api_briage.reset();//remove briage
         }
 
         clibhid_dev::type_wptr clibhid::_get_device(const std::string& s_path)
@@ -147,13 +156,19 @@ namespace _mp{
             std::wstringstream ss;
             ss << std::this_thread::get_id();
             std::wstring s_id = ss.str();
-            _mp::clog::get_instance().log_fmt(L"[I] exit : %ls : id = %ls.\n", __WFUNCTION__, s_id.c_str());
+            //_mp::clog::get_instance().log_fmt(L"[I] exit : %ls : id = %ls.\n", __WFUNCTION__, s_id.c_str());<< dead lock
 
+#ifdef _WIN32
+#ifdef _DEBUG
+            ATLTRACE(L"Exit clibhid::_worker_pluginout().\n");
+#endif
+#endif
         }
 
         /**
+		* @description - update m_set_removed_dev_info, m_set_inserted_dev_info and m_set_cur_dev_info.
         * ONLY for _worker_pluginout.
-        * update m_set_removed_dev_info, m_set_inserted_dev_info and m_set_cur_dev_info.
+		* @return - true - changed, false - not changed.
         */
         bool clibhid::_update_dev_set()
         {
@@ -216,23 +231,21 @@ namespace _mp{
 
             do {
                 /**
-                * don't use the hid_enumerate() of hidapi. it will occur packer-losting. 
+                * don't use the hid_enumerate() of hidapi. it will occur packet-losting. 
                 */
-                std::lock_guard<std::mutex> lock(*m_ptr_mutex_hidapi);
-                auto ptr_briage = _vhid_api_briage::get_instance(false);
-                if (!ptr_briage) {
+                if (!m_ptr_vhid_api_briage) {
                     return st;
                 }
-                auto set_dev = ptr_briage->hid_enumerate();
+                auto set_dev = m_ptr_vhid_api_briage->hid_enumerate();
 
                 for (auto item : set_dev) {
-                    clibhid_dev_info dev_info(
+                    st.emplace(
                         std::get<0>(item).c_str(),
                         std::get<1>(item),
                         std::get<2>(item),
-                        std::get<3>(item)
+                        std::get<3>(item),
+                        std::get<4>(item)
                     );
-                    st.insert(dev_info);
                 }//end for
             } while (false);
 
@@ -276,6 +289,10 @@ namespace _mp{
         void clibhid::_update_device_map()
         {
             do {
+                if (!m_ptr_vhid_api_briage) {
+                    continue;
+                }
+
                 //remove
                 for (auto item : m_set_removed_dev_info) {
                     m_map_ptrs.erase(item.get_path_by_string());
@@ -283,7 +300,7 @@ namespace _mp{
 
                 //insert
                 for (const clibhid_dev_info & item : m_set_inserted_dev_info) {
-                    auto ptr_dev = std::make_shared<clibhid_dev>(item, m_ptr_mutex_hidapi);
+                    auto ptr_dev = std::make_shared<clibhid_dev>(item, m_ptr_vhid_api_briage.get()); // create & open clibhid_dev.
                     if (!ptr_dev) {
                         continue;
                     }

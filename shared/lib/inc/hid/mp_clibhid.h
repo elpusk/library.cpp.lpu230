@@ -3,7 +3,6 @@
 #include <memory>
 #include <mutex>
 #include <map>
-#include <mutex>
 #include <atomic>
 #include <functional>
 
@@ -12,15 +11,17 @@
 #include <mp_elpusk.h>
 #include <mp_coperation.h>
 #include <hid/mp_clibhid_dev.h>
+#include <hid/_vhid_api_briage.h>
 
 
 namespace _mp{
 
     /**
+	* @description
     * this class job.
-    * single tone type
-    * 1. create & remove device.
-    * 2. detect plug in/out device.
+	* single tone type, device manager.
+    * 1. when manager detectes a plugin-out device,manager will create & remove device automatically.
+	* 2. detect plug in/out device by worker thread. and notify to user by callback function.
     */
     class clibhid
     {
@@ -73,8 +74,9 @@ namespace _mp{
         static void _worker_pluginout(clibhid& lib);
 
         /**
+        * @description - update m_set_removed_dev_info, m_set_inserted_dev_info and m_set_cur_dev_info.
         * ONLY for _worker_pluginout.
-        * update m_set_removed_dev_info, m_set_inserted_dev_info and m_set_cur_dev_info.
+        * @return - true - changed, false - not changed.
         */
         bool _update_dev_set();
 
@@ -87,18 +89,22 @@ namespace _mp{
         void _update_device_map();
 
     protected:
-        void* m_p_user;
-        clibhid::type_callback_pluginout m_cb;
+		//virtual hidapi library instance
+        _vhid_api_briage::type_ptr m_ptr_vhid_api_briage;
 
-        std::shared_ptr<std::mutex> m_ptr_mutex_hidapi;//mutex for hidapi library
-        bool m_b_ini;
+		void* m_p_user;// user parameter for callback(m_cb)
+		clibhid::type_callback_pluginout m_cb; // callback function for plugin out.(change of device list)
+
+		bool m_b_ini;//true - ini, false - not ini of this manager
         std::mutex m_mutex;
+
+		// key : device path, value : first - device instance, second - device info instance
         clibhid::type_map_ptrs m_map_ptrs;
 
-        std::shared_ptr<std::thread> m_ptr_th_pluginout;
-        std::atomic<bool> m_b_run_th_pluginout;
+		std::shared_ptr<std::thread> m_ptr_th_pluginout; //thread for detect plug in/out device.
+		std::atomic<bool> m_b_run_th_pluginout; //true - run, false - stop of pluginout thread.
 
-        type_set_usb_filter m_set_usb_filter;
+		type_set_usb_filter m_set_usb_filter; //filtering device list.
 
         clibhid_dev_info::type_set m_set_cur_dev_info;//this member will be changed after _update_dev_set ().
         clibhid_dev_info::type_set m_set_inserted_dev_info;//this member will be changed after _update_dev_set ().

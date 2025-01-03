@@ -1,51 +1,74 @@
 
 #include <hid/mp_clibhid_dev.h>
-#include <hid/_vhid_api_briage.h>
 
 #ifndef _WIN32
 #include <pthread.h>
 #endif
 
+#ifdef _WIN32
+#ifdef _DEBUG
+#include <atltrace.h>
+#endif
+#endif
+
 namespace _mp {
-    clibhid_dev::clibhid_dev(
-        const clibhid_dev_info & info,
-        std::shared_ptr<std::mutex> ptr_mutex_hidpai
-    ) :
+    clibhid_dev::clibhid_dev(const clibhid_dev_info & info, _vhid_api_briage* p_vhid_api_briage) :
         m_n_dev(-1),
         m_b_run_th_worker(false),
         m_dev_info(info),
         m_b_detect_replugin(false),
-        m_ptr_mutex_hidpai(ptr_mutex_hidpai)
+        m_p_vhid_api_briage(p_vhid_api_briage)
     {
-        _vhid_api_briage::type_ptr ptr_briage(_vhid_api_briage::get_instance(false));
-        if (!ptr_briage) {
+       if (!m_p_vhid_api_briage) {
             return;
         }
 
-        int n_dev = ptr_briage->api_open_path(info.get_path_by_string().c_str());
-        if (n_dev>=0) {
+        bool b_composite(false);
+        std::string s_path_composite(info.get_path_by_string());
+        std::string s_path_primitive;
+        _mp::type_bm_dev t(_mp::type_bm_dev_unknown);
+        bool b_support_shared_open(false);
 
-            int n_none_blocking = 1;//enable non-blocking.
+        std::tie(b_composite,t, s_path_primitive, b_support_shared_open) = _vhid_info::is_path_compositive_type(s_path_composite);
 
-            if (ptr_briage->api_set_nonblocking(n_dev, n_none_blocking) == 0) {
-                m_n_dev = n_dev;
-                m_b_run_th_worker = true;
-                m_ptr_th_worker = std::shared_ptr<std::thread>(new std::thread(clibhid_dev::_worker_using_thread, std::ref(*this)));
-            }
-            else {
-                ptr_briage->api_close(n_dev);
-                m_n_dev = -1;
+        int n_dev = -1;
+
+        do {
+
+        } while (false);
+
+        if (!b_composite) {
+            n_dev = m_p_vhid_api_briage->api_open_path(info.get_path_by_string().c_str());
+            if (n_dev >= 0) {
+                int n_none_blocking = 1;//enable non-blocking.
+
+                if (m_p_vhid_api_briage->api_set_nonblocking(n_dev, n_none_blocking) == 0) {
+                    m_n_dev = n_dev;
+                    m_b_run_th_worker = true;
+                    m_ptr_th_worker = std::shared_ptr<std::thread>(new std::thread(&clibhid_dev::_worker, this));
+                }
+                else {
+                    m_p_vhid_api_briage->api_close(n_dev);
+                    m_n_dev = -1;
+                }
             }
         }
-
+        else {
+            n_dev = m_p_vhid_api_briage->api_open_path(info.get_path_by_string().c_str());
+            if (n_dev >= 0) {
+                m_n_dev = n_dev;
+                m_b_run_th_worker = true;
+                m_ptr_th_worker = std::shared_ptr<std::thread>(new std::thread(&clibhid_dev::_worker, this));
+            }
+        }
     }
+
     clibhid_dev::~clibhid_dev()
     {
-        _vhid_api_briage::type_ptr ptr_briage(_vhid_api_briage::get_instance(false));
         m_b_run_th_worker = false;
 
-        if (ptr_briage && m_n_dev >= 0) {
-            ptr_briage->api_close(m_n_dev);
+        if (m_p_vhid_api_briage && m_n_dev >= 0) {
+            m_p_vhid_api_briage->api_close(m_n_dev);
         }
 
         if (m_ptr_th_worker) {
@@ -62,9 +85,8 @@ namespace _mp {
         return m_b_detect_replugin;
     }
 
-    bool clibhid_dev::is_open()
+    bool clibhid_dev::is_open() const
     {
-        std::lock_guard<std::mutex> lock(*m_ptr_mutex_hidpai);
         if (m_n_dev>=0)
             return true;
         else
@@ -76,13 +98,11 @@ namespace _mp {
         std::vector<unsigned char> v(4096,0);//HID_API_MAX_REPORT_DESCRIPTOR_SIZE
 
         do {
-            std::lock_guard<std::mutex> lock(*m_ptr_mutex_hidpai);
-            _vhid_api_briage::type_ptr ptr_briage(_vhid_api_briage::get_instance(false));
-            if (!ptr_briage) {
+            if (!m_p_vhid_api_briage) {
                 continue;
             }
             int n_result = 0;
-            n_result = ptr_briage->api_get_report_descriptor(m_n_dev, &v[0], v.size());
+            n_result = m_p_vhid_api_briage->api_get_report_descriptor(m_n_dev, &v[0], v.size());
             if (n_result < 0) {
                 continue;
             }
@@ -123,8 +143,8 @@ namespace _mp {
     */
     void clibhid_dev::start_write_read(const std::vector<unsigned char>& v_tx, cqitem_dev::type_cb cb, void* p_user_for_cb)
     {
-        cqitem_dev::type_ptr ptr(new cqitem_dev(v_tx, true, cb, p_user_for_cb));
-        m_q_ptr.push(ptr);
+        cqitem_dev::type_ptr ptr_tx(new cqitem_dev(v_tx, true, cb, p_user_for_cb));
+        m_q_ptr.push(ptr_tx);
     }
 
     /**
@@ -138,7 +158,7 @@ namespace _mp {
     }
 
     /**
-    * called by _worker_using_thread()
+    * called by _worker()
     */
     std::pair<bool, bool> clibhid_dev::_pump()
     {
@@ -152,62 +172,21 @@ namespace _mp {
         m_q_rx_ptr_v.clear();//pumpping.
 
         if (!b_read_is_normal) {
-            clog::get_instance().trace(L"[W] - %ls - obj._read_using_thread() in pump.\n", __WFUNCTION__);
-            clog::get_instance().log_fmt(L"[W] - %ls - obj._read_using_thread() in pump.\n", __WFUNCTION__);
+            clog::get_instance().trace(L"[W] - %ls - _read_using_thread() in pump.\n", __WFUNCTION__);
+            clog::get_instance().log_fmt(L"[W] - %ls - _read_using_thread() in pump.\n", __WFUNCTION__);
             if (b_expected_replugin) {
                 m_b_detect_replugin = true;//need this device instance removed
             }
         }
         return std::make_pair(b_read_is_normal, b_expected_replugin);
     }
-    /**
-    * called by _worker_using_thread()
-    * @return first( true - need more processing, false - complete transaction with or without error.)
-    * @return second( true - request is tx, rx pair, false - else), if first is complete, second must be false.
-    */
-    std::pair<bool,bool> clibhid_dev::_tx_and_check_need_more_processing_with_set_result(cqitem_dev::type_ptr & ptr_req, std::mutex& mutex_rx)
-    {
-        bool b_need_more_processing(false);
-        bool b_req_is_tx_rx_pair(false);
 
-        do {
-
-            do {
-                std::lock_guard<std::mutex> lock(*m_ptr_mutex_hidpai);//guard write
-                _clear_rx_q();//flush rx q
-            } while (false);
-
-            if (!ptr_req->is_empty_tx()) {
-                std::lock_guard<std::mutex> lock(*m_ptr_mutex_hidpai);//guard write
-                //std::lock_guard<std::mutex> lock(mutex_rx);//guard write
-                if (!_write(ptr_req->get_tx())) {//ERROR TX
-                    ptr_req->set_result(cqitem_dev::result_error, type_v_buffer(0), L"TX");
-                    continue;
-                }
-            }
-            if (!ptr_req->is_need_rx()) {
-                //map be cancel request.......
-                // none TX & no need rx!
-                ptr_req->set_result(cqitem_dev::result_success, type_v_buffer(0));
-                continue;
-            }
-
-            b_need_more_processing = true;
-        } while (false);
-
-        if (!ptr_req->is_empty_tx() && ptr_req->is_need_rx()) {
-            b_req_is_tx_rx_pair = true;
-        }
-        if (!b_need_more_processing) {
-            b_req_is_tx_rx_pair = false;
-        }
-        return std::make_pair(b_need_more_processing,b_req_is_tx_rx_pair);
-    }
-
-    void clibhid_dev::_clear_rx_q()
+    void clibhid_dev::_clear_rx_q_with_lock()
     {
         int n_flush = 0;
         _mp::type_ptr_v_buffer ptr_flush_buffer;
+
+        std::lock_guard<std::mutex> lock(_hid_api_briage::get_mutex_for_hidapi());
 
         while (m_q_rx_ptr_v.try_pop(ptr_flush_buffer)) {
             n_flush++;
@@ -222,16 +201,16 @@ namespace _mp {
     * @brief Write an Output report to a HID device.
     * the fist byte must be report ID.(automatic add 
     * @param v_tx - this will be sent by split-send as in-report size
+    * @param b_req_is_tx_rx_pair - true(after done tx, need to receive response.)
     */
-    bool clibhid_dev::_write(const std::vector<unsigned char>& v_tx)
+    bool clibhid_dev::_write_with_lock(const std::vector<unsigned char>& v_tx, bool b_req_is_tx_rx_pair)
     {
         bool b_result(false);
         size_t n_start = 0;
         size_t n_offset = 0;
 
         do {
-            _vhid_api_briage::type_ptr ptr_briage(_vhid_api_briage::get_instance(false));
-            if (!ptr_briage) {
+            if (!m_p_vhid_api_briage) {
                 continue;
             }
             if (v_tx.size() == 0) {
@@ -256,6 +235,8 @@ namespace _mp {
             int n_result = -1;
             b_result = true;
 
+            _hid_api_briage::type_next_io next(_hid_api_briage::next_io_none);
+
             for (size_t i = 0; i < n_loop; i++) {
                 std::fill(v_report.begin(), v_report.end(), 0);
                 if ((v_tx.size() - n_offset) >= (v_report.size() - n_start)) {
@@ -265,7 +246,19 @@ namespace _mp {
                     std::copy(v_tx.begin() + n_offset, v_tx.end(), v_report.begin() + n_start);
                 }
                 
-                n_result = ptr_briage->api_write(m_n_dev, &v_report[0], v_report.size());
+                if (i + 1 == n_loop) {
+                    //last write
+                    if (b_req_is_tx_rx_pair) {
+                        next = _hid_api_briage::next_io_read;
+                    }
+                    else {
+                        next = _hid_api_briage::next_io_none;
+                    }
+                }
+                else {
+                    next = _hid_api_briage::next_io_write;
+                }
+                n_result = m_p_vhid_api_briage->api_write(m_n_dev, &v_report[0], v_report.size(), next);
                 _mp::clog::get_instance().log_data_in_debug_mode(v_report, L"v_report = ", L"\n");
                 if (n_result < 0) {
                     b_result = false;
@@ -285,93 +278,6 @@ namespace _mp {
             }//end for
                 
         } while (false);
-        return b_result;
-    }
-
-    /**
-    * @brief Read an Input report from a HID device.
-    * Input reports are returned
-    * to the host through the INTERRUPT IN endpoint. The first byte will
-    * contain the Report number if the device uses numbered reports.
-    * @param the size of v_rx will be set in report size after receiving successfully.
-    * @return
-    * If no packet was available to be reads, this function returns true with size is zero.
-    */
-    bool clibhid_dev::_read(std::vector<unsigned char>& v_rx)
-    {
-        bool b_result(false);
-        bool b_continue(false);
-#ifdef _WIN32            
-        int n_start_offset = 0;//none for report ID
-#else
-        int n_start_offset = 0;//for report ID
-#endif
-        int n_offset = n_start_offset;
-        
-        _vhid_api_briage::type_ptr ptr_briage(_vhid_api_briage::get_instance(false));
-        if (!ptr_briage) {
-            return b_result;
-        }
-
-        do {
-            b_continue = false;
-
-            size_t n_report = m_dev_info.get_size_in_report();
-            if (n_report <= 0) {
-                _mp::clog::get_instance().log_fmt_in_debug_mode(L"[D] get_size_in_report = %u.\n", n_report);
-                continue;
-            }
-
-            v_rx.resize(n_report+ n_start_offset, 0);
-
-            //int n_result = api_read(m_p_dev, &v_rx[n_offset], v_rx.size() - n_offset);
-            int n_result = ptr_briage->api_read_timeout(m_n_dev, &v_rx[n_offset], v_rx.size() - n_offset, clibhid_dev::_const_dev_rx_check_interval_mmsec);
-            if (n_result == 0) {
-                if (n_offset == n_start_offset) {
-                    //_mp::clog::get_instance().log_fmt_in_debug_mode(L"[D] (n_result : n_offset : v_rx.size()) = (%d,%d,%u).\n", n_result, n_offset, v_rx.size());
-                    v_rx.resize(0);
-                    b_result = true;
-                    continue;//exit none data
-                }
-                if (n_offset >= v_rx.size()) {
-                    _mp::clog::get_instance().log_fmt_in_debug_mode(L"[D] 1(n_result : n_offset : v_rx.size()) = (%d,%d,%u).\n", n_result, n_offset, v_rx.size());
-                    b_result = true;
-                    continue;//exit complete
-                }
-                else {
-                    _mp::clog::get_instance().log_fmt_in_debug_mode(L"[D] 2(n_result : n_offset : v_rx.size()) = (%d,%d,%u).\n", n_result, n_offset, v_rx.size());
-                    //std::this_thread::sleep_for(std::chrono::milliseconds(clibhid_dev::_const_dev_rx_check_interval_mmsec));
-                    b_continue = true;
-                    continue;//retry rx
-                }
-            }
-
-            if (n_result < 0) {
-                _mp::clog::get_instance().log_fmt_in_debug_mode(L"[E] 3(n_result : n_offset : v_rx.size()) = (%d,%d,%u).\n", n_result, n_offset, v_rx.size());
-                v_rx.resize(0);
-                continue;//error exit
-            }
-
-            //here! n_result > 0
-            n_offset += n_result;
-            //
-            if (n_offset > v_rx.size()) {
-                _mp::clog::get_instance().log_fmt_in_debug_mode(L"[D] 4(n_result : n_offset : v_rx.size()) = (%d,%d,%u).\n", n_result, n_offset, v_rx.size());
-                continue;//error exit
-            }
-            if (n_offset < v_rx.size()) {
-                _mp::clog::get_instance().log_fmt_in_debug_mode(L"[D] 5(n_result : n_offset : v_rx.size()) = (%d,%d,%u).\n", n_result, n_offset, v_rx.size());
-                //need more 
-                //std::this_thread::sleep_for(std::chrono::milliseconds(clibhid_dev::_const_dev_rx_check_interval_mmsec));
-                b_continue = true;
-                continue;
-            }
-            //here! n_result == v_rx.size()
-            _mp::clog::get_instance().log_fmt_in_debug_mode(L"[D] 6(n_result : n_offset : v_rx.size()) = (%d,%d,%u).\n", n_result, n_offset, v_rx.size());
-            // complete read
-            b_result = true;
-        } while (b_continue);
-
         return b_result;
     }
 
@@ -496,25 +402,173 @@ namespace _mp {
         return std::make_pair(b_result, b_expected_replugin);
     }
 
-    void clibhid_dev::_worker_rx(clibhid_dev& obj,std::mutex & mutex_rx)
+    bool clibhid_dev::_process_new_request_and_set_result(cqitem_dev::type_ptr& ptr_req)
     {
-        size_t n_report = obj.m_dev_info.get_size_in_report();
+        bool b_complete(true);
+        bool b_result(false);
+        _mp::type_v_buffer v_rx(0);
+
+
+        do {
+            switch (ptr_req->get_request_type()) {
+            case cqitem_dev::req_only_tx:
+                b_result = _process_only_tx(ptr_req);
+                break;
+            case cqitem_dev::req_tx_rx:
+                std::tie(b_result,b_complete, v_rx) = _process_tx_rx(ptr_req);
+                break;
+            case cqitem_dev::req_only_rx:
+                std::tie(b_result, b_complete, v_rx) = _process_only_rx(ptr_req);
+                break;
+            case cqitem_dev::req_cancel:
+            default:
+                ptr_req->set_result(cqitem_dev::result_cancel, type_v_buffer(0), L"CANCELLED BY ANOTHER REQ");
+                continue;
+            }//end switch
+
+            if (b_complete) {
+                if (b_result) {
+                    ptr_req->set_result(cqitem_dev::result_success, v_rx, L"SUCCESS");
+                }
+                else {
+                    ptr_req->set_result(cqitem_dev::result_error, v_rx, L"ERROR");
+                }
+            }
+        } while (false);
+
+
+        return b_complete;
+    }
+
+    bool clibhid_dev::_process_only_tx(cqitem_dev::type_ptr& ptr_req)
+    {
+        bool b_result(false);
+
+        do {
+            _clear_rx_q_with_lock();//flush rx q
+
+            bool b_req_is_tx_rx_pair(false);
+
+            if (ptr_req->get_request_type() == cqitem_dev::req_tx_rx) {
+                b_req_is_tx_rx_pair = true;
+            }
+            if (!_write_with_lock(ptr_req->get_tx(), b_req_is_tx_rx_pair)) {//ERROR TX
+                continue;
+            }
+            b_result = true;
+
+        } while (false);
+
+        return b_result;
+    }
+
+    /**
+    * receving data
+    * @return 
+    *   first : processing result( true - none error ), 
+    *   second : processing complete(true), need more processing(false. in this case. first must be true)
+    *   third : rx data from device.
+    */
+    std::tuple<bool, bool, _mp::type_v_buffer> clibhid_dev::_process_only_rx(cqitem_dev::type_ptr& ptr_req)
+    {
+        bool b_complete(true);
+        bool b_result(false);
+        _mp::type_v_buffer v_rx(0);
+
+        do {
+            bool b_expected_replugin = false;
+            //
+            std::tie(b_result, b_expected_replugin) = _read_using_thread(v_rx);
+            if (!b_result) {//ERROR RX
+                clog::get_instance().trace(L"[E] - %ls - _read_using_thread().\n", __WFUNCTION__);
+                clog::get_instance().log_fmt(L"[E] - %ls - _read_using_thread().\n", __WFUNCTION__);
+
+                if (b_expected_replugin) {
+                    m_b_detect_replugin = true;//need this device instance removed
+                }
+                continue;
+            }
+
+            if (v_rx.size() == 0) {
+                b_complete = false;
+                continue;
+            }
+
+            //RX OK.
+            if (ptr_req->get_request_type() == cqitem_dev::req_tx_rx) {
+                if (v_rx[0] != 'R') {
+                    //may be response is msr or ibutton data.
+                    //therefore , you must pass this response. 
+                    b_complete = false;
+
+                    clog::get_instance().trace(L"[W] - %ls - the missed response is passed.\n", __WFUNCTION__);
+                    clog::get_instance().log_fmt(L"[W] - %ls - the missed response is passed.\n", __WFUNCTION__);
+                    continue; //and need re-read.
+                }
+            }
+
+        } while (false);
+        return std::make_tuple(b_result, b_complete, v_rx);
+    }
+
+    /**
+    * transmit and receving data
+    *   first : processing result( true - none error ),
+    *   second : processing complete(true), need more processing(false. in this case. first must be true)
+    *   third : rx data from device.
+    */
+    std::tuple<bool, bool, _mp::type_v_buffer> clibhid_dev::_process_tx_rx(cqitem_dev::type_ptr& ptr_req)
+    {
+        bool b_complete(true);
+        bool b_result(false);
+        _mp::type_v_buffer v_rx(0);
+
+        do {
+            b_result = _process_only_tx(ptr_req);
+            if (!b_result) {
+                continue;
+            }
+            //
+
+            std::tie(b_result, b_complete, v_rx) = _process_only_rx(ptr_req);
+
+        } while (false);
+        return std::make_tuple(b_result, b_complete,v_rx);
+    }
+
+    /**
+    * @brief receiving worker thread. this thread will be construct & destruct on _worker().
+    * from device, receving a data by in-report size unit. and it enqueue to m_q_ptr.
+    */
+    void clibhid_dev::_worker_rx()
+    {
+#ifdef _WIN32
+#ifdef _DEBUG
+        ATLTRACE(L"start clibhid_dev::_worker_rx(0x%x).\n", m_n_dev);
+#endif
+#endif
+        size_t n_report = m_dev_info.get_size_in_report();
         if (n_report <= 0) {
+#ifdef _WIN32
+#ifdef _DEBUG
+            ATLTRACE(L"Exit[E] clibhid_dev::_worker_rx(0x%x).\n", m_n_dev);
+#endif
+#endif
             return;
         }
 
         bool b_need_deep_recover = false;
 
-        _mp::type_v_buffer v_rx(n_report, 0);
+        _mp::type_v_buffer v_report_in(n_report, 0);
 
-        while (obj.m_b_run_th_worker) {
+        while (m_b_run_th_worker) {
 
             if (b_need_deep_recover) {
                 std::this_thread::sleep_for(std::chrono::microseconds(clibhid_dev::_const_dev_rx_recover_interval_usec));
                 continue;//recover is impossible!
             }
 
-            v_rx.assign(v_rx.size(), 0);//reset contents
+            v_report_in.assign(v_report_in.size(), 0);//reset contents
             int n_result = 0;
 
             int n_offset(0);
@@ -522,14 +576,12 @@ namespace _mp {
             int n_retry = n_max_try;
 
             do {
-                std::lock_guard<std::mutex> lock(*obj.m_ptr_mutex_hidpai);//read guard
-                //std::lock_guard<std::mutex> lock(mutex_rx);//read guard
-                _vhid_api_briage::type_ptr ptr_briage(_vhid_api_briage::get_instance(false));
-                if (!ptr_briage) {
+                if (!m_p_vhid_api_briage) {
                     break;//nothing to do
                 }
 
-                n_result = ptr_briage->api_read(obj.m_n_dev, &v_rx[n_offset], v_rx.size()- n_offset);//wait block or not by initialization
+                // this code is deadlock!!!!
+                n_result = m_p_vhid_api_briage->api_read(m_n_dev, &v_report_in[n_offset], v_report_in.size() - n_offset, v_report_in.size());//wait block or not by initialization
                 if (n_result == 0) {
                     if (n_offset == 0) {
                         break;//re-read transaction
@@ -539,7 +591,7 @@ namespace _mp {
                     --n_retry;
                     if (n_retry <= 0) {
                         //lost a packet
-                        obj.m_q_rx_ptr_v.push(std::make_shared<_mp::type_v_buffer>(0));
+                        m_q_rx_ptr_v.push(std::make_shared<_mp::type_v_buffer>(0));
                         _mp::clog::get_instance().log_fmt(L"[E] %ls : lost packet\n", __WFUNCTION__);
                         break;//restart transaction
                     }
@@ -550,24 +602,24 @@ namespace _mp {
                     // warning
                     b_need_deep_recover = true;//this case - recover is impossible!
 
-                    std::wstring s_error(ptr_briage->api_error(obj.m_n_dev));
+                    std::wstring s_error(m_p_vhid_api_briage->api_error(m_n_dev));
                     _mp::clog::get_instance().log_fmt_in_debug_mode(L"[D] rx return = %d. - %ls.\n", n_result, s_error.c_str());
 
-                    obj.m_q_rx_ptr_v.push(_mp::type_ptr_v_buffer());//indicate error of device usb io.
+                    m_q_rx_ptr_v.push(_mp::type_ptr_v_buffer());//indicate error of device usb io.
                     break;
                 }
                 //here n_result > 0 recevied some data.
                 n_offset += n_result;
-                if (n_offset >= v_rx.size()) {
+                if (n_offset >= v_report_in.size()) {
                     //one report complete.
-                    obj.m_q_rx_ptr_v.push(std::make_shared<_mp::type_v_buffer>(v_rx));
-                    _mp::clog::get_instance().log_fmt_in_debug_mode(L"[H] v_rx.size() = %u.\n", v_rx.size());
-                    _mp::clog::get_instance().log_data_in_debug_mode(v_rx, std::wstring(), L"\n");
+                    m_q_rx_ptr_v.push(std::make_shared<_mp::type_v_buffer>(v_report_in));
+                    _mp::clog::get_instance().log_fmt_in_debug_mode(L"[H] v_rx.size() = %u.\n", v_report_in.size());
+                    _mp::clog::get_instance().log_data_in_debug_mode(v_report_in, std::wstring(), L"\n");
                     break;
                 }
                 std::this_thread::sleep_for(std::chrono::microseconds(clibhid_dev::_const_dev_rx_recover_interval_usec));
                 n_retry = n_max_try;
-            } while (n_offset< v_rx.size());
+            } while (n_offset< v_report_in.size());
 
             // for reducing CPU usage rates.
             std::this_thread::sleep_for(std::chrono::microseconds(clibhid_dev::_const_dev_rx_recover_interval_usec));
@@ -576,19 +628,32 @@ namespace _mp {
         std::wstringstream ss;
         ss << std::this_thread::get_id();
         std::wstring s_id = ss.str();
-        _mp::clog::get_instance().log_fmt(L"[I] exit : %ls : id = %ls.\n", __WFUNCTION__, s_id.c_str());
+        //_mp::clog::get_instance().log_fmt(L"[I] exit : %ls : id = %ls.\n", __WFUNCTION__, s_id.c_str()); ,, dead lock
+
+#ifdef _WIN32
+#ifdef _DEBUG
+        ATLTRACE(L"Exit clibhid_dev::_worker_rx(0x%x).\n", m_n_dev);
+#endif
+#endif
     }
+
     /**
     * device io worker
     */
-    void clibhid_dev::_worker_using_thread(clibhid_dev& obj)
+    void clibhid_dev::_worker()
     {
-        cqitem_dev::type_ptr ptr_new, ptr_cur;
-        int n_size_in_report(obj.m_dev_info.get_size_in_report());
-        _mp::type_v_buffer v_rx(n_size_in_report, 0);
-        std::mutex mutex_rx;
+#ifdef _WIN32
+#ifdef _DEBUG
+        ATLTRACE(L"start clibhid_dev::_worker(0x%x).\n", m_n_dev);
+#endif
+#endif
 
-        std::shared_ptr<std::thread> ptr_th_rx(new std::thread(clibhid_dev::_worker_rx, std::ref(obj),std::ref(mutex_rx)));
+        cqitem_dev::type_ptr ptr_new, ptr_cur;
+        int n_size_in_report(m_dev_info.get_size_in_report());
+        _mp::type_v_buffer v_rx(n_size_in_report, 0);
+
+		// thread for rx
+        std::shared_ptr<std::thread> ptr_th_rx(new std::thread(&clibhid_dev::_worker_rx, this));
 
 #ifndef _WIN32
         //set priority level of _worker_rx()
@@ -601,98 +666,57 @@ namespace _mp {
             clog::get_instance().trace(L"[E] - %ls - Failed to set thread priority.\n", __WFUNCTION__);
             clog::get_instance().log_fmt(L"[E] - %ls - Failed to set thread priority.\n", __WFUNCTION__);
         }
+
 #endif
-
-        bool b_read_is_normal = true;
+        bool b_read = true;
         bool b_expected_replugin = false;
+        bool b_complete(true);
 
-        bool b_need_more_processing(false);
-        bool b_req_is_tx_rx_pair(false);
-
-        while (obj.m_b_run_th_worker) {
+        while(m_b_run_th_worker){
 
             do {
                 if (!ptr_cur) {
+                    //현재 처리하고 있는 명령 없음. 
                     //pumpping mode....... none processing request.
-                    if (!obj.m_q_ptr.try_pop(ptr_new) || !ptr_new) {
-                        std::tie(b_read_is_normal, b_expected_replugin) = obj._pump();//pumpping.
+                    if (!m_q_ptr.try_pop(ptr_new)) {
+                        std::tie(b_read, b_expected_replugin) = _pump();//pumpping.
                         continue;
                     }
 
-                    //processing new request.
-                    std::tie(b_need_more_processing, b_req_is_tx_rx_pair) = obj._tx_and_check_need_more_processing_with_set_result(ptr_new,mutex_rx);
-                    if (!b_need_more_processing) {
-                        continue;//complete or error
-                    }
-
-                    if (!b_read_is_normal) {
-                        // new request but read is error status -_-;;
-                        b_req_is_tx_rx_pair = false;
+                    // 새로운 명령을 pop한 경우.
+                    if (!b_read) {
+                        // 새로운 명령을 pop  했지만, 현재 rx 가 에러 상태이므로 새로운 명령은 바로 에러로 처리.
                         clog::get_instance().trace(L"[E] - %ls - new request but read is error status.\n", __WFUNCTION__);
                         clog::get_instance().log_fmt(L"[E] - %ls - new request but read is error status.\n", __WFUNCTION__);
                         ptr_new->set_result(cqitem_dev::result_error, type_v_buffer(0), L"RX");
                         continue;
                     }
 
-                    //need response....... re-read at next loop.
+                    // 새로운 명령을 처리.
+                    b_complete = _process_new_request_and_set_result(ptr_new);
+                    if (b_complete) {
+                        continue; // 새로운 명령은 처리됨.
+                    }
+
+                    // 새로운 명령 처리가 더 필요하므로, 현재 명령으로 설정.
                     ptr_cur = ptr_new;
                     ptr_new.reset();
                 }
 
-                //////////////////////////////////////
-                // here current request exist.......
-                // ready for rx mode.
-                std::tie(b_read_is_normal, b_expected_replugin) = obj._read_using_thread(v_rx);
-                if (!b_read_is_normal) {//ERROR RX
-                    b_req_is_tx_rx_pair = false;
-                    clog::get_instance().trace(L"[E] - %ls - obj._read_using_thread().\n", __WFUNCTION__);
-                    clog::get_instance().log_fmt(L"[E] - %ls - obj._read_using_thread().\n", __WFUNCTION__);
-                    ptr_cur->set_result(cqitem_dev::result_error, type_v_buffer(0), L"RX");
-
-                    if (b_expected_replugin) {
-                        obj.m_b_detect_replugin = true;//need this device instance removed
-                    }
+                // 현재 명령으로 설정된 명령을 위해 계속 수신 시도함.
+                std::tie(b_read, b_complete, v_rx) = _process_only_rx(ptr_cur);
+                if (!b_complete) {
                     continue;
                 }
-
-                if (v_rx.size() != 0) {
-                    //RX OK.
-                    if (b_req_is_tx_rx_pair) {
-                        if(v_rx[0] != 'R'){
-                            //may be response is msr or ibutton data.
-                            //therefore , you must pass this response. 
-                            clog::get_instance().trace(L"[W] - %ls - the missed response is passed.\n", __WFUNCTION__);
-                            clog::get_instance().log_fmt(L"[W] - %ls - the missed response is passed.\n", __WFUNCTION__);
-                            continue; //and need re-read.
-                        }
-                    }
-                    ptr_cur->set_result(cqitem_dev::result_success, v_rx);
-                    b_req_is_tx_rx_pair = false;
-                    continue;
+                if (b_read) {
+                    ptr_cur->set_result(cqitem_dev::result_success, v_rx, L"SUCCESS");
                 }
-
-                //need more waits
-                if (!obj.m_q_ptr.try_pop(ptr_new) || !ptr_new) {
-                    continue;//No new request
+                else {
+                    ptr_cur->set_result(cqitem_dev::result_error, v_rx, L"ERROR");
                 }
+            } while (false);//main do-while(false)
 
-                //the current reuqest canceled.
-                ptr_cur->set_result(cqitem_dev::result_cancel, type_v_buffer(0), L"CANCELLED BY ANOTHER REQ");
-                ptr_cur->run_callback();//impossible re-read
-                ptr_cur.reset();
-                //
-
-                //processing new request.
-                std::tie(b_need_more_processing, b_req_is_tx_rx_pair) = obj._tx_and_check_need_more_processing_with_set_result(ptr_new,mutex_rx);
-                if (!b_need_more_processing) {
-                    continue;
-                }
-                //need response....... re-read at next loop.
-                ptr_cur = ptr_new;
-                ptr_new.reset();
-
-            } while (false);//the end of lock_guard
-
+            // notify
             if (ptr_new) {
                 if (ptr_new->is_complete()) {
                     ptr_new->run_callback();//impossible re-read
@@ -711,8 +735,10 @@ namespace _mp {
             }
 
             std::this_thread::sleep_for(std::chrono::milliseconds(clibhid_dev::_const_dev_io_check_interval_mmsec));
-        }//end while - worker main loop
 
+        }// the end of main while
+
+        //terminate rx thread.
         if (ptr_th_rx) {
             if (ptr_th_rx->joinable()) {
                 ptr_th_rx->join();
@@ -723,6 +749,14 @@ namespace _mp {
         std::wstringstream ss;
         ss << std::this_thread::get_id();
         std::wstring s_id = ss.str();
-        _mp::clog::get_instance().log_fmt(L"[I] exit : %ls : id = %ls.\n", __WFUNCTION__, s_id.c_str());
+        //_mp::clog::get_instance().log_fmt(L"[I] exit : %ls : id = %ls.\n", __WFUNCTION__, s_id.c_str());<<dead lock
+
+#ifdef _WIN32
+#ifdef _DEBUG
+        ATLTRACE(L"Exit clibhid_dev::_worker(0x%x).\n", m_n_dev);
+#endif
+#endif
+
     }
+
 }

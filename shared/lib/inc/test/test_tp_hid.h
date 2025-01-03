@@ -3,12 +3,15 @@
 #include <iostream>
 #include <thread>
 #include <chrono>
+#include <array>
+#include <algorithm>
 
 #include <stdio.h>
 #include <wchar.h>
 #include <string.h>
 #include <stdlib.h>
 
+#include <_dev/mp_cdev_util.h>
 #include <mp_cconvert.h>
 #include <mp_cwait.h>
 #include <mp_cfile.h>
@@ -112,7 +115,7 @@ namespace _test{
 						//
 							//
 						_mp::clibhid_dev::type_wptr wptr_dev = lib_hid.get_device(item);
-						for (int i = 0; i < 10; i++) {
+						for (int i = 0; i < 1; i++) {
 							if (wptr_dev.expired()) {
 								continue;
 							}
@@ -324,7 +327,7 @@ namespace _test{
 			{
 				_mp::cwait waiter;
 				int n_event = waiter.generate_new_event();
-				std::pair<_mp::cwait*, int> pair_p(&waiter, n_event);
+				std::pair<_mp::cwait*, int> pair_p_wait_n_event(&waiter, n_event);
 #ifndef _WIN32
 				setvbuf(stdout, NULL, _IONBF, 0);
 
@@ -354,16 +357,39 @@ namespace _test{
 						for (auto item : st) {
 							std::wcout << std::hex << item.get_vendor_id() << L":";
 							std::wcout << std::hex << item.get_product_id() << L":";
-							std::wcout << std::hex << item.get_interface_number() << std::endl;
+							std::wcout << std::hex << item.get_interface_number() << L":";
+							std::wcout << item.get_extra_path_by_wstring();
+							std::wcout << std::endl;
 						}//end for
 						std::wcout << std::dec;
 					}
+
+					//msr device filtering
+					_mp::type_list_wstring list_filter{ L"lpu200",L"msr" };
+
+					size_t n_dev(0);
+					_mp::type_set_wstring set_dev_path;
+					_mp::type_v_bm_dev v_type;
+					bool b_lpu200_filter(false);
+					std::wstring s_first, s_second;
+					std::tie(b_lpu200_filter, s_first, s_second) = _mp::cdev_util::is_lpu200_filter(list_filter);
+					if (b_lpu200_filter) {
+						//lpu200 filter
+						v_type.clear();
+						v_type.push_back(_mp::cdev_util::get_device_type_from_lpu200_filter(s_second));
+
+						//get composite type path
+						n_dev = _mp::clibhid_dev_info::filter_dev_info_set(st, st, v_type);//filtering
+						set_dev_path = _mp::clibhid_dev_info::get_dev_path_by_wstring(st);
+					}
+
 
 					const _mp::clibhid_dev_info& item(*st.begin());
 					std::wcout << std::hex << item.get_vendor_id() << L", " << item.get_product_id() << L" : ";
 					std::wcout << item.get_path_by_wstring() << std::endl;
 					std::wcout << item.get_interface_number() << std::endl;
 					//
+					
 					for (int i = 0; i < 1000; i++) {
 						std::cout << "TEST" << i+1 << std::endl;
 						_mp::clibhid_dev::type_wptr wptr_dev = lib_hid.get_device(item);
@@ -372,28 +398,46 @@ namespace _test{
 							break;
 						}
 
-						//
-						pair_p.first->reset(pair_p.second);
-						wptr_dev.lock()->start_read(tp_hid::_cb_rx, &pair_p);
+						_mp::type_v_buffer v_tx(64, 0);
+
+						if (i % 2 == 0) {
+							v_tx[0] = 'X';
+						}
+						else {
+							v_tx[0] = 'Y';
+						}
+
+						pair_p_wait_n_event.first->reset(pair_p_wait_n_event.second);
+
+						wptr_dev.lock()->start_write_read(v_tx, tp_hid::_cb_rx, &pair_p_wait_n_event);
+						//wptr_dev.lock()->start_read(tp_hid::_cb_rx, &pair_p_wait_n_event);
 						auto start = std::chrono::high_resolution_clock::now();
 
 						int n_evt = _mp::cwait::const_event_timeout;
 
+						int n_point = 0;
+
 						do {
 							n_evt = _mp::cwait::const_event_timeout;
-							n_evt = pair_p.first->wait_for_one_at_time(0);
-							if (n_evt == pair_p.second) {
-								std::wcout << L"RX DON" << std::endl;
+							n_evt = pair_p_wait_n_event.first->wait_for_one_at_time(0);
+							if (n_evt == pair_p_wait_n_event.second) {
+								std::wcout << std::endl;
+								std::wcout << L"RX DONE" << std::endl;
 								break;
 							}
 							if (wptr_dev.expired()) {
+								std::wcout << std::endl;
 								std::cout << "device is expired" << std::endl;
 								i = 1000;
 								break;
 							}
 
 							std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-							std::wcout << L"-_-;;" << std::endl;
+							std::wcout << L".";
+							++n_point;
+							if (n_point % 25 == 0) {
+								std::wcout <<  std::endl;
+							}
 						} while (true);
 
 						auto end = std::chrono::high_resolution_clock::now();
@@ -630,6 +674,144 @@ namespace _test{
 
 					} while (c != L'x');
 				} while (false);
+				return 0;
+			}
+
+			static int test6()
+			{
+				_mp::cwait waiter;
+				int n_event = waiter.generate_new_event();
+				std::pair<_mp::cwait*, int> pair_p_wait_n_event(&waiter, n_event);
+#ifndef _WIN32
+				setvbuf(stdout, NULL, _IONBF, 0);
+
+#endif // !_WIN32
+
+				do {
+					_mp::clibhid& lib_hid(_mp::clibhid::get_instance());
+					if (!lib_hid.is_ini()) {
+						std::wcout << L"ERROR\n";
+						continue;
+					}
+					std::wcout << L"Lib started.\n";
+					for (int i = 3; i >= 0; i--) {
+						std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+						std::wcout << i << L'.' << std::flush;
+					}//end for
+
+					std::wcout << std::endl;
+					std::wcout << L"Start test." << std::endl;
+
+					_mp::clibhid_dev_info::type_set st = lib_hid.get_cur_device_set();
+					if (st.empty()) {
+						std::cout << "none device" << std::endl;
+						break;
+					}
+					else {
+						for (auto item : st) {
+							std::wcout << std::hex << item.get_vendor_id() << L":";
+							std::wcout << std::hex << item.get_product_id() << L":";
+							std::wcout << std::hex << item.get_interface_number() << L":";
+							std::wcout << item.get_extra_path_by_wstring();
+							std::wcout << std::endl;
+						}//end for
+						std::wcout << std::dec;
+					}
+
+					//setup device filtering
+					size_t n_dev(0);
+					std::array<_mp::type_bm_dev,5> ar_filter = {
+						_mp::type_bm_dev_hid,
+						_mp::type_bm_dev_lpu200_msr,
+						_mp::type_bm_dev_lpu200_scr0,
+						_mp::type_bm_dev_lpu200_ibutton,
+						_mp::type_bm_dev_lpu200_switch0
+					};
+
+					std::array<_mp::type_set_wstring, ar_filter.size()> ar_set_wstring;
+					std::array<_mp::clibhid_dev_info::type_set, ar_filter.size()> ar_set_dev_info;
+					_mp::type_v_bm_dev v_type;
+
+					for (auto i = 0; i < ar_filter.size(); i++) {
+						v_type.clear();
+						v_type.push_back(ar_filter[i]);
+						//
+						_mp::clibhid_dev_info::filter_dev_info_set(ar_set_dev_info[i], st, v_type);//filtering
+						ar_set_wstring[i] = _mp::clibhid_dev_info::get_dev_path_by_wstring(ar_set_dev_info[i]);
+						//
+						std::wcout << std::hex << L"the filtered : 0x" << ar_filter[i] << std::endl;
+						for (auto _s_path : ar_set_wstring[i]) {
+							std::wcout << L"\t" << _s_path << std::endl;
+						}
+					}//end for type
+
+					//return 0;
+
+
+
+
+					const _mp::clibhid_dev_info& item(*st.begin());
+					std::wcout << std::hex << item.get_vendor_id() << L", " << item.get_product_id() << L" : ";
+					std::wcout << item.get_path_by_wstring() << std::endl;
+					std::wcout << item.get_interface_number() << std::endl;
+					//
+
+					for (int i = 0; i < 100; i++) {
+						std::cout << "TEST" << i + 1 << std::endl;
+						_mp::clibhid_dev::type_wptr wptr_dev = lib_hid.get_device(item);
+						if (wptr_dev.expired()) {
+							std::cout << "device is expired" << std::endl;
+							break;
+						}
+
+						_mp::type_v_buffer v_tx(64, 0);
+
+						if (i % 2 == 0) {
+							v_tx[0] = 'X';
+						}
+						else {
+							v_tx[0] = 'Y';
+						}
+
+						pair_p_wait_n_event.first->reset(pair_p_wait_n_event.second);
+
+						wptr_dev.lock()->start_write_read(v_tx, tp_hid::_cb_rx, &pair_p_wait_n_event);
+						//wptr_dev.lock()->start_read(tp_hid::_cb_rx, &pair_p_wait_n_event);
+						auto start = std::chrono::high_resolution_clock::now();
+
+						int n_evt = _mp::cwait::const_event_timeout;
+
+						int n_point = 0;
+
+						do {
+							n_evt = _mp::cwait::const_event_timeout;
+							n_evt = pair_p_wait_n_event.first->wait_for_one_at_time(0);
+							if (n_evt == pair_p_wait_n_event.second) {
+								std::wcout << std::endl;
+								std::wcout << L"RX DONE" << std::endl;
+								break;
+							}
+							if (wptr_dev.expired()) {
+								std::wcout << std::endl;
+								std::cout << "device is expired" << std::endl;
+								i = 1000;
+								break;
+							}
+
+							std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+							std::wcout << L".";
+							++n_point;
+							if (n_point % 25 == 0) {
+								std::wcout << std::endl;
+							}
+						} while (true);
+
+						auto end = std::chrono::high_resolution_clock::now();
+						std::chrono::duration<double> elapsed = end - start;
+						std::cout << "Elapsed time: " << elapsed.count() << " seconds" << std::endl;
+					}
+				} while (false);
+
 				return 0;
 			}
         public:

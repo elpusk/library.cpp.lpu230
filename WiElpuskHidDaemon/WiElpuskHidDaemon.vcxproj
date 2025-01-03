@@ -61,6 +61,8 @@
     <ClInclude Include="..\shared\lib\inc\hid\mp_clibhid_dev_info.h" />
     <ClInclude Include="..\shared\lib\inc\hid\_hid_api_briage.h" />
     <ClInclude Include="..\shared\lib\inc\hid\_vhid_api_briage.h" />
+    <ClInclude Include="..\shared\lib\inc\hid\_vhid_info.h" />
+    <ClInclude Include="..\shared\lib\inc\hid\_vhid_info_lpu237.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cconsole.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cconvert.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cfile.h" />

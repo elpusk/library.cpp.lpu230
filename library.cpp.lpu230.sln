@@ -6,8 +6,14 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "shared", "shared\shared.vcxitems", "{D5DE4F35-7C4E-4D93-BF43-EBC60A76067C}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LiMgmtLpu230", "LiMgmtLpu230\LiMgmtLpu230.vcxproj", "{6B17D883-2AEE-4BE2-AC8D-EFAE00938E66}"
+	ProjectSection(ProjectDependencies) = postProject
+		{1CFCC246-AB9A-485F-A137-32890224B635} = {1CFCC246-AB9A-485F-A137-32890224B635}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WiMgmtLpu230", "WiMgmtLpu230\WiMgmtLpu230.vcxproj", "{015CC105-7643-4B2C-AB6E-30DFF39B8178}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D67B1496-AD00-49D1-88D9-A1D0E20C513D} = {D67B1496-AD00-49D1-88D9-A1D0E20C513D}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LiElpuskHidDaemon", "LiElpuskHidDaemon\LiElpuskHidDaemon.vcxproj", "{1CFCC246-AB9A-485F-A137-32890224B635}"
 EndProject

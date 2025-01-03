@@ -18,6 +18,13 @@ namespace _mp{
             result_error,
             result_cancel
         } type_result;
+
+        typedef enum : int {
+            req_only_tx,
+            req_only_rx,
+            req_tx_rx,
+            req_cancel
+        }type_request;
     public:
         typedef std::shared_ptr< cqitem_dev > type_ptr;
 
@@ -59,6 +66,24 @@ namespace _mp{
         virtual ~cqitem_dev()
         {
 
+        }
+
+        cqitem_dev::type_request get_request_type()
+        {
+            cqitem_dev::type_request t(cqitem_dev::req_cancel);
+
+            std::lock_guard<std::mutex> lock(m_mutex);
+            if (m_v_tx.empty() && m_b_need_read) {
+                t = cqitem_dev::req_only_rx;
+            }
+            else if (!m_v_tx.empty() && m_b_need_read) {
+                t = cqitem_dev::req_tx_rx;
+            }
+            else if (!m_v_tx.empty() && !m_b_need_read) {
+                t = cqitem_dev::req_only_tx;
+            }
+
+            return t;
         }
 
         bool is_empty_tx() const

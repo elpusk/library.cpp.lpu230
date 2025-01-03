@@ -146,5 +146,11 @@
     <ClInclude Include="..\shared\lib\inc\hid\_vhid_api_briage.h">
       <Filter>lib\hid</Filter>
     </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\hid\_vhid_info.h">
+      <Filter>lib\hid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\hid\_vhid_info_lpu237.h">
+      <Filter>lib\hid</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

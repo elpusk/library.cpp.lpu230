@@ -81,6 +81,10 @@ static std::tuple<bool, HANDLE, std::wstring> _get_list_open_enable(clpu237_msr&
 				continue;
 			}
 
+			for (auto item : list_dev) {
+				std::wcout << L" : I : found : " << item << std::endl;
+			}// end for
+
 			std::wcout << L" : I : selected device : " << *(list_dev.begin()) << std::endl;
 			s_path = *(list_dev.begin());
 		}

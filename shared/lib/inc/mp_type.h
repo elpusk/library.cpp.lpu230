@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdint.h>
 #include <vector>
 #include <string>
 #include <deque>
@@ -51,10 +52,10 @@ namespace _mp{
 #define	_MP_TOOLS_CT_TYPE_MSR_DATA_PREFIX		L"((((("
 #define	_MP_TOOLS_CT_TYPE_MSR_DATA_POSTFIX		L")))))"
 
-#define	_MP_TOOLS_CT_TYPE_FILE_TIMEIN_SECOND		((unsigned long long)10000000)
-#define	_MP_TOOLS_CT_TYPE_FILE_TIMEIN_MINUTE		((unsigned long long)_NS_TOOLS_CT_TYPE_FILE_TIMEIN_SECOND*60)
-#define	_MP_TOOLS_CT_TYPE_FILE_TIMEIN_HOUR			((unsigned long long)_NS_TOOLS_CT_TYPE_FILE_TIMEIN_MINUTE*60)
-#define	_MP_TOOLS_CT_TYPE_FILE_TIMEIN_DAY			((unsigned long long)_NS_TOOLS_CT_TYPE_FILE_TIMEIN_HOUR*24)
+#define	_MP_TOOLS_CT_TYPE_FILE_TIMEIN_SECOND		((uint64_t)10000000)
+#define	_MP_TOOLS_CT_TYPE_FILE_TIMEIN_MINUTE		((uint64_t)_NS_TOOLS_CT_TYPE_FILE_TIMEIN_SECOND*60)
+#define	_MP_TOOLS_CT_TYPE_FILE_TIMEIN_HOUR			((uint64_t)_NS_TOOLS_CT_TYPE_FILE_TIMEIN_MINUTE*60)
+#define	_MP_TOOLS_CT_TYPE_FILE_TIMEIN_DAY			((uint64_t)_NS_TOOLS_CT_TYPE_FILE_TIMEIN_HOUR*24)
 
 #define	_MP_TOOLS_INVALID_SESSION_NUMBER		0xFFFFFFFF
 #define	_MP_TOOLS_INVALID_DEVICE_INDEX		0x0000
@@ -65,7 +66,7 @@ namespace _mp{
     //s - structure name, m - member name
 #define	_MP_TOOLS_SIZE_OF_STRUCT(s,m)		sizeof(((s *)0 )->m)
 
-#define _MP_TOOLS_MAKE_QWORD(hi, lo)    (  (unsigned long long(unsigned long(hi) & 0xffffffff) << 32 ) | unsigned long long(unsigned long(lo) & 0xffffffff)  )
+#define _MP_TOOLS_MAKE_QWORD(hi, lo)    (  (uint64_t(uint32_t(hi) & 0xffffffff) << 32 ) | uint64_t(uint32_t(lo) & 0xffffffff)  )
 
 #ifdef _WIN32
     #define _MP_TIMEOUT     INFINITE
@@ -126,7 +127,14 @@ namespace _mp{
     typedef	std::deque<type_v_buffer>			type_dequeu_v_buffer;
     typedef	std::deque<type_ptr_v_buffer>		type_dequeu_ptr_v_buffer;
 
-    typedef enum : unsigned long {
+    /**
+	* @description: the type of device
+	* size of type_bm_dev is 4bytes.
+    * primitive type mask pattern is 0x00ff0000.
+	* leaf device(sub-device or compositive device) mask pattern is 0x000000ff.
+	* 0x0000ff00 mask pattern will be used for identifying the connected pysical device.
+    */
+    typedef enum : uint32_t {
         type_bm_dev_unknown = 0x00000000//primitive type
         , type_bm_dev_winusb = 0x00010000//primitive type
         , type_bm_dev_hid = 0x00020000//primitive type

@@ -26,10 +26,22 @@ namespace _mp{
             const clibhid_dev_info::type_set& in,
             const type_tuple_usb_filter t_filter
         );
+
+        static size_t filter_dev_info_set(
+            clibhid_dev_info::type_set& out,
+            const clibhid_dev_info::type_set& in,
+            const type_v_bm_dev& v_type_filter
+        );
     public: //constructor & destructor      
         clibhid_dev_info();
         
-        clibhid_dev_info(const char* ps_path, unsigned short w_vid, unsigned short w_pid, int n_interface);
+        clibhid_dev_info(
+            const char* ps_path,
+            unsigned short w_vid,
+            unsigned short w_pid,
+            int n_interface,
+            const std::string &s_extra_path
+        );
         
         virtual ~clibhid_dev_info();
         
@@ -45,6 +57,9 @@ namespace _mp{
         int get_size_in_report() const;
         int get_size_out_report() const;
 
+        std::string get_extra_path_by_string() const;
+        std::wstring get_extra_path_by_wstring() const;
+
         bool operator<(const clibhid_dev_info& other) const;
 
         bool operator==(const clibhid_dev_info& other) const;
@@ -58,6 +73,7 @@ namespace _mp{
         int m_n_size_in_report, m_n_size_out_report;//the size is less then equal zero. used not  report 
         //
         _mp::type_v_s_buffer m_vs_path;
+        std::string m_s_extra_path;//for virtual device path
     };
 
 }//the end of namespace _mp
