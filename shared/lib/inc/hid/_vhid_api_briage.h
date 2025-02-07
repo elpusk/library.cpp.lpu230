@@ -22,6 +22,9 @@
 #include <hid/_vhid_info.h>
 #include <hid/_hid_api_briage.h>
 
+/**
+* the instance of this class must be created only one in the process.
+*/
 class _vhid_api_briage: public _hid_api_briage
 {
 public:
@@ -72,6 +75,7 @@ private:
 		int get_map_index() const;
 
 		size_t get_size_report_in() const;
+		int get_rx_timeout_mmsec() const;
 
 		void set_start_time();
 		double get_elapsed_usec_time();
@@ -88,6 +92,7 @@ private:
 
 		_hid_api_briage::type_next_io m_next;
 		size_t m_n_in_report;
+		int m_n_rx_timeout_mmsec;
 		
 		std::chrono::high_resolution_clock::time_point m_start_time;
 
@@ -112,13 +117,13 @@ private:
 	private:
 		typedef std::deque<_vhid_api_briage::_q_item::type_ptr> _type_q;
 		typedef std::shared_ptr<_vhid_api_briage::_q_worker::_type_q> _type_ptr_q;
-		typedef std::map<int, _vhid_api_briage::_q_worker::_type_ptr_q> _type_map_ptr_q;//key-compositive
+		typedef std::map<int, _vhid_api_briage::_q_worker::_type_ptr_q> _type_map_ptr_q;//key-compositive index
 	private:
 		enum {
 			_const_worker_interval_mmsec = 30
 		};
 		enum {
-			_const_txrx_pair_tx_interval_mmsec = 3
+			_const_txrx_pair_tx_interval_mmsec = 1
 		};
 
 	public:
@@ -167,7 +172,15 @@ private:
 	};
 
 private:
+	//key is primitive map index.
+	//value is pair of vhid_info ptr and worker ptr
 	typedef std::map<int, std::pair<_vhid_info::type_ptr, _q_worker::type_ptr> > _type_map_ptr_vhid_info_ptr_worker;
+
+	// key is compositive map index
+	typedef std::map<int, _vhid_info::type_ptr > _type_compositive_map_ptr_vhid_info;
+
+	// key is primitive map index
+	typedef std::map<int, _q_worker::type_ptr > _type_primitive_map_ptr_primitive_worker;
 
 public:
 	_vhid_api_briage();
@@ -175,41 +188,86 @@ public:
 	virtual ~_vhid_api_briage();
 
 	/**
-	* get connected information of devices.
-	* return  each item's 1'st - device apth, 2'nd - usb vendor id, 3'th - usb product id, 4'th - usb interface number, 5'th - extra data
+	* @brief get connected information of devices.
+	* 
+	* @param none
+	* 
+	* @return  each item's 
+	*
+	*	1'st - std::string, device path, 
+	* 
+	*	2'nd - unsigned short, usb vendor id,
+	* 
+	*	3'th - unsigned short, usb product id, 
+	* 
+	*	4'th - int, usb interface number, 
+	* 
+	*	5'th - std::string, extra data
 	*/
 	virtual std::set< std::tuple<std::string, unsigned short, unsigned short, int, std::string> >hid_enumerate();
 
 	/**
 	* @brief check is open or not
+	*
 	* @param path - primitive or composite path
-	* @return first true - open, false not open or error, second - the opened device of the index of map. third - true(exclusive open), false(shared open or not open )
+	*
+	* @return tuple type
+	*
+	*   first true - open, false not open or error.
+	*
+	*   second - the opened device of the index of map.(primitive index)
+	*
+	*   third - true(exclusive open), false(shared open or not open )
 	*/
 	virtual std::tuple<bool, int, bool> is_open(const char* path) const;
 
 	/**
-	* open device with path. (hid_open_path())
-	* return the index of map(m_map_hid_dev), this value must be const_map_index_min~const_map_index_max, Multiples of const_map_index_inc_unit.
-	* -1(error)
+	* @brief open device with path. (hid_open_path())
+	* 
+	* A primitive type device and all compositive types 
+	* that share the primitive type device must be able to open simultaneously,
+	* regardless of shared open support. 
+	* Additionally, if shared open support is provided, 
+	* it must be possible to open it more than twice simultaneously.
+	* 
+	* @param path - primitive or composite path
+	* 
+	* @return compositive type map index
+	* 
+	*	this value must be const_map_index_min~const_map_index_max, Multiples of const_map_index_inc_unit.
+	* 
+	*	this index cannot be index of map directly. but you can get map index(primitive index) from this value.
+	* 
+	*	Use _vhid_info::get_primitive_map_index_from_compositive_map_index() for getting map index(primitive index) from this value.
+	* 
+	*	error : -1
 	*/
 	virtual int api_open_path(const char* path);
 
 	/**
-	* (hid_close())
+	* @brief close (hid_close())
+	* 
+	* @param n_map_index - primitive or compositive map index.
 	*/
 	virtual void api_close(int n_map_index);
 
 	/**
-	* set blocking mode.(hid_set_nonblocking())
-	* @param
-	* n_map_index:int - the index of map(m_map_hid_dev)
-	* nonblock:int - 0 is blocking mode, 1 is nonblocking mode
+	* @brief set blocking mode.(hid_set_nonblocking())
+	* 
+	* @param n_map_index:int - primitive or compositive map index.
+	* 
+	* @param nonblock:int - 0 is blocking mode, 1 is nonblocking mode
+	* 
+	* @return int 
+	*	0 - success
+	* 
+	*	-1 - error
 	*/
 	virtual int api_set_nonblocking(int n_map_index, int nonblock);
 
 
 	/**
-	* (hid_get_report_descriptor())
+	* @brief get report descriptor (hid_get_report_descriptor())
 	*/
 	virtual int api_get_report_descriptor(int n_map_index, unsigned char* buf, size_t buf_size);
 
@@ -229,30 +287,15 @@ public:
 	virtual const wchar_t* api_error(int n_map_index);
 
 private:
-	bool _is_open(int n_map_index);
-
-	/**
-	* @brief create primitive map item.
-	* @retutrn primitive map index
-	*/
-	int _create_new_map_primitive_item(const std::string& s_primitive_path, _mp::type_bm_dev composite_or_primitive_type);
-
-	/**
-	* @brief create composite map item.
-	* @retutrn composite m primitive or _vhid_info::const_map_index_invalid by b_return_index_is_composite_index parameter.
-	*/
-	int _create_new_map_compositive_item(int n_primitive_index, _mp::type_bm_dev composite_or_primitive_type, bool b_return_index_is_composite_index);
-
-	/**
-	* @brief increase composite type open counter!
-	* @return composite map index. or _vhid_info::const_map_index_invalid(error)
-	*/
-	int _open_composite(int n_primitive_index, _mp::type_bm_dev composite_type, bool b_shared_open);
+	std::tuple<bool, int, bool> _is_open(const char* path) const;
 
 private:
-	//compoitive type and primitive type map key index
-	// a key is equal to the key of m_map_hid_dev
+	// key is primitive map index.
+	// value is pair of vhid_info ptr and worker ptr
 	_type_map_ptr_vhid_info_ptr_worker m_map_ptr_hid_info_ptr_worker;
+
+	// new part
+	mutable std::mutex m_mutex_for_map;
 
 private://don't call these methods.
 	_vhid_api_briage(const _vhid_api_briage&);

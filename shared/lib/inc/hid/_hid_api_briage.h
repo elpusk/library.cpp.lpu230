@@ -56,7 +56,7 @@ public:
 	*/
 	static std::mutex& get_mutex_for_hidapi()
 	{
-		static std::mutex mutex_hidapi; //each hidapi function must be guarded by this mutex.
+		static std::mutex mutex_hidapi; //each hidapi function must be guarded by this mutex. all instance of this class must be shared this mutex.
 
 		return mutex_hidapi;
 	}
@@ -81,9 +81,15 @@ public:
 
 
 	/**
-	* open device with path. (hid_open_path())
-	* return the index of map(m_map_hid_dev), this value must be const_map_index_min~const_map_index_max, Multiples of const_map_index_inc_unit.
-	* -1(error)
+	* @brief open device
+	*
+	*   In windows, open with FILE_SHARE_READ|FILE_SHARE_WRITE flag
+	*
+	*   In linux, open by libusb_open()
+	*
+	* @return the index of map(m_map_hid_dev)
+	* 
+	*	-1 : error( including already open status )
 	*/
 	virtual int api_open_path(const char* path);
 

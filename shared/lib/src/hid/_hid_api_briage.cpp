@@ -12,6 +12,10 @@ extern "C"
 #include <cfgmgr32.h>
 #include <setupapi.h>
 
+#ifdef _DEBUG
+#include <atltrace.h>
+#endif
+
 #pragma comment(lib, "hid.lib")
 #pragma comment(lib, "setupapi.lib")
 #pragma comment(lib, "Cfgmgr32.lib")
@@ -481,12 +485,6 @@ std::tuple<bool, int, bool> _hid_api_briage::is_open(const char* path) const
 }
 
 
-/**
-* open device
-* In windows, open with FILE_SHARE_READ|FILE_SHARE_WRITE flag
-* In linux, open by libusb_open() -> 
-* return the index of map(m_map_hid_dev)
-*/
 int _hid_api_briage::api_open_path(const char* path)
 {
     std::lock_guard<std::mutex> lock(_hid_api_briage::get_mutex_for_hidapi());
@@ -509,8 +507,9 @@ int _hid_api_briage::api_open_path(const char* path)
         }
         
         if (m_map_hid_dev.find(n_map_index) != std::end(m_map_hid_dev)) {
-            hid_close(m_map_hid_dev[n_map_index].first);
-            m_map_hid_dev.erase(n_map_index);
+            return -1; // already open
+            //hid_close(m_map_hid_dev[n_map_index].first);
+            //m_map_hid_dev.erase(n_map_index);
         }
         m_map_hid_dev[n_map_index].first = p_dev;
         m_map_hid_dev[n_map_index].second = false;//primitive device always exclusive mode
@@ -592,7 +591,19 @@ int _hid_api_briage::api_read(int n_map_index, unsigned char* data, size_t lengt
     if (m_map_hid_dev.find(n_map_index) != std::end(m_map_hid_dev)) {
         p_dev = m_map_hid_dev[n_map_index].first;
     }
-    return hid_read(p_dev, data, length);
+
+    int n_result = hid_read(p_dev, data, length);
+#ifdef _WIN32
+#ifdef _DEBUG
+    if(n_result >0 ){
+        if (data[0] == 'R') {
+            ATLTRACE(L"0x%08X-RX[0] is 'R'.\n", n_map_index);
+        }
+    }
+    
+#endif
+#endif
+	return n_result;
 }
 
 const wchar_t* _hid_api_briage::api_error(int n_map_index)

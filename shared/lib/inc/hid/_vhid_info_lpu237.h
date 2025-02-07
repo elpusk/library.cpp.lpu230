@@ -7,6 +7,11 @@
 #include <mp_elpusk.h>
 #include <hid/_vhid_info.h>
 
+
+/**
+* this class is virtual hid device information of lpu237.
+* An instance of this class corresponds to a single physical device (primitive device).
+*/
 class _vhid_info_lpu237 : public _vhid_info
 {
 public:
@@ -18,6 +23,8 @@ private:
 	//third - bool : true(support shared open), false(support exclusive open)
 	//forth - int : additional value for generating compositive map index
 	typedef std::tuple<std::string, int, bool, int> _type_tuple_info_type;
+
+	//key is type , value is tuple of extra path, open counter, support shared open, additional value
 	typedef	std::map<_mp::type_bm_dev,_vhid_info_lpu237::_type_tuple_info_type> _type_map_info_type;
 
 public:
@@ -31,6 +38,7 @@ public:
 	{
 
 		for (auto item : m_const_v_extra) {
+			//key is type , value is tuple of extra path, open counter, support shared open, additional value
 			m_map_info[std::get<1>(item)] = std::make_tuple(std::get<0>(item), 0, std::get<2>(item), std::get<3>(item));
 		}//end for
 
@@ -92,8 +100,13 @@ public:
 	}
 
 	/**
-	* increase or decrease open counter of virtual device
-	* return first-true(success adjustment), second-adjusted counter, third-true(all open-counter of compositive type is zero - need primitve type is closed!)
+	* @brief increase or decrease open counter of virtual device
+	* 
+	* @return first-true(success adjustment)
+	* 
+	*	second-adjusted counter
+	* 
+	*	third-true(all open-counter of compositive type is zero - need primitve type is closed!)
 	*/
 	virtual std::tuple<bool,int, bool> ajust_open_cnt(_mp::type_bm_dev type, bool b_increase)
 	{
@@ -132,7 +145,17 @@ public:
 		return std::make_tuple(b_result, n_cnt, b_all_closed);
 	}
 private:
+	/**
+	* this set is const value. initialized in constructure. 
+	* the set of lpu237 primitive and compositive data.
+	* tuple.first - string : compositive additioanl path
+	* tuple.second - type : device type
+	* tuple.third - bool : true(support shared open), false(support exclusive open)
+	* tuple.forth - int : additional value for generating compositive map index
+	*/
 	const _vhid_info::type_set_path_type m_const_v_extra;
+
+	//key is type , value is tuple of extra path, open counter, support shared open, additional value
 	_type_map_info_type m_map_info;
 
 private://don't call these method

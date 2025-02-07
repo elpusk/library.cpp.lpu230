@@ -12,63 +12,64 @@
 #endif
 
 namespace _mp {
-    clibhid_dev::clibhid_dev(const clibhid_dev_info & info, _vhid_api_briage* p_vhid_api_briage) :
+    clibhid_dev::clibhid_dev(const clibhid_dev_info & info, _hid_api_briage* p_hid_api_briage) :
         m_n_dev(-1),
         m_b_run_th_worker(false),
         m_dev_info(info),
         m_b_detect_replugin(false),
-        m_p_vhid_api_briage(p_vhid_api_briage)
+        m_p_hid_api_briage(p_hid_api_briage)
     {
-       if (!m_p_vhid_api_briage) {
+       if (!m_p_hid_api_briage) {
             return;
         }
 
         bool b_composite(false);
         std::string s_path_composite(info.get_path_by_string());
-        std::string s_path_primitive;
-        _mp::type_bm_dev t(_mp::type_bm_dev_unknown);
-        bool b_support_shared_open(false);
 
-        std::tie(b_composite,t, s_path_primitive, b_support_shared_open) = _vhid_info::is_path_compositive_type(s_path_composite);
+        std::tie(b_composite, std::ignore, std::ignore, std::ignore) = _vhid_info::is_path_compositive_type(s_path_composite);
 
         int n_dev = -1;
 
         do {
+            if (!b_composite) {
+                //primitive type
+                n_dev = m_p_hid_api_briage->api_open_path(info.get_path_by_string().c_str());
+                if (n_dev < 0) {
+                    continue; //open error
+                }
 
-        } while (false);
-
-        if (!b_composite) {
-            n_dev = m_p_vhid_api_briage->api_open_path(info.get_path_by_string().c_str());
-            if (n_dev >= 0) {
                 int n_none_blocking = 1;//enable non-blocking.
 
-                if (m_p_vhid_api_briage->api_set_nonblocking(n_dev, n_none_blocking) == 0) {
+                if (m_p_hid_api_briage->api_set_nonblocking(n_dev, n_none_blocking) == 0) {
                     m_n_dev = n_dev;
                     m_b_run_th_worker = true;
                     m_ptr_th_worker = std::shared_ptr<std::thread>(new std::thread(&clibhid_dev::_worker, this));
                 }
                 else {
-                    m_p_vhid_api_briage->api_close(n_dev);
+                    m_p_hid_api_briage->api_close(n_dev);
                     m_n_dev = -1;
                 }
+                continue;
             }
-        }
-        else {
-            n_dev = m_p_vhid_api_briage->api_open_path(info.get_path_by_string().c_str());
-            if (n_dev >= 0) {
-                m_n_dev = n_dev;
-                m_b_run_th_worker = true;
-                m_ptr_th_worker = std::shared_ptr<std::thread>(new std::thread(&clibhid_dev::_worker, this));
+
+            // compositive type
+            n_dev = m_p_hid_api_briage->api_open_path(info.get_path_by_string().c_str());
+            if (n_dev < 0) {
+                continue;
             }
-        }
+            m_n_dev = n_dev;
+            m_b_run_th_worker = true;
+            m_ptr_th_worker = std::shared_ptr<std::thread>(new std::thread(&clibhid_dev::_worker, this));
+
+        } while (false);
     }
 
     clibhid_dev::~clibhid_dev()
     {
         m_b_run_th_worker = false;
 
-        if (m_p_vhid_api_briage && m_n_dev >= 0) {
-            m_p_vhid_api_briage->api_close(m_n_dev);
+        if (m_p_hid_api_briage && m_n_dev >= 0) {
+            m_p_hid_api_briage->api_close(m_n_dev);
         }
 
         if (m_ptr_th_worker) {
@@ -98,11 +99,11 @@ namespace _mp {
         std::vector<unsigned char> v(4096,0);//HID_API_MAX_REPORT_DESCRIPTOR_SIZE
 
         do {
-            if (!m_p_vhid_api_briage) {
+            if (!m_p_hid_api_briage) {
                 continue;
             }
             int n_result = 0;
-            n_result = m_p_vhid_api_briage->api_get_report_descriptor(m_n_dev, &v[0], v.size());
+            n_result = m_p_hid_api_briage->api_get_report_descriptor(m_n_dev, &v[0], v.size());
             if (n_result < 0) {
                 continue;
             }
@@ -210,7 +211,7 @@ namespace _mp {
         size_t n_offset = 0;
 
         do {
-            if (!m_p_vhid_api_briage) {
+            if (!m_p_hid_api_briage) {
                 continue;
             }
             if (v_tx.size() == 0) {
@@ -258,7 +259,7 @@ namespace _mp {
                 else {
                     next = _hid_api_briage::next_io_write;
                 }
-                n_result = m_p_vhid_api_briage->api_write(m_n_dev, &v_report[0], v_report.size(), next);
+                n_result = m_p_hid_api_briage->api_write(m_n_dev, &v_report[0], v_report.size(), next);
                 _mp::clog::get_instance().log_data_in_debug_mode(v_report, L"v_report = ", L"\n");
                 if (n_result < 0) {
                     b_result = false;
@@ -445,13 +446,14 @@ namespace _mp {
         bool b_result(false);
 
         do {
-            _clear_rx_q_with_lock();//flush rx q
-
             bool b_req_is_tx_rx_pair(false);
 
             if (ptr_req->get_request_type() == cqitem_dev::req_tx_rx) {
                 b_req_is_tx_rx_pair = true;
             }
+
+            _clear_rx_q_with_lock();//flush rx q
+
             if (!_write_with_lock(ptr_req->get_tx(), b_req_is_tx_rx_pair)) {//ERROR TX
                 continue;
             }
@@ -496,7 +498,8 @@ namespace _mp {
 
             //RX OK.
             if (ptr_req->get_request_type() == cqitem_dev::req_tx_rx) {
-                if (v_rx[0] != 'R') {
+                if (v_rx[0] != 'R') {//lpu237 specific protocol
+
                     //may be response is msr or ibutton data.
                     //therefore , you must pass this response. 
                     b_complete = false;
@@ -576,12 +579,12 @@ namespace _mp {
             int n_retry = n_max_try;
 
             do {
-                if (!m_p_vhid_api_briage) {
+                if (!m_p_hid_api_briage) {
                     break;//nothing to do
                 }
 
                 // this code is deadlock!!!!
-                n_result = m_p_vhid_api_briage->api_read(m_n_dev, &v_report_in[n_offset], v_report_in.size() - n_offset, v_report_in.size());//wait block or not by initialization
+                n_result = m_p_hid_api_briage->api_read(m_n_dev, &v_report_in[n_offset], v_report_in.size() - n_offset, v_report_in.size());//wait block or not by initialization
                 if (n_result == 0) {
                     if (n_offset == 0) {
                         break;//re-read transaction
@@ -602,7 +605,7 @@ namespace _mp {
                     // warning
                     b_need_deep_recover = true;//this case - recover is impossible!
 
-                    std::wstring s_error(m_p_vhid_api_briage->api_error(m_n_dev));
+                    std::wstring s_error(m_p_hid_api_briage->api_error(m_n_dev));
                     _mp::clog::get_instance().log_fmt_in_debug_mode(L"[D] rx return = %d. - %ls.\n", n_result, s_error.c_str());
 
                     m_q_rx_ptr_v.push(_mp::type_ptr_v_buffer());//indicate error of device usb io.

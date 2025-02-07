@@ -91,10 +91,9 @@ namespace _mp{
 
             std::for_each(std::begin(in_temp), std::end(in_temp), [&](const clibhid_dev_info& info) {
 
-                bool b_composite(false);
                 _mp::type_bm_dev t(_mp::type_bm_dev_unknown);
 
-                std::tie(b_composite,t,std::ignore,std::ignore) = _vhid_info::is_path_compositive_type(info.get_path_by_string());
+                std::tie(std::ignore,t,std::ignore,std::ignore) = _vhid_info::is_path_compositive_type(info.get_path_by_string());
                 if (std::find(v_type_filter.begin(), v_type_filter.end(), t) != std::end(v_type_filter)) {
                     //found matched type.
                     out.insert(info);
@@ -148,6 +147,43 @@ namespace _mp{
         
     clibhid_dev_info::~clibhid_dev_info()
     {
+    }
+
+    type_bm_dev clibhid_dev_info::get_type() const
+    {
+        type_bm_dev t(_mp::type_bm_dev_unknown);
+
+        do {
+			if (m_vs_path.empty()) {
+				continue;
+			}
+            t = _mp::type_bm_dev_hid;
+
+			if (m_s_extra_path.empty()) {
+				continue;
+			}
+
+            const _vhid_info::type_set_path_type const_v_extra(_vhid_info::get_extra_paths(
+                _mp::_elpusk::const_usb_vid,
+                _mp::_elpusk::_lpu237::const_usb_pid,
+                _mp::_elpusk::_lpu237::const_usb_inf_hid
+            ));
+
+			for (auto item : const_v_extra) {
+				if (m_s_extra_path.size() < std::get<0>(item).size()) {
+					continue;
+				}
+				if (std::get<0>(item).size() == 0) {
+					continue;
+				}
+				if (m_s_extra_path.compare(m_s_extra_path.size() - std::get<0>(item).size(), std::get<0>(item).size(), std::get<0>(item)) == 0) {
+					t = std::get<1>(item);
+					break;
+				}
+			}//end for
+
+        } while (false);
+        return t;
     }
         
     const std::wstring clibhid_dev_info::get_path_by_wstring() const

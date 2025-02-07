@@ -58,15 +58,19 @@ namespace _mp{
             m_set_usb_filter.emplace(_elpusk::const_usb_vid, _elpusk::_lpu238::const_usb_pid, _elpusk::_lpu238::const_usb_inf_hid);
             m_set_usb_filter.emplace(_elpusk::const_usb_vid, _elpusk::const_usb_pid_hidbl, _elpusk::const_usb_inf_hidbl);
 
-            m_ptr_vhid_api_briage = std::make_shared<_vhid_api_briage>();
+            //
+            // original code
+            // m_ptr_hid_api_briage = std::make_shared<_hid_api_briage>();//create single instance of hidapi library
+            // for supporting, virtual device. code is create child of _hid_api_briage class.
+			m_ptr_hid_api_briage = std::make_shared<_vhid_api_briage>();//create single instance of virtual hidapi library
 
-            if (m_ptr_vhid_api_briage->is_ini()) {
+            if (m_ptr_hid_api_briage->is_ini()) {
                 m_b_ini = true;
 
                 m_set_cur_dev_info = _get_device_set();
 
                 for (const clibhid_dev_info& item : m_set_cur_dev_info) {
-                    auto ptr_dev = std::make_shared<clibhid_dev>(item, m_ptr_vhid_api_briage.get());// create & open clibhid_dev.
+                    auto ptr_dev = std::make_shared<clibhid_dev>(item, m_ptr_hid_api_briage.get());// create & open clibhid_dev.
                     if (!ptr_dev) {
                         continue;
                     }
@@ -74,7 +78,7 @@ namespace _mp{
                         continue;
                     }
                     auto ptr_info = std::make_shared<clibhid_dev_info>(item);
-                    m_map_ptrs.emplace(item.get_path_by_string(), std::make_pair(ptr_dev, ptr_info));
+                    m_map_pair_ptrs.emplace(item.get_path_by_string(), std::make_pair(ptr_dev, ptr_info));
                 }//end for
 
                 //
@@ -96,21 +100,21 @@ namespace _mp{
             }
 
             // 
-            for (auto item : m_map_ptrs) {
+            for (auto item : m_map_pair_ptrs) {
                 item.second.first.reset();
                 item.second.second.reset();
             }//
-            m_map_ptrs.clear();
+            m_map_pair_ptrs.clear();
 
-            m_ptr_vhid_api_briage.reset();//remove briage
+            m_ptr_hid_api_briage.reset();//remove briage
         }
 
         clibhid_dev::type_wptr clibhid::_get_device(const std::string& s_path)
         {
             clibhid_dev::type_wptr wptr;
             do {
-                auto it = m_map_ptrs.find(s_path);
-                if (it != m_map_ptrs.end()) {
+                auto it = m_map_pair_ptrs.find(s_path);
+                if (it != m_map_pair_ptrs.end()) {
                     wptr = it->second.first;
                 }
             } while (false);
@@ -233,10 +237,10 @@ namespace _mp{
                 /**
                 * don't use the hid_enumerate() of hidapi. it will occur packet-losting. 
                 */
-                if (!m_ptr_vhid_api_briage) {
+                if (!m_ptr_hid_api_briage) {
                     return st;
                 }
-                auto set_dev = m_ptr_vhid_api_briage->hid_enumerate();
+                auto set_dev = m_ptr_hid_api_briage->hid_enumerate();
 
                 for (auto item : set_dev) {
                     st.emplace(
@@ -251,7 +255,7 @@ namespace _mp{
 
             // checks the device critial error 
             clibhid_dev_info::type_set st_must_be_removed;
-            for (auto item : m_map_ptrs) {
+            for (auto item : m_map_pair_ptrs) {
                 if (!item.second.first) {
                     continue;
                 }
@@ -289,18 +293,18 @@ namespace _mp{
         void clibhid::_update_device_map()
         {
             do {
-                if (!m_ptr_vhid_api_briage) {
+                if (!m_ptr_hid_api_briage) {
                     continue;
                 }
 
                 //remove
                 for (auto item : m_set_removed_dev_info) {
-                    m_map_ptrs.erase(item.get_path_by_string());
+                    m_map_pair_ptrs.erase(item.get_path_by_string());
                 }
 
                 //insert
                 for (const clibhid_dev_info & item : m_set_inserted_dev_info) {
-                    auto ptr_dev = std::make_shared<clibhid_dev>(item, m_ptr_vhid_api_briage.get()); // create & open clibhid_dev.
+                    auto ptr_dev = std::make_shared<clibhid_dev>(item, m_ptr_hid_api_briage.get()); // create & open clibhid_dev.
                     if (!ptr_dev) {
                         continue;
                     }
@@ -308,7 +312,7 @@ namespace _mp{
                         continue;
                     }
                     auto ptr_info = std::make_shared< clibhid_dev_info>(item);
-                    m_map_ptrs.emplace(item.get_path_by_string(), std::make_pair(ptr_dev, ptr_info));
+                    m_map_pair_ptrs.emplace(item.get_path_by_string(), std::make_pair(ptr_dev, ptr_info));
                 }//end for
             } while (false);
         }

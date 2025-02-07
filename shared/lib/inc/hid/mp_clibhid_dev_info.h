@@ -45,6 +45,8 @@ namespace _mp{
         
         virtual ~clibhid_dev_info();
         
+		type_bm_dev get_type() const;
+
         const std::wstring get_path_by_wstring() const;
         const std::string get_path_by_string() const;
 

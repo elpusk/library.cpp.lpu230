@@ -204,7 +204,7 @@ private:
 	HMODULE m_hMode;
 #else
 	void* m_hMode;
-#endif _WIN32
+#endif //_WIN32
 	cdll_service::type_sd_execute m_sd_execute;
 	cdll_service::type_sd_cancel m_sd_cancel;
 	cdll_service::type_sd_removed m_sd_removed;

@@ -29,7 +29,7 @@ namespace _mp{
         typedef std::shared_ptr< clibhid > type_ptr;
 
         typedef std::pair< clibhid_dev::type_ptr, clibhid_dev_info::type_ptr> pair_ptrs;
-        typedef std::map< std::string, clibhid::pair_ptrs > type_map_ptrs;
+        typedef std::map< std::string, clibhid::pair_ptrs > type_map_pair_ptrs;
 
         /**
         * callback funtion prototype
@@ -89,8 +89,9 @@ namespace _mp{
         void _update_device_map();
 
     protected:
-		//virtual hidapi library instance
-        _vhid_api_briage::type_ptr m_ptr_vhid_api_briage;
+
+        // virtual hidapi library instance
+        _hid_api_briage::type_ptr m_ptr_hid_api_briage;
 
 		void* m_p_user;// user parameter for callback(m_cb)
 		clibhid::type_callback_pluginout m_cb; // callback function for plugin out.(change of device list)
@@ -99,7 +100,7 @@ namespace _mp{
         std::mutex m_mutex;
 
 		// key : device path, value : first - device instance, second - device info instance
-        clibhid::type_map_ptrs m_map_ptrs;
+        clibhid::type_map_pair_ptrs m_map_pair_ptrs;
 
 		std::shared_ptr<std::thread> m_ptr_th_pluginout; //thread for detect plug in/out device.
 		std::atomic<bool> m_b_run_th_pluginout; //true - run, false - stop of pluginout thread.

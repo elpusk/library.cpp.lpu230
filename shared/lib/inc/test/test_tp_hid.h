@@ -745,11 +745,6 @@ namespace _test{
 						}
 					}//end for type
 
-					//return 0;
-
-
-
-
 					const _mp::clibhid_dev_info& item(*st.begin());
 					std::wcout << std::hex << item.get_vendor_id() << L", " << item.get_product_id() << L" : ";
 					std::wcout << item.get_path_by_wstring() << std::endl;
@@ -814,10 +809,237 @@ namespace _test{
 
 				return 0;
 			}
-        public:
+
+			/**
+			* io test of the first connected primitive device.(100 times)
+			* 
+			*/
+			static int test7()
+			{
+				int n_result(0);
+				bool b_result(false);
+				_mp::clibhid_dev_info::type_set st_dev_info;
+				_mp::clibhid_dev_info test_dev_info;
+
+				int n_test_count = 1000;
+
+				do {
+					// get connected device info.
+					std::tie(b_result,st_dev_info) = tp_hid::_get_connected_device_info();
+					if (!b_result) {
+						std::wcout << L"error - get connected device info." << std::endl;
+						n_result = -1;
+						continue;
+					}
+					if (st_dev_info.empty()) {
+						std::wcout << L"no device." << std::endl;
+						n_result = 0;
+						continue;
+					}
+
+					// filter device info set by device type.
+					_mp::clibhid_dev_info::type_set st_dev_info_filtered;
+					std::set<_mp::type_bm_dev> set_filter{ _mp::type_bm_dev_hid };
+					st_dev_info_filtered = tp_hid::_filter_device_info_set_by_device_type(st_dev_info, set_filter);
+					if (st_dev_info_filtered.empty()) {
+						std::wcout << L"none filtered device." << std::endl;
+						n_result = 0;
+						continue;
+					}
+
+					std::wcout << L"= filtered devices. = " << std::endl;
+					for (auto item : st_dev_info_filtered) {
+						std::wcout << item.get_path_by_wstring() << std::endl;
+					}//end for
+
+					// get the first device.
+					test_dev_info = *st_dev_info_filtered.begin();
+					tp_hid::_display_device_info(test_dev_info);
+
+
+					for (int i = 0; i < n_test_count; i++) {
+						std::wcout << L"TEST" << std::dec << i + 1 << std::endl;
+						
+						std::chrono::duration<double> elapsed;
+						bool b_test(false);
+
+						std::tie(b_test, elapsed) = tp_hid::_test_one_byte_request(test_dev_info, 'X');
+						if (!b_test) {
+							std::wcout << L"test fail X - " << L"Elapsed time: " << elapsed.count() << L" seconds" << std::endl;
+							break;
+						}
+
+						std::wcout << L"success test - " << L"Elapsed time: " << elapsed.count() << L" seconds" << std::endl;
+						//
+						std::tie(b_test, elapsed) = tp_hid::_test_one_byte_request(test_dev_info, 'Y');
+						if (!b_test) {
+							std::wcout << L"test fail Y - " << L"Elapsed time: " << elapsed.count() << L" seconds" << std::endl;
+							break;
+						}
+
+						std::wcout << L"success test - " << L"Elapsed time: " << elapsed.count() << L" seconds" << std::endl;
+
+					}//end for
+
+
+				} while (false);
+
+				return n_result;
+			}
+
+		private:
+			/**
+			* @brief get device info of all connected devices.
+			* and display it.
+			* @param[in] none.
+			* @return std::pair<bool,std::_mp::clibhid_dev_info::type_set> : 
+			* first : true - success, false - fail.
+			* second : device info set.
+			*/
+			static std::pair<bool, _mp::clibhid_dev_info::type_set> _get_connected_device_info()
+			{
+				bool b_result(false);
+				_mp::clibhid_dev_info::type_set st;
+				do {
+					_mp::clibhid& lib_hid(_mp::clibhid::get_instance());
+					if (!lib_hid.is_ini()) {
+						continue;
+					}
+
+					std::wcout << L"the connected device." << std::endl;
+					st = lib_hid.get_cur_device_set();
+					for (const _mp::clibhid_dev_info& item : st) {
+						std::wcout << std::hex << item.get_vendor_id() << L", " << item.get_product_id() << L" : ";
+						std::wcout << item.get_path_by_wstring() << std::endl;
+						std::wcout << item.get_interface_number() << std::endl;
+					}//end for
+
+					b_result = true;
+				} while (false);
+				return std::make_pair(b_result,st);
+			}
+
+			/**
+			* @brief filter device info set by device type.
+			* @param[in,const] _mp::clibhid_dev_info::type_set& st_in : input device info set.
+			* @param[in,const] std::set<_mp::type_bm_dev bm_dev> : device type set. - filtering st_in.
+			* @return _mp::clibhid_dev_info::type_set : filtered device info set.
+			*/
+			static _mp::clibhid_dev_info::type_set _filter_device_info_set_by_device_type(
+				const _mp::clibhid_dev_info::type_set& st_in,
+				const std::set<_mp::type_bm_dev> set_bm_dev
+			)
+			{
+				_mp::clibhid_dev_info::type_set st_out;
+				do {
+					if (st_in.empty()) {
+						continue;
+					}
+					if (set_bm_dev.empty()) {
+						st_out = st_in;
+						continue;
+					}
+					for (const _mp::clibhid_dev_info& item : st_in) {
+						if (set_bm_dev.find(item.get_type()) != std::end(set_bm_dev)) {
+							st_out.insert(item);
+						}
+					}//end for
+				} while (false);
+				return st_out;
+			}
+
+
+			/**
+			* @brief dislay device info.
+			* @param[in,const] _mp::clibhid_dev_info dev_info : device info instance.
+			* @return void.
+			*/
+			static void _display_device_info(const _mp::clibhid_dev_info& dev_info)
+			{
+				std::wcout << L"the test target : " << dev_info.get_path_by_wstring() << std::endl;
+				std::wcout << std::hex << dev_info.get_vendor_id() << L", " << dev_info.get_product_id() << L" : ";
+				std::wcout << dev_info.get_path_by_wstring() << std::endl;
+				std::wcout << dev_info.get_interface_number() << std::endl;
+			}
+
+			/**
+			* @brief test "enter config". 
+			* @param[in,const] _mp::clibhid_dev_info dev_info : device info instance.
+			* @return std::pair<bool,std::chrono::duration<double>> : 
+			* first : true - success, false - fail.
+			* second : elapsed time.
+			*/
+			static std::pair<bool, std::chrono::duration<double>> _test_one_byte_request(const _mp::clibhid_dev_info& dev_info, unsigned char c_cmd)
+			{
+				bool b_result(false);
+				std::chrono::duration<double> elapsed;
+				do {
+					_mp::cwait waiter;
+					int n_event = waiter.generate_new_event();
+					std::pair<_mp::cwait*, int> pair_p_wait_n_event(&waiter, n_event);
+
+					_mp::clibhid& lib_hid(_mp::clibhid::get_instance());
+					if (!lib_hid.is_ini()) {
+						continue;
+					}
+					_mp::clibhid_dev::type_wptr wptr_dev = lib_hid.get_device(dev_info);
+					if (wptr_dev.expired()) {
+						continue;
+					}
+					
+					//
+					_mp::type_v_buffer v_tx(64, 0);
+					v_tx[0] = c_cmd;
+					pair_p_wait_n_event.first->reset(pair_p_wait_n_event.second);
+
+					auto start = std::chrono::high_resolution_clock::now();//start timer
+
+					wptr_dev.lock()->start_write_read(v_tx, tp_hid::_cb_rx, &pair_p_wait_n_event);
+
+					int n_evt = _mp::cwait::const_event_timeout;
+					int n_point = 0;
+					int n_wait_cnt = 200;
+
+					//wait for response
+					do {
+						n_evt = _mp::cwait::const_event_timeout;
+						n_evt = pair_p_wait_n_event.first->wait_for_one_at_time(0);
+						if (n_evt == pair_p_wait_n_event.second) {
+							b_result = true;
+							break;
+						}
+						if (wptr_dev.expired()) {
+							std::wcout << std::endl;
+							std::cout << "device is expired" << std::endl;
+							break;
+						}
+
+						std::this_thread::sleep_for(std::chrono::milliseconds(10));
+						std::wcout << L".";
+						++n_point;
+						if (n_point % 25 == 0) {
+							std::wcout << std::endl;
+						}
+
+						if (n_wait_cnt-- <= 0) {
+							std::cout << "processing timeout" << std::endl;
+							break;
+						}
+					} while (true);
+
+					
+					auto end = std::chrono::high_resolution_clock::now();//stop timer
+					elapsed = end - start;
+				} while (false);
+				return std::make_pair(b_result, elapsed);
+			}
+
+
+		public:
             tp_hid();
             ~tp_hid();
         private:
 	};
+
     
 }//the end of _test name space

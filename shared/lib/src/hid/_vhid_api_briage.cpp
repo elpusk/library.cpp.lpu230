@@ -25,10 +25,6 @@ _vhid_api_briage::~_vhid_api_briage()
     m_map_ptr_hid_info_ptr_worker.clear();
 }
 
-/**
-* get connected information of devices.
-* return  each item's 1'st - device apth, 2'nd - usb vendor id, 3'th - usb product id, 4'th - usb interface number, 5'th - extra data
-*/
 std::set< std::tuple<std::string, unsigned short, unsigned short, int, std::string> > _vhid_api_briage::hid_enumerate()
 {
 
@@ -69,101 +65,81 @@ std::set< std::tuple<std::string, unsigned short, unsigned short, int, std::stri
     return set_dev_out;
 }
 
-/**
-* @brief check is open or not
-* @param path - primitive or composite path
-* @return first true - open, false not open or error, second - the opened device of the index of map. third - true(exclusive open), false(shared open or not open )
-*/
 std::tuple<bool, int, bool> _vhid_api_briage::is_open(const char* path) const
 {
-    bool b_result(false);
-    int n_index(-1);
-    bool b_exclusive_open(false);
-
-    do {
-        bool b_compositive(false);
-        _mp::type_bm_dev t(_mp::type_bm_dev_unknown);
-        std::string s_primitive;
-        bool b_support_shared_open(false);
-
-        std::tie(b_compositive, t, s_primitive, b_support_shared_open) = _vhid_info::is_path_compositive_type(std::string(path));
-
-        if (!b_compositive) {
-            //primitive
-            std::tie(b_result, n_index, b_exclusive_open) = _hid_api_briage::is_open(path);
-            continue;
-        }
-
-        // composite type
-        auto it = m_map_ptr_hid_info_ptr_worker.find(n_index);
-        if (it == std::end(m_map_ptr_hid_info_ptr_worker)) {
-            continue;
-        }
-        b_result = it->second.first->is_open(t);
-        b_exclusive_open = !b_support_shared_open;
-    } while (false);
-
-    return std::make_tuple(b_result, n_index, b_exclusive_open);
+    std::lock_guard<std::mutex> lock(m_mutex_for_map);
+    return _is_open(path);
 }
 
-/**
-* primitive type is exclusive open.
-* 
-* return the index of map(m_map_hid_dev)
-*/
 int _vhid_api_briage::api_open_path(const char* path)
 {
     int n_map_index(_vhid_info::const_map_index_invalid);
     int n_primitive_map_index(_vhid_info::const_map_index_invalid);
-    int n_compositive_map_index(_vhid_info::const_map_index_invalid);
-    bool b_compositive(false);
     _mp::type_bm_dev t(_mp::type_bm_dev_unknown);
     std::string s_primitive;
     bool b_support_shared_open(false);
 
     do {
+        std::lock_guard<std::mutex> lock(m_mutex_for_map);
         if (path == nullptr) {
             continue;
         }
 
-        std::tie(b_compositive, t, s_primitive, b_support_shared_open) = _vhid_info::is_path_compositive_type(std::string(path));
+        std::tie(std::ignore, t, s_primitive, b_support_shared_open) = _vhid_info::is_path_compositive_type(std::string(path));
+        bool b_open(false);
 
-        if (!b_compositive) {
-            //primitive type. 
-            if (std::get<0>(_hid_api_briage::is_open(s_primitive.c_str()))) {
-                continue;//already open
+        std::tie(b_open, n_primitive_map_index, std::ignore ) = _hid_api_briage::is_open(s_primitive.c_str());
+
+        if (!b_open) {
+            n_map_index = n_primitive_map_index = _hid_api_briage::api_open_path(s_primitive.c_str());
+            if (n_primitive_map_index < 0) {
+                continue;// for compositive, open primitive error.
             }
 
-            //primitive type is exclusive open.always open by exclusive mode
-            n_map_index = n_primitive_map_index = _create_new_map_primitive_item(s_primitive, t);//return primitive index
+#ifdef _WIN32
+#ifdef _DEBUG
+            ATLTRACE(L"_create_new_map_primitive_item : index = 0x%x.\n", n_primitive_map_index);
+#endif
+#endif
+        }
+
+        // here primitive is opened.
+        auto it = m_map_ptr_hid_info_ptr_worker.find(n_primitive_map_index);
+        if (it == std::end(m_map_ptr_hid_info_ptr_worker)) {
+            m_map_ptr_hid_info_ptr_worker[n_primitive_map_index] =
+                std::make_pair(
+                    std::make_shared<_vhid_info_lpu237>(t), // in constructure, type open counter is increased.
+                    std::make_shared<_q_worker>(n_primitive_map_index, this)
+                );
+            //convert primitive index to composite index.
+            n_map_index = _vhid_info::get_compositive_map_index_from_primitive_map_index(t, n_primitive_map_index);
+
+#ifdef _WIN32
+#ifdef _DEBUG
+            ATLTRACE(L"_create_new_map_compositive_item : index = 0x%x.\n", n_map_index);
+#endif
+#endif
             continue;
         }
 
-        /////////////////////////////////////
-        //here path is compositive type
-
-        bool b_composite_open(false);
-        bool b_is_exclusive_open(false);
-        std::tie(b_composite_open, n_map_index, b_is_exclusive_open) = is_open(path);
-        if (b_composite_open) {
-            //already open
-            n_map_index = n_compositive_map_index = _open_composite(n_map_index, t, b_support_shared_open);
-            continue;
+        //already opened 
+        if (!it->second.first->can_be_open(t, !b_support_shared_open)) {
+            n_map_index = _vhid_info::const_map_index_invalid;
+            continue; // thie type cannt be open by shared-mode.
         }
 
-        //not open
-        bool b_primitive_open(false);
+        // compositive shared open or primitive open
+        bool b_adjustment(false);
 
-        std::tie(b_primitive_open, n_primitive_map_index, b_is_exclusive_open) = _hid_api_briage::is_open(s_primitive.c_str());
-        if (!b_primitive_open) {
-            n_map_index = n_primitive_map_index = _create_new_map_primitive_item(s_primitive, t);//return primitive index
-            if (n_primitive_map_index == _vhid_info::const_map_index_invalid) {
-                continue;
-            }
+        std::tie(b_adjustment, std::ignore, std::ignore) = it->second.first->ajust_open_cnt(t, true);
+        if (!b_adjustment) {
+            n_map_index = _vhid_info::const_map_index_invalid;
+            continue;//open failure....... previous opened compositive isn't support shared open! 
         }
 
-        n_map_index = _open_composite(n_primitive_map_index, t, b_support_shared_open);
-        n_map_index = _create_new_map_compositive_item(n_primitive_map_index, t, true);//return compositive index
+        //convert primitive index to composite index.
+        n_map_index = _vhid_info::get_compositive_map_index_from_primitive_map_index(t, n_primitive_map_index);
+        
     } while (false);
 
     
@@ -173,29 +149,38 @@ int _vhid_api_briage::api_open_path(const char* path)
 void _vhid_api_briage::api_close(int n_map_index)
 {
     do {
-        int n_primitive = _vhid_info::get_primitive_map_index_from_compositive_map_index(n_map_index);
+        std::lock_guard<std::mutex> lock(m_mutex_for_map);
+
+        int n_primitive(-1);
+        bool b_compositive_type(false);
+        std::tie(n_primitive, b_compositive_type) = _vhid_info::get_primitive_map_index_from_compositive_map_index(n_map_index);
         if (n_primitive < 0) {
             continue;
         }
 
         auto it = m_map_ptr_hid_info_ptr_worker.find(n_primitive);
         if (it == std::end(m_map_ptr_hid_info_ptr_worker)) {
-            _hid_api_briage::api_close(n_primitive);
-            continue;//primiary type close only
+            continue;//not opened
         }
 
-        //compositive type
+        // here opened.
+        // 
+        //get type from index
         auto t = _vhid_info::get_type_from_compositive_map_index(n_map_index);
         if (t == _mp::type_bm_dev_unknown) {
             continue;
         }
 
-        auto result =  it->second.first->ajust_open_cnt(t,false);//decrease open counter
-        if (!std::get<0>(result)) {
+        bool b_result(false);
+        bool b_all_compositive_type_are_zeros(false);
+
+        //decrease open counter
+        std::tie(b_result,std::ignore,b_all_compositive_type_are_zeros) = it->second.first->ajust_open_cnt(t, false);
+        if (!b_result) {
             continue;
         }
 
-        if (std::get<2>(result)) {
+        if (b_all_compositive_type_are_zeros) {
             //all compositive type is closed
             m_map_ptr_hid_info_ptr_worker.erase(it);
             _hid_api_briage::api_close(n_primitive);
@@ -206,10 +191,16 @@ void _vhid_api_briage::api_close(int n_map_index)
 
 int _vhid_api_briage::api_set_nonblocking(int n_map_index, int nonblock)
 {
+    bool b_run(false);
     int n_result(-1);
-    int n_primitive = _vhid_info::get_primitive_map_index_from_compositive_map_index(n_map_index);
+    int n_primitive(-1);
+    _vhid_api_briage::_q_item::type_ptr ptr_item;
+
+    std::tie(n_primitive,std::ignore) = _vhid_info::get_primitive_map_index_from_compositive_map_index(n_map_index);
 
     do {
+        std::lock_guard<std::mutex> lock(m_mutex_for_map);
+
         if (n_primitive == _vhid_info::const_map_index_invalid) {
             continue;
         }
@@ -230,10 +221,18 @@ int _vhid_api_briage::api_set_nonblocking(int n_map_index, int nonblock)
             continue;
         }
 
-        _vhid_api_briage::_q_item::type_ptr ptr_item(new _vhid_api_briage::_q_item(n_map_index));
+        ptr_item = std::make_shared<_vhid_api_briage::_q_item>(n_map_index);
         ptr_item->setup_for_set_nonblocking(nonblock);
-
         if (!it->second.second->push(ptr_item)) {
+            continue;
+        }
+
+        b_run = true;
+
+    } while (false);
+
+    do {
+        if (!b_run) {
             continue;
         }
         //waits response
@@ -247,10 +246,15 @@ int _vhid_api_briage::api_set_nonblocking(int n_map_index, int nonblock)
 
 int _vhid_api_briage::api_get_report_descriptor(int n_map_index, unsigned char* buf, size_t buf_size)
 {
+    bool b_run(false);
     int n_result(-1);
-    int n_primitive = _vhid_info::get_primitive_map_index_from_compositive_map_index(n_map_index);
+    int n_primitive(-1);
+    _vhid_api_briage::_q_item::type_ptr ptr_item;
+
+    std::tie(n_primitive, std::ignore) = _vhid_info::get_primitive_map_index_from_compositive_map_index(n_map_index);
 
     do {
+        std::lock_guard<std::mutex> lock(m_mutex_for_map);
         if (n_primitive == _vhid_info::const_map_index_invalid) {
             continue;
         }
@@ -260,10 +264,18 @@ int _vhid_api_briage::api_get_report_descriptor(int n_map_index, unsigned char* 
             continue;
         }
 
-        _vhid_api_briage::_q_item::type_ptr ptr_item(new _vhid_api_briage::_q_item(n_map_index));
+        ptr_item = std::make_shared<_vhid_api_briage::_q_item>(n_map_index);
         ptr_item->setup_for_get_report_descriptor(buf, buf_size);
 
         if (!it->second.second->push(ptr_item)) {
+            continue;
+        }
+
+        b_run = true;
+    } while (false);
+
+    do {
+        if (!b_run) {
             continue;
         }
         //waits response
@@ -278,10 +290,15 @@ int _vhid_api_briage::api_get_report_descriptor(int n_map_index, unsigned char* 
 
 int _vhid_api_briage::api_write(int n_map_index, const unsigned char* data, size_t length, _hid_api_briage::type_next_io next)
 {
+    bool b_run(false);
     int n_result(-1);
-    int n_primitive = _vhid_info::get_primitive_map_index_from_compositive_map_index(n_map_index);
+    int n_primitive(-1);
+    _vhid_api_briage::_q_item::type_ptr ptr_item;
+
+    std::tie(n_primitive, std::ignore) = _vhid_info::get_primitive_map_index_from_compositive_map_index(n_map_index);
 
     do {
+        std::lock_guard<std::mutex> lock(m_mutex_for_map);
         if (n_primitive == _vhid_info::const_map_index_invalid) {
             continue;
         }
@@ -291,13 +308,21 @@ int _vhid_api_briage::api_write(int n_map_index, const unsigned char* data, size
             continue;
         }
 
-        _vhid_api_briage::_q_item::type_ptr ptr_item(new _vhid_api_briage::_q_item(n_map_index));
+        ptr_item = std::make_shared<_vhid_api_briage::_q_item>(n_map_index);
         ptr_item->setup_for_write(data, length,next);
 
         if (!it->second.second->push(ptr_item)) {
             continue;
         }
 
+        b_run = true;
+    } while (false);
+
+    do {
+        if (!b_run) {
+            continue;
+        }
+        //
         if (next == _hid_api_briage::next_io_none) {
             //waits response
             ptr_item->waits();
@@ -307,7 +332,6 @@ int _vhid_api_briage::api_write(int n_map_index, const unsigned char* data, size
         else {
             n_result = length;//virtual success.
         }
-
     } while (false);
 
     return n_result;
@@ -315,10 +339,16 @@ int _vhid_api_briage::api_write(int n_map_index, const unsigned char* data, size
 
 int _vhid_api_briage::api_read(int n_map_index, unsigned char* data, size_t length, size_t n_report)
 {
+    bool b_run(false);
     int n_result(-1);
-    int n_primitive = _vhid_info::get_primitive_map_index_from_compositive_map_index(n_map_index);
+    int n_primitive(-1);
+    _vhid_api_briage::_q_item::type_ptr ptr_item;
+
+    std::tie(n_primitive, std::ignore) = _vhid_info::get_primitive_map_index_from_compositive_map_index(n_map_index);
 
     do {
+        std::lock_guard<std::mutex> lock(m_mutex_for_map);
+
         if (n_primitive == _vhid_info::const_map_index_invalid) {
             continue;
         }
@@ -328,17 +358,26 @@ int _vhid_api_briage::api_read(int n_map_index, unsigned char* data, size_t leng
             continue;
         }
 
-        _vhid_api_briage::_q_item::type_ptr ptr_item(new _vhid_api_briage::_q_item(n_map_index));
+        ptr_item = std::make_shared<_vhid_api_briage::_q_item>(n_map_index);
         ptr_item->setup_for_read(data, length,n_report);
 #ifdef _WIN32
 #ifdef _DEBUG
-        ATLTRACE(L"0x%08X-read(%u)\n", n_map_index, length);
+        //ATLTRACE(L"0x%08X-read(%u)\n", n_map_index, length);
 #endif
 #endif
 
         if (!it->second.second->push(ptr_item)) {
             continue;
         }
+
+        b_run = true;
+    } while (false);
+
+    do {
+        if (!b_run) {
+            continue;
+        }
+
         //waits response
         ptr_item->waits();
         //rx data will be save on buf directly.
@@ -347,14 +386,9 @@ int _vhid_api_briage::api_read(int n_map_index, unsigned char* data, size_t leng
 
 #ifdef _WIN32
 #ifdef _DEBUG
-        
-        if (n_result > 0) {
-            ATLTRACE(L"0x%08X-RX n_result = %d\n", n_map_index, n_result);
-            ATLTRACE(L"0x%08X-RX size = %d\n", n_map_index, v_rx.size());
-        }
+        ATLTRACE(L"0x%08X-RX (n_result,size) = (%d,%d)\n", n_map_index, n_result, v_rx.size());
 #endif
 #endif
-
     } while (false);
 
     return n_result;
@@ -362,137 +396,50 @@ int _vhid_api_briage::api_read(int n_map_index, unsigned char* data, size_t leng
 
 const wchar_t* _vhid_api_briage::api_error(int n_map_index)
 {
-    int n_primitive = _vhid_info::get_primitive_map_index_from_compositive_map_index(n_map_index);
+    int n_primitive(-1);
+    std::tie(n_primitive, std::ignore) = _vhid_info::get_primitive_map_index_from_compositive_map_index(n_map_index);
     return _hid_api_briage::api_error(n_map_index);
 }
 
-bool _vhid_api_briage::_is_open(int n_compositive_map_index)
+std::tuple<bool, int, bool> _vhid_api_briage::_is_open(const char* path) const
 {
     bool b_open(false);
+    int n_primitive_map_index(-1);
+    int n_compositive_map_index(-1);
+    bool b_exclusive_open(false);
 
     do {
-        int n_primitive = _vhid_info::get_primitive_map_index_from_compositive_map_index(n_compositive_map_index);
-        auto it_p = m_map_hid_dev.find(n_primitive);
-        if (it_p == std::end(m_map_hid_dev)) {
+        _mp::type_bm_dev t(_mp::type_bm_dev_unknown);
+        std::string s_primitive;
+        bool b_support_shared_open(false);
+
+        std::tie(std::ignore, t, s_primitive, b_support_shared_open) = _vhid_info::is_path_compositive_type(std::string(path));
+        std::tie(b_open, n_primitive_map_index, std::ignore) = _hid_api_briage::is_open(s_primitive.c_str()); //check primitive type
+
+        // the base type is opened ?
+        if (!b_open) {
             continue;
         }
 
-        auto it_c = m_map_ptr_hid_info_ptr_worker.find(n_primitive);
-        if (it_c == std::end(m_map_ptr_hid_info_ptr_worker)) {
+        auto it_info = m_map_ptr_hid_info_ptr_worker.find(n_primitive_map_index);
+        if (it_info == std::end(m_map_ptr_hid_info_ptr_worker)) {
+            b_open = false; // not opened compositive type
             continue;
         }
 
-        auto t = _vhid_info::get_type_from_compositive_map_index(n_compositive_map_index);
-        if (!it_c->second.first) {
-            continue;
-        }
-
-        b_open = it_c->second.first->is_open(t);
+        //
+        b_exclusive_open = !b_support_shared_open;
 
     } while (false);
 
-    return b_open;
+    return std::make_tuple(b_open, n_primitive_map_index, b_exclusive_open);
+
 }
 
 /**
-* @brief create primitive map item.
-* @retutrn primitive map index
+* ***************************************************
+* _vhid_api_briage::_q_worker member function bodies
 */
-int _vhid_api_briage::_create_new_map_primitive_item(const std::string& s_primitive_path, _mp::type_bm_dev composite_or_primitive_type)
-{
-    int n_primitive(_vhid_info::const_map_index_invalid);
-    int n_compositive(_vhid_info::const_map_index_invalid);
-
-    do {
-        if ( (composite_or_primitive_type & 0xFFFF) != 0) {
-            continue; //type is compositive
-        }
-        n_primitive = _hid_api_briage::api_open_path(s_primitive_path.c_str());
-        if (n_primitive == _vhid_info::const_map_index_invalid) {
-            continue;//open failure
-        }
-
-        m_map_ptr_hid_info_ptr_worker[n_primitive] =
-            std::make_pair(
-                std::make_shared<_vhid_info_lpu237>(composite_or_primitive_type),
-                std::make_shared<_q_worker>(n_primitive, this)
-            );
-
-#ifdef _WIN32
-#ifdef _DEBUG
-        ATLTRACE(L"_create_new_map_primitive_item : index = 0x%x.\n", n_primitive);
-#endif
-#endif
-
-    } while (false);
-
-    return n_primitive;
-}
-
-
-/**
-* @brief create composite map item.
-* @retutrn composite m primitive or _vhid_info::const_map_index_invalid by b_return_index_is_composite_index parameter.
-*/
-int _vhid_api_briage::_create_new_map_compositive_item(int n_primitive_index, _mp::type_bm_dev composite_or_primitive_type, bool b_return_index_is_composite_index)
-{
-    int n_compositive(_vhid_info::const_map_index_invalid);
-
-    do {
-        if ((composite_or_primitive_type & 0xFFFF) == 0) {
-            continue; //type is primitive
-        }
-
-        if (n_primitive_index == _vhid_info::const_map_index_invalid) {
-            continue;//open failure
-        }
-
-        //convert primitiove index to composite index.
-        n_compositive = _vhid_info::get_compositive_map_index_from_primitive_map_index(composite_or_primitive_type, n_primitive_index);
-
-        m_map_ptr_hid_info_ptr_worker[n_compositive] =
-            std::make_pair(
-                std::make_shared<_vhid_info_lpu237>(composite_or_primitive_type),
-                std::make_shared<_q_worker>(n_primitive_index, this)
-            );
-
-#ifdef _WIN32
-#ifdef _DEBUG
-        ATLTRACE(L"_create_new_map_compositive_item : index = 0x%x.\n",n_compositive);
-#endif
-#endif
-
-    } while (false);
-
-    if (b_return_index_is_composite_index && n_primitive_index != _vhid_info::const_map_index_invalid) {
-        return n_compositive;
-    }
-    return n_primitive_index;
-}
-
-/**
-* @brief increase composite type open counter!
-* @return composite map index. or _vhid_info::const_map_index_invalid(error)
-*/
-int _vhid_api_briage::_open_composite(int n_primitive_index, _mp::type_bm_dev composite_type, bool b_shared_open)
-{
-    int n_composite_index(_vhid_info::const_map_index_invalid);
-
-    do {
-        if (!m_map_ptr_hid_info_ptr_worker[n_primitive_index].first->can_be_open(composite_type, !b_shared_open)) {
-            continue;//open failure....... previous opened compositive isn't support shared open! 
-        }
-        if (!std::get<0>(m_map_ptr_hid_info_ptr_worker[n_primitive_index].first->ajust_open_cnt(composite_type, true))) {
-            continue;//open failure....... previous opened compositive isn't support shared open! 
-        }
-
-        n_composite_index = _vhid_info::get_compositive_map_index_from_primitive_map_index(composite_type, n_primitive_index); //success open counter only increase.
-
-    } while (false);
-    return n_composite_index;
-}
-
-
 _vhid_api_briage::_q_worker::_q_worker(int n_primitive_map_index, _vhid_api_briage* p_api_briage) :
     m_b_run_worker(false),
     m_n_primitive_map_index(n_primitive_map_index)
@@ -709,9 +656,13 @@ void _vhid_api_briage::_q_worker::_process_req_and_erase(
     bool b_already_received_in_rx_only(false);
     int n_result_for_rx_only(0);
     _mp::type_v_buffer v_rx_for_rx_only;
+    int n_txrx_pair_index = _vhid_info::const_map_index_invalid;
+	int n_cur_map_index = _vhid_info::const_map_index_invalid;
 
 
     for (auto it = cur_map_ptr_q.begin(); it != cur_map_ptr_q.end(); ) {
+
+		n_cur_map_index = it->first;
         // _index_ptr_q_cur.second 에는 없던가, 하나의 트랜잭션을 완성하는 item 만 있음. 
         if (!it->second) {
             it = cur_map_ptr_q.erase(it);
@@ -764,12 +715,19 @@ void _vhid_api_briage::_q_worker::_process_req_and_erase(
                 break;
             case _vhid_api_briage::_q_item::cmd_write:
                 n_result = p_api_briage->_hid_api_briage::api_write(m_n_primitive_map_index, ps_tx, n_tx, next_io);
-                b_processed = true;
 
                 if (next_io == _hid_api_briage::next_io_read) {
-                    b_tx_rx_mode = true;
-                    cmd = _vhid_api_briage::_q_item::cmd_read; // setting for next loop
-
+                    if (n_result < 0) {
+						b_processed = true;//tx error
+                    }
+					else {//tx is success nad ready for rx
+                        b_tx_rx_mode = true;
+                        cmd = _vhid_api_briage::_q_item::cmd_read; // setting for next loop
+						n_txrx_pair_index = n_cur_map_index;//get compositive index of tx request.
+                    }
+                }
+                else {
+                    b_processed = true;//tx only.
                 }
                 break;
             case _vhid_api_briage::_q_item::cmd_read:
@@ -846,7 +804,10 @@ int _vhid_api_briage::_q_worker::_receive_for_txrx_pair(_hid_api_briage* p_api_b
             break;// error
         }
         if (n_result == 0) {
-            continue;
+            if (m_b_run_worker)
+                continue;
+            else
+                break;// worker must be terminated!
         }
         //
         n_total += n_result;
@@ -914,10 +875,16 @@ std::tuple<int, _mp::type_v_buffer, bool> _vhid_api_briage::_q_worker::_worker_o
 }
 
 
+/**
+* ***************************************************
+* _vhid_api_briage::_q_item member function bodies
+*/
+
 _vhid_api_briage::_q_item::_q_item(int n_compositive_map_index) : m_n_compositive_map_index(n_compositive_map_index)
 {
     m_next = _hid_api_briage::next_io_none;
     m_n_in_report = 0;
+    m_n_rx_timeout_mmsec = 0;
 
     m_cmd = _q_item::cmd_undefined;
     m_n_nonblock = 0;
@@ -1082,6 +1049,11 @@ int _vhid_api_briage::_q_item::get_map_index() const
 size_t _vhid_api_briage::_q_item::get_size_report_in() const
 {
     return m_n_in_report;
+}
+
+int _vhid_api_briage::_q_item::get_rx_timeout_mmsec() const
+{
+    return m_n_milliseconds;
 }
 
 void _vhid_api_briage::_q_item::set_start_time()

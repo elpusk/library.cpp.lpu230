@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
 	(void)argc;
 	(void)argv;
 
-	return _test::tp_hid::test6();
+	return _test::tp_hid::test7();
 }
 
 
