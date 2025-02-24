@@ -821,7 +821,8 @@ namespace _test{
 				_mp::clibhid_dev_info::type_set st_dev_info;
 				_mp::clibhid_dev_info test_dev_info;
 
-				int n_test_count = 1000;
+				int n_test_count = 10;
+				std::vector<double> v_d_time(n_test_count*2, 0.0);
 
 				do {
 					// get connected device info.
@@ -849,17 +850,176 @@ namespace _test{
 
 					std::wcout << L"= filtered devices. = " << std::endl;
 					for (auto item : st_dev_info_filtered) {
-						std::wcout << item.get_path_by_wstring() << std::endl;
+						tp_hid::_display_device_info(item);
 					}//end for
 
 					// get the first device.
 					test_dev_info = *st_dev_info_filtered.begin();
-					tp_hid::_display_device_info(test_dev_info);
-
+					//tp_hid::_display_device_info(test_dev_info);
 
 					for (int i = 0; i < n_test_count; i++) {
 						std::wcout << L"TEST" << std::dec << i + 1 << std::endl;
 						
+						std::chrono::duration<double> elapsed;
+						bool b_test(false);
+
+						std::tie(b_test, elapsed) = tp_hid::_test_one_byte_request(test_dev_info, 'X');
+						if (!b_test) {
+							std::wcout << L"test fail X - " << L"Elapsed time: " << elapsed.count() << L" seconds" << std::endl;
+							break;
+						}
+
+						v_d_time[i] = elapsed.count();
+						std::wcout << L"success test - " << L"Elapsed time: " << elapsed.count() << L" seconds" << std::endl;
+						//
+						std::tie(b_test, elapsed) = tp_hid::_test_one_byte_request(test_dev_info, 'Y');
+						if (!b_test) {
+							std::wcout << L"test fail Y - " << L"Elapsed time: " << elapsed.count() << L" seconds" << std::endl;
+							break;
+						}
+
+						v_d_time[i+ n_test_count] = elapsed.count();
+						std::wcout << L"success test - " << L"Elapsed time: " << elapsed.count() << L" seconds" << std::endl;
+
+					}//end for
+
+					double d_t(0.0);
+					for (auto c : v_d_time) {
+						d_t += c;
+					}
+					std::wcout << L" * average - " << L"Elapsed time: " << d_t/((double)v_d_time.size()) << L" seconds" << std::endl;
+
+
+				} while (false);
+
+				return n_result;
+			}
+
+			/**
+			* io test of the first connected primitive device.(100 times)
+			*
+			*/
+			static int test_filtering()
+			{
+				int n_result(0);
+				bool b_result(false);
+				_mp::clibhid_dev_info::type_set st_dev_info;
+				_mp::clibhid_dev_info test_dev_info;
+
+				int n_test_count = 1000;
+
+				do {
+					// get connected device info.
+					std::tie(b_result, st_dev_info) = tp_hid::_get_connected_device_info();
+					if (!b_result) {
+						std::wcout << L"error - get connected device info." << std::endl;
+						n_result = -1;
+						continue;
+					}
+					if (st_dev_info.empty()) {
+						std::wcout << L"no device." << std::endl;
+						n_result = 0;
+						continue;
+					}
+
+					// filter device info set by device type.
+					_mp::clibhid_dev_info::type_set st_dev_info_filtered;
+					//std::set<_mp::type_bm_dev> set_filter;
+					//
+					std::array< _mp::type_bm_dev, 5 > ar_type{
+						_mp::type_bm_dev_hid,
+						_mp::type_bm_dev_lpu200_msr,
+						_mp::type_bm_dev_lpu200_scr0,
+						_mp::type_bm_dev_lpu200_ibutton,
+						_mp::type_bm_dev_lpu200_switch0
+					};
+
+					
+					// 조합을 저장할 벡터
+					std::vector<std::set<_mp::type_bm_dev>> all_sets;
+					std::set<_mp::type_bm_dev> current_set;
+
+					// 조합 생성 함수 호출
+					tp_hid::_generate_combinations(ar_type, current_set, all_sets);
+
+					// 결과 출력
+					for (const auto& set_filter : all_sets) {
+						std::cout << "{ ";
+						for (const auto& elem : set_filter) {
+							std::cout << elem << " ";
+						}
+						std::cout << "}\n";
+						//
+						st_dev_info_filtered = tp_hid::_filter_device_info_set_by_device_type(st_dev_info, set_filter);
+						if (st_dev_info_filtered.empty()) {
+							std::wcout << L"none filtered device." << std::endl;
+							n_result = 0;
+							continue;
+						}
+
+						std::wcout << L"= filtered devices. = " << std::endl;
+						for (auto item : st_dev_info_filtered) {
+							tp_hid::_display_device_info(item);
+						}//end for
+
+					}
+
+				} while (false);
+
+				return n_result;
+			}
+
+			static int test_msr()
+			{
+				int n_result(0);
+				bool b_result(false);
+				_mp::clibhid_dev_info::type_set st_dev_info;
+				_mp::clibhid_dev_info test_dev_info;
+
+				int n_test_count = 1000;
+
+				do {
+					// get connected device info.
+					std::tie(b_result, st_dev_info) = tp_hid::_get_connected_device_info();
+					if (!b_result) {
+						std::wcout << L"error - get connected device info." << std::endl;
+						n_result = -1;
+						continue;
+					}
+					if (st_dev_info.empty()) {
+						std::wcout << L"no device." << std::endl;
+						n_result = 0;
+						continue;
+					}
+
+					// filter device info set by device type.
+					_mp::clibhid_dev_info::type_set st_dev_info_filtered;
+					std::set<_mp::type_bm_dev> set_filter{ _mp::type_bm_dev_lpu200_msr };
+					st_dev_info_filtered = tp_hid::_filter_device_info_set_by_device_type(st_dev_info, set_filter);
+					if (st_dev_info_filtered.empty()) {
+						std::wcout << L"none filtered device." << std::endl;
+						n_result = 0;
+						continue;
+					}
+
+					std::wcout << L"= filtered devices. = " << std::endl;
+					for (auto item : st_dev_info_filtered) {
+						tp_hid::_display_device_info(item);
+					}//end for
+
+					for (int i = 0; i < 3; i++) {
+						std::wcout << L'.';
+						std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+					}
+					//continue;
+
+					// get the first device.
+					test_dev_info = *st_dev_info_filtered.begin();
+					//tp_hid::_display_device_info(test_dev_info);
+
+					for (int i = 0; i < n_test_count; i++) {
+						std::wcout << L"TEST" << std::dec << i + 1 << std::endl;
+
 						std::chrono::duration<double> elapsed;
 						bool b_test(false);
 
@@ -886,8 +1046,25 @@ namespace _test{
 
 				return n_result;
 			}
-
 		private:
+			static void _generate_combinations(const std::array<_mp::type_bm_dev, 5>& ar_type,
+				std::set<_mp::type_bm_dev>& current_set,
+				std::vector<std::set<_mp::type_bm_dev>>& all_sets,
+				size_t start = 0)
+			{
+				// 현재 세트를 all_sets에 추가
+				all_sets.push_back(current_set);
+
+				for (size_t i = start; i < ar_type.size(); ++i) {
+					// 현재 요소를 세트에 추가
+					current_set.insert(ar_type[i]);
+					// 다음 요소로 재귀 호출
+					tp_hid::_generate_combinations(ar_type, current_set, all_sets, i + 1);
+					// 현재 요소를 세트에서 제거 (백트래킹)
+					current_set.erase(ar_type[i]);
+				}
+			}
+
 			/**
 			* @brief get device info of all connected devices.
 			* and display it.
@@ -956,10 +1133,10 @@ namespace _test{
 			*/
 			static void _display_device_info(const _mp::clibhid_dev_info& dev_info)
 			{
-				std::wcout << L"the test target : " << dev_info.get_path_by_wstring() << std::endl;
-				std::wcout << std::hex << dev_info.get_vendor_id() << L", " << dev_info.get_product_id() << L" : ";
-				std::wcout << dev_info.get_path_by_wstring() << std::endl;
-				std::wcout << dev_info.get_interface_number() << std::endl;
+				std::wcout << L"PTH : " << dev_info.get_path_by_wstring() << std::endl;
+				std::wcout << L"VID : " << std::hex << dev_info.get_vendor_id() << std::endl;
+				std::wcout << L"PID : " << std::hex << dev_info.get_product_id() << std::endl;
+				std::wcout << L"INF : " << std::hex << dev_info.get_interface_number() << std::endl;
 			}
 
 			/**

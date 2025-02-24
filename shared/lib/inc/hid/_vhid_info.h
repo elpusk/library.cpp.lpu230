@@ -56,11 +56,11 @@ public:
 	{
 		static const _vhid_info::type_set_path_type v_extra_empty;
 		static const _vhid_info::type_set_path_type v_extra_lpu237 = {
-			{std::string(),_mp::type_bm_dev_hid,false, 0},//primitive type
-			{"&msr",_mp::type_bm_dev_lpu200_msr,false, ((int)(_vhid_info::const_map_index_mask_additional_compositive)& _mp::type_bm_dev_lpu200_msr)},
-			{"&scr0",_mp::type_bm_dev_lpu200_scr0,false, ((int)(_vhid_info::const_map_index_mask_additional_compositive) & _mp::type_bm_dev_lpu200_scr0) },
-			{"&ibutton",_mp::type_bm_dev_lpu200_ibutton,true, ((int)(_vhid_info::const_map_index_mask_additional_compositive) & _mp::type_bm_dev_lpu200_ibutton)},
-			{"&switch0",_mp::type_bm_dev_lpu200_switch0,true, ((int)(_vhid_info::const_map_index_mask_additional_compositive) & _mp::type_bm_dev_lpu200_switch0)}
+			{std::string(),_mp::type_bm_dev_hid,false, 0}//primitive type
+			,{"&msr",_mp::type_bm_dev_lpu200_msr,false, ((int)(_vhid_info::const_map_index_mask_additional_compositive)& _mp::type_bm_dev_lpu200_msr)}
+			,{"&scr0",_mp::type_bm_dev_lpu200_scr0,false, ((int)(_vhid_info::const_map_index_mask_additional_compositive) & _mp::type_bm_dev_lpu200_scr0) }
+			,{"&ibutton",_mp::type_bm_dev_lpu200_ibutton,true, ((int)(_vhid_info::const_map_index_mask_additional_compositive) & _mp::type_bm_dev_lpu200_ibutton)}
+			,{"&switch0",_mp::type_bm_dev_lpu200_switch0,true, ((int)(_vhid_info::const_map_index_mask_additional_compositive) & _mp::type_bm_dev_lpu200_switch0)}
 		};
 
 		if (w_vid == _mp::_elpusk::const_usb_vid && w_pid == _mp::_elpusk::_lpu237::const_usb_pid && n_interface == _mp::_elpusk::_lpu237::const_usb_inf_hid) {

@@ -521,7 +521,7 @@ int _hid_api_briage::api_open_path(const char* path)
     }
 }
 
-void _hid_api_briage::api_close(int n_map_index)
+void _hid_api_briage::api_close(int n_primitive_map_index)
 {
     std::lock_guard<std::mutex> lock(_hid_api_briage::get_mutex_for_hidapi());
 
@@ -530,26 +530,30 @@ void _hid_api_briage::api_close(int n_map_index)
     }
 
     hid_device* p_dev = nullptr;
-    if (m_map_hid_dev.find(n_map_index) != std::end(m_map_hid_dev)) {
-        p_dev = m_map_hid_dev[n_map_index].first;
-        m_map_hid_dev.erase(n_map_index);
+    if (m_map_hid_dev.find(n_primitive_map_index) != std::end(m_map_hid_dev)) {
+        p_dev = m_map_hid_dev[n_primitive_map_index].first;
+        m_map_hid_dev.erase(n_primitive_map_index);
         hid_close(p_dev);
     }
 }
 
-int _hid_api_briage::api_set_nonblocking(int n_map_index, int nonblock)
+int _hid_api_briage::api_set_nonblocking(int n_primitive_map_index, int nonblock)
 {
     std::lock_guard<std::mutex> lock(_hid_api_briage::get_mutex_for_hidapi());
 
     hid_device* p_dev = nullptr;
-    if (m_map_hid_dev.find(n_map_index) != std::end(m_map_hid_dev)) {
-        p_dev = m_map_hid_dev[n_map_index].first;
+    if (m_map_hid_dev.find(n_primitive_map_index) != std::end(m_map_hid_dev)) {
+        p_dev = m_map_hid_dev[n_primitive_map_index].first;
+        return hid_set_nonblocking(p_dev, nonblock);
     }
-    return hid_set_nonblocking(p_dev, nonblock);
+    else {
+        return -1; //error
+    }
+    
 }
 
 
-int _hid_api_briage::api_get_report_descriptor(int n_map_index, unsigned char* buf, size_t buf_size)
+int _hid_api_briage::api_get_report_descriptor(int n_primitive_map_index, unsigned char* buf, size_t buf_size)
 {
     std::lock_guard<std::mutex> lock(_hid_api_briage::get_mutex_for_hidapi());
 
@@ -558,13 +562,13 @@ int _hid_api_briage::api_get_report_descriptor(int n_map_index, unsigned char* b
     }
 
     hid_device* p_dev = nullptr;
-    if (m_map_hid_dev.find(n_map_index) != std::end(m_map_hid_dev)) {
-        p_dev = m_map_hid_dev[n_map_index].first;
+    if (m_map_hid_dev.find(n_primitive_map_index) != std::end(m_map_hid_dev)) {
+        p_dev = m_map_hid_dev[n_primitive_map_index].first;
     }
     return hid_get_report_descriptor(p_dev, buf, buf_size);
 }
 
-int _hid_api_briage::api_write(int n_map_index, const unsigned char* data, size_t length, _hid_api_briage::type_next_io next)
+int _hid_api_briage::api_write(int n_primitive_map_index, const unsigned char* data, size_t length, _hid_api_briage::type_next_io next)
 {
     std::lock_guard<std::mutex> lock(_hid_api_briage::get_mutex_for_hidapi());
 
@@ -573,13 +577,13 @@ int _hid_api_briage::api_write(int n_map_index, const unsigned char* data, size_
     }
 
     hid_device* p_dev = nullptr;
-    if (m_map_hid_dev.find(n_map_index) != std::end(m_map_hid_dev)) {
-        p_dev = m_map_hid_dev[n_map_index].first;
+    if (m_map_hid_dev.find(n_primitive_map_index) != std::end(m_map_hid_dev)) {
+        p_dev = m_map_hid_dev[n_primitive_map_index].first;
     }
     return hid_write(p_dev, data, length);
 }
 
-int _hid_api_briage::api_read(int n_map_index, unsigned char* data, size_t length, size_t n_report)
+int _hid_api_briage::api_read(int n_primitive_map_index, unsigned char* data, size_t length, size_t n_report)
 {
     std::lock_guard<std::mutex> lock(_hid_api_briage::get_mutex_for_hidapi());
 
@@ -588,25 +592,15 @@ int _hid_api_briage::api_read(int n_map_index, unsigned char* data, size_t lengt
     }
 
     hid_device* p_dev = nullptr;
-    if (m_map_hid_dev.find(n_map_index) != std::end(m_map_hid_dev)) {
-        p_dev = m_map_hid_dev[n_map_index].first;
+    if (m_map_hid_dev.find(n_primitive_map_index) != std::end(m_map_hid_dev)) {
+        p_dev = m_map_hid_dev[n_primitive_map_index].first;
     }
 
     int n_result = hid_read(p_dev, data, length);
-#ifdef _WIN32
-#ifdef _DEBUG
-    if(n_result >0 ){
-        if (data[0] == 'R') {
-            ATLTRACE(L"0x%08X-RX[0] is 'R'.\n", n_map_index);
-        }
-    }
-    
-#endif
-#endif
 	return n_result;
 }
 
-const wchar_t* _hid_api_briage::api_error(int n_map_index)
+const wchar_t* _hid_api_briage::api_error(int n_primitive_map_index)
 {
     std::lock_guard<std::mutex> lock(_hid_api_briage::get_mutex_for_hidapi());
 
@@ -615,8 +609,8 @@ const wchar_t* _hid_api_briage::api_error(int n_map_index)
     }
 
     hid_device* p_dev = nullptr;
-    if (m_map_hid_dev.find(n_map_index) != std::end(m_map_hid_dev)) {
-        p_dev = m_map_hid_dev[n_map_index].first;
+    if (m_map_hid_dev.find(n_primitive_map_index) != std::end(m_map_hid_dev)) {
+        p_dev = m_map_hid_dev[n_primitive_map_index].first;
     }
     return hid_error(p_dev);
 }

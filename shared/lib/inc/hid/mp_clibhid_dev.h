@@ -121,6 +121,8 @@ namespace _mp {
 
         bool _process_only_tx(cqitem_dev::type_ptr& ptr_req);
 
+        bool _process_cancel(cqitem_dev::type_ptr& ptr_req);
+
         /**
         * @brief receving data
         * @return

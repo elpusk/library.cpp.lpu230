@@ -423,6 +423,7 @@ namespace _mp {
                 break;
             case cqitem_dev::req_cancel:
             default:
+                b_result = _process_cancel(ptr_req);//result is ignored
                 ptr_req->set_result(cqitem_dev::result_cancel, type_v_buffer(0), L"CANCELLED BY ANOTHER REQ");
                 continue;
             }//end switch
@@ -457,6 +458,36 @@ namespace _mp {
             if (!_write_with_lock(ptr_req->get_tx(), b_req_is_tx_rx_pair)) {//ERROR TX
                 continue;
             }
+            b_result = true;
+
+        } while (false);
+
+        return b_result;
+    }
+
+    bool clibhid_dev::_process_cancel(cqitem_dev::type_ptr& ptr_req)
+    {
+        bool b_result(false);
+
+        do {
+            _clear_rx_q_with_lock();//flush rx q
+
+            if (!m_p_hid_api_briage) {
+                continue;
+            }
+
+            int n_result = m_p_hid_api_briage->api_write(m_n_dev, NULL, 0, _hid_api_briage::next_io_none);
+            if (n_result < 0) {
+                _mp::clog::get_instance().log_fmt(L"[E] hid_write()-cancel < 0(n_result) = (%d).\n", n_result);
+                continue;
+            }
+            if (n_result != 0) {
+                _mp::clog::get_instance().log_fmt(L"[E] hid_write()-cancel != 0 (n_result) = (%d).\n", n_result);
+                continue;
+            }
+
+            _mp::clog::get_instance().log_fmt_in_debug_mode(L"[D] (n_result) = (%d).\n", n_result);
+
             b_result = true;
 
         } while (false);
@@ -501,11 +532,9 @@ namespace _mp {
                 if (v_rx[0] != 'R') {//lpu237 specific protocol
 
                     //may be response is msr or ibutton data.
-                    //therefore , you must pass this response. 
-                    b_complete = false;
-
-                    clog::get_instance().trace(L"[W] - %ls - the missed response is passed.\n", __WFUNCTION__);
-                    clog::get_instance().log_fmt(L"[W] - %ls - the missed response is passed.\n", __WFUNCTION__);
+                    //therefore , this response is error. 
+                    clog::get_instance().trace(L"[E] - %ls - the missed response is passed.\n", __WFUNCTION__);
+                    clog::get_instance().log_fmt(L"[E] - %ls - the missed response is passed.\n", __WFUNCTION__);
                     continue; //and need re-read.
                 }
             }
