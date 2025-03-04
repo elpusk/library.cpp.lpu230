@@ -664,7 +664,7 @@ namespace _mp {
 
 #ifdef _WIN32
 #ifdef _DEBUG
-        ATLTRACE(L"Exit clibhid_dev::_worker_rx(0x%x).\n", m_n_dev);
+        ATLTRACE(L"Exit clibhid_dev::_worker_rx(0x%08x-%s).\n", m_n_dev, _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str());
 #endif
 #endif
     }
@@ -676,7 +676,7 @@ namespace _mp {
     {
 #ifdef _WIN32
 #ifdef _DEBUG
-        ATLTRACE(L"start clibhid_dev::_worker(0x%x).\n", m_n_dev);
+        ATLTRACE(L"start clibhid_dev::_worker(0x%08x-%s).\n", m_n_dev, _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str());
 #endif
 #endif
 
@@ -785,7 +785,7 @@ namespace _mp {
 
 #ifdef _WIN32
 #ifdef _DEBUG
-        ATLTRACE(L"Exit clibhid_dev::_worker(0x%x).\n", m_n_dev);
+        ATLTRACE(L"Exit clibhid_dev::_worker(0x%08x-%s).\n", m_n_dev, _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str());
 #endif
 #endif
 

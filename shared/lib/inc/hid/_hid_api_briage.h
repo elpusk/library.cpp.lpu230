@@ -22,9 +22,17 @@
 class _hid_api_briage
 {
 public:
+	// For construting one transaction, the next request type.
 	typedef	enum : int{
-		next_io_none = -1,
-		next_io_write = -2,
+		// the current transaction is terminated in the current phase(request).
+		next_io_none = -1, 
+
+		// the current transaction isn't terminated in the current phase(request).
+		// the next phase is writing request.
+		next_io_write = -2, 
+		
+		// the current transaction isn't terminated in the current phase(request).
+		// the next phase is reaing request.
 		next_io_read = -3
 	}type_next_io;
 public:

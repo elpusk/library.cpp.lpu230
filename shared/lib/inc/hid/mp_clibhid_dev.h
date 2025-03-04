@@ -31,10 +31,10 @@ namespace _mp {
 
     protected:
         enum {
-            _const_dev_io_check_interval_mmsec = 50
+            _const_dev_io_check_interval_mmsec = 3//50
         };
         enum {
-            _const_dev_rx_check_interval_mmsec = 50
+            _const_dev_rx_check_interval_mmsec = 3//50
         };
         enum {
             _const_dev_rx_recover_interval_usec = 1000

@@ -3,6 +3,7 @@
 #include <memory>
 #include <utility>
 #include <map>
+#include <array>
 #include <mp_type.h>
 #include <mp_elpusk.h>
 #include <hid/_vhid_info.h>
@@ -26,6 +27,49 @@ private:
 
 	//key is type , value is tuple of extra path, open counter, support shared open, additional value
 	typedef	std::map<_mp::type_bm_dev,_vhid_info_lpu237::_type_tuple_info_type> _type_map_info_type;
+
+public:
+	//static member
+	static bool is_rx_ibutton(const _mp::type_v_buffer& v_rx)
+	{
+		bool b_result(false);
+
+		const std::string s_ibutton_postfix("this_is_ibutton_data");
+		const size_t n_size_button_data(8);
+
+		do {
+			if (v_rx.size() < s_ibutton_postfix.size() + n_size_button_data) {
+				continue;
+			}
+			//
+			b_result = true;
+
+			for (auto i = 0; i < s_ibutton_postfix.size(); i++) {
+				if (v_rx[n_size_button_data + i] != s_ibutton_postfix[i]) {
+					b_result = false;
+					break;//exit for
+				}
+			}//end for
+			
+		} while (false);
+		return b_result;
+	}
+	static bool is_rx_pair_txrx(const _mp::type_v_buffer& v_rx)
+	{
+		bool b_result(false);
+
+		do {
+			if (v_rx.size() < 2) {
+				continue;
+			}
+			if (v_rx[0] != 'R') {
+				continue;
+			}
+			//
+			b_result = true;
+		} while (false);
+		return b_result;
+	}
 
 public:
 	_vhid_info_lpu237(_mp::type_bm_dev type) : 

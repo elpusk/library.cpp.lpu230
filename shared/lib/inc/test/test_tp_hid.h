@@ -320,6 +320,44 @@ namespace _test{
 				p_pair->first->set(p_pair->second);
 				return b_complete;
 			}
+			static bool _cb_msr(_mp::cqitem_dev& item, void* p_user)
+			{
+				bool b_complete(true);
+				_mp::cqitem_dev::type_result r;
+				_mp::type_v_buffer v;
+				std::wstring s;
+
+				std::pair<_mp::cwait*, int>* p_pair = (std::pair<_mp::cwait*, int>*)p_user;
+
+				do {
+					std::tie(r, v, s) = item.get_result_all();
+					switch (r) {
+					case _mp::cqitem_dev::result_not_yet:
+						b_complete = false;
+						std::wcout << L" ++ _cb_rx : result_not_yet.\n";
+						continue;//more processing
+					case _mp::cqitem_dev::result_success:
+						std::wcout << L" ++ _cb_rx : result_success.\n";
+						_print_msr(v);
+						//printf(" ++ %u : %02x,%02x,%02x.\n", (unsigned int)v.size(), v[0], v[1], v[2]);
+						break;
+					case _mp::cqitem_dev::result_error:
+						std::wcout << L" ++ _cb_rx : result_error.\n";
+						break;
+					case _mp::cqitem_dev::result_cancel:
+						std::wcout << L" ++ _cb_rx : result_cancel.\n";
+						break;
+					default:
+						std::wcout << L" ++ _cb_rx : unknown.\n";
+						break;
+					}//end switch
+				} while (false);
+
+				fflush(stdout);
+
+				p_pair->first->set(p_pair->second);
+				return b_complete;
+			}
 			/**
 			* rx 1000 times
 			*/
@@ -821,7 +859,7 @@ namespace _test{
 				_mp::clibhid_dev_info::type_set st_dev_info;
 				_mp::clibhid_dev_info test_dev_info;
 
-				int n_test_count = 10;
+				int n_test_count = 1000;
 				std::vector<double> v_d_time(n_test_count*2, 0.0);
 
 				do {
@@ -1007,23 +1045,34 @@ namespace _test{
 						tp_hid::_display_device_info(item);
 					}//end for
 
+					/*
 					for (int i = 0; i < 3; i++) {
 						std::wcout << L'.';
 						std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 					}
-					//continue;
+					*/
 
 					// get the first device.
 					test_dev_info = *st_dev_info_filtered.begin();
 					//tp_hid::_display_device_info(test_dev_info);
 
+					std::chrono::duration<double> elapsed;
+					bool b_test(false);
+
+					std::tie(b_test, std::ignore) = tp_hid::_test_one_byte_request(test_dev_info,'I');
+					if (!b_test) {
+						std::wcout << L"test fail I - enter opos" << std::endl;
+						continue;
+					}
+					else {
+						std::wcout << L"OK - enter opos" << std::endl;
+					}
+
 					for (int i = 0; i < n_test_count; i++) {
-						std::wcout << L"TEST" << std::dec << i + 1 << std::endl;
+						std::wcout << L"TEST" << std::dec << i + 1 << L" : " << L"swipe a card" << std::endl;
 
-						std::chrono::duration<double> elapsed;
-						bool b_test(false);
 
-						std::tie(b_test, elapsed) = tp_hid::_test_one_byte_request(test_dev_info, 'X');
+						std::tie(b_test, elapsed) = tp_hid::_test_reading_msr(test_dev_info,10);
 						if (!b_test) {
 							std::wcout << L"test fail X - " << L"Elapsed time: " << elapsed.count() << L" seconds" << std::endl;
 							break;
@@ -1031,15 +1080,17 @@ namespace _test{
 
 						std::wcout << L"success test - " << L"Elapsed time: " << elapsed.count() << L" seconds" << std::endl;
 						//
-						std::tie(b_test, elapsed) = tp_hid::_test_one_byte_request(test_dev_info, 'Y');
-						if (!b_test) {
-							std::wcout << L"test fail Y - " << L"Elapsed time: " << elapsed.count() << L" seconds" << std::endl;
-							break;
-						}
-
-						std::wcout << L"success test - " << L"Elapsed time: " << elapsed.count() << L" seconds" << std::endl;
 
 					}//end for
+
+					std::tie(b_test, std::ignore) = tp_hid::_test_one_byte_request(test_dev_info, 'J');
+					if (!b_test) {
+						std::wcout << L"test fail I - leave opos" << std::endl;
+						continue;
+					}
+					else {
+						std::wcout << L"OK - leave opos" << std::endl;
+					}
 
 
 				} while (false);
@@ -1157,10 +1208,12 @@ namespace _test{
 
 					_mp::clibhid& lib_hid(_mp::clibhid::get_instance());
 					if (!lib_hid.is_ini()) {
+						std::wcout << L"!lib_hid.is_ini()" << std::endl;
 						continue;
 					}
 					_mp::clibhid_dev::type_wptr wptr_dev = lib_hid.get_device(dev_info);
 					if (wptr_dev.expired()) {
+						std::wcout << L"wptr_dev.expired()" << std::endl;
 						continue;
 					}
 					
@@ -1187,7 +1240,7 @@ namespace _test{
 						}
 						if (wptr_dev.expired()) {
 							std::wcout << std::endl;
-							std::cout << "device is expired" << std::endl;
+							std::wcout << L"device is expired" << std::endl;
 							break;
 						}
 
@@ -1199,7 +1252,7 @@ namespace _test{
 						}
 
 						if (n_wait_cnt-- <= 0) {
-							std::cout << "processing timeout" << std::endl;
+							std::wcout << L"processing timeout" << std::endl;
 							break;
 						}
 					} while (true);
@@ -1211,6 +1264,133 @@ namespace _test{
 				return std::make_pair(b_result, elapsed);
 			}
 
+			/**
+			* @brief test reaing msr or ibutton
+			* @param[in,const] _mp::clibhid_dev_info dev_info : device info instance.
+			* @param[in,int] n_timeout_sec : timeout unit is second. negative value is inifinite
+			* @return std::pair<bool,std::chrono::duration<double>> :
+			* first : true - success, false - fail.
+			* second : elapsed time.
+			*/
+			static std::pair<bool, std::chrono::duration<double>> _test_reading_msr(const _mp::clibhid_dev_info& dev_info,int n_timeout_sec)
+			{
+				bool b_result(false);
+				std::chrono::duration<double> elapsed;
+				do {
+					_mp::cwait waiter;
+					int n_event = waiter.generate_new_event();
+					std::pair<_mp::cwait*, int> pair_p_wait_n_event(&waiter, n_event);
+
+					_mp::clibhid& lib_hid(_mp::clibhid::get_instance());
+					if (!lib_hid.is_ini()) {
+						std::wcout << L"!lib_hid.is_ini()" << std::endl;
+						continue;
+					}
+					_mp::clibhid_dev::type_wptr wptr_dev = lib_hid.get_device(dev_info);
+					if (wptr_dev.expired()) {
+						std::wcout << L"wptr_dev.expired()" << std::endl;
+						continue;
+					}
+
+					//
+					pair_p_wait_n_event.first->reset(pair_p_wait_n_event.second);
+
+					auto start = std::chrono::high_resolution_clock::now();//start timer
+
+					wptr_dev.lock()->start_read( tp_hid::_cb_msr, &pair_p_wait_n_event);
+
+					int n_evt = _mp::cwait::const_event_timeout;
+					int n_point = 0;
+					int n_wait_cnt = n_timeout_sec*1000/10; //10mmsec counter
+
+					bool b_run(true);
+					//wait for response
+					do {
+						n_evt = _mp::cwait::const_event_timeout;
+						n_evt = pair_p_wait_n_event.first->wait_for_one_at_time(0);
+						if (n_evt == pair_p_wait_n_event.second) {
+							b_result = true;
+							b_run = false;
+							continue;
+						}
+						if (wptr_dev.expired()) {
+							std::wcout << std::endl;
+							std::wcout << L"device is expired" << std::endl;
+							b_run = false;
+							continue;
+						}
+						if (n_timeout_sec == 0) {
+							std::wcout << L"processing timeout" << std::endl;
+							b_run = false;
+							continue;
+						}
+
+						std::this_thread::sleep_for(std::chrono::milliseconds(10));
+						if (n_timeout_sec < 0) {
+							continue;//infinite wait
+						}
+						//std::wcout << L".";
+						++n_point;
+						if (n_point % 25 == 0) {
+							//std::wcout << std::endl;
+						}
+
+						if (n_wait_cnt-- <= 0) {
+							std::wcout << L"processing timeout" << std::endl;
+							b_run = false;
+							continue;
+						}
+					} while (b_run);
+
+
+					auto end = std::chrono::high_resolution_clock::now();//stop timer
+					elapsed = end - start;
+				} while (false);
+				return std::make_pair(b_result, elapsed);
+			}
+
+			static void _print_msr(const _mp::type_v_buffer &v_rx)
+			{
+				do {
+					if (v_rx.size() < 3) {
+						continue;
+					}
+
+					std::array<signed char, 3> ar_c_len{ v_rx[0],v_rx[1],v_rx[2] };
+					std::array<signed char, 3> ar_c_add{ 0x20, 0x30, 0x30 };
+					std::array<bool, 3> ar_b_error{ false, false, false };
+					std::array<_mp::type_v_buffer, 3> ar_v_iso{ _mp::type_v_buffer(0), };
+					size_t n_offset(0);
+
+					for (size_t i = 0; i < ar_c_len.size(); i++) {
+						if (ar_c_len[i] > 0) {
+							std::copy(v_rx.begin() + 3 + n_offset, v_rx.begin() + 3 + n_offset + (size_t)ar_c_len[i], std::back_inserter(ar_v_iso[i]));
+							n_offset += (size_t)ar_c_len[i];
+						}
+						else if(ar_c_len[i] < 0 ){
+							ar_b_error[i] = true;
+						}
+					}//end for
+
+					for (size_t i = 0; i < ar_c_len.size(); i++) {
+						if (ar_b_error[i]) {
+							std::wcout << L" track"<< i+1 <<L" : error.\n";
+						}
+						else {
+							std::wcout << L" track" << i + 1 << L" : ";
+							if (ar_c_len[i] > 0) {
+								for (auto c_d : ar_v_iso[i]) {
+									std::wcout << (wchar_t)(c_d + ar_c_add[i]);
+								}//
+							}
+							else {
+								std::wcout << L"NONE";
+							}
+							std::wcout << std::endl;;
+						}
+					}//end for
+				} while (false);
+			}
 
 		public:
             tp_hid();

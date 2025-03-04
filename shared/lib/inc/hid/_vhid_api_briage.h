@@ -64,6 +64,7 @@ private:
 		_hid_api_briage::type_next_io get_next_io_type() const;
 
 		size_t get_rx_size() const;
+		_vhid_api_briage::_q_item& set_rx(const _mp::type_ptr_v_buffer& ptr_v_rx);
 		_vhid_api_briage::_q_item& set_rx(const _mp::type_v_buffer& v_rx);
 		_vhid_api_briage::_q_item& append_rx(const _mp::type_v_buffer& v_rx,bool b_add_to_head = false);
 		_vhid_api_briage::_q_item& set_result(int n_result);
@@ -202,8 +203,12 @@ private:
 	public:
 		typedef	std::shared_ptr<_vhid_api_briage::_q_worker>	type_ptr;
 	private:
+		typedef	std::pair<int, _mp::type_ptr_v_buffer> _type_pair_result_ptr_rx;
+		typedef std::deque< _q_worker::_type_pair_result_ptr_rx > _type_q_result;
+
+	private:
 		enum {
-			_const_worker_interval_mmsec = 30
+			_const_worker_interval_mmsec = 2
 		};
 		enum {
 			_const_txrx_pair_tx_interval_mmsec = 1
@@ -247,7 +252,7 @@ private:
 		* @param ptr_list - list of requestes
 		* 
 		* @return 
-		*	first - true: success,, false : error
+		*	first - true: success, false : error
 		*	
 		*	second - the received ddata.
 		*/
@@ -276,7 +281,9 @@ private:
 		*
 		* @param p_api_briage - pointer of _hid_api_briage instance.
 		* 
-		* @param v_rx - receved data
+		* @param ptr_v_rx[in,out] - receved data, this shared_ptr must be allocated to a new memory( if none rx, allocated as _mp:type_v_buffer(0) ) 
+		* 
+		* @param s_debug_msg - string for debugging.
 		* 
 		* @return
 		*	first - true : this phase is complete process with success or error, false : not yet complete.
@@ -287,15 +294,58 @@ private:
 		std::tuple<bool, int> _process_req(
 			const _vhid_api_briage::_q_item::type_ptr& ptr_q_item,
 			_hid_api_briage* p_api_briage,
-			_mp::type_v_buffer& v_rx
+			_mp::type_ptr_v_buffer& v_ptr_rx,
+			const std::wstring& s_debug_msg = std::wstring(L"")
 			);
+
+		/**
+		* @brief notify the result of request to waiting worker.
+		* 
+		* this function have to be called only that the poped request-list is single or only rx requests.
+		* 
+		* @param ptr_req - request
+		* 
+		* @param n_result - result code
+		* 
+		* @param ptr_v_rx - the received data from device.
+		* 
+		* @return true(result is notified), false(the notification is passed.)
+		*/
+		bool _notify_in_single_or_multi_rx_requests(
+			_q_item::type_ptr &ptr_req,
+			int n_result,
+			const _mp::type_ptr_v_buffer & ptr_v_rx
+		);
+
+		/**
+		* @brief save result code and the received data to MSR reponse buffer Q(m_q_result_msr) or ibutton buffer Q(m_q_result_ibutton)
+		* 
+		* @param n_result - result code
+		* 
+		* @param ptr_v_rx - the received data 
+		* 
+		* @param ptr_req - current request. if this is empty, the current request is expected read_request. 
+		* 
+		*/
+		void _save_rx_to_msr_or_ibutton_buffer_in_single_or_multi_rx_requests(
+			int n_result,
+			const _mp::type_ptr_v_buffer& ptr_v_rx,
+			const _q_item::type_ptr& ptr_req= _q_item::type_ptr()
+		);
 
 	private:
 		std::shared_ptr<std::thread> m_ptr_worker; // inner worker thread
 		std::atomic<bool> m_b_run_worker;//self killing flag of m_ptr_worker.
 
 		_vhid_api_briage::_q_container m_q;
-		//
+
+		// received msr data queue.
+		// this queue must be reset on txrx request.
+		_q_worker::_type_q_result m_q_result_msr; 
+
+		// received ibutton data queue 
+		// this queue must be reset on txrx request.
+		_q_worker::_type_q_result m_q_result_ibutton;
 
 		// primitive map index. setting on constructure.
 		const int m_n_primitive_map_index;

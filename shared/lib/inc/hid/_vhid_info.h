@@ -4,6 +4,7 @@
 #include <utility>
 #include <mp_type.h>
 #include <mp_elpusk.h>
+#include <mp_cstring.h>
 
 /**
 * An instance of this class corresponds to a single physical device (primitive device).
@@ -138,37 +139,30 @@ public:
 	{
 		_mp::type_bm_dev type(_mp::type_bm_dev_unknown);
 
-		do {
-			if (n_map_index_compositive < 0) {
-				continue;
-			}
-			int n_primitive = _vhid_info::const_map_index_mask_of_primitive & n_map_index_compositive;
-			if (n_primitive > _vhid_info::const_map_index_max) {
-				continue;
-			}
-			if (n_primitive < _vhid_info::const_map_index_min) {
-				continue;
-			}
-			if (n_primitive % _vhid_info::const_map_index_inc_unit != 0) {
-				continue;
-			}
-			//
-			int n_additional_compositive = _vhid_info::const_map_index_mask_additional_compositive & n_map_index_compositive;
-			_mp::type_bm_dev t_compositive = (_mp::type_bm_dev)(_mp::type_bm_dev_hid + n_additional_compositive);
+		_vhid_info::type_tuple_path_type data = _vhid_info::_get_type_from_compositive_map_index(n_map_index_compositive);
+		return std::get<1>(data);
+	}
 
-			for (auto item : _vhid_info::get_extra_paths(
-				_mp::_elpusk::const_usb_vid,
-				_mp::_elpusk::_lpu237::const_usb_pid,
-				_mp::_elpusk::_lpu237::const_usb_inf_hid
-			)) {
-				if (std::get<1>(item) == t_compositive) {
-					type = t_compositive;
-					break;
-				}
-			}//end for
+	/**
+	* @brief get compositive type string from compositive map index
+	*
+	* @return compositive or primitive string
+	*/
+	static std::string get_type_string_from_compositive_map_index(int n_map_index_compositive)
+	{
+		_vhid_info::type_tuple_path_type data = _vhid_info::_get_type_from_compositive_map_index(n_map_index_compositive);
+		return std::get<0>(data);
+	}
 
-		} while (false);
-		return type;
+	/**
+	* @brief get compositive type wstring from compositive map index
+	*
+	* @return compositive or primitive wstring
+	*/
+	static std::wstring get_type_wstring_from_compositive_map_index(int n_map_index_compositive)
+	{
+		_vhid_info::type_tuple_path_type data = _vhid_info::_get_type_from_compositive_map_index(n_map_index_compositive);
+		return _mp::cstring::get_unicode_from_mcsc(std::get<0>(data));
 	}
 
 	/**
@@ -282,6 +276,48 @@ protected:
 		} while (false);
 
 		return n_add;
+	}
+
+	/**
+	* @brief get compositive info tuple from compositive map index
+	*
+	* @return _vhid_info::type_tuple_path_type type
+	*/
+	static _vhid_info::type_tuple_path_type _get_type_from_compositive_map_index(int n_map_index_compositive)
+	{
+		_vhid_info::type_tuple_path_type data("", _mp::type_bm_dev_unknown, false, 0);
+
+		do {
+			if (n_map_index_compositive < 0) {
+				continue;
+			}
+			int n_primitive = _vhid_info::const_map_index_mask_of_primitive & n_map_index_compositive;
+			if (n_primitive > _vhid_info::const_map_index_max) {
+				continue;
+			}
+			if (n_primitive < _vhid_info::const_map_index_min) {
+				continue;
+			}
+			if (n_primitive % _vhid_info::const_map_index_inc_unit != 0) {
+				continue;
+			}
+			//
+			int n_additional_compositive = _vhid_info::const_map_index_mask_additional_compositive & n_map_index_compositive;
+			_mp::type_bm_dev t_compositive = (_mp::type_bm_dev)(_mp::type_bm_dev_hid + n_additional_compositive);
+
+			for (auto item : _vhid_info::get_extra_paths(
+				_mp::_elpusk::const_usb_vid,
+				_mp::_elpusk::_lpu237::const_usb_pid,
+				_mp::_elpusk::_lpu237::const_usb_inf_hid
+			)) {
+				if (std::get<1>(item) == t_compositive) {
+					data = item;
+					break;
+				}
+			}//end for
+
+		} while (false);
+		return data;
 	}
 
 protected:
