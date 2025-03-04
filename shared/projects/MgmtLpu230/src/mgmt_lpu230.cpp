@@ -17,14 +17,66 @@
 #include <test/test_tp_hid.h>
 
 
+static void _display_option()
+{
+    std::wcout << L" = input option!" << std::endl;
+    std::wcout << L" = filter - filter test." << std::endl;
+    std::wcout << L" = hid - tx-rx test." << std::endl;
+    std::wcout << L" = msr - reading msr test." << std::endl;
+    std::wcout << L" = ibutton - reading ibutton test." << std::endl;
+}
 
 
 int main(int argc, char* argv[])
 {
-	(void)argc;
-	(void)argv;
+	//(void)argc;
+	//(void)argv;
 
-	return _test::tp_hid::test_msr();
+    int n_result(0);
+
+    auto list_option = _mp::cconvert::get_command_line_parameters_by_list(argc, argv);
+
+    do {
+        if (list_option.size() < 1) {
+            std::wcout << L" = BYE - Error option." <<std::endl;
+            std::wcout << L" = filter - filter test." << std::endl;
+            std::wcout << L" = hid - tx-rx test." << std::endl;
+            std::wcout << L" = msr - reading msr test." << std::endl;
+            std::wcout << L" = ibutton - reading ibutton test." << std::endl;
+            continue;
+        }
+
+        if (list_option.size() < 2) {
+            _display_option();
+            continue;
+        }
+
+        auto it = std::begin(list_option);
+        ++it;
+        std::wstring s_test(*it);
+        //
+        if (s_test.compare(L"filter") == 0) {
+            n_result = _test::tp_hid::test_filtering();
+            continue;
+        }
+        if (s_test.compare(L"hid") == 0) {
+            n_result = _test::tp_hid::test7();
+            continue;
+        }
+        if (s_test.compare(L"msr") == 0) {
+            n_result = _test::tp_hid::test_msr();
+            continue;
+        }
+        if (s_test.compare(L"ibutton") == 0) {
+            n_result = _test::tp_hid::test_ibutton();
+            continue;
+        }
+
+        _display_option();
+    } while (false);
+
+    return n_result;
+	
 }
 
 

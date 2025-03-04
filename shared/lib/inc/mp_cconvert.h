@@ -6,6 +6,8 @@
 #include <cctype>
 #include <string>
 #include <algorithm>
+#include <set>
+#include <list>
 
 #include <mp_type.h>
 #include <mp_cstring.h>
@@ -1606,6 +1608,10 @@ namespace _mp{
 			} while (false);
 		}
 
+		/**
+		* @brief Don't use this function. this function must be depricated. only for old code.
+		* Use get_command_line_parameters_by_set() or get_command_line_parameters_by_list()
+		*/
 		static type_set_wstring get_command_line_parameters(int argc, char* argv[])
 		{
 			type_set_wstring set_parameters;
@@ -1619,6 +1625,27 @@ namespace _mp{
 			} while (false);
 			return set_parameters;
 		}
+
+		static type_set_wstring get_command_line_parameters_by_set(int argc, char* argv[])
+		{
+			return _mp::cconvert::get_command_line_parameters(argc, argv);
+		}
+
+		static type_list_wstring get_command_line_parameters_by_list(int argc, char* argv[])
+		{
+			type_list_wstring list_parameters;
+
+			do {
+				for (int i = 0; i < argc; i++) {
+					if (argv[i]) {
+						list_parameters.push_back(cstring::get_unicode_from_mcsc(argv[i]));
+					}
+				}//end for
+			} while (false);
+			return list_parameters;
+		}
+
+
 
 		//
     private:

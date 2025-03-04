@@ -36,16 +36,20 @@ public:
 
 		const std::string s_ibutton_postfix("this_is_ibutton_data");
 		const size_t n_size_button_data(8);
+		const size_t n_len_bytes = 3;
 
 		do {
-			if (v_rx.size() < s_ibutton_postfix.size() + n_size_button_data) {
+			if (v_rx.size() < n_len_bytes + s_ibutton_postfix.size() + n_size_button_data) {
 				continue;
+			}
+			if (v_rx[0] != 0 || v_rx[1] != 0 || v_rx[2] != 0) {
+				continue;// ibutton 데이터는 1,2,3 track 의 길이를 나타내는 값이 모두 0 임.
 			}
 			//
 			b_result = true;
 
 			for (auto i = 0; i < s_ibutton_postfix.size(); i++) {
-				if (v_rx[n_size_button_data + i] != s_ibutton_postfix[i]) {
+				if (v_rx[n_len_bytes + n_size_button_data + i] != s_ibutton_postfix[i]) {
 					b_result = false;
 					break;//exit for
 				}
