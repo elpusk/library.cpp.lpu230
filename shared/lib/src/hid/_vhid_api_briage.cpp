@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <mp_elpusk.h>
 
+#include <mp_clog.h>
 #include <hid/_vhid_info_lpu237.h>
 #include <hid/_vhid_api_briage.h>
 #include <hid/_vhid_info.h>
@@ -350,11 +351,13 @@ int _vhid_api_briage::api_read(int n_map_index, unsigned char* data, size_t leng
         std::lock_guard<std::mutex> lock(m_mutex_for_map);
 
         if (n_primitive == _vhid_info::const_map_index_invalid) {
+            _mp::clog::get_instance().log_fmt(L"[E] %ls : invalid map index.\n", __WFUNCTION__);
             continue;
         }
 
         auto it = m_map_ptr_hid_info_ptr_worker.find(n_primitive);
         if (it == std::end(m_map_ptr_hid_info_ptr_worker)) {
+            _mp::clog::get_instance().log_fmt(L"[E] %ls : not found map item.\n", __WFUNCTION__);
             continue;
         }
 
@@ -362,6 +365,7 @@ int _vhid_api_briage::api_read(int n_map_index, unsigned char* data, size_t leng
         ptr_item->setup_for_read(data, length,n_report);
 
         if (!it->second.second->push(ptr_item)) {
+            _mp::clog::get_instance().log_fmt(L"[E] %ls : push().\n", __WFUNCTION__);
             continue;
         }
 
@@ -398,18 +402,18 @@ int _vhid_api_briage::api_read(int n_map_index, unsigned char* data, size_t leng
 #endif
     } while (false);
 
+    if (n_result < 0) {
+        _mp::clog::get_instance().log_fmt(L"[E] %ls : n_result = %d.\n", __WFUNCTION__, n_result);
 #ifdef _WIN32
 #ifdef _DEBUG
-
-    if (n_result < 0) {
         ATLTRACE(L"0x%08X(%s)-ERROR-RX (n_result) = (%d)\n",
             n_map_index,
             _vhid_info::get_type_wstring_from_compositive_map_index(n_map_index).c_str(),
             n_result);
+#endif
+#endif
     }
 
-#endif
-#endif
 
     return n_result;
 }
@@ -519,7 +523,7 @@ void _vhid_api_briage::_q_worker::_worker(_vhid_api_briage* p_api_briage)
             if (!b_exsit_data) {
                 continue;
             }
-
+/*
 #ifdef _WIN32
 #ifdef _DEBUG
             if (ptr_list) {
@@ -549,7 +553,7 @@ void _vhid_api_briage::_q_worker::_worker(_vhid_api_briage* p_api_briage)
             }
 #endif
 #endif
-
+*/
             if (b_canceled) {
                 b_result = _process_cancel(ptr_list, p_api_briage);
             }
@@ -637,7 +641,7 @@ std::tuple<bool,int> _vhid_api_briage::_q_worker::_process_req(
             n_size_report_in = ptr_item->get_size_report_in();
 
             (*v_ptr_rx).resize(n_size_report_in, 0);
-            n_result = p_api_briage->_hid_api_briage::api_read(m_n_primitive_map_index, &(*v_ptr_rx)[0], (*v_ptr_rx).size(), n_size_report_in);
+            n_result = _rx((*v_ptr_rx), p_api_briage);
             if (n_result == 0) {
                 // need more receving
                 b_complete = false;
@@ -649,19 +653,6 @@ std::tuple<bool,int> _vhid_api_briage::_q_worker::_process_req(
         }
 
     } while (false);
-
-#ifdef _WIN32
-#ifdef _DEBUG
-    if (n_result > 0 && (*v_ptr_rx).size() > 0) {
-        if ((*v_ptr_rx)[0] == 'R') {
-            ATLTRACE(L"0x%08X-RX[0] is 'R'.\n", m_n_primitive_map_index);
-        }
-        else {
-            ATLTRACE(L"0x%08X-RX[0] == 0x%02x.\n", m_n_primitive_map_index, (*v_ptr_rx)[0]);
-        }
-    }
-#endif
-#endif
 
     return std::make_pair(b_complete, n_result);
 }
@@ -727,28 +718,22 @@ std::pair<bool, _mp::type_v_buffer> _vhid_api_briage::_q_worker::_process(
                 continue;
             }
 
+            _mp::clog::get_instance().log_fmt_in_debug_mode(L"[D] TXRX REQ : %ls.\n", ptr_req->get_cmd_by_string().c_str());
+
             next_io = ptr_req->get_next_io_type();
             ptr_v_rx.reset();
-            bool b_checked_first_time(false);
 
             do {
                 std::tie(b_complete, n_result) = _process_req(ptr_req, p_api_briage, ptr_v_rx, L"TXRX");
-                if(!m_b_run_worker || b_complete){
+                if(!m_b_run_worker ){
+                    _mp::clog::get_instance().log_fmt_in_debug_mode(L"[D] TXRX REQ : %ls - complete BY TH : %d.\n", ptr_req->get_cmd_by_string().c_str(), n_result);
                     break;//exit while
                 }
-                if (b_complete && n_result>1 && ptr_req->get_cmd() == _q_item::cmd_read && !b_checked_first_time) {
-                    if ((*ptr_v_rx)[0] != 'R') {
-                        //invalid response format.
-                        b_complete = false;
-                        ptr_v_rx.reset();//retry again.
-
-                        // very important code - fix miss-matching txrx protocol. 
-                        // 펨웨어에서, msr 이나 ibutton 데이터를 보내려고, usb buffer 에 데이타를 쓰고 있는 때,
-                        // tx 가 전송되면, api 는 tx 에 대한 응답으로 msr 이나 ibutton 데이터를 받을수 있다.
-                        // 이러한 경우 프로토콜 미스로 문제가 생기므로, 이 msr 이나 ibutton 은 무시되어야 한다. 무조건 !
-                        b_checked_first_time = true;
-                    }
+                if (b_complete) {
+                    _mp::clog::get_instance().log_fmt_in_debug_mode(L"[D] TXRX REQ : %ls - complete : %d.\n", ptr_req->get_cmd_by_string().c_str(), n_result);
+                    break;// continue while
                 }
+
                 std::this_thread::sleep_for(std::chrono::milliseconds(_vhid_api_briage::_q_worker::_const_txrx_pair_tx_interval_mmsec));
             } while (!b_complete && m_b_run_worker);
 
@@ -894,12 +879,13 @@ bool _vhid_api_briage::_q_worker::_notify_in_single_or_multi_rx_requests(
 
         int n_map_index = ptr_req->get_map_index();
         _mp::type_bm_dev t = _vhid_info::get_type_from_compositive_map_index(n_map_index);
-        bool b_is_ibutton_format = _vhid_info_lpu237::is_rx_ibutton(v);
+        bool b_is_ibutton_format(false);
+        std::tie(b_is_ibutton_format,std::ignore) = _vhid_info_lpu237::is_rx_ibutton(v);
         _q_worker::_type_pair_result_ptr_rx item(0, _mp::type_ptr_v_buffer());
 
 #ifdef _WIN32
 #ifdef _DEBUG
-        ATLTRACE(L"*_*-0x%08x(%s) NOTIFY.\n", n_map_index,_vhid_info::get_type_wstring_from_compositive_map_index(n_map_index).c_str());
+//        ATLTRACE(L"*_*-0x%08x(%s) NOTIFY.\n", n_map_index,_vhid_info::get_type_wstring_from_compositive_map_index(n_map_index).c_str());
 #endif
 #endif
 
@@ -1007,7 +993,8 @@ void _vhid_api_briage::_q_worker::_save_rx_to_msr_or_ibutton_buffer_in_single_or
         }
 
         // n_result 가 영 보다 큰 경우, ptr_v_rx 는 무조건 할당되어 값을 가지고 있다.
-        bool b_is_ibutton_format = _vhid_info_lpu237::is_rx_ibutton(*ptr_v_rx);
+        bool b_is_ibutton_format(false);
+        std::tie(b_is_ibutton_format,std::ignore) = _vhid_info_lpu237::is_rx_ibutton(*ptr_v_rx);
         if (b_is_ibutton_format) {
             m_q_result_ibutton.push_back(std::make_pair(n_result, ptr_v_rx));
             continue;
@@ -1021,6 +1008,49 @@ void _vhid_api_briage::_q_worker::_save_rx_to_msr_or_ibutton_buffer_in_single_or
 #endif
 
     } while (false);
+}
+
+int _vhid_api_briage::_q_worker::_rx(_mp::type_v_buffer& v_rx, _hid_api_briage* p_api_briage)
+{
+    int n_result(0);
+    int n_offset(0);
+    int n_len = (int)v_rx.size();
+    int n_loop = 0;
+
+    do {
+        ++n_loop; //for debugging
+
+        n_result = p_api_briage->_hid_api_briage::api_read(m_n_primitive_map_index, &v_rx[n_offset], n_len, v_rx.size());
+        if (n_result < 0) {
+            break;// error 
+        }
+
+        if (n_result == 0 ) {
+            if (n_offset == 0) {
+                break;// need read more.
+            }
+            else {
+                //self loop
+                std::this_thread::sleep_for(std::chrono::milliseconds(_vhid_api_briage::_q_worker::_const_txrx_pair_rx_interval_mmsec));
+                continue;
+            }
+        }
+        //
+        if ((n_result + n_offset) >= v_rx.size()) {
+            n_result = n_result + n_offset;
+            _mp::clog::get_instance().log_fmt_in_debug_mode(L"[D%d] RX-OK : (n_offset, n_read)=(%d,%d,%u).\n", n_loop, n_offset, n_result, v_rx.size());
+            break; // read complete
+        }
+        //
+        _mp::clog::get_instance().log_fmt_in_debug_mode(L"[D%d] RX : (n_offset, n_read)=(%d,%d,%u).\n", n_loop, n_offset, n_result, v_rx.size());
+
+        n_offset = n_offset + n_result;
+        n_len = n_len - n_result;
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(_vhid_api_briage::_q_worker::_const_txrx_pair_rx_interval_mmsec));
+    } while (true);
+    //
+    return n_result;
 }
 
 
@@ -1329,22 +1359,24 @@ bool _vhid_api_briage::_q_container::push( const _vhid_api_briage::_q_item::type
 #ifdef _WIN32
 #ifdef _DEBUG
         if (cmd == _q_item::cmd_write) {
-            n_debug = 1;
+            if (n_debug == 0) {
+                n_debug = 1;
+            }
+            if (n_debug == 1) {
+                n_debug = 2;
+            }
+            else if (n_debug == 2) {
+                n_debug = 3;
+            }
+            else if (n_debug == 3) {
+                n_debug = 4;
+            }
+            else {
+                n_debug = 0;
+            }
             //ATLTRACE(L".......\n");
         }
         
-        if (n_debug == 1) {
-            n_debug = 2;
-        }
-        else if (n_debug == 2) {
-            n_debug = 3;
-        }
-        else if (n_debug == 3) {
-            n_debug = 4;
-        }
-        else {
-            n_debug = 0;
-        }
 #endif
 #endif
 

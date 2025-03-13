@@ -34,17 +34,17 @@ namespace _mp {
             _const_dev_io_check_interval_mmsec = 3//50
         };
         enum {
-            _const_dev_rx_check_interval_mmsec = 3//50
+            _const_dev_rx_check_interval_mmsec = 1//50
         };
         enum {
             _const_dev_rx_recover_interval_usec = 1000
         };
         enum {
-            _const_dev_rx_flush_interval_mmsec = 2
+            _const_dev_rx_flush_interval_mmsec = 1
         };
 
         enum {
-            _const_lost_packet_retry_counter = 3
+            _const_lost_packet_retry_counter = 300  // times of clibhid_dev::_const_dev_rx_check_interval_mmsec
         };
 
     public:
@@ -117,7 +117,17 @@ namespace _mp {
         */
         std::pair<bool, bool> _read_using_thread(std::vector<unsigned char>& v_rx);
 
-        bool _process_new_request_and_set_result(cqitem_dev::type_ptr& ptr_req);
+
+        /**
+        * @brief process new request and set result but Don't notify.
+        * 
+        * @param ptr_req - new request.
+        * 
+        * @return first - true(the new request is processed comppletely with success or error), false - need more time to process it.
+        * 
+        *   second - true(the new request is cancel request!, In this case, first must be true), false(else)
+        */
+        std::pair<bool,bool> _process_new_request_and_set_result(cqitem_dev::type_ptr& ptr_req);
 
         bool _process_only_tx(cqitem_dev::type_ptr& ptr_req);
 

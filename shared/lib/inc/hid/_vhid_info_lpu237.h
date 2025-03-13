@@ -30,13 +30,24 @@ private:
 
 public:
 	//static member
-	static bool is_rx_ibutton(const _mp::type_v_buffer& v_rx)
+	/**
+	* @brief check that the received data is i-button format.
+	* 
+	* @param v_rx - the received data.
+	* 
+	* @return 
+	*	first - true(the received data is i-button format). false(not~)
+	* 
+	*	second - 8 bytes ibutton key code(by defined i-button itself) or remove-key code(by defined user. default are 0,0,0,0,0,0,0,0) .
+	*/
+	static std::pair<bool, _mp::type_v_buffer> is_rx_ibutton(const _mp::type_v_buffer& v_rx)
 	{
 		bool b_result(false);
 
 		const std::string s_ibutton_postfix("this_is_ibutton_data");
 		const size_t n_size_button_data(8);
 		const size_t n_len_bytes = 3;
+		_mp::type_v_buffer v_code(0);
 
 		do {
 			if (v_rx.size() < n_len_bytes + s_ibutton_postfix.size() + n_size_button_data) {
@@ -54,9 +65,13 @@ public:
 					break;//exit for
 				}
 			}//end for
+
+			if (b_result) {
+				std::copy(v_rx.begin() + n_len_bytes, v_rx.begin() + n_len_bytes + n_size_button_data, std::back_inserter(v_code));
+			}
 			
 		} while (false);
-		return b_result;
+		return std::make_pair(b_result,v_code);
 	}
 	static bool is_rx_pair_txrx(const _mp::type_v_buffer& v_rx)
 	{

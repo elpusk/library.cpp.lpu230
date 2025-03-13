@@ -203,21 +203,21 @@ namespace _mp{
                 m_set_cur_dev_info = set_dev;
 
                 for (auto item : m_set_removed_dev_info) {
-                    clog::get_instance().trace(L"[I] - %ls - removed : %ls.\n", __WFUNCTION__, item.get_path_by_wstring().c_str());
+                    clog::get_instance().trace(L"T[I] - %ls - removed : %ls.\n", __WFUNCTION__, item.get_path_by_wstring().c_str());
                     clog::get_instance().log_fmt(L"[I] - %ls - removed : %ls.\n", __WFUNCTION__, item.get_path_by_wstring().c_str());
                 }
 
                 for (auto item : m_set_inserted_dev_info) {
-                    clog::get_instance().trace(L"[I] - %ls - inserted : %ls.\n", __WFUNCTION__, item.get_path_by_wstring().c_str());
+                    clog::get_instance().trace(L"T[I] - %ls - inserted : %ls.\n", __WFUNCTION__, item.get_path_by_wstring().c_str());
                     clog::get_instance().log_fmt(L"[I] - %ls - inserted : %ls.\n", __WFUNCTION__, item.get_path_by_wstring().c_str());
                 }
 
                 if (m_set_cur_dev_info.empty()) {
-                    clog::get_instance().trace(L"[I] - current : none.\n");
+                    clog::get_instance().trace(L"T[I] - current : none.\n");
                 }
                 else {
                     for (auto item : m_set_cur_dev_info) {
-                        clog::get_instance().trace(L"[I] - %ls - current : %ls.\n", __WFUNCTION__, item.get_path_by_wstring().c_str());
+                        clog::get_instance().trace(L"T[I] - %ls - current : %ls.\n", __WFUNCTION__, item.get_path_by_wstring().c_str());
                     }
                 }
 

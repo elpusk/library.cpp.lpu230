@@ -33,7 +33,7 @@ namespace _mp {
 
         if (ccertificate::get_log()) {
             ccertificate::get_log()->log_fmt(L"[I] - %ls | enter.\n", __WFUNCTION__);
-            ccertificate::get_log()->trace(L"[I] - %ls | enter.\n", __WFUNCTION__);
+            ccertificate::get_log()->trace(L"T[I] - %ls | enter.\n", __WFUNCTION__);
         }
 
         do {
@@ -43,7 +43,7 @@ namespace _mp {
             if (!ptr_ca_private_key) {
                 if (ccertificate::get_log()) {
                     ccertificate::get_log()->log_fmt(L"[E] - %ls | generate_2048_rsa_key.\n", __WFUNCTION__);
-                    ccertificate::get_log()->trace(L"[E] - %ls | generate_2048_rsa_key.\n", __WFUNCTION__);
+                    ccertificate::get_log()->trace(L"T[E] - %ls | generate_2048_rsa_key.\n", __WFUNCTION__);
                 }
                 continue;
             }
@@ -56,7 +56,7 @@ namespace _mp {
             if (!ptr_ca_certificate) {
                 if (ccertificate::get_log()) {
                     ccertificate::get_log()->log_fmt(L"[E] - %ls | generate_self_signed_x509_certificate.\n", __WFUNCTION__);
-                    ccertificate::get_log()->trace(L"[E] - %ls | generate_self_signed_x509_certificate.\n", __WFUNCTION__);
+                    ccertificate::get_log()->trace(L"T[E] - %ls | generate_self_signed_x509_certificate.\n", __WFUNCTION__);
                 }
                 continue;
             }
@@ -75,7 +75,7 @@ namespace _mp {
             if (!ptr_saver_certificate) {
                 if (ccertificate::get_log()) {
                     ccertificate::get_log()->log_fmt(L"[E] - %ls | generate_x509_certificate.\n", __WFUNCTION__);
-                    ccertificate::get_log()->trace(L"[E] - %ls | generate_x509_certificate.\n", __WFUNCTION__);
+                    ccertificate::get_log()->trace(L"T[E] - %ls | generate_x509_certificate.\n", __WFUNCTION__);
                 }
                 continue;
             }
@@ -83,7 +83,7 @@ namespace _mp {
             if (!ccertificate::remove_certificate_from_system_root_ca(s_ca_cert_common_name, s_file_cert)) {
                 if (ccertificate::get_log()) {
                     ccertificate::get_log()->log_fmt(L"[E] - %ls | remove_certificate_from_system_root_ca.\n", __WFUNCTION__);
-                    ccertificate::get_log()->trace(L"[E] - %ls | remove_certificate_from_system_root_ca.\n", __WFUNCTION__);
+                    ccertificate::get_log()->trace(L"T[E] - %ls | remove_certificate_from_system_root_ca.\n", __WFUNCTION__);
                 }
                 continue;
             }
@@ -91,7 +91,7 @@ namespace _mp {
             if (!ccertificate::store_certificate_to_system_root_ca(ptr_ca_certificate, s_file_cert)) {
                 if (ccertificate::get_log()) {
                     ccertificate::get_log()->log_fmt(L"[E] - %ls | store_certificate_to_system_root_ca.\n", __WFUNCTION__);
-                    ccertificate::get_log()->trace(L"[E] - %ls | store_certificate_to_system_root_ca.\n", __WFUNCTION__);
+                    ccertificate::get_log()->trace(L"T[E] - %ls | store_certificate_to_system_root_ca.\n", __WFUNCTION__);
                 }
                 continue;
             }
@@ -116,7 +116,7 @@ namespace _mp {
 
         if (ccertificate::get_log()) {
             ccertificate::get_log()->log_fmt(L"[I] - %ls | enter.\n", __WFUNCTION__);
-            ccertificate::get_log()->trace(L"[I] - %ls | enter.\n", __WFUNCTION__);
+            ccertificate::get_log()->trace(L"T[I] - %ls | enter.\n", __WFUNCTION__);
         }
 
         do {
@@ -130,7 +130,7 @@ namespace _mp {
             if (h_store == NULL) {
                 if (ccertificate::get_log()) {
                     ccertificate::get_log()->log_fmt(L"[E] - %ls | CertOpenStore.\n", __WFUNCTION__);
-                    ccertificate::get_log()->trace(L"[E] - %ls | CertOpenStore.\n", __WFUNCTION__);
+                    ccertificate::get_log()->trace(L"T[E] - %ls | CertOpenStore.\n", __WFUNCTION__);
                 }
                 b_result = false;
                 break;
@@ -161,14 +161,14 @@ namespace _mp {
                 if (dw_result == CRYPT_E_NOT_FOUND && b_not_found_is_true) {
                     if (ccertificate::get_log()) {
                         ccertificate::get_log()->log_fmt(L"[W] - %ls | CertFindCertificateInStore error code = CRYPT_E_NOT_FOUND.\n", __WFUNCTION__);
-                        ccertificate::get_log()->trace(L"[W] - %ls | CertFindCertificateInStore error code = CRYPT_E_NOT_FOUND.\n", __WFUNCTION__);
+                        ccertificate::get_log()->trace(L"T[W] - %ls | CertFindCertificateInStore error code = CRYPT_E_NOT_FOUND.\n", __WFUNCTION__);
                     }
                     b_result = true;
                 }
                 else {
                     if (ccertificate::get_log()) {
                         ccertificate::get_log()->log_fmt(L"[E] - %ls | CertFindCertificateInStore error code = %u.\n", __WFUNCTION__, dw_result);
-                        ccertificate::get_log()->trace(L"[E] - %ls | CertFindCertificateInStore error code = %u.\n", __WFUNCTION__, dw_result);
+                        ccertificate::get_log()->trace(L"T[E] - %ls | CertFindCertificateInStore error code = %u.\n", __WFUNCTION__, dw_result);
                     }
                     b_result = false;
                 }
@@ -178,7 +178,7 @@ namespace _mp {
             if (!CertDeleteCertificateFromStore(CertDuplicateCertificateContext(p_cert_context))) {
                 if (ccertificate::get_log()) {
                     ccertificate::get_log()->log_fmt(L"[E] - %ls | CertDeleteCertificateFromStore.\n", __WFUNCTION__);
-                    ccertificate::get_log()->trace(L"[E] - %ls | CertDeleteCertificateFromStore.\n", __WFUNCTION__);
+                    ccertificate::get_log()->trace(L"T[E] - %ls | CertDeleteCertificateFromStore.\n", __WFUNCTION__);
                 }
                 b_result = false;
                 break;
@@ -224,14 +224,14 @@ namespace _mp {
             if (b_not_found_is_true) {
                 if (ccertificate::get_log()) {
                     ccertificate::get_log()->log_fmt(L"[W] - %ls | Certificate not found.\n", __FUNCTION__);
-                    ccertificate::get_log()->trace(L"[W] - %ls | Certificate not found.\n", __FUNCTION__);
+                    ccertificate::get_log()->trace(L"T[W] - %ls | Certificate not found.\n", __FUNCTION__);
                 }
                 return true;
             }
             else {
                 if (ccertificate::get_log()) {
                     ccertificate::get_log()->log_fmt(L"[E] - %ls | Certificate not found.\n", __FUNCTION__);
-                    ccertificate::get_log()->trace(L"[E] - %ls | Certificate not found.\n", __FUNCTION__);
+                    ccertificate::get_log()->trace(L"T[E] - %ls | Certificate not found.\n", __FUNCTION__);
                 }
                 return false;
             }
@@ -255,7 +255,7 @@ namespace _mp {
         if (ret != 0) {
             if (ccertificate::get_log()) {
                 ccertificate::get_log()->log_fmt(L"[E] - %ls | Failed to delete certificate.\n", __FUNCTION__);
-                ccertificate::get_log()->trace(L"[E] - %ls | Failed to delete certificate.\n", __FUNCTION__);
+                ccertificate::get_log()->trace(L"T[E] - %ls | Failed to delete certificate.\n", __FUNCTION__);
             }
             return false;
         }
@@ -264,7 +264,7 @@ namespace _mp {
         if (ret != 0) {
             if (ccertificate::get_log()) {
                 ccertificate::get_log()->log_fmt(L"[E] - %ls | Failed to update CA certificates.\n", __FUNCTION__);
-                ccertificate::get_log()->trace(L"[E] - %ls | Failed to update CA certificates.\n", __FUNCTION__);
+                ccertificate::get_log()->trace(L"T[E] - %ls | Failed to update CA certificates.\n", __FUNCTION__);
             }
             return false;
         }
@@ -297,7 +297,7 @@ namespace _mp {
 
             if (h_store == NULL) {
                 if (ccertificate::get_log()) {
-                    ccertificate::get_log()->trace(L"[E] - %ls - %ls - CertOpenStore().\n", __WFILE__, __WFUNCTION__);
+                    ccertificate::get_log()->trace(L"T[E] - %ls - %ls - CertOpenStore().\n", __WFILE__, __WFUNCTION__);
                 }
                 continue;
             }
@@ -305,7 +305,7 @@ namespace _mp {
             int n_cert = i2d_X509(ptr_cert.get(), &s_cert);
             if (n_cert <= 0) {
                 if (ccertificate::get_log()) {
-                    ccertificate::get_log()->trace(L"[E] - %ls - %ls - i2d_X509().\n", __WFILE__, __WFUNCTION__);
+                    ccertificate::get_log()->trace(L"T[E] - %ls - %ls - i2d_X509().\n", __WFILE__, __WFUNCTION__);
                 }
                 continue;
             }
@@ -320,7 +320,7 @@ namespace _mp {
             )) {
                 dw_result = GetLastError();
                 if (ccertificate::get_log()) {
-                    ccertificate::get_log()->trace(L"[E] - %ls - %ls - CertAddEncodedCertificateToStore() - code - %u.\n", __WFILE__, __WFUNCTION__, dw_result);
+                    ccertificate::get_log()->trace(L"T[E] - %ls - %ls - CertAddEncodedCertificateToStore() - code - %u.\n", __WFILE__, __WFUNCTION__, dw_result);
                 }
                 continue;
             }
@@ -335,7 +335,7 @@ namespace _mp {
      do {
         if (!ptr_cert) {
             if (ccertificate::get_log()) {
-                ccertificate::get_log()->trace(L"[E] - %ls - %ls - Invalid certificate.\n", __WFILE__, __WFUNCTION__);
+                ccertificate::get_log()->trace(L"T[E] - %ls - %ls - Invalid certificate.\n", __WFILE__, __WFUNCTION__);
             }
             continue;
         }
@@ -367,7 +367,7 @@ namespace _mp {
 
         if (PEM_write_X509(fp, ptr_cert.get()) == 0) {
             if (ccertificate::get_log()) {
-                ccertificate::get_log()->trace(L"[E] - %ls - %ls - PEM_write_X509().\n", __WFILE__, __WFUNCTION__);
+                ccertificate::get_log()->trace(L"T[E] - %ls - %ls - PEM_write_X509().\n", __WFILE__, __WFUNCTION__);
             }
             fclose(fp);
             continue;
@@ -378,7 +378,7 @@ namespace _mp {
         int ret = system("sudo update-ca-certificates");
         if (ret != 0) {
             if (ccertificate::get_log()) {
-                ccertificate::get_log()->trace(L"[E] - %ls - %ls - update CA certificates.\n", __WFILE__, __WFUNCTION__);
+                ccertificate::get_log()->trace(L"T[E] - %ls - %ls - update CA certificates.\n", __WFILE__, __WFUNCTION__);
             }
             continue;
         }
@@ -467,7 +467,7 @@ namespace _mp {
 
         if (ccertificate::get_log()) {
             ccertificate::get_log()->log_fmt(L"[I] - %ls | enter.\n", __WFUNCTION__);
-            ccertificate::get_log()->trace(L"[I] - %ls | enter.\n", __WFUNCTION__);
+            ccertificate::get_log()->trace(L"T[I] - %ls | enter.\n", __WFUNCTION__);
         }
 
         do {
@@ -516,7 +516,7 @@ namespace _mp {
                 //error
                 if (ccertificate::get_log()) {
                     ccertificate::get_log()->log_fmt(L"[E] - %ls | fopen_s(%d) | %ls.\n", __WFUNCTION__, file_err, s_will_be_saved_key_file_by_pem.c_str());
-                    ccertificate::get_log()->trace(L"[E] - %ls | fopen_s(%d) | %ls.\n", __WFUNCTION__, file_err, s_will_be_saved_key_file_by_pem.c_str());
+                    ccertificate::get_log()->trace(L"T[E] - %ls | fopen_s(%d) | %ls.\n", __WFUNCTION__, file_err, s_will_be_saved_key_file_by_pem.c_str());
                 }
                 continue;
             }
@@ -527,7 +527,7 @@ namespace _mp {
                 perror("fopen");
                 if (ccertificate::get_log()) {
                     ccertificate::get_log()->log_fmt(L"[E] - %ls | fopen_s() | %ls.\n", __WFUNCTION__, s_will_be_saved_key_file_by_pem.c_str());
-                    ccertificate::get_log()->trace(L"[E] - %ls | fopen_s() | %ls.\n", __WFUNCTION__, s_will_be_saved_key_file_by_pem.c_str());
+                    ccertificate::get_log()->trace(L"T[E] - %ls | fopen_s() | %ls.\n", __WFUNCTION__, s_will_be_saved_key_file_by_pem.c_str());
                 }
                 continue;
             }
@@ -538,7 +538,7 @@ namespace _mp {
             if (!b_return) {
                 if (ccertificate::get_log()) {
                     ccertificate::get_log()->log_fmt(L"[E] - %ls | PEM_write_PrivateKey.\n", __WFUNCTION__);
-                    ccertificate::get_log()->trace(L"[E] - %ls | PEM_write_PrivateKey.\n", __WFUNCTION__);
+                    ccertificate::get_log()->trace(L"T[E] - %ls | PEM_write_PrivateKey.\n", __WFUNCTION__);
                 }
             }
 
@@ -562,7 +562,7 @@ namespace _mp {
 
         if (ccertificate::get_log()) {
             ccertificate::get_log()->log_fmt(L"[I] - %ls | enter.\n", __WFUNCTION__);
-            ccertificate::get_log()->trace(L"[I] - %ls | enter.\n", __WFUNCTION__);
+            ccertificate::get_log()->trace(L"T[I] - %ls | enter.\n", __WFUNCTION__);
         }
 
         do {
@@ -650,7 +650,7 @@ namespace _mp {
                 //error
                 if (ccertificate::get_log()) {
                     ccertificate::get_log()->log_fmt(L"[E] - %ls | fopen_s(%d) | %ls.\n", __WFUNCTION__, file_err, s_self_signed_cert_pem_format_file.c_str());
-                    ccertificate::get_log()->trace(L"[E] - %ls | fopen_s(%d) | %ls.\n", __WFUNCTION__, file_err, s_self_signed_cert_pem_format_file.c_str());
+                    ccertificate::get_log()->trace(L"T[E] - %ls | fopen_s(%d) | %ls.\n", __WFUNCTION__, file_err, s_self_signed_cert_pem_format_file.c_str());
                 }
                 continue;
             }
@@ -661,7 +661,7 @@ namespace _mp {
                 perror("fopen");
                 if (ccertificate::get_log()) {
                     ccertificate::get_log()->log_fmt(L"[E] - %ls | fopen_s() | %ls.\n", __WFUNCTION__, s_self_signed_cert_pem_format_file.c_str());
-                    ccertificate::get_log()->trace(L"[E] - %ls | fopen_s() | %ls.\n", __WFUNCTION__, s_self_signed_cert_pem_format_file.c_str());
+                    ccertificate::get_log()->trace(L"T[E] - %ls | fopen_s() | %ls.\n", __WFUNCTION__, s_self_signed_cert_pem_format_file.c_str());
                 }
                 continue;
             }
@@ -672,7 +672,7 @@ namespace _mp {
             if (!b_return) {
                 if (ccertificate::get_log()) {
                     ccertificate::get_log()->log_fmt(L"[E] - %ls | PEM_write_X509.\n", __WFUNCTION__);
-                    ccertificate::get_log()->trace(L"[E] - %ls | PEM_write_X509.\n", __WFUNCTION__);
+                    ccertificate::get_log()->trace(L"T[E] - %ls | PEM_write_X509.\n", __WFUNCTION__);
                 }
             }
 
@@ -698,7 +698,7 @@ namespace _mp {
 
         if (ccertificate::get_log()) {
             ccertificate::get_log()->log_fmt(L"[I] - %ls | enter.\n", __WFUNCTION__);
-            ccertificate::get_log()->trace(L"[I] - %ls | enter.\n", __WFUNCTION__);
+            ccertificate::get_log()->trace(L"T[I] - %ls | enter.\n", __WFUNCTION__);
         }
 
         do {
@@ -711,7 +711,7 @@ namespace _mp {
             if (!ptr_server_private_key) {
                 if (ccertificate::get_log()) {
                     ccertificate::get_log()->log_fmt(L"[E] - %ls | generate_2048_rsa_key.\n", __WFUNCTION__);
-                    ccertificate::get_log()->trace(L"[E] - %ls | generate_2048_rsa_key.\n", __WFUNCTION__);
+                    ccertificate::get_log()->trace(L"T[E] - %ls | generate_2048_rsa_key.\n", __WFUNCTION__);
                 }
                 continue;
             }
@@ -723,7 +723,7 @@ namespace _mp {
             if (!ptr_csr) {
                 if (ccertificate::get_log()) {
                     ccertificate::get_log()->log_fmt(L"[E] - %ls | _generate_x509_certificate_signing_request.\n", __WFUNCTION__);
-                    ccertificate::get_log()->trace(L"[E] - %ls | _generate_x509_certificate_signing_request.\n", __WFUNCTION__);
+                    ccertificate::get_log()->trace(L"T[E] - %ls | _generate_x509_certificate_signing_request.\n", __WFUNCTION__);
                 }
                 continue;
             }
@@ -731,7 +731,7 @@ namespace _mp {
             if (!ptr_saver_certificate) {
                 if (ccertificate::get_log()) {
                     ccertificate::get_log()->log_fmt(L"[E] - %ls | _generate_x509_certificate.\n", __WFUNCTION__);
-                    ccertificate::get_log()->trace(L"[E] - %ls | _generate_x509_certificate.\n", __WFUNCTION__);
+                    ccertificate::get_log()->trace(L"T[E] - %ls | _generate_x509_certificate.\n", __WFUNCTION__);
                 }
                 continue;
             }
@@ -812,7 +812,7 @@ namespace _mp {
                 //error
                 if (ccertificate::get_log()) {
                     ccertificate::get_log()->log_fmt(L"[E] - %ls | fopen_s(%d) | %ls.\n", __WFUNCTION__, file_err, s_csr_file.c_str());
-                    ccertificate::get_log()->trace(L"[E] - %ls | fopen_s(%d) | %ls.\n", __WFUNCTION__, file_err, s_csr_file.c_str());
+                    ccertificate::get_log()->trace(L"T[E] - %ls | fopen_s(%d) | %ls.\n", __WFUNCTION__, file_err, s_csr_file.c_str());
                 }
                 continue;
             }
@@ -823,7 +823,7 @@ namespace _mp {
                 perror("fopen");
                 if (ccertificate::get_log()) {
                     ccertificate::get_log()->log_fmt(L"[E] - %ls | fopen_s() | %ls.\n", __WFUNCTION__, s_csr_file.c_str());
-                    ccertificate::get_log()->trace(L"[E] - %ls | fopen_s() | %ls.\n", __WFUNCTION__, s_csr_file.c_str());
+                    ccertificate::get_log()->trace(L"T[E] - %ls | fopen_s() | %ls.\n", __WFUNCTION__, s_csr_file.c_str());
                 }
                 continue;
             }
@@ -834,7 +834,7 @@ namespace _mp {
             if (!b_return) {
                 if (ccertificate::get_log()) {
                     ccertificate::get_log()->log_fmt(L"[E] - %ls | PEM_write_X509_REQ.\n", __WFUNCTION__);
-                    ccertificate::get_log()->trace(L"[E] - %ls | PEM_write_X509_REQ.\n", __WFUNCTION__);
+                    ccertificate::get_log()->trace(L"T[E] - %ls | PEM_write_X509_REQ.\n", __WFUNCTION__);
                 }
             }
             if (p_x509_req_file)
@@ -942,7 +942,7 @@ namespace _mp {
                 //error
                 if (ccertificate::get_log()) {
                     ccertificate::get_log()->log_fmt(L"[E] - %ls | fopen_s(%d) | %ls.\n", __WFUNCTION__, file_err, s_cert_pem_format_file.c_str());
-                    ccertificate::get_log()->trace(L"[E] - %ls | fopen_s(%d) | %ls.\n", __WFUNCTION__, file_err, s_cert_pem_format_file.c_str());
+                    ccertificate::get_log()->trace(L"T[E] - %ls | fopen_s(%d) | %ls.\n", __WFUNCTION__, file_err, s_cert_pem_format_file.c_str());
                 }
                 continue;
             }
@@ -953,7 +953,7 @@ namespace _mp {
                 perror("fopen");
                 if (ccertificate::get_log()) {
                     ccertificate::get_log()->log_fmt(L"[E] - %ls | fopen_s() | %ls.\n", __WFUNCTION__, s_cert_pem_format_file.c_str());
-                    ccertificate::get_log()->trace(L"[E] - %ls | fopen_s() | %ls.\n", __WFUNCTION__, s_cert_pem_format_file.c_str());
+                    ccertificate::get_log()->trace(L"T[E] - %ls | fopen_s() | %ls.\n", __WFUNCTION__, s_cert_pem_format_file.c_str());
                 }
                 continue;
             }
@@ -964,7 +964,7 @@ namespace _mp {
             if (!b_return) {
                 if (ccertificate::get_log()) {
                     ccertificate::get_log()->log_fmt(L"[E] - %ls | PEM_write_X509.\n", __WFUNCTION__);
-                    ccertificate::get_log()->trace(L"[E] - %ls | PEM_write_X509.\n", __WFUNCTION__);
+                    ccertificate::get_log()->trace(L"T[E] - %ls | PEM_write_X509.\n", __WFUNCTION__);
                 }
             }
             if (p_x509_file)

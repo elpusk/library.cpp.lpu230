@@ -173,7 +173,7 @@ namespace _mp {
         m_q_rx_ptr_v.clear();//pumpping.
 
         if (!b_read_is_normal) {
-            clog::get_instance().trace(L"[W] - %ls - _read_using_thread() in pump.\n", __WFUNCTION__);
+            clog::get_instance().trace(L"T[W] - %ls - _read_using_thread() in pump.\n", __WFUNCTION__);
             clog::get_instance().log_fmt(L"[W] - %ls - _read_using_thread() in pump.\n", __WFUNCTION__);
             if (b_expected_replugin) {
                 m_b_detect_replugin = true;//need this device instance removed
@@ -260,7 +260,7 @@ namespace _mp {
                     next = _hid_api_briage::next_io_write;
                 }
                 n_result = m_p_hid_api_briage->api_write(m_n_dev, &v_report[0], v_report.size(), next);
-                _mp::clog::get_instance().log_data_in_debug_mode(v_report, L"v_report = ", L"\n");
+                //_mp::clog::get_instance().log_data_in_debug_mode(v_report, L"v_report = ", L"\n");
                 if (n_result < 0) {
                     b_result = false;
                     _mp::clog::get_instance().log_fmt(L"[E] hid_write() < 0(n_result : n_offset : v_tx.size()) = (%d,%d,%u).\n", n_result, n_offset, v_tx.size());
@@ -403,8 +403,9 @@ namespace _mp {
         return std::make_pair(b_result, b_expected_replugin);
     }
 
-    bool clibhid_dev::_process_new_request_and_set_result(cqitem_dev::type_ptr& ptr_req)
+    std::pair<bool, bool> clibhid_dev::_process_new_request_and_set_result(cqitem_dev::type_ptr& ptr_req)
     {
+        bool b_request_is_cancel(false);
         bool b_complete(true);
         bool b_result(false);
         _mp::type_v_buffer v_rx(0);
@@ -422,9 +423,10 @@ namespace _mp {
                 std::tie(b_result, b_complete, v_rx) = _process_only_rx(ptr_req);
                 break;
             case cqitem_dev::req_cancel:
+                b_request_is_cancel = true;
             default:
                 b_result = _process_cancel(ptr_req);//result is ignored
-                ptr_req->set_result(cqitem_dev::result_cancel, type_v_buffer(0), L"CANCELLED BY ANOTHER REQ");
+                ptr_req->set_result(cqitem_dev::result_success, type_v_buffer(0), L"SUCCESS CANCEL REQ");
                 continue;
             }//end switch
 
@@ -439,7 +441,7 @@ namespace _mp {
         } while (false);
 
 
-        return b_complete;
+        return std::make_pair(b_complete,b_request_is_cancel);
     }
 
     bool clibhid_dev::_process_only_tx(cqitem_dev::type_ptr& ptr_req)
@@ -513,7 +515,7 @@ namespace _mp {
             //
             std::tie(b_result, b_expected_replugin) = _read_using_thread(v_rx);
             if (!b_result) {//ERROR RX
-                clog::get_instance().trace(L"[E] - %ls - _read_using_thread().\n", __WFUNCTION__);
+                clog::get_instance().trace(L"T[E] - %ls - _read_using_thread().\n", __WFUNCTION__);
                 clog::get_instance().log_fmt(L"[E] - %ls - _read_using_thread().\n", __WFUNCTION__);
 
                 if (b_expected_replugin) {
@@ -530,11 +532,16 @@ namespace _mp {
             //RX OK.
             if (ptr_req->get_request_type() == cqitem_dev::req_tx_rx) {
                 if (v_rx[0] != 'R') {//lpu237 specific protocol
-
-                    //may be response is msr or ibutton data.
-                    //therefore , this response is error. 
-                    clog::get_instance().trace(L"[E] - %ls - the missed response is passed.\n", __WFUNCTION__);
-                    clog::get_instance().log_fmt(L"[E] - %ls - the missed response is passed.\n", __WFUNCTION__);
+                    // very important code - fix miss-matching txrx protocol. 
+                    // 펨웨어에서, msr 이나 ibutton 데이터를 보내려고, usb buffer 에 데이타를 쓰고 있는 때,
+                    // tx 가 전송되면, api 는 tx 에 대한 응답으로 msr 이나 ibutton 데이터를 받을수 있다.
+                    // 이러한 경우 프로토콜 미스로 문제가 생기므로, 이 msr 이나 ibutton 은 무시되어야 한다. 무조건 !
+                    b_complete = false;
+                    v_rx.resize(0);
+                    //
+                    clog::get_instance().trace(L"T[W] - %ls - the missed response is passed.\n", __WFUNCTION__);
+                    clog::get_instance().log_fmt(L"[W] - %ls - the missed response is passed.\n", __WFUNCTION__);
+                    //
                     continue; //and need re-read.
                 }
             }
@@ -604,7 +611,7 @@ namespace _mp {
             int n_result = 0;
 
             int n_offset(0);
-            int n_max_try = 3;
+            int n_max_try = 50;//50msec
             int n_retry = n_max_try;
 
             do {
@@ -616,6 +623,7 @@ namespace _mp {
                 n_result = m_p_hid_api_briage->api_read(m_n_dev, &v_report_in[n_offset], v_report_in.size() - n_offset, v_report_in.size());//wait block or not by initialization
                 if (n_result == 0) {
                     if (n_offset == 0) {
+                        //_mp::clog::get_instance().log_fmt(L"[W] %ls : .\n", __WFUNCTION__);
                         break;//re-read transaction
                     }
 
@@ -624,7 +632,7 @@ namespace _mp {
                     if (n_retry <= 0) {
                         //lost a packet
                         m_q_rx_ptr_v.push(std::make_shared<_mp::type_v_buffer>(0));
-                        _mp::clog::get_instance().log_fmt(L"[E] %ls : lost packet\n", __WFUNCTION__);
+                        _mp::clog::get_instance().log_fmt(L"[E] %ls : lost packet - push zero size buffer.\n", __WFUNCTION__);
                         break;//restart transaction
                     }
                     std::this_thread::sleep_for(std::chrono::microseconds(clibhid_dev::_const_dev_rx_recover_interval_usec));
@@ -695,7 +703,7 @@ namespace _mp {
         sched_param sch_params;
         sch_params.sched_priority = n_priority;
         if (pthread_setschedparam(nativeHandle, n_policy, &sch_params)) {//NEED root 
-            clog::get_instance().trace(L"[E] - %ls - Failed to set thread priority.\n", __WFUNCTION__);
+            clog::get_instance().trace(L"T[E] - %ls - Failed to set thread priority.\n", __WFUNCTION__);
             clog::get_instance().log_fmt(L"[E] - %ls - Failed to set thread priority.\n", __WFUNCTION__);
         }
 
@@ -703,29 +711,54 @@ namespace _mp {
         bool b_read = true;
         bool b_expected_replugin = false;
         bool b_complete(true);
+        bool b_request_is_cancel(false);
 
         while(m_b_run_th_worker){
 
             do {
-                if (!ptr_cur) {
-                    //현재 처리하고 있는 명령 없음. 
-                    //pumpping mode....... none processing request.
-                    if (!m_q_ptr.try_pop(ptr_new)) {
+                if (!m_q_ptr.try_pop(ptr_new)) {
+                    // 새로운 명령 없음.
+                    if (!ptr_cur) {
+                        // 현재 작업 주인 것 없으면.
                         std::tie(b_read, b_expected_replugin) = _pump();//pumpping.
                         continue;
                     }
 
-                    // 새로운 명령을 pop한 경우.
+                    // 현재 작업 중인 것 있으면,
+                }
+                else {
+                    // 새로운 명령이 들어오면. 
+                    /*
+                    if (ptr_cur) {
+                        // 기존 명령 취소.
+                        _process_cancel(ptr_cur);//result is ignored
+                        ptr_cur->set_result(cqitem_dev::result_cancel, type_v_buffer(0), L"CANCELLED BY ANOTHER REQ");
+                        // callback 의 return 값이 관계없이 현재 작업은 제거.
+                        ptr_cur->run_callback();
+                        ptr_cur.reset();
+                    }
+                    */
+
+                    // pop된 새로운 명령의 경우.
                     if (!b_read) {
                         // 새로운 명령을 pop  했지만, 현재 rx 가 에러 상태이므로 새로운 명령은 바로 에러로 처리.
-                        clog::get_instance().trace(L"[E] - %ls - new request but read is error status.\n", __WFUNCTION__);
+                        clog::get_instance().trace(L"T[E] - %ls - new request but read is error status.\n", __WFUNCTION__);
                         clog::get_instance().log_fmt(L"[E] - %ls - new request but read is error status.\n", __WFUNCTION__);
                         ptr_new->set_result(cqitem_dev::result_error, type_v_buffer(0), L"RX");
                         continue;
                     }
 
                     // 새로운 명령을 처리.
-                    b_complete = _process_new_request_and_set_result(ptr_new);
+                    std::tie(b_complete,b_request_is_cancel) = _process_new_request_and_set_result(ptr_new);
+                    if (b_request_is_cancel) {
+                        // 이 경우 b_request_is_cancel 는 항상 true.
+                        if (ptr_cur) {
+                            // 현재 실행 중인 명령이 있으면, cancel request 에 의해 취소 되므로, 
+                            // ptr_cur 의 결과를 설정한다.
+                            ptr_cur->set_result(cqitem_dev::result_cancel, type_v_buffer(0), L"CANCELLED BY ANOTHER REQ");
+                        }
+                        continue;
+                    }
                     if (b_complete) {
                         continue; // 새로운 명령은 처리됨.
                     }
@@ -738,23 +771,20 @@ namespace _mp {
                 // 현재 명령으로 설정된 명령을 위해 계속 수신 시도함.
                 std::tie(b_read, b_complete, v_rx) = _process_only_rx(ptr_cur);
                 if (!b_complete) {
+#if defined(_WIN32) && defined(_DEBUG)
+                    ATLTRACE(L" =======(%s) _process_only_rx.\n", _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str());
+#endif
                     continue;
                 }
                 if (b_read) {
                     ptr_cur->set_result(cqitem_dev::result_success, v_rx, L"SUCCESS");
                 }
                 else {
-                    ptr_cur->set_result(cqitem_dev::result_error, v_rx, L"ERROR");
+                    ptr_cur->set_result(cqitem_dev::result_error, v_rx, L"ERROR-_process_only_rx()");
                 }
             } while (false);//main do-while(false)
 
-            // notify
-            if (ptr_new) {
-                if (ptr_new->is_complete()) {
-                    ptr_new->run_callback();//impossible re-read
-                }
-                ptr_new.reset();
-            }
+            // notify 는 항상 실행하고 있던 것 부터하고, 신규는 그 나중에 알림을 한다.
             if (ptr_cur) {
                 if (ptr_cur->is_complete()) {
                     if (ptr_cur->run_callback()) {
@@ -764,6 +794,13 @@ namespace _mp {
                         //user want to read more operation.
                     }
                 }
+            }
+
+            if (ptr_new) {
+                if (ptr_new->is_complete()) {
+                    ptr_new->run_callback();//impossible re-read
+                }
+                ptr_new.reset();
             }
 
             std::this_thread::sleep_for(std::chrono::milliseconds(clibhid_dev::_const_dev_io_check_interval_mmsec));

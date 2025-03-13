@@ -40,7 +40,7 @@ namespace _mp{
 
     protected:
         enum {
-            _const_dev_pluginout_check_interval_mmsec = 30
+            _const_dev_pluginout_check_interval_mmsec = 100
         };
     public:
         static clibhid& get_instance();

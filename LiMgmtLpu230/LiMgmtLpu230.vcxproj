@@ -239,6 +239,7 @@
     <ClCompile>
       <AdditionalOptions>-D_POSIX_C_SOURCE=200809L %(AdditionalOptions)</AdditionalOptions>
       <CppLanguageStandard>c++14</CppLanguageStandard>
+      <PreprocessorDefinitions>_DEBUG</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

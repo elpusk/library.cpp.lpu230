@@ -208,10 +208,13 @@ private:
 
 	private:
 		enum {
-			_const_worker_interval_mmsec = 2
+			_const_worker_interval_mmsec = 1
 		};
 		enum {
 			_const_txrx_pair_tx_interval_mmsec = 1
+		};
+		enum {
+			_const_txrx_pair_rx_interval_mmsec = 1
 		};
 
 	public:
@@ -332,6 +335,20 @@ private:
 			const _mp::type_ptr_v_buffer& ptr_v_rx,
 			const _q_item::type_ptr& ptr_req= _q_item::type_ptr()
 		);
+
+		/**
+		* @brief recevive data by _hid_api_briage::api_read. 
+		* 
+		* @param v_rx[in/out] - v_rx.size() must be eqaul to in-report size, the receved data will be save to this buffer,
+		* 
+		* @param p_api_briage - pointer of _hid_api_briage instance.
+		*
+		* @return return value of _hid_api_briage::api_read() in zero or negative.
+		* 
+		*	if _hid_api_briage::api_read() return partial value, this function concates the received all data to v_rx by the size of v_rx. 
+		*
+		*/
+		int _rx(_mp::type_v_buffer& v_rx, _hid_api_briage* p_api_briage);
 
 	private:
 		std::shared_ptr<std::thread> m_ptr_worker; // inner worker thread

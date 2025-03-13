@@ -6,6 +6,7 @@
 #endif // _WIN32
 
 #include <iostream>
+#include <sstream>
 #include <thread>
 #include <chrono>
 
@@ -43,6 +44,12 @@ int main(int argc, char* argv[])
             std::wcout << L" = hid - tx-rx test." << std::endl;
             std::wcout << L" = msr - reading msr test." << std::endl;
             std::wcout << L" = ibutton - reading ibutton test." << std::endl;
+            std::wcout << L" = msr ibutton - reading one msr and two ibutton test." << std::endl;
+            std::wcout << L" = cancelmsr - cancel reading msr test." << std::endl;
+            std::wcout << L" = cancelibutton - cancel reading ibutton test." << std::endl;
+            std::wcout << L"ex) hid io 10 times test > mgmt_lpu230 hid 10 " << std::endl;
+            std::wcout << L"ex) msr io 100 times test > mgmt_lpu230 hid 100 " << std::endl;
+            std::wcout << L"ex) ibutton io 200 times test > mgmt_lpu230 hid 200 " << std::endl;
             continue;
         }
 
@@ -52,24 +59,75 @@ int main(int argc, char* argv[])
         }
 
         auto it = std::begin(list_option);
-        ++it;
-        std::wstring s_test(*it);
-        //
-        if (s_test.compare(L"filter") == 0) {
-            n_result = _test::tp_hid::test_filtering();
-            continue;
+
+        if (list_option.size() == 2) {
+            ++it;
+            std::wstring s_test(*it);
+            //
+            if (s_test.compare(L"filter") == 0) {
+                n_result = _test::tp_hid::get_instance().test_filtering();
+                continue;
+            }
+            if (s_test.compare(L"hid") == 0) {
+                n_result = _test::tp_hid::get_instance().test_hid_io();
+                continue;
+            }
+            if (s_test.compare(L"msr") == 0) {
+                n_result = _test::tp_hid::get_instance().test_msr();
+                continue;
+            }
+            if (s_test.compare(L"ibutton") == 0) {
+                n_result = _test::tp_hid::get_instance().test_ibutton();
+                continue;
+            }
+            if (s_test.compare(L"cancelmsr") == 0) {
+                n_result = _test::tp_hid::get_instance().test_cancelmsr();
+                continue;
+            }
+            if (s_test.compare(L"cancelibutton") == 0) {
+                n_result = _test::tp_hid::get_instance().test_cancelibutton();
+                continue;
+            }
+
         }
-        if (s_test.compare(L"hid") == 0) {
-            n_result = _test::tp_hid::test7();
-            continue;
-        }
-        if (s_test.compare(L"msr") == 0) {
-            n_result = _test::tp_hid::test_msr();
-            continue;
-        }
-        if (s_test.compare(L"ibutton") == 0) {
-            n_result = _test::tp_hid::test_ibutton();
-            continue;
+
+        if (list_option.size() == 3) {
+            ++it;
+            std::wstring s_p1(*it);
+
+            ++it;
+            std::wstring s_p2(*it);
+
+            if ((s_p1 == L"msr" && s_p2 == L"ibutton") || (s_p1 == L"ibutton" && s_p2 == L"msr")) {
+                n_result = _test::tp_hid::get_instance().test_msr_ibutton();
+                continue;
+            }
+            //
+            std::wistringstream wiss(s_p2);
+            int n_loop(-1);
+            if (!(wiss >> n_loop)) {
+                _display_option();
+                continue;
+            }
+            // n_loop is interger
+            if (n_loop <= 0) {
+                _display_option();
+                continue;
+            }
+
+            if (s_p1.compare(L"hid") == 0) {
+                n_result = _test::tp_hid::get_instance().test_hid_io(n_loop);
+                continue;
+            }
+            if (s_p1.compare(L"msr") == 0) {
+                n_result = _test::tp_hid::get_instance().test_msr(n_loop);
+                continue;
+            }
+            if (s_p1.compare(L"ibutton") == 0) {
+                n_result = _test::tp_hid::get_instance().test_ibutton(n_loop);
+                continue;
+            }
+            
         }
 
         _display_option();

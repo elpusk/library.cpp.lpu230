@@ -588,6 +588,7 @@ int _hid_api_briage::api_read(int n_primitive_map_index, unsigned char* data, si
     std::lock_guard<std::mutex> lock(_hid_api_briage::get_mutex_for_hidapi());
 
     if (!m_b_ini) {
+        _mp::clog::get_instance().log_fmt(L"[E] %ls : not m_b_ini.\n", __WFUNCTION__);
         return -1;
     }
 
@@ -597,6 +598,9 @@ int _hid_api_briage::api_read(int n_primitive_map_index, unsigned char* data, si
     }
 
     int n_result = hid_read(p_dev, data, length);
+    if (n_result < 0) {
+        _mp::clog::get_instance().log_fmt(L"[E] %ls : n_result = %d.\n", __WFUNCTION__, n_result);
+    }
 	return n_result;
 }
 
