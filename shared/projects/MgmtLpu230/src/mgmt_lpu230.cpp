@@ -52,6 +52,8 @@ int main(int argc, char* argv[])
             std::wcout << L"ex) ibutton io 200 times test > mgmt_lpu230 ibutton 200 " << std::endl;
             std::wcout << L"ex) after default timeout, cancel the status of msr-reading 300 times test > mgmt_lpu230 cancelmsr 300 " << std::endl;
             std::wcout << L"ex) after 200 msec, cancel the status of msr-reading 100 times test > mgmt_lpu230 cancelmsr 100 200 " << std::endl;
+            std::wcout << L"ex) after default timeout, cancel the status of ibutton-reading 300 times test > mgmt_lpu230 cancelibutton 300 " << std::endl;
+            std::wcout << L"ex) after 200 msec, cancel the status of ibutton-reading 100 times test > mgmt_lpu230 cancelibutton 100 200 " << std::endl;
             continue;
         }
 
@@ -133,6 +135,10 @@ int main(int argc, char* argv[])
                 n_result = _test::tp_hid::get_instance().test_cancelmsr(n_loop);
                 continue;
             }
+            if (s_p1.compare(L"cancelibutton") == 0) {
+                n_result = _test::tp_hid::get_instance().test_cancelibutton(n_loop);
+                continue;
+            }
 
         }
 
@@ -146,8 +152,26 @@ int main(int argc, char* argv[])
             ++it;
             std::wstring s_p3(*it);
 
-            std::wistringstream wiss(s_p2);
             int n_loop(-1);
+
+            if ((s_p1 == L"msr" && s_p2 == L"ibutton") || (s_p1 == L"ibutton" && s_p2 == L"msr")) {
+
+                if (!(std::wistringstream(s_p3) >> n_loop)) {
+                    _display_option();
+                    continue;
+                }
+                // n_loop is interger
+                if (n_loop <= 0) {
+                    _display_option();
+                    continue;
+                }
+
+                n_result = _test::tp_hid::get_instance().test_msr_ibutton(n_loop);
+                continue;
+            }
+
+            std::wistringstream wiss(s_p2);
+
             if (!(wiss >> n_loop)) {
                 _display_option();
                 continue;
@@ -167,6 +191,10 @@ int main(int argc, char* argv[])
 
             if (s_p1.compare(L"cancelmsr") == 0) {
                 n_result = _test::tp_hid::get_instance().test_cancelmsr(n_loop, n_cancel_time_msec);
+                continue;
+            }
+            if (s_p1.compare(L"cancelibutton") == 0) {
+                n_result = _test::tp_hid::get_instance().test_cancelibutton(n_loop, n_cancel_time_msec);
                 continue;
             }
 

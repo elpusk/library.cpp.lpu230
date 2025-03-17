@@ -949,24 +949,6 @@ namespace _test{
 			return n_result;
 		}
 
-		/**
-		* msr 읽기를 위한 thread msra 와 ibutton 읽기를 위한 thread ibb, ibc 를 만들고,
-		* 각 thread 가 독립적으로 읽기를 시도한다.
-		* ms 카드를 읽으면, msra 에만 값이 표시되고, ibutton 을 contact 또는 remove 하면, ibb, ibc 두 곳에 값이 표시되면 정상.
-		*/
-		int test_msr_ibutton()
-		{
-			int n_result(0);
-
-			do {
-
-				std::wcout << L"msr and ibutton test." << std::endl;
-
-			} while (false);
-
-			return n_result;
-		}
-
 		int test_cancelmsr(int n_loop=1,int n_cancel_time_msec = 1000)
 		{
 			int n_result(0);
@@ -1022,7 +1004,7 @@ namespace _test{
 
 				for (int i = 0; i < n_loop; i++) {
 					std::wcout << L" = MSR cancel test " << std::dec << i+1 << L".= " << std::endl;
-					std::thread th_read_msr(std::bind(&tp_hid::_test_reading, this, std::placeholders::_1, std::placeholders::_2), std::ref(test_dev_info), n_wait_sec);
+					std::thread th_read_msr(std::bind(&tp_hid::_test_reading, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), &test_dev_info, nullptr, n_wait_sec);
 
 					
 					if (n_cancel_time_msec >= 0) {
@@ -1065,12 +1047,196 @@ namespace _test{
 			return n_result;
 		}
 
-		int test_cancelibutton()
+		int test_cancelibutton(int n_loop = 1, int n_cancel_time_msec = 1000)
 		{
 			int n_result(0);
+			bool b_result(false);
+			_mp::clibhid_dev_info::type_set st_dev_info;
+			_mp::clibhid_dev_info test_dev_info;
 
 			do {
-				std::wcout << L"cancel ibutton test." << std::endl;
+				// get connected device info.
+				std::tie(b_result, st_dev_info) = tp_hid::_get_connected_device_info();
+				if (!b_result) {
+					std::wcout << L"error - get connected device info." << std::endl;
+					n_result = -1;
+					continue;
+				}
+				if (st_dev_info.empty()) {
+					std::wcout << L"no device." << std::endl;
+					n_result = 0;
+					continue;
+				}
+
+				// filter device info set by device type.
+				_mp::clibhid_dev_info::type_set st_dev_info_filtered;
+				std::set<_mp::type_bm_dev> set_filter{ _mp::type_bm_dev_lpu200_ibutton };
+				st_dev_info_filtered = tp_hid::_filter_device_info_set_by_device_type(st_dev_info, set_filter);
+				if (st_dev_info_filtered.empty()) {
+					std::wcout << L"none filtered device." << std::endl;
+					n_result = 0;
+					continue;
+				}
+
+				std::wcout << L"= filtered devices. = " << std::endl;
+				for (auto item : st_dev_info_filtered) {
+					tp_hid::_display_device_info(item);
+				}//end for
+
+				// get the first device.
+				test_dev_info = *st_dev_info_filtered.begin();
+
+				std::chrono::duration<double> elapsed;
+				bool b_test(false);
+
+				std::tie(b_test, std::ignore) = tp_hid::_test_one_byte_request(test_dev_info, 'I');
+				if (!b_test) {
+					std::wcout << L"test fail I - enter opos" << std::endl;
+					continue;
+				}
+				else {
+					std::wcout << L"OK - enter opos" << std::endl;
+				}
+
+				int n_wait_sec = -1;// negative is infinate.
+
+				for (int i = 0; i < n_loop; i++) {
+					std::wcout << L" = ibutton cancel test " << std::dec << i + 1 << L".= " << std::endl;
+					std::thread th_read_ibutton(std::bind(&tp_hid::_test_reading, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), nullptr, &test_dev_info, n_wait_sec);
+
+
+					if (n_cancel_time_msec >= 0) {
+						std::wcout << L"Readiong will be canceled after " << std::dec << n_cancel_time_msec << L" msec." << std::endl;
+						std::this_thread::sleep_for(std::chrono::milliseconds(n_cancel_time_msec));
+					}
+					else {
+						std::wcout << L"For cancel, press x " << std::endl;
+						std::wstring s_in;
+
+						do {
+							std::wcin >> s_in;
+							std::wcout << L"your input : " << s_in << std::endl;
+						} while (s_in.compare(L"x") != 0);
+					}
+
+					std::wcout << L"start cancel." << std::endl;
+					tp_hid::_test_cancel(test_dev_info, 10);
+
+					if (th_read_ibutton.joinable()) {
+						std::wcout << L"Waiting Join" << std::endl;
+						th_read_ibutton.join();
+					}
+					std::wcout << L"Done Join" << std::endl;
+				}//end for test loop
+				//
+
+				std::tie(b_test, std::ignore) = tp_hid::_test_one_byte_request(test_dev_info, 'J');
+				if (!b_test) {
+					std::wcout << L"test fail I - leave opos" << std::endl;
+					continue;
+				}
+				else {
+					std::wcout << L"OK - leave opos" << std::endl;
+				}
+
+
+			} while (false);
+
+			return n_result;
+		}
+
+		/**
+		* msr 읽기를 위한 thread msra 와 ibutton 읽기를 위한 thread ibb, ibc 를 만들고,
+		* 각 thread 가 독립적으로 읽기를 시도한다.
+		* ms 카드를 읽으면, msra 에만 값이 표시되고, ibutton 을 contact 또는 remove 하면, ibb, ibc 두 곳에 값이 표시되면 정상.
+		*/
+		int test_msr_ibutton(int n_test_count = 1000)
+		{
+			int n_result(0);
+			bool b_result(false);
+			_mp::clibhid_dev_info::type_set st_dev_info;
+			_mp::clibhid_dev_info test_msr_info, test_ibutton_info;
+
+			do {
+				// get connected device info.
+				std::tie(b_result, st_dev_info) = tp_hid::_get_connected_device_info();
+				if (!b_result) {
+					std::wcout << L"error - get connected device info." << std::endl;
+					n_result = -1;
+					continue;
+				}
+				if (st_dev_info.empty()) {
+					std::wcout << L"no device." << std::endl;
+					n_result = 0;
+					continue;
+				}
+
+				// filter device info set by device type.
+				_mp::clibhid_dev_info::type_set st_msr_info_filtered, st_ibutton_info_filtered;
+				std::set<_mp::type_bm_dev> set_filter_msr{ _mp::type_bm_dev_lpu200_msr };
+				std::set<_mp::type_bm_dev> set_filter_ibutton{ _mp::type_bm_dev_lpu200_ibutton };
+				st_msr_info_filtered = tp_hid::_filter_device_info_set_by_device_type(st_dev_info, set_filter_msr);
+				if (st_msr_info_filtered.empty()) {
+					std::wcout << L"none filtered msr." << std::endl;
+					n_result = 0;
+					continue;
+				}
+				st_ibutton_info_filtered = tp_hid::_filter_device_info_set_by_device_type(st_dev_info, set_filter_ibutton);
+				if (st_ibutton_info_filtered.empty()) {
+					std::wcout << L"none filtered ibutton." << std::endl;
+					n_result = 0;
+					continue;
+				}
+
+				std::wcout << L"= filtered devices. = " << std::endl;
+				for (auto item : st_msr_info_filtered) {
+					tp_hid::_display_device_info(item);
+				}//end for
+				for (auto item : st_ibutton_info_filtered) {
+					tp_hid::_display_device_info(item);
+				}//end for
+
+				// get the first device.
+				test_msr_info = *st_msr_info_filtered.begin();
+				test_ibutton_info = *st_ibutton_info_filtered.begin();
+
+				std::chrono::duration<double> elapsed;
+				bool b_test(false);
+
+				std::tie(b_test, std::ignore) = tp_hid::_test_one_byte_request(test_msr_info, 'I');
+				if (!b_test) {
+					std::wcout << L"test fail I - enter opos" << std::endl;
+					continue;
+				}
+				else {
+					std::wcout << L"OK - enter opos" << std::endl;
+				}
+
+				//////////////////////////////////
+				for (int i = 0; i < n_test_count; i++) {
+					std::wcout << L"TEST" << std::dec << i + 1 << L" : " << L"swipe a card or contancts a ibutton" << std::endl;
+
+
+					std::tie(b_test, elapsed) = tp_hid::_test_reading(&test_msr_info,&test_ibutton_info, -1);
+					if (!b_test) {
+						std::wcout << L"test fail X - " << L"Elapsed time: " << elapsed.count() << L" seconds" << std::endl;
+						break;
+					}
+
+					std::wcout << L"success test - " << L"Elapsed time: " << elapsed.count() << L" seconds" << std::endl;
+					//
+
+				}//end for
+				//////////////////////////////////
+				std::tie(b_test, std::ignore) = tp_hid::_test_one_byte_request(test_msr_info, 'J');
+				if (!b_test) {
+					std::wcout << L"test fail I - leave opos" << std::endl;
+					continue;
+				}
+				else {
+					std::wcout << L"OK - leave opos" << std::endl;
+				}
+
 
 			} while (false);
 
@@ -1463,33 +1629,49 @@ namespace _test{
 
 		/**
 		* @brief test reaing msr or ibutton
-		* @param[in,const] _mp::clibhid_dev_info dev_info : device info instance.
+		* @param[in,const] _mp::clibhid_dev_info* p_msr_info : msr device info instance.
+		* @param[in,const] _mp::clibhid_dev_info* p_ibutton_info : ibutton device info instance.
 		* @param[in,int] n_timeout_sec : timeout unit is second. negative value is infinite
 		* @return std::pair<bool,std::chrono::duration<double>> :
 		* first : true - success, false - fail.
 		* second : elapsed time.
 		*/
-		std::pair<bool, std::chrono::duration<double>> _test_reading(const _mp::clibhid_dev_info& dev_info, int n_timeout_sec)
+		std::pair<bool, std::chrono::duration<double>> _test_reading(const _mp::clibhid_dev_info* p_msr_info, const _mp::clibhid_dev_info* p_ibutton_info, int n_timeout_sec)
 		{
 			bool b_result(false);
 			std::chrono::duration<double> elapsed;
+			std::chrono::steady_clock::time_point start;
+
 			do {
 				_mp::clibhid& lib_hid(_mp::clibhid::get_instance());
 				if (!lib_hid.is_ini()) {
 					std::wcout << L"!lib_hid.is_ini()" << std::endl;
 					continue;
 				}
-				_mp::clibhid_dev::type_wptr wptr_dev = lib_hid.get_device(dev_info);
-				if (wptr_dev.expired()) {
-					std::wcout << L"wptr_dev.expired()" << std::endl;
-					continue;
+
+				_mp::clibhid_dev::type_wptr wptr_msr, wptr_ibutton;
+
+				start = std::chrono::high_resolution_clock::now();//start timer
+
+				if (p_msr_info) {
+					wptr_msr = lib_hid.get_device(*p_msr_info);
+					if (wptr_msr.expired()) {
+						std::wcout << L"wptr_msr.expired()" << std::endl;
+						continue;
+					}
+					m_ar_evt[tp_hid::_index_cb_msr].reset();
+					wptr_msr.lock()->start_read(tp_hid::_cb_msr_ibutton, &m_ar_evt[tp_hid::_index_cb_msr]);
 				}
 
-				m_ar_evt[tp_hid::_index_cb_msr_ibutton].reset();
-
-				auto start = std::chrono::high_resolution_clock::now();//start timer
-
-				wptr_dev.lock()->start_read(tp_hid::_cb_msr_ibutton, &m_ar_evt[tp_hid::_index_cb_msr_ibutton]);
+				if (p_ibutton_info) {
+					wptr_ibutton = lib_hid.get_device(*p_ibutton_info);
+					if (wptr_ibutton.expired()) {
+						std::wcout << L"wptr_ibutton.expired()" << std::endl;
+						continue;
+					}
+					m_ar_evt[tp_hid::_index_cb_ibutton].reset();
+					wptr_ibutton.lock()->start_read(tp_hid::_cb_msr_ibutton, &m_ar_evt[tp_hid::_index_cb_ibutton]);
+				}
 
 				int n_point = 0;
 				int n_wait_cnt = n_timeout_sec * 1000 / 10; //10mmsec counter
@@ -1497,17 +1679,34 @@ namespace _test{
 				bool b_run(true);
 				//wait for response
 				do {
-					if (m_ar_evt[tp_hid::_index_cb_msr_ibutton].is_triggered()) {
-						b_result = true;
-						b_run = false;
-						continue;
+					if (p_msr_info) {
+						if (m_ar_evt[tp_hid::_index_cb_msr].is_triggered()) {
+							b_result = true;
+							b_run = false;
+							continue;
+						}
+						if (wptr_msr.expired()) {
+							std::wcout << std::endl;
+							std::wcout << L"_test_reading() - msr device is expired" << std::endl;
+							b_run = false;
+							continue;
+						}
 					}
-					if (wptr_dev.expired()) {
-						std::wcout << std::endl;
-						std::wcout << L"_test_reading() - device is expired" << std::endl;
-						b_run = false;
-						continue;
+
+					if (p_ibutton_info) {
+						if (m_ar_evt[tp_hid::_index_cb_ibutton].is_triggered()) {
+							b_result = true;
+							b_run = false;
+							continue;
+						}
+						if (wptr_ibutton.expired()) {
+							std::wcout << std::endl;
+							std::wcout << L"_test_reading() - ibutton device is expired" << std::endl;
+							b_run = false;
+							continue;
+						}
 					}
+
 					if (n_timeout_sec == 0) {
 						std::wcout << L"_test_reading() - processing timeout" << std::endl;
 						b_run = false;
