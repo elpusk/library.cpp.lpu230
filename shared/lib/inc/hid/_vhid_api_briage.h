@@ -67,7 +67,7 @@ private:
 		_vhid_api_briage::_q_item& set_rx(const _mp::type_ptr_v_buffer& ptr_v_rx);
 		_vhid_api_briage::_q_item& set_rx(const _mp::type_v_buffer& v_rx);
 		_vhid_api_briage::_q_item& append_rx(const _mp::type_v_buffer& v_rx,bool b_add_to_head = false);
-		_vhid_api_briage::_q_item& set_result(int n_result);
+		_vhid_api_briage::_q_item& set_result(int n_result,const std::wstring & s_debug_msg = std::wstring());
 
 		size_t get_user_rx_buffer_size() const;
 		unsigned char* get_user_rx_buffer() const;
@@ -215,6 +215,9 @@ private:
 		};
 		enum {
 			_const_txrx_pair_rx_interval_mmsec = 1
+		};
+		enum {
+			_const_one_packet_of_in_report_retry_counter = 300  // times of _q_worker::_const_txrx_pair_rx_interval_mmsec
 		};
 
 	public:
@@ -487,7 +490,9 @@ public:
 	virtual int api_write(int n_map_index, const unsigned char* data, size_t length, _hid_api_briage::type_next_io next);
 
 	/**
-	* @brief receive data from device.(hid_read())
+	* @brief receive data from device.(hid_read()).
+	* 
+	* This function reads data in in-report size units.
 	*
 	* @param n_map_index int - primitive or compositive map index.
 	*

@@ -967,14 +967,12 @@ namespace _test{
 			return n_result;
 		}
 
-		int test_cancelmsr()
+		int test_cancelmsr(int n_loop=1,int n_cancel_time_msec = 1000)
 		{
 			int n_result(0);
 			bool b_result(false);
 			_mp::clibhid_dev_info::type_set st_dev_info;
 			_mp::clibhid_dev_info test_dev_info;
-
-			int n_test_count = 1000;
 
 			do {
 				// get connected device info.
@@ -1007,7 +1005,6 @@ namespace _test{
 
 				// get the first device.
 				test_dev_info = *st_dev_info_filtered.begin();
-				//tp_hid::_display_device_info(test_dev_info);
 
 				std::chrono::duration<double> elapsed;
 				bool b_test(false);
@@ -1021,26 +1018,37 @@ namespace _test{
 					std::wcout << L"OK - enter opos" << std::endl;
 				}
 
-				//std::thread th_read_msr(tp_hid::_test_reading, std::ref(test_dev_info), 10);
-				std::thread th_read_msr(std::bind(&tp_hid::_test_reading, this, std::placeholders::_1, std::placeholders::_2), std::ref(test_dev_info), 10);
+				int n_wait_sec = -1;// negative is infinate.
 
-				std::wcout << L"For cancel, press x " << std::endl;
+				for (int i = 0; i < n_loop; i++) {
+					std::wcout << L" = MSR cancel test " << std::dec << i+1 << L".= " << std::endl;
+					std::thread th_read_msr(std::bind(&tp_hid::_test_reading, this, std::placeholders::_1, std::placeholders::_2), std::ref(test_dev_info), n_wait_sec);
 
-				std::wstring s_in;
+					
+					if (n_cancel_time_msec >= 0) {
+						std::wcout << L"Readiong will be canceled after " << std::dec << n_cancel_time_msec << L" msec." << std::endl;
+						std::this_thread::sleep_for(std::chrono::milliseconds(n_cancel_time_msec));
+					}
+					else {
+						std::wcout << L"For cancel, press x " << std::endl;
+						std::wstring s_in;
 
-				do {
-					std::wcin >> s_in;
-					std::wcout << L"your input : " << s_in << std::endl;
-				} while (s_in.compare(L"x") != 0 );
+						do {
+							std::wcin >> s_in;
+							std::wcout << L"your input : " << s_in << std::endl;
+						} while (s_in.compare(L"x") != 0);
+					}
 
-				std::wcout << L"start cancel." << std::endl;
-				tp_hid::_test_cancel(test_dev_info, 10);
+					std::wcout << L"start cancel." << std::endl;
+					tp_hid::_test_cancel(test_dev_info, 10);
 
-				if (th_read_msr.joinable()) {
-					std::wcout << L"Waiting Join" << std::endl;
-					th_read_msr.join();
-				}
-				std::wcout << L"Done Join" << std::endl;
+					if (th_read_msr.joinable()) {
+						std::wcout << L"Waiting Join" << std::endl;
+						th_read_msr.join();
+					}
+					std::wcout << L"Done Join" << std::endl;
+				}//end for test loop
+				//
 				
 				std::tie(b_test, std::ignore) = tp_hid::_test_one_byte_request(test_dev_info, 'J');
 				if (!b_test) {
@@ -1456,7 +1464,7 @@ namespace _test{
 		/**
 		* @brief test reaing msr or ibutton
 		* @param[in,const] _mp::clibhid_dev_info dev_info : device info instance.
-		* @param[in,int] n_timeout_sec : timeout unit is second. negative value is inifinite
+		* @param[in,int] n_timeout_sec : timeout unit is second. negative value is infinite
 		* @return std::pair<bool,std::chrono::duration<double>> :
 		* first : true - success, false - fail.
 		* second : elapsed time.

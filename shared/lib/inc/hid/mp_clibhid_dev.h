@@ -34,7 +34,7 @@ namespace _mp {
             _const_dev_io_check_interval_mmsec = 3//50
         };
         enum {
-            _const_dev_rx_check_interval_mmsec = 1//50
+            _const_dev_rx_check_interval_mmsec = 4// min is 1 msec in full speed hid device. but one report needs 4 in-packets.
         };
         enum {
             _const_dev_rx_recover_interval_usec = 1000

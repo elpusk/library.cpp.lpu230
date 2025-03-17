@@ -48,8 +48,10 @@ int main(int argc, char* argv[])
             std::wcout << L" = cancelmsr - cancel reading msr test." << std::endl;
             std::wcout << L" = cancelibutton - cancel reading ibutton test." << std::endl;
             std::wcout << L"ex) hid io 10 times test > mgmt_lpu230 hid 10 " << std::endl;
-            std::wcout << L"ex) msr io 100 times test > mgmt_lpu230 hid 100 " << std::endl;
-            std::wcout << L"ex) ibutton io 200 times test > mgmt_lpu230 hid 200 " << std::endl;
+            std::wcout << L"ex) msr io 100 times test > mgmt_lpu230 msr 100 " << std::endl;
+            std::wcout << L"ex) ibutton io 200 times test > mgmt_lpu230 ibutton 200 " << std::endl;
+            std::wcout << L"ex) after default timeout, cancel the status of msr-reading 300 times test > mgmt_lpu230 cancelmsr 300 " << std::endl;
+            std::wcout << L"ex) after 200 msec, cancel the status of msr-reading 100 times test > mgmt_lpu230 cancelmsr 100 200 " << std::endl;
             continue;
         }
 
@@ -127,9 +129,48 @@ int main(int argc, char* argv[])
                 n_result = _test::tp_hid::get_instance().test_ibutton(n_loop);
                 continue;
             }
-            
+            if (s_p1.compare(L"cancelmsr") == 0) {
+                n_result = _test::tp_hid::get_instance().test_cancelmsr(n_loop);
+                continue;
+            }
+
         }
 
+        if (list_option.size() == 4) {
+            ++it;
+            std::wstring s_p1(*it);
+
+            ++it;
+            std::wstring s_p2(*it);
+
+            ++it;
+            std::wstring s_p3(*it);
+
+            std::wistringstream wiss(s_p2);
+            int n_loop(-1);
+            if (!(wiss >> n_loop)) {
+                _display_option();
+                continue;
+            }
+            // n_loop is interger
+            if (n_loop <= 0) {
+                _display_option();
+                continue;
+            }
+
+            std::wistringstream wiss3(s_p3);
+            int n_cancel_time_msec(1000);
+            if (!(wiss3 >> n_cancel_time_msec)) {
+                _display_option();
+                continue;
+            }
+
+            if (s_p1.compare(L"cancelmsr") == 0) {
+                n_result = _test::tp_hid::get_instance().test_cancelmsr(n_loop, n_cancel_time_msec);
+                continue;
+            }
+
+        }
         _display_option();
     } while (false);
 

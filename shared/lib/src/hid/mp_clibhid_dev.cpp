@@ -176,6 +176,9 @@ namespace _mp {
             clog::get_instance().trace(L"T[W] - %ls - _read_using_thread() in pump.\n", __WFUNCTION__);
             clog::get_instance().log_fmt(L"[W] - %ls - _read_using_thread() in pump.\n", __WFUNCTION__);
             if (b_expected_replugin) {
+#if defined(_WIN32) && defined(_DEBUG)
+                ATLTRACE(L" =******= DECTECT plugout.\n");
+#endif
                 m_b_detect_replugin = true;//need this device instance removed
             }
         }
@@ -326,7 +329,7 @@ namespace _mp {
                     if (n_result > 0) {
                         std::copy(ptr_v->begin(), ptr_v->end(), &v_rx[n_offset]);
                     }
-                    if (n_result == 0) {
+                    else if (n_result == 0) {
                         //lost packet
                         n_result = -2;//error. lost packet
                     }
@@ -425,7 +428,7 @@ namespace _mp {
             case cqitem_dev::req_cancel:
                 b_request_is_cancel = true;
             default:
-                b_result = _process_cancel(ptr_req);//result is ignored
+                //b_result = _process_cancel(ptr_req);//result is ignored
                 ptr_req->set_result(cqitem_dev::result_success, type_v_buffer(0), L"SUCCESS CANCEL REQ");
                 continue;
             }//end switch
@@ -519,6 +522,9 @@ namespace _mp {
                 clog::get_instance().log_fmt(L"[E] - %ls - _read_using_thread().\n", __WFUNCTION__);
 
                 if (b_expected_replugin) {
+#if defined(_WIN32) && defined(_DEBUG)
+                    ATLTRACE(L" =******= DECTECT plugout.\n");
+#endif
                     m_b_detect_replugin = true;//need this device instance removed
                 }
                 continue;
@@ -610,33 +616,13 @@ namespace _mp {
             v_report_in.assign(v_report_in.size(), 0);//reset contents
             int n_result = 0;
 
-            int n_offset(0);
-            int n_max_try = 50;//50msec
-            int n_retry = n_max_try;
-
             do {
                 if (!m_p_hid_api_briage) {
-                    break;//nothing to do
+                    continue;//nothing to do
                 }
-
-                // this code is deadlock!!!!
-                n_result = m_p_hid_api_briage->api_read(m_n_dev, &v_report_in[n_offset], v_report_in.size() - n_offset, v_report_in.size());//wait block or not by initialization
+                n_result = m_p_hid_api_briage->api_read(m_n_dev, &v_report_in[0], v_report_in.size(), v_report_in.size());//wait block or not by initialization
                 if (n_result == 0) {
-                    if (n_offset == 0) {
-                        //_mp::clog::get_instance().log_fmt(L"[W] %ls : .\n", __WFUNCTION__);
-                        break;//re-read transaction
-                    }
-
-                    //already transaction is started!!!
-                    --n_retry;
-                    if (n_retry <= 0) {
-                        //lost a packet
-                        m_q_rx_ptr_v.push(std::make_shared<_mp::type_v_buffer>(0));
-                        _mp::clog::get_instance().log_fmt(L"[E] %ls : lost packet - push zero size buffer.\n", __WFUNCTION__);
-                        break;//restart transaction
-                    }
-                    std::this_thread::sleep_for(std::chrono::microseconds(clibhid_dev::_const_dev_rx_recover_interval_usec));
-                    continue;//retry
+                    continue;//re-read transaction
                 }
                 if (n_result < 0) {
                     // warning
@@ -646,23 +632,24 @@ namespace _mp {
                     _mp::clog::get_instance().log_fmt_in_debug_mode(L"[D] rx return = %d. - %ls.\n", n_result, s_error.c_str());
 
                     m_q_rx_ptr_v.push(_mp::type_ptr_v_buffer());//indicate error of device usb io.
-                    break;
+                    continue;
                 }
                 //here n_result > 0 recevied some data.
-                n_offset += n_result;
-                if (n_offset >= v_report_in.size()) {
-                    //one report complete.
-                    m_q_rx_ptr_v.push(std::make_shared<_mp::type_v_buffer>(v_report_in));
-                    _mp::clog::get_instance().log_fmt_in_debug_mode(L"[H] v_rx.size() = %u.\n", v_report_in.size());
-                    _mp::clog::get_instance().log_data_in_debug_mode(v_report_in, std::wstring(), L"\n");
-                    break;
+                if (n_result < v_report_in.size()) {
+                    // _vhid_api_briage::api_read() 는 에러가 아닌 경우,항상 in-report 크기로 rx 를 반환하는데 이런 경우는 뭔가 엄청 잘못
+                    m_q_rx_ptr_v.push(std::make_shared<_mp::type_v_buffer>(0));
+                    _mp::clog::get_instance().log_fmt(L"[E] %ls : lost packet - push zero size buffer.\n", __WFUNCTION__);
+                    continue;
                 }
-                std::this_thread::sleep_for(std::chrono::microseconds(clibhid_dev::_const_dev_rx_recover_interval_usec));
-                n_retry = n_max_try;
-            } while (n_offset< v_report_in.size());
+                //one report complete.
+                m_q_rx_ptr_v.push(std::make_shared<_mp::type_v_buffer>(v_report_in));
+                _mp::clog::get_instance().log_fmt_in_debug_mode(L"[H] v_rx.size() = %u.\n", v_report_in.size());
+                _mp::clog::get_instance().log_data_in_debug_mode(v_report_in, std::wstring(), L"\n");
+
+            } while (false);
 
             // for reducing CPU usage rates.
-            std::this_thread::sleep_for(std::chrono::microseconds(clibhid_dev::_const_dev_rx_recover_interval_usec));
+            std::this_thread::sleep_for(std::chrono::milliseconds(clibhid_dev::_const_dev_rx_check_interval_mmsec));
         }//end while
 
         std::wstringstream ss;
@@ -708,7 +695,7 @@ namespace _mp {
         }
 
 #endif
-        bool b_read = true;
+        bool b_read_ok = true;
         bool b_expected_replugin = false;
         bool b_complete(true);
         bool b_request_is_cancel(false);
@@ -720,27 +707,15 @@ namespace _mp {
                     // 새로운 명령 없음.
                     if (!ptr_cur) {
                         // 현재 작업 주인 것 없으면.
-                        std::tie(b_read, b_expected_replugin) = _pump();//pumpping.
+                        std::tie(b_read_ok, b_expected_replugin) = _pump();//pumpping.
                         continue;
                     }
 
                     // 현재 작업 중인 것 있으면,
                 }
                 else {
-                    // 새로운 명령이 들어오면. 
-                    /*
-                    if (ptr_cur) {
-                        // 기존 명령 취소.
-                        _process_cancel(ptr_cur);//result is ignored
-                        ptr_cur->set_result(cqitem_dev::result_cancel, type_v_buffer(0), L"CANCELLED BY ANOTHER REQ");
-                        // callback 의 return 값이 관계없이 현재 작업은 제거.
-                        ptr_cur->run_callback();
-                        ptr_cur.reset();
-                    }
-                    */
-
                     // pop된 새로운 명령의 경우.
-                    if (!b_read) {
+                    if (!b_read_ok) {
                         // 새로운 명령을 pop  했지만, 현재 rx 가 에러 상태이므로 새로운 명령은 바로 에러로 처리.
                         clog::get_instance().trace(L"T[E] - %ls - new request but read is error status.\n", __WFUNCTION__);
                         clog::get_instance().log_fmt(L"[E] - %ls - new request but read is error status.\n", __WFUNCTION__);
@@ -769,14 +744,14 @@ namespace _mp {
                 }
 
                 // 현재 명령으로 설정된 명령을 위해 계속 수신 시도함.
-                std::tie(b_read, b_complete, v_rx) = _process_only_rx(ptr_cur);
+                std::tie(b_read_ok, b_complete, v_rx) = _process_only_rx(ptr_cur);
                 if (!b_complete) {
 #if defined(_WIN32) && defined(_DEBUG)
-                    ATLTRACE(L" =======(%s) _process_only_rx.\n", _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str());
+                    //ATLTRACE(L" =======(%s) _process_only_rx.\n", _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str());
 #endif
                     continue;
                 }
-                if (b_read) {
+                if (b_read_ok) {
                     ptr_cur->set_result(cqitem_dev::result_success, v_rx, L"SUCCESS");
                 }
                 else {

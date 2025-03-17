@@ -634,7 +634,7 @@ std::tuple<bool,int> _vhid_api_briage::_q_worker::_process_req(
             s_d = L"REQ-read : ";
             s_d += ws_type;
 
-            ATLTRACE(L"%s-%s\n", s_d.c_str(), s_debug_msg.c_str());
+            //ATLTRACE(L"%s-%s\n", s_d.c_str(), s_debug_msg.c_str());
 #endif
 #endif
 
@@ -787,8 +787,7 @@ bool _vhid_api_briage::_q_worker::_process_cancel(_q_container::type_ptr_list& p
         //
         if (ptr_list->size() == 1) {
             // cancel request 하나로만 구성된 list
-            (*ptr_list->begin())->set_result(n_result).set_rx(v_rx);
-            (*ptr_list->begin())->set_event();
+            (*ptr_list->begin())->set_result(n_result).set_rx(v_rx).set_event();
             b_result = true;
             continue;
         }
@@ -801,6 +800,7 @@ bool _vhid_api_briage::_q_worker::_process_cancel(_q_container::type_ptr_list& p
         _mp::type_v_buffer v_tx_last(ptr_item_cancel->get_tx());
         int n_map_index_cancel(ptr_item_cancel->get_map_index());
 
+        //마지막이 cancel 명령인지 검사
         if (cmd_last != _q_item::cmd_write) {
             continue; // 에러 cancel request 는 tx size가 0인 write 명령.
         }
@@ -809,6 +809,7 @@ bool _vhid_api_briage::_q_worker::_process_cancel(_q_container::type_ptr_list& p
         }
         //
 
+        // cancel 바로 앞 명령 얻기.
         --it;
         _q_item::type_ptr ptr_item_normal_last(*it);
         _hid_api_briage::type_next_io next_io_normal_last(ptr_item_normal_last->get_next_io_type());
@@ -821,7 +822,7 @@ bool _vhid_api_briage::_q_worker::_process_cancel(_q_container::type_ptr_list& p
         if (next_io_normal_last == _hid_api_briage::next_io_none) {
             //complete transaction is canceled.
             if (cmd_first != _q_item::cmd_read) {
-                ptr_item_normal_last->set_result(-1).set_rx(v_rx).set_event();
+                ptr_item_normal_last->set_result(-1,L"complete transaction is canceled").set_rx(v_rx).set_event();
                 ptr_item_cancel-> set_result(n_result).set_rx(v_rx).set_event();
                 continue;
             }
@@ -838,7 +839,7 @@ bool _vhid_api_briage::_q_worker::_process_cancel(_q_container::type_ptr_list& p
             });
 
             if (it_found != ptr_list->end()) {
-                (*it_found)->set_result(-1).set_rx(v_rx).set_event();
+                (*it_found)->set_result(-1,L"remove cancel").set_rx(v_rx).set_event();
             }
             ptr_item_cancel->set_result(n_result).set_rx(v_rx).set_event();
             continue;
@@ -1016,6 +1017,7 @@ int _vhid_api_briage::_q_worker::_rx(_mp::type_v_buffer& v_rx, _hid_api_briage* 
     int n_offset(0);
     int n_len = (int)v_rx.size();
     int n_loop = 0;
+    int n_retry = 0;
 
     do {
         ++n_loop; //for debugging
@@ -1031,11 +1033,20 @@ int _vhid_api_briage::_q_worker::_rx(_mp::type_v_buffer& v_rx, _hid_api_briage* 
             }
             else {
                 //self loop
+                ++n_retry;
+                if (n_retry >= _q_worker::_const_one_packet_of_in_report_retry_counter) {
+                    // fail rx over retry. 하나의 in-report 를 구성하는 packet 사이의 간격이 
+                    //_const_one_packet_of_in_report_retry_counter*_const_txrx_pair_rx_interval_mmsec 를 초과.
+                    n_result = -1;
+                    break;
+                }
                 std::this_thread::sleep_for(std::chrono::milliseconds(_vhid_api_briage::_q_worker::_const_txrx_pair_rx_interval_mmsec));
                 continue;
             }
         }
         //
+        n_retry = 0;
+
         if ((n_result + n_offset) >= v_rx.size()) {
             n_result = n_result + n_offset;
             _mp::clog::get_instance().log_fmt_in_debug_mode(L"[D%d] RX-OK : (n_offset, n_read)=(%d,%d,%u).\n", n_loop, n_offset, n_result, v_rx.size());
@@ -1048,7 +1059,7 @@ int _vhid_api_briage::_q_worker::_rx(_mp::type_v_buffer& v_rx, _hid_api_briage* 
         n_len = n_len - n_result;
 
         std::this_thread::sleep_for(std::chrono::milliseconds(_vhid_api_briage::_q_worker::_const_txrx_pair_rx_interval_mmsec));
-    } while (true);
+    } while (m_b_run_worker);
     //
     return n_result;
 }
@@ -1241,14 +1252,15 @@ _vhid_api_briage::_q_item& _vhid_api_briage::_q_item::append_rx(const _mp::type_
     return *this;
 }
 
-_vhid_api_briage::_q_item& _vhid_api_briage::_q_item::set_result(int n_result)
+_vhid_api_briage::_q_item& _vhid_api_briage::_q_item::set_result(int n_result, const std::wstring& s_debug_msg/*=std::wstring()*/)
 {
     m_n_result = n_result;
 
 #ifdef _WIN32
 #ifdef _DEBUG
     if (n_result <0 ) {
-        ATLTRACE(L"error set_result.\n");
+        ATLTRACE(L"error set_result - %s.\n", s_debug_msg.c_str());
+        //std::wcout << L"error set_result - " << s_debug_msg << std::endl;
     }
 #endif
 #endif
@@ -1335,13 +1347,6 @@ bool _vhid_api_briage::_q_container::push( const _vhid_api_briage::_q_item::type
 {
     bool b_result(false);
 
-#ifdef _WIN32
-#ifdef _DEBUG
-
-    static int n_debug = 0;
-#endif
-#endif
-
     do {
         std::lock_guard<std::mutex> lock(m_mutex);
 
@@ -1355,46 +1360,28 @@ bool _vhid_api_briage::_q_container::push( const _vhid_api_briage::_q_item::type
         _q_item::type_cmd cmd(ptr_item->get_cmd());
         _hid_api_briage::type_next_io next_type(ptr_item->get_next_io_type());
         int n_map_index(ptr_item->get_map_index());
-
-#ifdef _WIN32
-#ifdef _DEBUG
-        if (cmd == _q_item::cmd_write) {
-            if (n_debug == 0) {
-                n_debug = 1;
-            }
-            if (n_debug == 1) {
-                n_debug = 2;
-            }
-            else if (n_debug == 2) {
-                n_debug = 3;
-            }
-            else if (n_debug == 3) {
-                n_debug = 4;
-            }
-            else {
-                n_debug = 0;
-            }
-            //ATLTRACE(L".......\n");
-        }
-        
-#endif
-#endif
+        _mp::type_v_buffer v_tx(ptr_item->get_tx());
 
         if (next_type != _hid_api_briage::next_io_none) {
+            //하나의 transaction 의 마지막 request 는 next_type 이 next_io_none 임.
             status_transaction = _q_container::st_not_yet_transaction;
         }
-        else if ((cmd == _q_item::cmd_write) && (ptr_item->get_tx().empty())) {
+        else if ((cmd == _q_item::cmd_write) && (v_tx.empty())) {
             //보낼 데이터가 없는 comd_write 명령은 해당 map_index 의 명령을 취소 하는 요청.
             status_transaction = _q_container::st_cancel;
         }
 
+        // 새로운 request 의 list 생성.
         _q_container::type_ptr_list ptr_list(new _q_container::type_list());
         ptr_list->push_back(ptr_item);
+
+        // q 에 넣을 요소 생성.
         auto new_item = std::make_pair(status_transaction, ptr_list);
         //
         if (m_q_pair.empty()) {
+            // q 가 빈 경우.
             m_q_pair.push_back(new_item);
-            _dump_map();
+            _dump_map();// for debuggig
             continue;
         }
         
@@ -1407,6 +1394,8 @@ bool _vhid_api_briage::_q_container::push( const _vhid_api_briage::_q_item::type
                 if (item_q.first == _q_container::st_cancel) {
                     continue; //cancel 된 request list 에 또 다시 cancel request 를 추가 할수 없다.
                 }
+
+                // 현재 item_q 의 list 모든 요소에서 새로운 ptr_item 과 map index 가 동일한 요소를 찾는다.
                 auto it_q_cancel = std::find_if(item_q.second->begin(), item_q.second->end(), [&](_q_item::type_ptr& item)->bool {
                     if (item->get_map_index() == n_map_index) {
                         return true;
@@ -1417,9 +1406,11 @@ bool _vhid_api_briage::_q_container::push( const _vhid_api_briage::_q_item::type
                 });
 
                 if (it_q_cancel == item_q.second->end()) {
-                    continue;
+                    continue; // 현재 item_q 의 list 모든 요소에 새로운 ptr_item 과 map index 가 동일한 요소가 없다.
                 }
-                    
+                
+                // 현재 item_q 의 list 모든 요소에 새로운 ptr_item 과 map index 가 동일한 요소가
+                // 있으면, item_q 상태를 cancel 로 바꾸고, 그 끝에 새로 받은 cancel request 를 추가.
                 item_q.first = _q_container::st_cancel; // this transaction is canceled
                 item_q.second->push_back(ptr_item); //push cancel request
                 b_cancel_pushed = true;
