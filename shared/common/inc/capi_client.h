@@ -174,9 +174,9 @@ public:
 	bool get_device_list_multi_sync(std::set<std::wstring>& set_s_path, unsigned long n_client_index, const std::list<std::wstring>& list_s_filter = std::list<std::wstring>());
 
 
-	bool open(unsigned long n_client_index, const std::wstring& s_device_path);
+	bool open(unsigned long n_client_index, const std::wstring& s_device_path,bool b_shared_mode);
 
-	bool open_sync(unsigned long& n_out_device_index, unsigned long n_client_index, const std::wstring& s_device_path);
+	bool open_sync(unsigned long& n_out_device_index, unsigned long n_client_index, const std::wstring& s_device_path, bool b_shared_mode);
 	bool close(unsigned long n_client_index, unsigned long n_device_index);
 	bool close_sync(unsigned long n_client_index, unsigned long n_device_index);
 	bool write(unsigned long n_client_index, unsigned long n_device_index, unsigned char c_out_id, const std::vector<unsigned char>& v_data);

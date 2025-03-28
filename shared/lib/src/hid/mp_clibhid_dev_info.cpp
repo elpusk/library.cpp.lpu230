@@ -107,7 +107,8 @@ namespace _mp{
     clibhid_dev_info::clibhid_dev_info() :
         m_w_vid(0), m_w_pid(0), m_n_interface(-1),
         m_n_size_in_report(0),
-        m_n_size_out_report(0)
+        m_n_size_out_report(0),
+        m_b_support_shared(false)
     {
 
     }
@@ -122,7 +123,8 @@ namespace _mp{
         m_w_vid(w_vid), m_w_pid(w_pid), m_n_interface(n_interface),
         m_n_size_in_report(0),
         m_n_size_out_report(0),
-        m_s_extra_path(s_extra_path)
+        m_s_extra_path(s_extra_path),
+        m_b_support_shared(false)
     {
         if(ps_path){
             m_vs_path.assign(ps_path, ps_path + strlen(ps_path));
@@ -133,6 +135,8 @@ namespace _mp{
             if (w_pid == _elpusk::_lpu237::const_usb_pid && n_interface == _elpusk::_lpu237::const_usb_inf_hid) {
                 m_n_size_in_report = _elpusk::_lpu237::const_size_report_in_except_id;
                 m_n_size_out_report = _elpusk::_lpu237::const_size_report_out_except_id;
+                //
+                m_b_support_shared = _vhid_info::is_support_shared_open(m_s_extra_path);
             }
             else if (w_pid == _elpusk::_lpu238::const_usb_pid && n_interface == _elpusk::_lpu238::const_usb_inf_hid) {
                 m_n_size_in_report = _elpusk::_lpu238::const_size_report_in_except_id;
@@ -145,8 +149,24 @@ namespace _mp{
         }
     }
         
+    clibhid_dev_info::clibhid_dev_info(const char* ps_path, unsigned short w_vid, unsigned short w_pid, int n_interface) :
+        m_w_vid(w_vid), m_w_pid(w_pid), m_n_interface(n_interface),
+        m_n_size_in_report(0),
+        m_n_size_out_report(0),
+        m_b_support_shared(false)
+    {
+        if (ps_path) {
+            m_vs_path.assign(ps_path, ps_path + strlen(ps_path));
+        }
+    }
+
     clibhid_dev_info::~clibhid_dev_info()
     {
+    }
+
+    bool clibhid_dev_info::is_support_shared_open() const
+    {
+        return m_b_support_shared;
     }
 
     type_bm_dev clibhid_dev_info::get_type() const

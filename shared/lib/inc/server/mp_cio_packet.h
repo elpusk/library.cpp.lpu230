@@ -305,7 +305,19 @@ public:
 		return cio_packet::_is_valid(m_v_packet);
 	}
 
-	cio_packet() : _mp::vcpacket(),m_type_data_field(cio_packet::data_field_binary)
+
+	void set_recover_reserve(bool b_must_be_recover)
+	{
+		m_b_must_be_recover = b_must_be_recover;
+	}
+	/**
+	* @brief check this packet is recoverd?( may be optional data field)
+	*/
+	bool is_recover_reserved() const
+	{
+		return m_b_must_be_recover;
+	}
+	cio_packet() : _mp::vcpacket(),m_type_data_field(cio_packet::data_field_binary), m_b_must_be_recover(false)
 	{
 		m_v_packet = cio_packet::_build(cio_packet::cmd_request, _MP_TOOLS_INVALID_SESSION_NUMBER, cio_packet::owner_manager, 0, act_mgmt_get_echo, 0, 0,  0, NULL);
 	}
@@ -316,7 +328,7 @@ public:
 	}
 
 	cio_packet(cio_packet::type_data_field data_field_type,const type_v_buffer & v_packet) 
-		: _mp::vcpacket(), m_type_data_field(data_field_type)
+		: _mp::vcpacket(), m_type_data_field(data_field_type), m_b_must_be_recover(false)
 	{
 		if (cio_packet::_is_valid(v_packet)) {
 			m_v_packet = v_packet;
@@ -331,7 +343,7 @@ public:
 		,type_owner c_owner,unsigned long dw_device_index, type_act c_act
 		, unsigned char c_in_id, unsigned char c_out_id
 		, cio_packet::type_data_field data_field_type,unsigned long n_data,const unsigned char *ps_data)
-		: m_type_data_field(data_field_type)
+		: m_type_data_field(data_field_type), m_b_must_be_recover(false)
 	{
 		m_v_packet = cio_packet::_build(c_cmd, n_session, c_owner, dw_device_index, c_act, c_in_id,c_out_id, n_data, ps_data);
 	}
@@ -341,7 +353,7 @@ public:
 		, type_owner c_owner, unsigned long dw_device_index, type_act c_act
 		, unsigned char c_in_id, unsigned char c_out_id
 		, cio_packet::type_data_field data_field_type, const type_v_buffer & v_data)
-		: m_type_data_field(data_field_type)
+		: m_type_data_field(data_field_type), m_b_must_be_recover(false)
 	{
 		if (v_data.empty()) {
 			m_v_packet = cio_packet::_build(c_cmd, n_session, c_owner, dw_device_index, c_act, c_in_id,c_out_id, (unsigned long)v_data.size(), NULL);
@@ -355,6 +367,7 @@ public:
 	{
 		m_v_packet = src.m_v_packet;
 		m_type_data_field = src.m_type_data_field;
+		m_b_must_be_recover = src.m_b_must_be_recover;
 		return *this;
 	}
 
@@ -550,7 +563,7 @@ public:
 	}
 
 	/**
-	 * geet data field by wstring set.
+	 * get data field by wstring set.
 	 * 
 	 * \param set_wstring
 	 * \param n_total_characters : set by the numnber of all character on set_wstring.
@@ -1573,6 +1586,7 @@ private:
 	}
 protected:
 	cio_packet::type_data_field m_type_data_field;
+	bool m_b_must_be_recover; //this packet must be recoverd after processing high priority requst.
 	
 };
 

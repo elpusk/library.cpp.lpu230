@@ -94,6 +94,11 @@ namespace _mp {
             return false;
     }
 
+    bool clibhid_dev::is_support_shared_open() const
+    {
+        return m_dev_info.is_support_shared_open();
+    }
+
     std::vector<unsigned char> clibhid_dev::get_report_desciptor()
     {
         std::vector<unsigned char> v(4096,0);//HID_API_MAX_REPORT_DESCRIPTOR_SIZE
@@ -115,47 +120,35 @@ namespace _mp {
     }
 
 
-    /**
-    * @brief Staring Write an Output report to a HID device.
-    * the fist byte must be report ID. start write operation.
-    */
-    void clibhid_dev::start_write(const std::vector<unsigned char>& v_tx, cqitem_dev::type_cb cb, void* p_user_for_cb)
+    void clibhid_dev::start_write(const std::vector<unsigned char>& v_tx, cqitem_dev::type_cb cb, void* p_user_for_cb, unsigned long n_session_number/*=0*/)
     {
-        cqitem_dev::type_ptr ptr(new cqitem_dev(v_tx,false,cb,p_user_for_cb));
+        cqitem_dev::type_ptr ptr(new cqitem_dev(v_tx,false,cb,p_user_for_cb, n_session_number));
         m_q_ptr.push(ptr);
     }
 
-    /**
-    * @brief Staring Read an Input report from a HID device.
-    * Input reports are returned
-    * to the host through the INTERRUPT IN endpoint. The first byte will
-    * contain the Report number if the device uses numbered reports.
-    *  start read operation.
-    */
-    void clibhid_dev::start_read(cqitem_dev::type_cb cb, void* p_user_for_cb)
+
+    void clibhid_dev::start_read(cqitem_dev::type_cb cb, void* p_user_for_cb, unsigned long n_session_number/*=0*/)
     {
-        cqitem_dev::type_ptr ptr(new cqitem_dev(_mp::type_v_buffer(0), true, cb, p_user_for_cb));
+        cqitem_dev::type_ptr ptr(new cqitem_dev(_mp::type_v_buffer(0), true, cb, p_user_for_cb, n_session_number));
         m_q_ptr.push(ptr);
     }
 
-    /**
-    * @brief Staring Write an Output report to a HID device. and read operation
-    * the fist byte must be report ID. start write operation.
-    */
-    void clibhid_dev::start_write_read(const std::vector<unsigned char>& v_tx, cqitem_dev::type_cb cb, void* p_user_for_cb)
+    void clibhid_dev::start_write_read(const std::vector<unsigned char>& v_tx, cqitem_dev::type_cb cb, void* p_user_for_cb, unsigned long n_session_number/*=0*/)
     {
-        cqitem_dev::type_ptr ptr_tx(new cqitem_dev(v_tx, true, cb, p_user_for_cb));
+        cqitem_dev::type_ptr ptr_tx(new cqitem_dev(v_tx, true, cb, p_user_for_cb, n_session_number));
         m_q_ptr.push(ptr_tx);
     }
 
-    /**
-    * @brief Staring cancel operation.
-    */
-    void clibhid_dev::start_cancel(cqitem_dev::type_cb cb, void* p_user_for_cb)
+    void clibhid_dev::start_cancel(cqitem_dev::type_cb cb, void* p_user_for_cb, unsigned long n_session_number/*=0*/)
     {
         //cancel -> tx is none, no need rx!
-        cqitem_dev::type_ptr ptr(new cqitem_dev(_mp::type_v_buffer(0), false, cb, p_user_for_cb));
+        cqitem_dev::type_ptr ptr(new cqitem_dev(_mp::type_v_buffer(0), false, cb, p_user_for_cb, n_session_number));
         m_q_ptr.push(ptr);
+    }
+
+    type_bm_dev clibhid_dev::get_type() const
+    {
+        return m_dev_info.get_type();
     }
 
     /**
@@ -406,7 +399,7 @@ namespace _mp {
         return std::make_pair(b_result, b_expected_replugin);
     }
 
-    std::pair<bool, bool> clibhid_dev::_process_new_request_and_set_result(cqitem_dev::type_ptr& ptr_req)
+    std::pair<bool, bool> clibhid_dev::_process_new_request_and_set_result(cqitem_dev::type_ptr& ptr_req_new, cqitem_dev::type_ptr& ptr_req_cur)
     {
         bool b_request_is_cancel(false);
         bool b_complete(true);
@@ -415,30 +408,36 @@ namespace _mp {
 
 
         do {
-            switch (ptr_req->get_request_type()) {
+            // 현재 실행 중인 명령이 있으면, 새로운 것 실행하기 전에 취소.
+            // ptr_cur 의 결과를 설정한다.
+            if (ptr_req_cur) {
+                ptr_req_cur->set_result(cqitem_dev::result_cancel, type_v_buffer(0), L"CANCELLED BY ANOTHER REQ AUTO");
+            }
+
+            switch (ptr_req_new->get_request_type()) {
             case cqitem_dev::req_only_tx:
-                b_result = _process_only_tx(ptr_req);
+                b_result = _process_only_tx(ptr_req_new);
                 break;
             case cqitem_dev::req_tx_rx:
-                std::tie(b_result,b_complete, v_rx) = _process_tx_rx(ptr_req);
+                std::tie(b_result,b_complete, v_rx) = _process_tx_rx(ptr_req_new);
                 break;
             case cqitem_dev::req_only_rx:
-                std::tie(b_result, b_complete, v_rx) = _process_only_rx(ptr_req);
+                std::tie(b_result, b_complete, v_rx) = _process_only_rx(ptr_req_new);
                 break;
             case cqitem_dev::req_cancel:
                 b_request_is_cancel = true;
             default:
-                //b_result = _process_cancel(ptr_req);//result is ignored
-                ptr_req->set_result(cqitem_dev::result_success, type_v_buffer(0), L"SUCCESS CANCEL REQ");
+                //b_result = _process_cancel(ptr_req_new);//result is ignored
+                ptr_req_new->set_result(cqitem_dev::result_success, type_v_buffer(0), L"SUCCESS CANCEL REQ");
                 continue;
             }//end switch
 
             if (b_complete) {
                 if (b_result) {
-                    ptr_req->set_result(cqitem_dev::result_success, v_rx, L"SUCCESS");
+                    ptr_req_new->set_result(cqitem_dev::result_success, v_rx, L"SUCCESS");
                 }
                 else {
-                    ptr_req->set_result(cqitem_dev::result_error, v_rx, L"ERROR");
+                    ptr_req_new->set_result(cqitem_dev::result_error, v_rx, L"ERROR");
                 }
             }
         } while (false);
@@ -724,14 +723,9 @@ namespace _mp {
                     }
 
                     // 새로운 명령을 처리.
-                    std::tie(b_complete,b_request_is_cancel) = _process_new_request_and_set_result(ptr_new);
+                    std::tie(b_complete,b_request_is_cancel) = _process_new_request_and_set_result(ptr_new, ptr_cur);
                     if (b_request_is_cancel) {
-                        // 이 경우 b_request_is_cancel 는 항상 true.
-                        if (ptr_cur) {
-                            // 현재 실행 중인 명령이 있으면, cancel request 에 의해 취소 되므로, 
-                            // ptr_cur 의 결과를 설정한다.
-                            ptr_cur->set_result(cqitem_dev::result_cancel, type_v_buffer(0), L"CANCELLED BY ANOTHER REQ");
-                        }
+                        // 이 경우 b_complete 는 항상 true.
                         continue;
                     }
                     if (b_complete) {
@@ -764,9 +758,6 @@ namespace _mp {
                 if (ptr_cur->is_complete()) {
                     if (ptr_cur->run_callback()) {
                         ptr_cur.reset();
-                    }
-                    else {//re read more
-                        //user want to read more operation.
                     }
                 }
             }

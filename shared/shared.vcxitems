@@ -95,6 +95,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\_dev\mp_cdev_util.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)..\info.md" />
     <None Include="$(MSBuildThisFileDirectory)..\README.md" />
   </ItemGroup>
   <ItemGroup>

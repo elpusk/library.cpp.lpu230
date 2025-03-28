@@ -198,7 +198,7 @@ public:
 		else
 			return ptr_null_device;
 	}
-	unsigned long create_device(const std::wstring& s_path)
+	unsigned long create_device(const std::wstring& s_path, bool b_shared_mode = false)
 	{
 		unsigned long n_device_index(i_device_of_client::const_invalied_device_index);
 
@@ -211,7 +211,7 @@ public:
 				continue;
 
 			manager_of_device_of_client<_T_SUB_DEVICE_OF_CLIENT>::type_ptr_device_of_client ptr_new_device(new _T_SUB_DEVICE_OF_CLIENT(m_n_client_index, s_path));
-			if (!ptr_new_device->open())
+			if (!ptr_new_device->open(b_shared_mode))
 				continue;
 			if (ptr_new_device->is_null_device())
 				continue;

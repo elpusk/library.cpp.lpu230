@@ -50,17 +50,19 @@ namespace _mp{
             m_p_user_for_cb = src.m_p_user_for_cb;
             m_result = src.m_result;
             m_s_info = src.m_s_info;
+            m_n_session_number = src.m_n_session_number;
 
             return *this;
         }
 
-        cqitem_dev(const type_v_buffer & v_tx, bool b_need_read, type_cb cb, void* p_user_for_cb)
+        cqitem_dev(const type_v_buffer & v_tx, bool b_need_read, type_cb cb, void* p_user_for_cb, unsigned long n_session_number)
         {
             _ini();
             m_v_tx = v_tx;
             m_b_need_read = b_need_read;
             m_cb = cb;
             m_p_user_for_cb = p_user_for_cb;
+            m_n_session_number = n_session_number;
         }
 
         virtual ~cqitem_dev()
@@ -106,6 +108,11 @@ namespace _mp{
         {
             std::lock_guard<std::mutex> lock(m_mutex);
             return m_v_rx;
+        }
+
+        unsigned long get_session_number() const
+        {
+            return m_n_session_number;
         }
 
         bool is_complete()
@@ -179,6 +186,7 @@ namespace _mp{
             m_p_user_for_cb = nullptr;
             m_result = cqitem_dev::result_not_yet;
             m_s_info.clear();
+            m_n_session_number = 0;
         }
 
     protected:
@@ -187,6 +195,7 @@ namespace _mp{
         bool m_b_need_read;
         cqitem_dev::type_cb m_cb;//set by constrcuture
         void* m_p_user_for_cb;//set by constrcuture
+        unsigned long m_n_session_number;//set by constrcuture
 
         std::mutex m_mutex;
         type_v_buffer m_v_rx;

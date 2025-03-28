@@ -4,14 +4,22 @@
 #include <mp_casync_result_manager.h>
 
 #include <cprotocol_lpu237.h>
-#include <tg_lpu237_dll.h>
-
 #include <manager_of_device_of_client.h>
 
 #include <lpu237_of_client.h>
 
 class ccb_client
 {
+public:
+	//
+	enum : unsigned long {
+		const_dll_result_success = 0,// = LPU237_DLL_RESULT_SUCCESS and LPU237LOCK_DLL_RESULT_SUCCESS
+		const_dll_result_error = 0xFFFFFFFF, //(-1) = LPU237_DLL_RESULT_ERROR and LPU237LOCK_DLL_RESULT_ERROR
+		const_dll_result_cancel = 0xFFFFFFFE, //(-2) = LPU237_DLL_RESULT_CANCEL and LPU237LOCK_DLL_RESULT_CANCEL
+		const_dll_result_icc_inserted = 0xFFFFFFFC, //(-4) = LPU237_DLL_RESULT_ICC_INSERTED
+		const_dll_result_icc_removed = 0xFFFFFFFB //(-5) = LPU237_DLL_RESULT_ICC_REMOVED
+	};
+
 public://this class must be have a static member only.
 	static _mp::cclient_cb::type_cb_callbacks& get_callbacks()
 	{
@@ -79,15 +87,21 @@ private:
 		bool b_result(false);
 
 		do {
-			if (n_result == _mp::cclient::RESULT_SUCCESS) {
+			unsigned long n_result_code(ccb_client::const_dll_result_success);
+
+			switch (n_result) {
+			case _mp::cclient::RESULT_SUCCESS:
 				b_result = true;
-			}
-
-			unsigned long n_result_code(LPU237_DLL_RESULT_SUCCESS);
-			if (!b_result) {
-				n_result_code = LPU237_DLL_RESULT_ERROR;
-			}
-
+				break;
+			case _mp::cclient::RESULT_CANCEL:
+				n_result_code = ccb_client::const_dll_result_cancel;
+				break;
+			case _mp::cclient::RESULT_ERROR:
+			default:
+				n_result_code = ccb_client::const_dll_result_error;;
+				break;
+			}//end switch
+			
 			int n_result_index(-1);
 
 			//received data for binary type.
@@ -107,12 +121,12 @@ private:
 				if (b_result && v_rx.size() >= 3) {
 					unsigned char c_var = cprotocol_lpu237::msr_warning_icc_inserted;
 					if (v_rx[0] == c_var && v_rx[1] == c_var && v_rx[2] == c_var) {
-						n_result_code = LPU237_DLL_RESULT_ICC_INSERTED;
+						n_result_code = ccb_client::const_dll_result_icc_inserted;
 					}
 					else {
 						c_var = cprotocol_lpu237::msr_warning_icc_removed;
 						if (v_rx[0] == c_var && v_rx[1] == c_var && v_rx[2] == c_var) {
-							n_result_code = LPU237_DLL_RESULT_ICC_REMOVED;
+							n_result_code = ccb_client::const_dll_result_icc_removed;
 						}
 					}
 				}

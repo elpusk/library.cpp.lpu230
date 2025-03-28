@@ -874,7 +874,7 @@ bool _vhid_api_briage::_q_worker::_notify_in_single_or_multi_rx_requests(
             continue;
         }
         if (ptr_req->get_cmd() != _vhid_api_briage::_q_item::cmd_read) {
-            // read 가 아님 것은 무조건 통지.
+            // read 인 것은 무조건 통지.
             continue;
         }
 

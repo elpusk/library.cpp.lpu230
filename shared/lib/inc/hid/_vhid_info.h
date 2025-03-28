@@ -71,6 +71,23 @@ public:
 		return v_extra_empty;
 	}
 
+	static bool is_support_shared_open(const std::string & s_extra_path )
+	{
+		bool b_support_shared(false);
+
+		for (auto item : _vhid_info::get_extra_paths(
+			_mp::_elpusk::const_usb_vid,
+			_mp::_elpusk::_lpu237::const_usb_pid,
+			_mp::_elpusk::_lpu237::const_usb_inf_hid
+		)) {
+			if (s_extra_path.compare(std::get<0>(item)) == 0) {
+				b_support_shared = std::get<2>(item);
+				break;
+			}
+		}//end for
+		return b_support_shared;
+	}
+
 	/**
 	* @brief checks the given path is primitive type or compositive type
 	*

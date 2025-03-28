@@ -62,14 +62,20 @@ namespace _mp {
 
         bool is_open() const;
 
+        bool is_support_shared_open() const;
+
         std::vector<unsigned char> get_report_desciptor();
 
 
         /**
         * @brief Staring Write an Output report to a HID device.
         * the fist byte must be report ID. start write operation.
+        * @param v_tx - tx data
+        * @param cb - callback function
+        * @param p_user_for_cb - user parameter of cb.
+        * @param n_session_number - session number, if not used it, use Zero.
         */
-        void start_write(const std::vector<unsigned char>& v_tx, cqitem_dev::type_cb cb, void* p_user_for_cb);
+        void start_write(const std::vector<unsigned char>& v_tx, cqitem_dev::type_cb cb, void* p_user_for_cb, unsigned long n_session_number=0);
 
         /**
         * @brief Staring Read an Input report from a HID device.
@@ -77,20 +83,35 @@ namespace _mp {
         * to the host through the INTERRUPT IN endpoint. The first byte will
         * contain the Report number if the device uses numbered reports.
         *  start read operation.
+        * @param cb - callback function
+        * @param p_user_for_cb - user parameter of cb.
+        * @param n_session_number - session number, if not used it, use Zero.
         */
-        void start_read(cqitem_dev::type_cb cb, void* p_user_for_cb);
+        void start_read(cqitem_dev::type_cb cb, void* p_user_for_cb, unsigned long n_session_number = 0);
 
         /**
         * @brief Staring Write an Output report to a HID device. and read operation
         * the fist byte must be report ID. start write operation.
+        * @param v_tx - tx data
+        * @param cb - callback function
+        * @param p_user_for_cb - user parameter of cb.
+        * @param n_session_number - session number, if not used it, use Zero.
         */
-        void start_write_read(const std::vector<unsigned char>& v_tx, cqitem_dev::type_cb cb, void* p_user_for_cb);
+        void start_write_read(const std::vector<unsigned char>& v_tx, cqitem_dev::type_cb cb, void* p_user_for_cb, unsigned long n_session_number = 0);
 
         /**
         * @brief Staring cancel operation.
+        * @param cb - callback function
+        * @param p_user_for_cb - user parameter of cb.
+        * @param n_session_number - session number, if not used it, use Zero.
         */
-        void start_cancel(cqitem_dev::type_cb cb, void* p_user_for_cb);
+        void start_cancel(cqitem_dev::type_cb cb, void* p_user_for_cb, unsigned long n_session_number = 0);
 
+        /**
+        * @brief get device type.
+        * @return type_bm_dev_lpu200_msr, type_bm_dev_lpu200_ibutton, type_bm_dev_hid
+        */
+        type_bm_dev get_type() const;
     protected:
 
         /**
@@ -123,11 +144,13 @@ namespace _mp {
         * 
         * @param ptr_req - new request.
         * 
+        * @param ptr_req - current request.
+        * 
         * @return first - true(the new request is processed comppletely with success or error), false - need more time to process it.
         * 
         *   second - true(the new request is cancel request!, In this case, first must be true), false(else)
         */
-        std::pair<bool,bool> _process_new_request_and_set_result(cqitem_dev::type_ptr& ptr_req);
+        std::pair<bool,bool> _process_new_request_and_set_result(cqitem_dev::type_ptr& ptr_req_new, cqitem_dev::type_ptr& ptr_req_cur);
 
         bool _process_only_tx(cqitem_dev::type_ptr& ptr_req);
 

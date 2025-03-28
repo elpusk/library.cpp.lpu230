@@ -75,7 +75,7 @@ public:
 	{
 	}
 
-	bool open()
+	bool open(bool b_shared_mode)
 	{
 		bool b_result(false);
 		do {
@@ -84,7 +84,7 @@ public:
 				continue;
 			if (m_n_device_index != const_invalied_device_index)
 				continue;
-			b_result = _open();
+			b_result = _open(b_shared_mode);
 		} while (false);
 		return b_result;
 	}
@@ -188,7 +188,7 @@ protected:
 		m_v_id = v_id;
 	}
 
-	bool _open()
+	bool _open(bool b_shared_mode)
 	{
 		bool b_result(false);
 		unsigned long n_device_index(const_invalied_device_index);
@@ -202,7 +202,7 @@ protected:
 			n_result_index = _create_async_result_for_transaction();
 			if (n_result_index < 0)
 				continue;
-			if (!capi_client::get_instance().open(m_n_client_index, m_s_device_path)) {
+			if (!capi_client::get_instance().open(m_n_client_index, m_s_device_path, b_shared_mode)) {
 				continue;
 			}
 			_mp::casync_parameter_result::type_ptr_ct_async_parameter_result& ptr_async_parameter_result = get_async_parameter_result_for_transaction(n_result_index);

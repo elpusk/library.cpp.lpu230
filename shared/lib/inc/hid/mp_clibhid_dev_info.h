@@ -35,6 +35,9 @@ namespace _mp{
     public: //constructor & destructor      
         clibhid_dev_info();
         
+        /**
+        * this construct for lpu237. if device isn't lpu237, s_extra_path is std::string().
+        */
         clibhid_dev_info(
             const char* ps_path,
             unsigned short w_vid,
@@ -42,8 +45,21 @@ namespace _mp{
             int n_interface,
             const std::string &s_extra_path
         );
+
+        /**
+        * this construct for generic device.
+        */
+        clibhid_dev_info(
+            const char* ps_path,
+            unsigned short w_vid,
+            unsigned short w_pid,
+            int n_interface
+        );
+
         
         virtual ~clibhid_dev_info();
+
+        bool is_support_shared_open() const;
         
 		type_bm_dev get_type() const;
 
@@ -76,6 +92,8 @@ namespace _mp{
         //
         _mp::type_v_s_buffer m_vs_path;
         std::string m_s_extra_path;//for virtual device path
+
+        bool m_b_support_shared; // lpu237 ibutton supprts shared open and shared rx of ibutton key.
     };
 
 }//the end of namespace _mp

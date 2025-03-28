@@ -535,7 +535,7 @@ bool capi_client::get_device_list_multi_sync(std::set<std::wstring>&set_s_path, 
 }
 
 
-bool capi_client::open(unsigned long n_client_index, const std::wstring & s_device_path)
+bool capi_client::open(unsigned long n_client_index, const std::wstring & s_device_path, bool b_shared_mode /*=false*/)
 {
 	unsigned long n_result(_mp::cclient::RESULT_ERROR);
 	do {
@@ -551,6 +551,9 @@ bool capi_client::open(unsigned long n_client_index, const std::wstring & s_devi
 			.set_owner(_mp::cio_packet::owner_device, 0)
 			.set_action(_mp::cio_packet::act_dev_open)
 			.set_data_by_utf8_without_colron_doubling(std::wstring(s_device_path));
+		if (b_shared_mode) {
+			packet.set_data_by_utf8_without_colron_doubling(L"share", true); // shared mode open
+		}
 
 		_mp::type_v_buffer v_tx;
 		packet.get_packet_by_json_format(v_tx);
@@ -564,7 +567,7 @@ bool capi_client::open(unsigned long n_client_index, const std::wstring & s_devi
 	if (n_result == _mp::cclient::RESULT_SUCCESS)	return true;
 	else	return false;
 }
-bool capi_client::open_sync(unsigned long& n_out_device_index, unsigned long n_client_index, const std::wstring & s_device_path)
+bool capi_client::open_sync(unsigned long& n_out_device_index, unsigned long n_client_index, const std::wstring & s_device_path, bool b_shared_mode)
 {
 	bool b_result(false);
 
@@ -586,7 +589,7 @@ bool capi_client::open_sync(unsigned long& n_out_device_index, unsigned long n_c
 			_set_callback_write(n_client_index, capi_client::_write_cb, nullptr);
 			_set_callback_read(n_client_index, capi_client::_read_cb, nullptr);
 			do {
-				if (!open(n_client_index, s_device_path)) //send request
+				if (!open(n_client_index, s_device_path,b_shared_mode)) //send request
 					continue;
 				b_result = future_write.get();//get tx ok?
 				if (!b_result)

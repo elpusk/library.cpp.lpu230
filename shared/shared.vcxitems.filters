@@ -311,6 +311,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)..\README.md" />
+    <None Include="$(MSBuildThisFileDirectory)..\info.md" />
   </ItemGroup>
   <ItemGroup>
     <Xml Include="$(MSBuildThisFileDirectory)projects\lpu237_dll\tg_lpu237_dll.xml">

@@ -34,27 +34,27 @@ public:
 	bool cmd_leave_opos();
 	bool cmd_bypass(const _mp::type_v_buffer& v_tx, _mp::type_v_buffer& v_rx);
 
-	int cmd_async_waits_ms_card()
+	int cmd_async_waits_data()
 	{
 		std::lock_guard<std::mutex> lock(m_mutex);
-		return _cmd_async_waits_ms_card(nullptr, nullptr, NULL, 0);
+		return _cmd_async_waits_rx(nullptr, nullptr, NULL, 0);
 	}
-	int cmd_async_waits_ms_card(_mp::casync_parameter_result::type_callback p_fun, void* p_para)
+	int cmd_async_waits_data(_mp::casync_parameter_result::type_callback p_fun, void* p_para)
 	{
 		std::lock_guard<std::mutex> lock(m_mutex);
-		return _cmd_async_waits_ms_card(p_fun, p_para, NULL, 0);
+		return _cmd_async_waits_rx(p_fun, p_para, NULL, 0);
 	}
-	int cmd_async_waits_ms_card(HWND h_wnd, UINT n_msg)
+	int cmd_async_waits_data(HWND h_wnd, UINT n_msg)
 	{
 		std::lock_guard<std::mutex> lock(m_mutex);
-		return _cmd_async_waits_ms_card(nullptr, nullptr, h_wnd, n_msg);
+		return _cmd_async_waits_rx(nullptr, nullptr, h_wnd, n_msg);
 	}
 
 private:
 	bool _cmd_get(cprotocol_lpu237::type_cmd c_cmd);
 
 	//return result index
-	int _cmd_async_waits_ms_card(_mp::casync_parameter_result::type_callback p_fun, void* p_para, HWND h_wnd, UINT n_msg);
+	int _cmd_async_waits_rx(_mp::casync_parameter_result::type_callback p_fun, void* p_para, HWND h_wnd, UINT n_msg);
 
 private:
 	cprotocol_lpu237 m_protocol;

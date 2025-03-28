@@ -44,6 +44,7 @@ int main(int argc, char* argv[])
             std::wcout << L" = hid - tx-rx test." << std::endl;
             std::wcout << L" = msr - reading msr test." << std::endl;
             std::wcout << L" = ibutton - reading ibutton test." << std::endl;
+            std::wcout << L" = multiibutton - reading ibutton test in multi-threading env." << std::endl;
             std::wcout << L" = msr ibutton - reading one msr and two ibutton test." << std::endl;
             std::wcout << L" = cancelmsr - cancel reading msr test." << std::endl;
             std::wcout << L" = cancelibutton - cancel reading ibutton test." << std::endl;
@@ -82,6 +83,10 @@ int main(int argc, char* argv[])
             }
             if (s_test.compare(L"ibutton") == 0) {
                 n_result = _test::tp_hid::get_instance().test_ibutton();
+                continue;
+            }
+            if (s_test.compare(L"multiibutton") == 0) {
+                n_result = _test::tp_hid::get_instance().test_multi_ibutton();
                 continue;
             }
             if (s_test.compare(L"cancelmsr") == 0) {

@@ -223,7 +223,7 @@ bool lpu237_of_client::cmd_bypass(const _mp::type_v_buffer& v_tx, _mp::type_v_bu
     return b_result;
 }
 
-int lpu237_of_client::_cmd_async_waits_ms_card(_mp::casync_parameter_result::type_callback p_fun, void* p_para, HWND h_wnd, UINT n_msg)
+int lpu237_of_client::_cmd_async_waits_rx(_mp::casync_parameter_result::type_callback p_fun, void* p_para, HWND h_wnd, UINT n_msg)
 {
     int n_result_index(-1);
 

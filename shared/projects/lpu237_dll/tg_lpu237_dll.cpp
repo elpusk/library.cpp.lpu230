@@ -548,7 +548,7 @@ unsigned long _CALLTYPE_ LPU237_wait_swipe_with_waits(HANDLE hDev)
 			continue;
 		}
 
-		int n_result_index = ptr_device->cmd_async_waits_ms_card();
+		int n_result_index = ptr_device->cmd_async_waits_data();
 		if (n_result_index < 0) {
 			_mp::clog::get_instance().log_fmt(L" : RET : %ls : cmd_async_waits_ms_card.\n", __WFUNCTION__);
 			continue;
@@ -606,7 +606,7 @@ unsigned long _CALLTYPE_ LPU237_wait_swipe_with_callback(HANDLE hDev, type_callb
 			continue;
 		}
 
-		int n_result_index = ptr_device->cmd_async_waits_ms_card(pFun, pParameter);
+		int n_result_index = ptr_device->cmd_async_waits_data(pFun, pParameter);
 		if (n_result_index < 0) {
 			_mp::clog::get_instance().log_fmt(L" : RET : %ls : cmd_async_waits_ms_card.\n", __WFUNCTION__);
 			continue;
@@ -647,7 +647,7 @@ unsigned long _CALLTYPE_ LPU237_wait_swipe_with_message(HANDLE hDev, HWND hWnd, 
 			continue;
 		}
 
-		int n_result_index = ptr_device->cmd_async_waits_ms_card(hWnd, nMsg);
+		int n_result_index = ptr_device->cmd_async_waits_data(hWnd, nMsg);
 		if (n_result_index < 0) {
 			_mp::clog::get_instance().log_fmt(L" : RET : %ls : cmd_async_waits_ms_card.\n", __WFUNCTION__);
 			continue;
@@ -711,8 +711,9 @@ unsigned long _CALLTYPE_ LPU237_get_data(unsigned long dwBufferIndex, unsigned l
 		_mp::type_v_buffer v_out_rx(0);
 
 		if (!ptr_result->get_result(v_out_rx)) {
+			ptr_result->get_result(dw_client_result);
+			//dw_client_result = LPU237_DLL_RESULT_ERROR;
 			ptr_manager_of_device_of_client->remove_async_result_for_manager(n_result_index);
-			dw_client_result = LPU237_DLL_RESULT_ERROR;
 			_mp::clog::get_instance().log_fmt(L" : RET : %ls : error\n", __WFUNCTION__);
 			continue;
 		}

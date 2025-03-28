@@ -1,0 +1,190 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="inc">
+      <UniqueIdentifier>{5ef2011f-53a6-4475-bd25-304546f4afdf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common">
+      <UniqueIdentifier>{7d4957b3-e467-4d50-b850-fc4b53540d38}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib">
+      <UniqueIdentifier>{38e412a5-e824-42b4-8c4f-14be6987ae5e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\svr">
+      <UniqueIdentifier>{cfb60420-e634-4794-b887-10384985ece0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\ws">
+      <UniqueIdentifier>{ceb01641-7e1f-4172-9df8-254c35762876}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="framework.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="pch.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\projects\lpu237_dll\inc\ccb_client.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\projects\lpu237_dll\inc\lpu237_of_client.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\projects\lpu237_dll\inc\tg_lpu237_ibutton.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\capi_client.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\cdef.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\ckey_map.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\cprotocol_lpu237.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\i_device_of_client.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\manager_of_device_of_client.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\server\mp_cclient.h">
+      <Filter>lib\svr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\server\mp_cclient_cb.h">
+      <Filter>lib\svr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\server\mp_cclient_cb_qitem.h">
+      <Filter>lib\svr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\server\mp_cclient_manager.h">
+      <Filter>lib\svr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\server\mp_cio_packet.h">
+      <Filter>lib\svr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\websocket\mp_cws_client.h">
+      <Filter>lib\ws</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\websocket\mp_win_nt.h">
+      <Filter>lib\ws</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\websocket\mp_ws_tools.h">
+      <Filter>lib\ws</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_casync_parameter_result.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_casync_result_manager.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cconsole.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cconvert.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cfile.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_clog.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cnamed_pipe_.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_coffee.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_coperation.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cqitem_dev.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cqueue.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cstring.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_csystem_.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cversion.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cwait.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_elpusk.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_type.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_vcpacket.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_vcworker.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="dllmain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="pch.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\projects\lpu237_dll\tg_lpu237_ibutton.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\projects\lpu237_dll\lpu237_of_client.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\common\src\capi_client.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\lib\src\server\mp_cclient.cpp">
+      <Filter>lib\svr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\lib\src\server\mp_cclient_cb.cpp">
+      <Filter>lib\svr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\lib\inc\mp_cnamed_pipe_.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\lib\inc\mp_csystem_.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="wi_lpu237_ibutton.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="tg_lpu237_ibutton.def">
+      <Filter>Source Files</Filter>
+    </None>
+  </ItemGroup>
+</Project>
