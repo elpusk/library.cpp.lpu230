@@ -732,6 +732,11 @@ namespace _mp {
                         continue; // 새로운 명령은 처리됨.
                     }
 
+                    if (ptr_cur) {
+                        // 새로운 명령 처리가 더 필요하므로 기존 명령이 cancel 된 것을,
+                        // callback 해서 알려 준다. 
+                        ptr_cur->run_callback();
+                    }
                     // 새로운 명령 처리가 더 필요하므로, 현재 명령으로 설정.
                     ptr_cur = ptr_new;
                     ptr_new.reset();

@@ -162,10 +162,9 @@ namespace _mp {
 			return w_result;
 		}
 
-		std::pair<unsigned long, unsigned short> cctl_svr::remove_dev_ctl(const std::wstring& s_device_path)
+		unsigned short cctl_svr::remove_dev_ctl(const std::wstring& s_device_path)
 		{
-			unsigned short w_device_index(0);
-			unsigned long n_session(_MP_TOOLS_INVALID_SESSION_NUMBER);
+			unsigned short w_device_index(_MP_TOOLS_INVALID_DEVICE_INDEX);
 			bool b_found(false);
 
 			do {
@@ -184,7 +183,6 @@ namespace _mp {
 						if (s_device_path_of_ctl.compare(s_device_path) != 0)
 							continue;
 						//
-						n_session = it->second->get_connected_session();
 						w_device_index = it->first;
 						m_map_device_index_to_ptr_dev_ctl.erase(it);
 
@@ -198,7 +196,7 @@ namespace _mp {
 						break;//exit for
 				}//end for
 			} while (false);
-			return std::make_pair(n_session, w_device_index);
+			return w_device_index;
 		}
 
 		// >> for m_map_session_to_set_of_device_index

@@ -212,7 +212,7 @@ namespace _mp
 					continue;
 				}
 				if (s_action.compare(L"close") == 0) {
-					pair_bool_result_bool_complete = _execute_close_sync(m_p_log, request, response,get_connected_session(), get_dev_path());
+					pair_bool_result_bool_complete = _execute_close_sync(m_p_log, request, response, get_dev_path());
 					b_result = pair_bool_result_bool_complete.first;
 					b_complete = pair_bool_result_bool_complete.second;
 					response.set_kernel_device_close(true);
@@ -220,11 +220,6 @@ namespace _mp
 				}
 			}
 
-			if (get_connected_session() != n_session) {
-				response.set_data_error(cio_packet::get_error_message(cio_packet::error_reason_session));
-				//push_info(_ns_tools::ct_color::COLOR_ERROR, L"%ls[%c] : mismatched : session = %u", __WFUNCTION__, (wchar_t)request.get_action(), request.get_session_number());
-				continue;
-			}
 			ptr_session = cserver::get_instance().get_session(n_session);
 			if (!ptr_session)
 				continue;

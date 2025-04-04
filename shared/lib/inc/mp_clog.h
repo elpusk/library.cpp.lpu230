@@ -5,6 +5,8 @@
 #include <memory>
 #include <string>
 #include <cstdio>
+#include <iostream>
+#include <sstream>
 
 #include<boost/filesystem.hpp>
 
@@ -130,9 +132,20 @@ namespace _mp
 
 		void trace(const wchar_t* s_fmt, ...)
 		{
+			static uint32_t n_cont(0);
+
 			do {
 				std::lock_guard<std::mutex>	lock(m_mutex_trace);
 				//
+				if (s_fmt == NULL) {
+					continue;
+				}
+				++n_cont;
+				std::wostringstream ss_out;
+				ss_out << std::setfill(L'0') << std::setw(sizeof(n_cont) * 2) << std::hex << n_cont << L" " << s_fmt;
+				std::wstring s = ss_out.str();
+				const wchar_t* ps_fmt = s.c_str();
+
 				va_list ap;
 				va_start(ap, s_fmt);
 
@@ -140,8 +153,6 @@ namespace _mp
 					if (!m_ptr_track_pipe) {
 						continue;
 					}
-					if (s_fmt == NULL)
-						continue;
 					//
 					type_v_ws_buffer v(
 						m_ptr_track_pipe->get_max_size_of_one_message()/sizeof(wchar_t),
@@ -154,13 +165,13 @@ namespace _mp
 					va_list ap_cp;
 					va_copy(ap_cp, ap);
 					//
-					vswprintf(&v[0], v.size(), s_fmt, ap);
+					vswprintf(&v[0], v.size(), ps_fmt, ap);
 					m_ptr_track_pipe->write(&v[0]);
 
-					vwprintf(s_fmt, ap_cp);
+					vwprintf(ps_fmt, ap_cp);
 					va_end(ap_cp);
 #else
-					vswprintf(&v[0], v.size(), s_fmt, ap);
+					vswprintf(&v[0], v.size(), ps_fmt, ap);
 					m_ptr_track_pipe->write(&v[0]);
 #endif
 				} while (false);

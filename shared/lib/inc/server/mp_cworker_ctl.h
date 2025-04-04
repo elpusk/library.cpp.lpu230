@@ -38,8 +38,7 @@ namespace _mp {
 		}
 		cworker_ctl(clog *p_log) : vcworker(p_log)
 		{
-			m_w_device_index = 0;
-			m_n_session = _MP_TOOLS_INVALID_SESSION_NUMBER;
+			m_w_device_index = _MP_TOOLS_INVALID_DEVICE_INDEX;
 		}
 
 		unsigned short get_device_index() const
@@ -50,16 +49,6 @@ namespace _mp {
 		std::wstring get_dev_path() const
 		{
 			return m_s_dev_path;
-		}
-
-		unsigned long get_connected_session() const
-		{
-			return m_n_session;
-		}
-
-		void set_connected_session(unsigned long n_session)
-		{
-			m_n_session = n_session;
 		}
 
 		void set_dev_path(const std::wstring & sw_path )
@@ -100,7 +89,6 @@ namespace _mp {
 		}
 
 	protected:
-		unsigned long m_n_session;
 		unsigned short m_w_device_index;
 		std::wstring m_s_dev_path;
 

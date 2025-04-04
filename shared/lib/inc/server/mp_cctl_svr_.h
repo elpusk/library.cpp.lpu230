@@ -64,10 +64,14 @@ namespace _mp {
 
 
 		/**
-		* remove cdev_ctl from m_map_device_index_to_ptr_dev_ctl.
+		* @brief remove cdev_ctl from m_map_device_index_to_ptr_dev_ctl.
 		* update m_map_device_index_to_ptr_dev_ctl
+		* 
+		* @param s_device_path - device path
+		* 
+		* @return removed device index , fail - 0
 		*/
-		std::pair<unsigned long, unsigned short> remove_dev_ctl(const std::wstring& s_device_path);
+		unsigned short remove_dev_ctl(const std::wstring& s_device_path);
 
 		// >> for m_map_session_to_set_of_device_index
 		cctl_svr::type_set_device_index get_device_index_set_of_session(unsigned long n_session);

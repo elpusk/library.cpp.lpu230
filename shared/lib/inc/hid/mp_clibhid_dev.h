@@ -70,6 +70,8 @@ namespace _mp {
         /**
         * @brief Staring Write an Output report to a HID device.
         * the fist byte must be report ID. start write operation.
+        * If there's an ongoing read request, cancel it and notify the previous request's callback with the response.
+        * 
         * @param v_tx - tx data
         * @param cb - callback function
         * @param p_user_for_cb - user parameter of cb.
@@ -83,6 +85,8 @@ namespace _mp {
         * to the host through the INTERRUPT IN endpoint. The first byte will
         * contain the Report number if the device uses numbered reports.
         *  start read operation.
+        * If there's an ongoing read request, cancel it and notify the previous request's callback with the response.
+        * 
         * @param cb - callback function
         * @param p_user_for_cb - user parameter of cb.
         * @param n_session_number - session number, if not used it, use Zero.
@@ -92,6 +96,8 @@ namespace _mp {
         /**
         * @brief Staring Write an Output report to a HID device. and read operation
         * the fist byte must be report ID. start write operation.
+        * If there's an ongoing read request, cancel it and notify the previous request's callback with the response.
+        * 
         * @param v_tx - tx data
         * @param cb - callback function
         * @param p_user_for_cb - user parameter of cb.
@@ -101,6 +107,8 @@ namespace _mp {
 
         /**
         * @brief Staring cancel operation.
+        * If there's an ongoing read request, cancel it and notify the previous request's callback with the response.
+        * 
         * @param cb - callback function
         * @param p_user_for_cb - user parameter of cb.
         * @param n_session_number - session number, if not used it, use Zero.

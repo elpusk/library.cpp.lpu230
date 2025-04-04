@@ -37,6 +37,13 @@ namespace _mp {
 		*/
 		virtual bool _execute(cio_packet& request);
 
+		/**
+		* executed by worker thread. when _execute return false(not complete),and none new request
+		* @paramter request request reference
+		* @return true -> complete(with error or success), false -> not complete(_continue() will be recalled at next time)
+		*/
+		virtual bool _continue(cio_packet& request);
+
 	private://don't call these methods
 		cdev_ctl();
 		cdev_ctl(const cdev_ctl&);

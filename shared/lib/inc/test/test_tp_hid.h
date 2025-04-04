@@ -1754,7 +1754,7 @@ namespace _test{
 			std::wcout << std::dec << n_worker_id << L"> " << L"START." << std::endl;
 			bool b_result(false);
 			std::chrono::duration<double> elapsed;
-			std::chrono::steady_clock::time_point start;
+			std::chrono::high_resolution_clock::time_point start;
 
 			do {
 				_mp::clibhid& lib_hid(_mp::clibhid::get_instance());
@@ -1849,7 +1849,7 @@ namespace _test{
 		{
 			bool b_result(false);
 			std::chrono::duration<double> elapsed;
-			std::chrono::steady_clock::time_point start;
+			std::chrono::high_resolution_clock::time_point start;
 
 			do {
 				_mp::clibhid& lib_hid(_mp::clibhid::get_instance());
