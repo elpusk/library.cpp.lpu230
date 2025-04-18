@@ -30,19 +30,34 @@ namespace _mp {
 	protected:
 
 		/**
-		* executed by worker thread.
-		* processing request.
-		* @paramter request request reference
+		* @brief executed by worker thread. processing request.
+		* 
+		* this function will be called when the new request is poped in request queue.
+		* 
+		* if return is complete, the result of processing send to client.
+		* 
+		* @param request-request reference
 		* @return true -> complete(with error or success), false -> not complete
 		*/
 		virtual bool _execute(cio_packet& request);
 
 		/**
-		* executed by worker thread. when _execute return false(not complete),and none new request
-		* @paramter request request reference
+		* @brief executed by worker thread.
+		* 
+		* this function will be called when _execute return false(not complete),and none new request.
+		* 
+		* @param request-request reference
 		* @return true -> complete(with error or success), false -> not complete(_continue() will be recalled at next time)
 		*/
 		virtual bool _continue(cio_packet& request);
+
+		/**
+		* @brief send all completed response to client.
+		* @return pair type 
+		*	first - the number of completed response.
+		*	second - the number of sent response packet.
+		*/
+		std::pair<int,int> _send_all_complete_response();
 
 	private://don't call these methods
 		cdev_ctl();

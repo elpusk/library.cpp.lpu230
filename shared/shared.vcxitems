@@ -27,6 +27,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)lib\inc\mp_csystem_.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)lib\src\cert\mp_ccertificate_.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)lib\src\cert\mp_ccoffee_hlp_cert_.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)lib\src\server\mp_cbase_ctl_fn_.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)lib\src\server\mp_cclient.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)lib\src\server\mp_cclient_cb.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)lib\src\server\mp_cctl_svr_.cpp" />
@@ -77,6 +78,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\mp_vcpacket.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\mp_vcworker.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\path\mp_cpath.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\server\mp_cbase_ctl_fn_.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\server\mp_cclient.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\server\mp_cclient_cb.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\server\mp_cclient_cb_qitem.h" />

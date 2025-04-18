@@ -23,7 +23,7 @@ namespace _mp {
 		cmain_ctl::~cmain_ctl()
 		{
 		}
-		cmain_ctl::cmain_ctl(clog* p_log) : cworker_ctl(p_log), cmain_ctl_fn()
+		cmain_ctl::cmain_ctl(clog* p_log) : cworker_ctl(p_log), cmain_ctl_fn(p_log)
 		{
 			_mp::clibhid& lib_hid(_mp::clibhid::get_instance());
 		}
@@ -46,7 +46,8 @@ namespace _mp {
 
 			do {
 				if (request.is_response()) {
-					b_completet = _execute_general_error_response(m_p_log, request, response, cio_packet::error_reason_request_type);
+					b_completet = true;
+					response = *_generate_error_response(request, cio_packet::error_reason_request_type);
 					continue;
 				}
 
@@ -60,7 +61,8 @@ namespace _mp {
 						m_p_log->log_fmt(L"[E] - %ls | overflow rx data(binary type) : %u(limit : %u).\n", __WFUNCTION__, n_data, cws_server::const_default_max_rx_size_bytes);
 						m_p_log->trace(L"[E] - %ls | overflow rx data(binary type) : %u(limit : %u).\n", __WFUNCTION__, n_data, cws_server::const_default_max_rx_size_bytes);
 					}
-					b_completet = _execute_general_error_response(m_p_log, request, response, cio_packet::error_reason_overflow_buffer);
+					b_completet = true;
+					response = *_generate_error_response(request, cio_packet::error_reason_overflow_buffer);
 					continue;
 				}
 				switch (request.get_action())
@@ -82,7 +84,8 @@ namespace _mp {
 					b_completet = _execute_advance_operation(m_p_log, request, response, response_for_the_other_session);
 					break;
 				default:
-					b_completet = _execute_general_error_response(m_p_log, request, response, cio_packet::error_reason_action_code);
+					b_completet = true;
+					response = *_generate_error_response(request, cio_packet::error_reason_action_code);
 					break;
 				}//end switch
 

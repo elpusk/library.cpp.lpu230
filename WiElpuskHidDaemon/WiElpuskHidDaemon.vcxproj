@@ -34,6 +34,7 @@
     <ClCompile Include="..\shared\lib\src\hid\mp_clibhid_dev_info.cpp" />
     <ClCompile Include="..\shared\lib\src\hid\_hid_api_briage.cpp" />
     <ClCompile Include="..\shared\lib\src\hid\_vhid_api_briage.cpp" />
+    <ClCompile Include="..\shared\lib\src\server\mp_cbase_ctl_fn_.cpp" />
     <ClCompile Include="..\shared\lib\src\server\mp_cctl_svr_.cpp" />
     <ClCompile Include="..\shared\lib\src\server\mp_cdev_ctl_.cpp" />
     <ClCompile Include="..\shared\lib\src\server\mp_cdev_ctl_fn_.cpp" />
@@ -81,6 +82,7 @@
     <ClInclude Include="..\shared\lib\inc\mp_vcpacket.h" />
     <ClInclude Include="..\shared\lib\inc\mp_vcworker.h" />
     <ClInclude Include="..\shared\lib\inc\path\mp_cpath.h" />
+    <ClInclude Include="..\shared\lib\inc\server\mp_cbase_ctl_fn_.h" />
     <ClInclude Include="..\shared\lib\inc\server\mp_cdev_ctl_.h" />
     <ClInclude Include="..\shared\lib\inc\server\mp_cdev_ctl_fn_.h" />
     <ClInclude Include="..\shared\lib\inc\server\mp_cio_packet.h" />

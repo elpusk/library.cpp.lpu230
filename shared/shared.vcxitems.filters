@@ -138,6 +138,9 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)lib\src\server\mp_ckernel_ctl_.cpp">
       <Filter>lib\inc\svr</Filter>
     </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)lib\src\server\mp_cbase_ctl_fn_.cpp">
+      <Filter>lib\inc\svr</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)3thpart\inc\hidapi.h">
@@ -306,6 +309,9 @@
       <Filter>lib\inc\svr</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\server\mp_ckernel_ctl_.h">
+      <Filter>lib\inc\svr</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\server\mp_cbase_ctl_fn_.h">
       <Filter>lib\inc\svr</Filter>
     </ClInclude>
   </ItemGroup>

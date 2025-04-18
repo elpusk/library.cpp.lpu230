@@ -50,7 +50,6 @@ namespace _mp
 		virtual bool _continue(cio_packet& request);
 
 	private:
-		bool _execute_general_error_response(cio_packet& request, cio_packet& response, cio_packet::type_error_reason n_reason = cio_packet::error_reason_none);
 		bool _execute_kernel_operation(cio_packet& request, cio_packet& response);
 		bool _execute_kernel(const cio_packet& request, cio_packet& response);//device dependent kernal operation
 

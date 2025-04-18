@@ -11,9 +11,10 @@
 #include <mp_cqueue.h>
 #include <mp_clog.h>
 #include <server/mp_cio_packet.h>
+#include <server/mp_cbase_ctl_fn_.h>
 
 namespace _mp {
-	class cmain_ctl_fn
+	class cmain_ctl_fn : public cbase_ctl_fn
 	{
 
 	public:
@@ -24,11 +25,9 @@ namespace _mp {
 
 		virtual ~cmain_ctl_fn();
 	protected:
-		cmain_ctl_fn();
+		cmain_ctl_fn(clog* p_log);
 
 		//
-		bool _execute_general_error_response(clog* p_log,cio_packet& request, cio_packet& response, cio_packet::type_error_reason n_reason /*= cio_packet::error_reason_none*/);
-
 		bool _execute_mgmt_get_echo(clog* p_log, cio_packet& request, cio_packet& response);
 		
 		bool _execute_mgmt_get_device_list(clog* p_log, const type_list_wstring& list_wstring_filter, cio_packet& request, cio_packet& response);
@@ -40,6 +39,7 @@ namespace _mp {
 		bool _execute_advance_operation(clog* p_log, cio_packet& request, cio_packet& response, cio_packet& response_for_the_other_session);
 
 	private://don't call these methods
+		cmain_ctl_fn();
 		cmain_ctl_fn(const cmain_ctl_fn&);
 		cmain_ctl_fn& operator=(const cmain_ctl_fn&);
 

@@ -23,21 +23,9 @@ namespace _mp {
 		cmain_ctl_fn::~cmain_ctl_fn()
 		{
 		}
-		cmain_ctl_fn::cmain_ctl_fn()
+		cmain_ctl_fn::cmain_ctl_fn(clog* p_log) : cbase_ctl_fn(p_log)
 		{
 			_mp::clibhid& lib_hid(_mp::clibhid::get_instance());
-		}
-
-		bool cmain_ctl_fn::_execute_general_error_response(clog* p_log, cio_packet& request, cio_packet& response, cio_packet::type_error_reason n_reason /*= cio_packet::error_reason_none*/)
-		{
-			response = request;
-			response.set_cmd(cio_packet::cmd_response);
-			if (n_reason == cio_packet::error_reason_none)
-				response.set_data_error();
-			else
-				response.set_data_error(cio_packet::get_error_message(n_reason));
-			//
-			return true;//complete with error
 		}
 
 		bool cmain_ctl_fn::_execute_mgmt_get_echo(clog* p_log, cio_packet& request, cio_packet& response)
