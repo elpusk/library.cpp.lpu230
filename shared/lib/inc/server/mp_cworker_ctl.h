@@ -20,7 +20,6 @@ namespace _mp {
 	/**
 	* base class of view worker
 	* need the defintion of
-	* push_back_request() function.
 	* _execute() function
 	* _continue() function
 	*/
@@ -68,22 +67,25 @@ namespace _mp {
     protected:
 
 		/**
-		* executed by worker thread.
-		* processing request.
-		* @paramter request request reference
+		* @brief executed by worker thread. processing request.
+		* 
+		* @paramter request ptr
+		* 
 		* @return true -> complete(with error or success), false -> not complete 
 		*/
-		virtual bool _execute(cio_packet& request) 
+		virtual bool _execute(cio_packet::type_ptr& ptr_request) 
 		{
 			return false;
 		}
 
 		/**
-		* executed by worker thread. when _execute return false(not complete),and none new request
-		* @paramter request request reference
+		* @brief executed by worker thread. when _execute return false(not complete),and none new request
+		* 
+		* @paramter request ptr
+		* 
 		* @return true -> complete(with error or success), false -> not complete(_continue() will be recalled at next time)
 		*/
-		virtual bool _continue(cio_packet& request)
+		virtual bool _continue(cio_packet::type_ptr& ptr_request)
 		{
 			return true;
 		}

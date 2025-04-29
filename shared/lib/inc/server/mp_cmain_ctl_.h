@@ -35,7 +35,7 @@ namespace _mp {
 		* @paramter request request reference
 		* @return true -> complete(with error or success), false -> not complete 
 		*/
-		virtual bool _execute(cio_packet& request);
+		virtual bool _execute(cio_packet::type_ptr& ptr_request);
 
 	private://don't call these methods
 		cmain_ctl();

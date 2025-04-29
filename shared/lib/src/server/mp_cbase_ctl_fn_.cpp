@@ -113,6 +113,85 @@ namespace _mp {
 		return b_result;
 	}
 
+	bool cbase_ctl_fn::_set_response(cio_packet& out_response, cqitem_dev& in_qi, cio_packet& in_request)
+	{
+		bool b_complete(false);
+
+		do {
+			cqitem_dev::type_result r(cqitem_dev::result_not_yet);//processing result
+			type_v_buffer v;//received data
+			std::wstring s;//information
+			cio_packet::type_act c_act = cio_packet::act_mgmt_unknown;
+			unsigned long n_session = _MP_TOOLS_INVALID_SESSION_NUMBER;
+			unsigned long n_device_index = 0;
+			//
+			std::tie(r, v, s) = in_qi.get_result_all();
+			if (r == cqitem_dev::result_not_yet) {
+				continue;
+			}
+			//
+			b_complete = true;
+			//
+			// build response
+			out_response = in_request;
+			c_act = out_response.get_action();
+			n_session = out_response.get_session_number();
+			n_device_index = out_response.get_device_index();
+			out_response.set_cmd(cio_packet::cmd_response);
+			//
+			switch (r) {
+			case cqitem_dev::result_success:
+				if (v.empty()) {
+					out_response.set_data_sucesss();
+				}
+				else {
+					out_response.set_data(v);
+				}
+				break;
+			case cqitem_dev::result_error:
+				out_response.set_data_error(cio_packet::get_error_message(cio_packet::error_reason_device_operation));
+				break;
+			case cqitem_dev::result_cancel:
+				out_response.set_data_cancel();
+				break;
+			default:
+				out_response.set_data_error(cio_packet::get_error_message(cio_packet::error_reason_device_operation));
+				break;
+			}//end switch
+			//
+		} while (false);
+		return b_complete;
+	}
+
+	void cbase_ctl_fn::_set_response_result_only(cio_packet& out_response, cqitem_dev::type_result result, const std::wstring& s_result, cio_packet& in_request)
+	{
+		cio_packet::type_act c_act = cio_packet::act_mgmt_unknown;
+		unsigned long n_session = _MP_TOOLS_INVALID_SESSION_NUMBER;
+		unsigned long n_device_index = 0;
+		//
+		// build response
+		out_response = in_request;
+		c_act = out_response.get_action();
+		n_session = out_response.get_session_number();
+		n_device_index = out_response.get_device_index();
+		out_response.set_cmd(cio_packet::cmd_response);
+		//
+		switch (result) {
+		case cqitem_dev::result_success:
+			out_response.set_data_sucesss();
+			break;
+		case cqitem_dev::result_error:
+			out_response.set_data_error(s_result);
+			break;
+		case cqitem_dev::result_cancel:
+			out_response.set_data_cancel(s_result);
+			break;
+		default:
+			out_response.set_data_error(s_result);
+			break;
+		}//end switch
+	}
+
 	/*
 		device support shared:	user request is shared:	current open status:	result
 		0	0	0	openable
@@ -160,6 +239,467 @@ namespace _mp {
 #if defined(_WIN32) && defined(_DEBUG)
 		ATLTRACE(L"-- %09u + %s\n", request.get_session_number(), s_fun_name.c_str());
 #endif
+	}
+
+
+
+	//=======================================//=======================================
+	//=======================================//=======================================
+	//cbase_ctl_fn::_cstate member
+	// m_trans_table_base 는 exclusive 또는 하나의 session 의 기본 state transaction table.
+	const int cbase_ctl_fn::_cstate::_m_trans_table_base[cbase_ctl_fn::_cstate::st_total][cbase_ctl_fn::_cstate::ev_total]
+		= {
+			{st_idl,st_not,st_not,st_not,st_not},
+			{st_idl,st_not,st_idl,st_asy,st_idl},
+			{st_asy,st_not,st_idl,st_asy,st_idl}
+	};
+
+	std::pair<bool, cbase_ctl_fn::_cstate::type_state> cbase_ctl_fn::_cstate::get_combination_state_in_map_except_selected_session
+	(
+		const cbase_ctl_fn::_cstate::type_map_ptr_state& map_ptr_state_cur,
+		unsigned long n_selected_session_number
+	)
+	{
+		bool b_exist(false);
+		cbase_ctl_fn::_cstate::type_state st_result(cbase_ctl_fn::_cstate::st_not);
+
+		do {
+			if (map_ptr_state_cur.empty()) {
+				continue;
+			}
+
+			cbase_ctl_fn::_cstate::type_map_ptr_state::const_iterator it_sel = map_ptr_state_cur.find(n_selected_session_number);
+			if (it_sel != map_ptr_state_cur.cend()) {
+				if (map_ptr_state_cur.size() == 1) {
+					continue; // n_session 의 state 만 존재하는 경우. - another session is none.
+				}
+			}
+
+			b_exist = true; //there are another session.
+			st_result = cbase_ctl_fn::_cstate::st_not;
+
+			cbase_ctl_fn::_cstate::type_map_ptr_state::const_iterator it = map_ptr_state_cur.begin();
+			for (; it != map_ptr_state_cur.cend(); ++it) {
+				if (it == it_sel) {
+					continue;
+				}
+				if (it->second->get() <= st_result) {
+					continue;
+				}
+				st_result = it->second->get();
+			}//end for
+
+		} while (false);
+		return std::make_pair(b_exist, st_result);
+
+	}
+
+	cbase_ctl_fn::_cstate::type_evt cbase_ctl_fn::_cstate::get_event_from_request_action(cio_packet::type_act act)
+	{
+		cbase_ctl_fn::_cstate::type_evt evt(cbase_ctl_fn::_cstate::ev_none);
+
+		switch (act)
+		{
+		case cio_packet::act_dev_open:
+			evt = cbase_ctl_fn::_cstate::ev_open;
+			break;
+		case cio_packet::act_dev_close:
+			evt = cbase_ctl_fn::_cstate::ev_close;
+			break;
+		case cio_packet::act_dev_transmit:
+		case cio_packet::act_dev_cancel:
+		case cio_packet::act_dev_write:
+			evt = cbase_ctl_fn::_cstate::ev_sync;
+			break;
+		case cio_packet::act_dev_read:
+			evt = cbase_ctl_fn::_cstate::ev_asy;
+			break;
+		case cio_packet::act_dev_sub_bootloader:
+		default:
+			break;
+		}//end switch
+		return evt;
+	}
+
+	int cbase_ctl_fn::_cstate::get_mask_from_state(_cstate::type_state st)
+	{
+		int n_mask = 0;
+
+		do {
+
+			if ((int)st <= (int)_cstate::st_undefined) {
+				continue;
+			}
+			if ((int)st >= (int)_cstate::st_total) {
+				continue;
+			}
+
+			n_mask = 0x1 << (int)st;
+
+		} while (false);
+		return n_mask;
+	}
+
+	cbase_ctl_fn::_cstate::type_state cbase_ctl_fn::_cstate::get_state_from_mask(int n_mask)
+	{
+		_cstate::type_state st(_cstate::st_undefined);
+
+		switch (st) {
+		case 0x01:	st = _cstate::st_not;	break;
+		case 0x02:	st = _cstate::st_idl;	break;
+		case 0x04:	st = _cstate::st_asy;	break;
+		default: break;
+		}// end swithc
+
+		return st;
+	}
+
+	cbase_ctl_fn::_cstate::_cstate()
+	{
+		this->reset();
+	}
+
+	cbase_ctl_fn::_cstate::_cstate(const cbase_ctl_fn::_cstate& src)
+	{
+		*this = src;
+	}
+
+	cbase_ctl_fn::_cstate& cbase_ctl_fn::_cstate::operator=(const cbase_ctl_fn::_cstate& src)
+	{
+		m_st_cur = src.m_st_cur;
+		m_ev_last = src.m_ev_last;
+		return *this;
+	}
+	cbase_ctl_fn::_cstate::~_cstate()
+	{
+	}
+
+	void cbase_ctl_fn::_cstate::reset()
+	{
+		m_st_cur = _cstate::st_not;
+		m_ev_last = _cstate::ev_none;
+	}
+
+	cbase_ctl_fn::_cstate::type_state cbase_ctl_fn::_cstate::get() const
+	{
+		return m_st_cur;
+	}
+
+	cbase_ctl_fn::_cstate::type_evt cbase_ctl_fn::_cstate::get_last_event() const
+	{
+		return m_ev_last;
+	}
+
+	cbase_ctl_fn::_cstate::type_result_evt   cbase_ctl_fn::_cstate::set(_cstate::type_evt evt)
+	{
+		_cstate::type_state st_new(_cstate::st_not);
+		_cstate::type_state st_old(_cstate::st_not);
+
+		st_old = m_st_cur;
+		st_new = (_cstate::type_state)_cstate::_m_trans_table_base[m_st_cur][evt];
+
+		m_st_cur = st_new;
+		m_ev_last = evt;
+
+		bool b_changed(false);
+		if (st_new != st_old) {
+			b_changed = true;
+		}
+		return std::make_tuple(b_changed, st_new, st_old);
+
+	}
+
+	//=======================================//=======================================
+	//=======================================//=======================================
+	////cbase_ctl_fn::cresult  member
+	cbase_ctl_fn::cresult::cresult()
+	{
+		reset();
+	}
+
+	cbase_ctl_fn::cresult::cresult(const cbase_ctl_fn::cresult& src)
+	{
+		*this = src;
+	}
+
+	cbase_ctl_fn::cresult::cresult(const cio_packet& request)
+	{
+		reset();
+		m_ptr_req = std::make_shared<cio_packet>(request);
+	}
+
+	cbase_ctl_fn::cresult::cresult(const cio_packet::type_ptr& ptr_request)
+	{
+		reset();
+		m_ptr_req = ptr_request;
+	}
+
+	cbase_ctl_fn::cresult& cbase_ctl_fn::cresult::operator=(const cbase_ctl_fn::cresult& src)
+	{
+		m_b_process_exist_session = src.m_b_process_exist_session;
+		m_st_session_old = src.m_st_session_old;
+		m_st_session_new = src.m_st_session_new;
+
+		m_st_combination_old = src.m_st_combination_old;
+		m_st_combination_new = src.m_st_combination_new;
+
+		m_b_process_result = src.m_b_process_result;
+		m_b_process_complete = src.m_b_process_complete;
+		m_ptr_req = src.m_ptr_req;
+		m_ptr_rsp = src.m_ptr_rsp;
+		m_s_dev_path = src.m_s_dev_path;
+		return *this;
+	}
+
+	void cbase_ctl_fn::cresult::reset()
+	{
+		m_b_process_exist_session = false;
+
+		m_st_session_old = cbase_ctl_fn::_cstate::st_not;
+		m_st_session_new = cbase_ctl_fn::_cstate::st_not;
+
+		m_st_combination_old = cbase_ctl_fn::_cstate::st_not;
+		m_st_combination_new = cbase_ctl_fn::_cstate::st_not;
+
+		m_b_process_result = false;
+		m_b_process_complete = true;
+
+		m_s_dev_path.clear();
+	}
+
+	const cio_packet::type_ptr& cbase_ctl_fn::cresult::get_req() const
+	{
+		return m_ptr_req;
+	}
+
+	unsigned long cbase_ctl_fn::cresult::get_session_number() const
+	{
+		unsigned long n_session(_MP_TOOLS_INVALID_SESSION_NUMBER);
+		if (m_ptr_req) {
+			n_session = m_ptr_req->get_session_number();
+		}
+		return n_session;
+	}
+
+	std::wstring cbase_ctl_fn::cresult::get_dev_path() const
+	{
+		return m_s_dev_path;
+	}
+
+
+	size_t cbase_ctl_fn::cresult::get_rx(type_v_buffer& v_data) const
+	{
+		size_t n_size(0);
+
+		do {
+			if (!m_ptr_rsp) {
+				continue;
+			}
+
+			n_size = m_ptr_rsp->get_packet_by_json_format(v_data);
+
+		} while (false);
+		
+		return n_size;
+	}
+
+	cbase_ctl_fn::_cstate::type_evt cbase_ctl_fn::cresult::get_cur_event() const
+	{
+		_cstate::type_evt evt(_cstate::ev_none);
+
+		do {
+			if (!m_ptr_req) {
+				continue;
+			}
+			evt = cbase_ctl_fn::_cstate::get_event_from_request_action(m_ptr_req->get_action());
+
+		} while (false);
+		return evt;
+	}
+
+	type_pair_bool_result_bool_complete cbase_ctl_fn::cresult::process_get_result() const
+	{
+		return std::make_pair(m_b_process_result, m_b_process_complete);
+	}
+
+	cio_packet::type_ptr cbase_ctl_fn::cresult::process_set_req_packet(const cio_packet& request)
+	{
+		m_ptr_req = std::make_shared<cio_packet>(request);
+		m_ptr_rsp = std::make_shared<cio_packet>(request);
+
+		m_ptr_rsp->set_cmd(cio_packet::cmd_response).set_data_error();
+
+		return m_ptr_rsp;
+	}
+
+	void cbase_ctl_fn::cresult::after_processing_set_rsp_with_error_complete
+	(
+		cio_packet::type_error_reason n_reason,
+		const std::wstring& s_dev_path /*= std::wstring()*/
+	)
+	{
+		do {
+			if (!m_ptr_req) {
+				continue;
+			}
+			if (!m_ptr_rsp) {
+				m_ptr_rsp = std::make_shared<cio_packet>(*m_ptr_req);
+				m_ptr_rsp->set_cmd(cio_packet::cmd_response);
+			}
+			//
+			m_b_process_exist_session = true;
+			m_s_dev_path = s_dev_path;
+
+			if (n_reason == cio_packet::error_reason_none)
+				m_ptr_rsp->set_data_error();
+			else {
+				m_ptr_rsp->set_data_error(cio_packet::get_error_message(n_reason));
+
+				if (n_reason == cio_packet::error_reason_session) {
+					m_b_process_exist_session = false;
+				}
+			}
+			//
+		} while (false);
+
+		m_b_process_result = false;
+		m_b_process_complete = true;
+	}
+
+	void cbase_ctl_fn::cresult::after_processing_set_rsp_with_succss_complete(const _mp::type_v_buffer& v_rx, const std::wstring& s_dev_path)
+	{
+		do {
+			if (!m_ptr_req) {
+				continue;
+			}
+			if (!m_ptr_rsp) {
+				m_ptr_rsp = std::make_shared<cio_packet>(*m_ptr_req);
+				m_ptr_rsp->set_cmd(cio_packet::cmd_response);
+			}
+			//
+			m_b_process_exist_session = true;
+			m_s_dev_path = s_dev_path;
+
+			m_ptr_rsp->set_data_sucesss();
+			if (!v_rx.empty()) {
+				m_ptr_rsp->set_data(v_rx, true);
+			}
+			//
+		} while (false);
+
+		m_b_process_result = true;
+		m_b_process_complete = true;
+	}
+
+	void cbase_ctl_fn::cresult::after_processing_set_rsp_with_succss_complete(const std::wstring& s_data, const std::wstring& s_dev_path)
+	{
+		do {
+			if (!m_ptr_req) {
+				continue;
+			}
+			if (!m_ptr_rsp) {
+				m_ptr_rsp = std::make_shared<cio_packet>(*m_ptr_req);
+				m_ptr_rsp->set_cmd(cio_packet::cmd_response);
+			}
+			//
+			m_b_process_exist_session = true;
+			m_s_dev_path = s_dev_path;
+
+			m_ptr_rsp->set_data_sucesss();
+			if (!s_data.empty()) {
+				m_ptr_rsp->set_data_by_utf8(s_data, true);
+			}
+			//
+		} while (false);
+
+		m_b_process_result = true;
+		m_b_process_complete = true;
+	}
+
+	void cbase_ctl_fn::cresult::after_processing_set_rsp_with_succss_complete(const cio_packet::type_ptr& ptr_reponse, const std::wstring& s_dev_path)
+	{
+		do {
+			if (!m_ptr_req) {
+				continue;
+			}
+			if (!ptr_reponse) {
+				m_ptr_rsp = std::make_shared<cio_packet>(*m_ptr_req);
+				m_ptr_rsp->set_cmd(cio_packet::cmd_response);
+				m_ptr_rsp->set_data_sucesss();
+			}
+			else {
+				m_ptr_rsp = ptr_reponse;
+			}
+			//
+			m_b_process_exist_session = true;
+			m_s_dev_path = s_dev_path;
+			//
+		} while (false);
+
+		m_b_process_result = true;
+		m_b_process_complete = true;
+	}
+
+	void cbase_ctl_fn::cresult::after_starting_process_set_rsp_with_succss_ing
+	(
+		const std::wstring& s_dev_path /*= std::wstring()*/
+	)
+	{
+		do {
+			if (!m_ptr_req) {
+				continue;
+			}
+			//
+			m_b_process_exist_session = true;
+			m_s_dev_path = s_dev_path;
+			//
+		} while (false);
+
+		m_b_process_result = true;
+		m_b_process_complete = false;
+	}
+
+	bool cbase_ctl_fn::cresult::is_changed_state_of_selected_session() const
+	{
+		if (m_st_session_old == m_st_session_new) {
+			return false;
+		}
+		return true;
+	}
+
+	bool cbase_ctl_fn::cresult::is_changed_combination_state_of_all_session() const
+	{
+		if (m_st_combination_old == m_st_combination_new) {
+			return false;
+		}
+		return true;
+	}
+
+	void cbase_ctl_fn::cresult::set_selected_session_state
+	(
+		cbase_ctl_fn::_cstate::type_state st_new,
+		cbase_ctl_fn::_cstate::type_state st_old
+	)
+	{
+		m_st_session_old = st_old;
+		m_st_session_new = st_new;
+	}
+
+	void cbase_ctl_fn::cresult::set_selected_session_state(cbase_ctl_fn::_cstate::type_result_evt st_result)
+	{
+		m_st_session_new = std::get<1>(st_result);
+		m_st_session_old = std::get<2>(st_result);
+	}
+
+	void cbase_ctl_fn::cresult::set_combination_state(cbase_ctl_fn::_cstate::type_state st_new, cbase_ctl_fn::_cstate::type_state st_old)
+	{
+		m_st_combination_old = st_old;
+		m_st_combination_new = st_new;
+	}
+
+	std::pair<cbase_ctl_fn::_cstate::type_state, cbase_ctl_fn::_cstate::type_state> cbase_ctl_fn::cresult::get_combination_state() const
+	{
+		return std::make_pair(m_st_combination_new, m_st_combination_old);
 	}
 
 }//the end of _mp namespace

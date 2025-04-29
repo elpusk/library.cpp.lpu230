@@ -33,26 +33,26 @@ namespace _mp
 	* @paramter request request reference
 	* @return true -> complete(with error or success), false -> not complete
 	*/
-	bool ckernel_ctl::_execute(cio_packet& request)
+	bool ckernel_ctl::_execute(cio_packet::type_ptr& ptr_request)
 	{
 		cio_packet response;
 		cio_packet response_for_the_other_session;
 		type_v_buffer v_rsp, v_rsp_for_the_other_session;
 		bool b_completet(true);
-		unsigned long n_owner_session(request.get_session_number());
+		unsigned long n_owner_session(ptr_request->get_session_number());
 		type_list_wstring list_wstring_data_field;
 		response_for_the_other_session.set_cmd(cio_packet::cmd_invalid);
 
 		do {
-			if (request.is_response()) {
+			if (ptr_request->is_response()) {
 				b_completet = true;
-				response = *cbase_ctl_fn::_generate_error_response(request, cio_packet::error_reason_request_type);
+				response = *cbase_ctl_fn::_generate_error_response(*ptr_request, cio_packet::error_reason_request_type);
 				continue;
 			}
 
-			size_t n_data(request.get_data_field_size());
+			size_t n_data(ptr_request->get_data_field_size());
 			if (n_data > cws_server::const_default_max_rx_size_bytes) {
-				if (request.get_data_field_type() == cio_packet::data_field_string_utf8) {
+				if (ptr_request->get_data_field_type() == cio_packet::data_field_string_utf8) {
 					m_p_log->log_fmt(L"[E] - %ls | overflow rx data(string type) : %u(limit : %u).\n", __WFUNCTION__, n_data, cws_server::const_default_max_rx_size_bytes);
 					m_p_log->trace(L"[E] - %ls | overflow rx data(string type) : %u(limit : %u).\n", __WFUNCTION__, n_data, cws_server::const_default_max_rx_size_bytes);
 				}
@@ -61,17 +61,17 @@ namespace _mp
 					m_p_log->trace(L"[E] - %ls | overflow rx data(binary type) : %u(limit : %u).\n", __WFUNCTION__, n_data, cws_server::const_default_max_rx_size_bytes);
 				}
 				b_completet = true;
-				response = *cbase_ctl_fn::_generate_error_response(request, cio_packet::error_reason_overflow_buffer);
+				response = *cbase_ctl_fn::_generate_error_response(*ptr_request, cio_packet::error_reason_overflow_buffer);
 				continue;
 			}
-			switch (request.get_action())
+			switch (ptr_request->get_action())
 			{
 			case cio_packet::act_mgmt_dev_kernel_operation:
-				b_completet = _execute_kernel_operation(request, response);
+				b_completet = _execute_kernel_operation(ptr_request, response);
 				break;
 			default:
 				b_completet = true;
-				response = *cbase_ctl_fn::_generate_error_response(request, cio_packet::error_reason_action_code);
+				response = *cbase_ctl_fn::_generate_error_response(*ptr_request, cio_packet::error_reason_action_code);
 				break;
 			}//end switch
 
@@ -80,11 +80,11 @@ namespace _mp
 		do {
 			if (!b_completet)
 				continue;//response is differd
-			if (request.is_self())
+			if (ptr_request->is_self())
 				continue;//no response need, this request is issued from server-self.
 			//send response
 			response.get_packet_by_json_format(v_rsp);
-			cserver::get_instance().send_data_to_client_by_ip4(v_rsp, request.get_session_number());
+			cserver::get_instance().send_data_to_client_by_ip4(v_rsp, ptr_request->get_session_number());
 
 			if (response_for_the_other_session.is_valid()) {
 				response_for_the_other_session.get_packet_by_json_format(v_rsp_for_the_other_session);
@@ -104,7 +104,7 @@ namespace _mp
 	* @paramter request request reference
 	* @return true -> complete(with error or success), false -> not complete(_continue() will be recalled at next time)
 	*/
-	bool ckernel_ctl::_continue(cio_packet& request)
+	bool ckernel_ctl::_continue(cio_packet::type_ptr& ptr_request)
 	{
 		return true;
 	}

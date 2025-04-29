@@ -60,19 +60,27 @@ namespace _mp {
     protected:
 
 		/**
-		* executed by worker thread.
-		* processing request.
-		* @paramter request request reference
+		* @brief executed processing request by worker thread.
+		*	
+		*	if a request is executing, this function shall cancel th running request.
+		* 
+		*	if the return is true, the allocated memeory of request will be freed.
+		*
+		* @parameter the new request ptr. this parameter must be allocated.
+		* 
 		* @return true -> complete(with error or success), false -> not complete 
 		*/
-		virtual bool _execute(T& request) = 0;
+		virtual bool _execute(std::shared_ptr<T>& ptr_request) = 0;
 
 		/**
-		* executed by worker thread. when _execute return false(not complete),and none new request
-		* @paramter request request reference
+		* @brief executed by worker thread. when _execute return false(not complete),and none new request
+		*	if the return is true, the allocated memeory of request will be freed.
+		* 
+		* @paramter the current request ptr. this parameter must be allocated.
+		* 
 		* @return true -> complete(with error or success), false -> not complete(_continue() will be recalled at next time) 
 		*/
-		virtual bool _continue(T& request) = 0;
+		virtual bool _continue(std::shared_ptr<T>& ptr_request) = 0;
 
 	protected:
 		static void _worker(vcworker& obj)
@@ -84,10 +92,11 @@ namespace _mp {
 				do {
 					if (obj.m_q.try_pop(ptr_request)) {
 						if (!ptr_request) {
+							b_completet = true;
 							continue;//idle
 						}
 						//
-						b_completet = obj._execute(*ptr_request);
+						b_completet = obj._execute(ptr_request);
 						if (b_completet) {
 							ptr_request.reset();
 						}
@@ -97,7 +106,7 @@ namespace _mp {
 					if (b_completet) {
 						continue;//idle
 					}
-					b_completet = obj._continue(*ptr_request);
+					b_completet = obj._continue(ptr_request);
 					if (b_completet) {
 						ptr_request.reset();
 					}
