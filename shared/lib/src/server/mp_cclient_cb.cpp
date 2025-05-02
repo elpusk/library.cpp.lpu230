@@ -110,34 +110,34 @@ namespace _mp {
 	* @paramter request request reference
 	* @return true -> complete(with error or success), false -> not complete
 	*/
-	bool cclient_cb::_execute(cclient_cb_qitem& request)
+	bool cclient_cb::_execute(cclient_cb_qitem::type_ptr& ptr_request)
 	{
-		switch (request.get_type_index()) {
+		switch (ptr_request->get_type_index()) {
 		case cclient_cb_qitem::index_resolve:
-			_run_user_callback_resolve(request.get_result());
+			_run_user_callback_resolve(ptr_request->get_result());
 			break;
 		case cclient_cb_qitem::index_connect:
-			_run_user_callback_connect(request.get_result());
+			_run_user_callback_connect(ptr_request->get_result());
 			break;
 		case cclient_cb_qitem::index_handshake:
-			_run_user_callback_handshake(request.get_result());
+			_run_user_callback_handshake(ptr_request->get_result());
 			break;
 		case cclient_cb_qitem::index_handshake_ssl:
-			_run_user_callback_ssl_handshake(request.get_result());
+			_run_user_callback_ssl_handshake(ptr_request->get_result());
 			break;
 		case cclient_cb_qitem::index_write:
-			_run_user_callback_write(request.get_result());
+			_run_user_callback_write(ptr_request->get_result());
 			break;
 		case cclient_cb_qitem::index_close:
-			_run_user_callback_close(request.get_result());
+			_run_user_callback_close(ptr_request->get_result());
 			break;
 		case cclient_cb_qitem::index_read:
 			_run_user_callback_read(
-				request.get_action_code()
-				, request.get_result()
-				, request.get_device_index()
-				, request.get_in_id()
-				, request .get_rx()
+				ptr_request->get_action_code()
+				, ptr_request->get_result()
+				, ptr_request->get_device_index()
+				, ptr_request->get_in_id()
+				, ptr_request->get_rx()
 			);
 			break;
 		default:
@@ -152,7 +152,7 @@ namespace _mp {
 	* @paramter request request reference
 	* @return true -> complete(with error or success), false -> not complete(_continue() will be recalled at next time)
 	*/
-	bool cclient_cb::_continue(cclient_cb_qitem& request)
+	bool cclient_cb::_continue(cclient_cb_qitem::type_ptr& ptr_request)
 	{
 		return true;
 	}

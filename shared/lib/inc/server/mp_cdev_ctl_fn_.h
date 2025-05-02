@@ -33,6 +33,9 @@ namespace _mp {
 
 		typedef std::shared_ptr< std::map<unsigned long, _mp::type_ptr_v_buffer > > type_ptr_map_ptr_rx;
 
+		// 0 - processing result, 1 - processing complete, 2 - response packet ptr
+		typedef std::tuple<bool, bool, cio_packet::type_ptr> type_result_event;
+
 	private:
 		/**
 		* inner queue manager of request and so on.......
@@ -67,11 +70,11 @@ namespace _mp {
 				* 
 				*	- create notification event
 				* 
-				* @param req - pushed item
+				* @param ptr_request - pushed item ptr
 				* 
 				* @return 0 - request ptr, 1-event, 2 - event index ,3 - response ptr(created)
 				*/
-				type_tuple_full push_back(const cio_packet& req);
+				type_tuple_full push_back(const cio_packet::type_ptr& ptr_request);
 
 
 				/**
@@ -121,7 +124,7 @@ namespace _mp {
 		public:
 			/**
 			* @brief push the new sync-request to sync-queue.(act_dev_transmit, act_dev_cancel, act_dev_write )
-			* @param request - the pushed request.
+			* @param request - the pushed request ptr.
 			*
 			*	first - request ptr.
 			*
@@ -131,7 +134,7 @@ namespace _mp {
 			*
 			*	forth - response ptr
 			*/
-			cdev_ctl_fn::type_tuple_full qm_sync_push_back(const cio_packet& request);
+			cdev_ctl_fn::type_tuple_full qm_sync_push_back(const cio_packet::type_ptr& ptr_request);
 
 			/**
 			* @brief pop front. option - remove the poped item.
@@ -161,12 +164,12 @@ namespace _mp {
 
 			/**
 			* @brief push the new read-request to read-queue.
-			* @param request - the pushed request.( this request must be read-request)
+			* @param request - the pushed request ptr.( this request must be read-request)
 			* @return true - the first read request of all session, false - else
 			*
 			*	if return is true, start_read() have to be executed.
 			*/
-			bool qm_read_push_back(const cio_packet& request);
+			bool qm_read_push_back(const cio_packet::type_ptr& ptr_request);
 
 			/**
 			* @brief from read-queue. pop_front current request set of all session.
@@ -210,9 +213,9 @@ namespace _mp {
 
 			/**
 			* @brief from read-queue. pop front and remove that processing is complete of all read queue.
-			* @return vector ptr of response ptr
+			* @return vector ptr of pair( request ptr, response ptr )
 			*/
-			std::shared_ptr< std::vector<cio_packet::type_ptr> > qm_read_pop_front_remove_complete_of_all_by_rsp_ptr();
+			std::shared_ptr< std::vector< std::pair<cio_packet::type_ptr,cio_packet::type_ptr>> > qm_read_pop_front_remove_complete_of_all_by_rsp_ptr();
 
 			/**
 			* @brief remove front of read Queue of the session
@@ -321,24 +324,28 @@ namespace _mp {
 		* @brief process request. transaction state with the given event.
 		*
 		* @param request[in] - request ptr ( must be allocated ! )
-		* @return pair< bool, bool > type
+		* @return tuple< bool, bool, cio_packet::type_ptr > type
 		*
-		*	first - true( processing result is success), false( processing result is error)
+		*	0 - true( processing result is success), false( processing result is error)
 		*
-		*	second - true( processing is complete), false( processing is not complete)
+		*	1 - true( processing is complete), false( processing is not complete)
+		* 
+		*	2 - response packet ptr
 		*/
-		type_pair_bool_result_bool_complete process_event(const cio_packet::type_ptr & ptr_request);
+		cdev_ctl_fn::type_result_event process_event(const cio_packet::type_ptr & ptr_request);
 
 		/**
 		* @brief get all completed response for sending to clients.
 		* 
-		* @return std::shared_ptr<std::vector<cio_packet::type_ptr>> - the vector ptr of rsp ptr.
+		* @return std::shared_ptr<std::vector<cio_packet::type_ptr>> - the vector ptr of pair( req ptr,rsp ptr ).
 		*
 		*	The order of vector is the order in which it is sent.
 		* 
 		*	If the returned vector is allocated, it have to a item.( size() must be greater then 0)
+		* 
+		*	If the sync item is exsited on vector, it is posited on the last position.( asyn-s-first, sync-last)
 		*/
-		std::shared_ptr<std::vector<cio_packet::type_ptr>> get_all_complete_response();
+		std::shared_ptr< std::vector< std::pair<cio_packet::type_ptr, cio_packet::type_ptr>> > get_all_complete_response();
 
 	private:
 		/**

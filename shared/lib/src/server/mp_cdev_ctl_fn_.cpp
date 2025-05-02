@@ -34,11 +34,11 @@ namespace _mp {
 			m_st_combi = cbase_ctl_fn::_cstate::st_not;
 		}
 
-		cdev_ctl_fn::type_tuple_full cdev_ctl_fn::_cq_mgmt::qm_sync_push_back(const cio_packet& request)
+		cdev_ctl_fn::type_tuple_full cdev_ctl_fn::_cq_mgmt::qm_sync_push_back(const cio_packet::type_ptr& ptr_request)
 		{
 			std::lock_guard<std::mutex> lock(m_mutex);
 
-			auto r = m_q_sync_req_evt_rsp.push_back(request);
+			auto r = m_q_sync_req_evt_rsp.push_back(ptr_request);
 
 			//
 			// m_map_ptr_q_ptr_cur_req_read 에 기존 read 명령은 device start_X 명령 실행으로
@@ -69,13 +69,13 @@ namespace _mp {
 			return b_empty;
 		}
 
-		bool cdev_ctl_fn::_cq_mgmt::qm_read_push_back(const cio_packet& request)
+		bool cdev_ctl_fn::_cq_mgmt::qm_read_push_back(const cio_packet::type_ptr& ptr_request)
 		{
 			bool b_first(false);
 
 			// key 가 있으면, 항상 value 값인 ptr_q 는 항상 할당되어야 한다.
 
-			unsigned long n_session = request.get_session_number();
+			unsigned long n_session = ptr_request->get_session_number();
 			cdev_ctl_fn::_cq_mgmt::_cq::type_ptr ptr_q;
 
 			std::lock_guard<std::mutex> lock(m_mutex);
@@ -95,10 +95,10 @@ namespace _mp {
 
 			if (b_first) {
 				// start_read 를 발생시키는 read request ptr 를 m_ptr_cur_req_read 에 저장.
-				std::tie(m_ptr_cur_req_read, std::ignore, std::ignore, std::ignore) = ptr_q->push_back(request);
+				std::tie(m_ptr_cur_req_read, std::ignore, std::ignore, std::ignore) = ptr_q->push_back(ptr_request);
 			}
 			else {
-				ptr_q->push_back(request);
+				ptr_q->push_back(ptr_request);
 			}
 			return b_first;
 		}
@@ -268,12 +268,13 @@ namespace _mp {
 			return v_result;
 		}
 
-		std::shared_ptr<std::vector<cio_packet::type_ptr>> cdev_ctl_fn::_cq_mgmt::qm_read_pop_front_remove_complete_of_all_by_rsp_ptr()
+		std::shared_ptr< std::vector< std::pair<cio_packet::type_ptr, cio_packet::type_ptr>> >
+			cdev_ctl_fn::_cq_mgmt::qm_read_pop_front_remove_complete_of_all_by_rsp_ptr()
 		{
 			cwait::type_ptr ptr_evt;
 			int n_evet(-1);
 			cio_packet::type_ptr ptr_req, ptr_rsp;
-			std::shared_ptr<std::vector<cio_packet::type_ptr>> ptr_v_r;
+			std::shared_ptr< std::vector< std::pair<cio_packet::type_ptr, cio_packet::type_ptr>> > ptr_v_req_rsp;
 
 			do {
 				std::lock_guard<std::mutex> lock(m_mutex);
@@ -300,8 +301,8 @@ namespace _mp {
 
 					// event set됨.
 
-					if (!ptr_v_r) {// return vector 생성.
-						ptr_v_r = std::make_shared<std::vector<cio_packet::type_ptr>>();
+					if (!ptr_v_req_rsp) {// return vector 생성.
+						ptr_v_req_rsp = std::make_shared<std::vector<std::pair<cio_packet::type_ptr, cio_packet::type_ptr>>>();
 					}
 					
 					ptr_q->remove_front();// queue 에서 삭제.
@@ -310,11 +311,11 @@ namespace _mp {
 						it = m_map_ptr_q_ptr_cur_req_read.erase(it);
 					}
 
-					ptr_v_r->push_back(std::get<3>(r));
+					ptr_v_req_rsp->emplace_back(std::get<0>(r),std::get<3>(r));
 				}//end for
 
 			} while (false);
-			return ptr_v_r;
+			return ptr_v_req_rsp;
 		}
 
 
@@ -377,13 +378,13 @@ namespace _mp {
 		{
 		}
 
-		cdev_ctl_fn::type_tuple_full cdev_ctl_fn::_cq_mgmt::_cq::push_back(const cio_packet& req)
+		cdev_ctl_fn::type_tuple_full cdev_ctl_fn::_cq_mgmt::_cq::push_back(const cio_packet::type_ptr& ptr_request)
 		{
 			cwait::type_ptr ptr_evt;
 			int n_evt(-1);
 			
-			cio_packet::type_ptr ptr_req = std::make_shared<cio_packet>(req);
-			cio_packet::type_ptr ptr_rsp = std::make_shared<cio_packet>(req);
+			cio_packet::type_ptr ptr_req = ptr_request;
+			cio_packet::type_ptr ptr_rsp = std::make_shared<cio_packet>(*ptr_req);
 
 			ptr_rsp->set_cmd(cio_packet::cmd_response);
 
@@ -542,40 +543,41 @@ namespace _mp {
 			return std::make_tuple(b_exist,st_cur.get(), m_st_combi);
 		}
 
-		std::shared_ptr<std::vector<cio_packet::type_ptr>> cdev_ctl_fn::get_all_complete_response()
+		std::shared_ptr< std::vector< std::pair<cio_packet::type_ptr, cio_packet::type_ptr>> > cdev_ctl_fn::get_all_complete_response()
 		{
-			std::shared_ptr<std::vector<cio_packet::type_ptr>> ptr_v_r;
+			std::shared_ptr< std::vector< std::pair<cio_packet::type_ptr, cio_packet::type_ptr>> > ptr_v_req_rsp;
 
 			do {
-				// reading( asyn ) 에서 먼저 얻음.
-				ptr_v_r = m_mgmt_q.qm_read_pop_front_remove_complete_of_all_by_rsp_ptr();
+				// 모든 session 의 reading( asyn ) 에서 complete 된 req를 먼저 얻고, reading Q 에서 제거.
+				ptr_v_req_rsp = m_mgmt_q.qm_read_pop_front_remove_complete_of_all_by_rsp_ptr();
 
 				// sync 에서 얻음.
-				cio_packet::type_ptr ptr_rsp_sync;
-				std::tie(std::ignore, std::ignore, std::ignore, ptr_rsp_sync) = m_mgmt_q.qm_sync_pop_front(true);// pop nad remove
-				if (!ptr_rsp_sync) {
-					continue;
-				}
+				cio_packet::type_ptr ptr_rsp_sync, ptr_req_sync;
+				std::tie(ptr_req_sync, std::ignore, std::ignore, ptr_rsp_sync) = m_mgmt_q.qm_sync_pop_front(true);// pop nad remove
 
-				if (!ptr_v_r) {
-					ptr_v_r = std::make_shared<std::vector<cio_packet::type_ptr>>();
-				}
+				if (ptr_rsp_sync) {
+					if (!ptr_v_req_rsp) {
+						ptr_v_req_rsp = std::make_shared<std::vector<std::pair<cio_packet::type_ptr, cio_packet::type_ptr>>>();
+					}
 
-				ptr_v_r->push_back(ptr_rsp_sync);
+					// 비동기 처리 결과를 얻음.
+					// 비동기 결과는 특성 상 존재하면, 1개 밖에 없음. 
+					ptr_v_req_rsp->emplace_back(ptr_req_sync,ptr_rsp_sync);
+				}
 
 			} while (false);
 
-			return ptr_v_r;
+			return ptr_v_req_rsp;
 		}
 
-		type_pair_bool_result_bool_complete cdev_ctl_fn::process_event( const cio_packet::type_ptr& ptr_request )
+		cdev_ctl_fn::type_result_event cdev_ctl_fn::process_event( const cio_packet::type_ptr& ptr_request )
 		{
 			// 논리적으로 각 session 의 장비는 독립된 것으로 보기 때문에
 			// 이벤트가 발생한 session 이 외의 session 의 state 에 영향은 없어야 함. 
 			// result.b_process_complete 이 true 면, result.ptr_rsp 에 결과가 설정되어야 함.
 			// cresult.ptr_rsp is must be created in this function.
 
-			type_pair_bool_result_bool_complete rc(false,true);
+			cdev_ctl_fn::type_result_event rc_ptr_rsp(false,true, cio_packet::type_ptr());
 			cbase_ctl_fn::cresult::type_ptr ptr_result; // default contructure, not yet ptr response.
 			auto evt = cbase_ctl_fn::_cstate::get_event_from_request_action(ptr_request->get_action());
 
@@ -594,10 +596,14 @@ namespace _mp {
 				if (!ptr_result) {
 					continue;
 				}
-				rc = ptr_result->process_get_result();
+
+				if (ptr_result) {
+					std::tie(std::get<0>(rc_ptr_rsp), std::get<1>(rc_ptr_rsp)) = ptr_result->process_get_result();
+					std::get<2>(rc_ptr_rsp) = ptr_result->get_rsp();
+				}
 
 			} while (false);
-			return rc;
+			return rc_ptr_rsp;
 		}
 
 		cbase_ctl_fn::cresult::type_ptr cdev_ctl_fn::_process_event_on_shared_mode(const cio_packet::type_ptr& ptr_request)
@@ -839,7 +845,7 @@ namespace _mp {
 					// 내리기 전에 , 실행 중인 another request에 복구 설정 해야함.
 
 					// another session 이 이미 asyn 이므로, asy queue 에 현재 session 추가만 하면. OK.
-					m_mgmt_q.qm_read_push_back(*result.get_req());;
+					m_mgmt_q.qm_read_push_back(result.get_req());;
 
 					result.after_starting_process_set_rsp_with_succss_ing(m_s_dev_path);
 
@@ -974,8 +980,9 @@ namespace _mp {
 			// 논린적으로 각 session 의 장비는 독립된 것으로 보기 때문에
 			// 이벤트가 발생한 session 이 외의 session 의 state 에 영향은 없어야 함.
 			// result.b_process_complete 이 true 면, result.ptr_rsp 에 결과가 설정되어야 함.
-			
-			cbase_ctl_fn::cresult::type_ptr ptr_result = std::make_shared<cbase_ctl_fn::cresult>(ptr_request);//contructure, only increase reference request, isn't create response.
+
+			//contructure, only increase reference request, isn't create response.
+			cbase_ctl_fn::cresult::type_ptr ptr_result = std::make_shared<cbase_ctl_fn::cresult>(ptr_request);
 			cbase_ctl_fn::_cstate::type_state st_cur(cbase_ctl_fn::_cstate::st_not);
 
 			std::tie(std::ignore, st_cur, std::ignore) = _get_state_cur_(ptr_result->get_session_number());
@@ -984,19 +991,19 @@ namespace _mp {
 				switch (st_cur)
 				{
 				case cbase_ctl_fn::_cstate::st_not:
-					//result 설정을 하위 함수에서 설정.
+					//result 설정을 하위 함수에서 설정. rsp ptr 은 하위 함수에서 생성.
 					_process_exclusive_st_not(*ptr_result);
 					break;
 				case cbase_ctl_fn::_cstate::st_idl:
-					//result 설정을 하위 함수에서 설정.
+					//result 설정을 하위 함수에서 설정. rsp ptr 은 하위 함수에서 생성..
 					_process_exclusive_st_idl(*ptr_result);
 					break;
 				case cbase_ctl_fn::_cstate::st_asy:
-					//result 설정을 하위 함수에서 설정.
+					//result 설정을 하위 함수에서 설정.. rsp ptr 은 하위 함수에서 생성.
 					_process_exclusive_st_asy(*ptr_result);
 					break;
 				default:
-					// 에러 complete.
+					// 에러 complete. rsp ptr 생성.
 					ptr_result->after_processing_set_rsp_with_error_complete(cio_packet::error_reason_session);
 					continue;
 				}
@@ -1260,7 +1267,7 @@ namespace _mp {
 				switch (ptr_req->get_action())
 				{
 				case cio_packet::act_dev_transmit:
-					std::tie(std::ignore, ptr_evt, std::ignore, ptr_rsp) = m_mgmt_q.qm_sync_push_back(*ptr_req);
+					std::tie(std::ignore, ptr_evt, std::ignore, ptr_rsp) = m_mgmt_q.qm_sync_push_back(ptr_req);
 					wptr_dev.lock()->start_write_read(v_tx, cdev_ctl_fn::_cb_dev_for_sync_req, this, n_session);
 					if (ptr_evt) {
 						// 만약 자동 cancel 되는 request 가 있으면, 현재 request 보다 q 앞쪽에서 있기 때문에, cdev_ctl::_execute() 에서 자동 응답 client 에 전송됨.
@@ -1268,7 +1275,7 @@ namespace _mp {
 					}
 					break;
 				case cio_packet::act_dev_cancel:
-					std::tie(std::ignore, ptr_evt, std::ignore, ptr_rsp) = m_mgmt_q.qm_sync_push_back(*ptr_req);
+					std::tie(std::ignore, ptr_evt, std::ignore, ptr_rsp) = m_mgmt_q.qm_sync_push_back(ptr_req);
 					wptr_dev.lock()->start_cancel(cdev_ctl_fn::_cb_dev_for_sync_req, this, n_session);
 					if (ptr_evt) {
 						// 만약 자동 cancel 되는 request 가 있으면, 현재 request 보다 q 앞쪽에서 있기 때문에, cdev_ctl::_execute() 에서 자동 응답 client 에 전송됨.
@@ -1276,7 +1283,7 @@ namespace _mp {
 					}
 					break;
 				case cio_packet::act_dev_write:
-					std::tie(std::ignore, ptr_evt, std::ignore, ptr_rsp) = m_mgmt_q.qm_sync_push_back(*ptr_req);
+					std::tie(std::ignore, ptr_evt, std::ignore, ptr_rsp) = m_mgmt_q.qm_sync_push_back(ptr_req);
 					wptr_dev.lock()->start_write(v_tx, cdev_ctl_fn::_cb_dev_for_sync_req, this, n_session);
 					if (ptr_evt) {
 						// 만약 자동 cancel 되는 request 가 있으면, 현재 request 보다 q 앞쪽에서 있기 때문에, cdev_ctl::_execute() 에서 자동 응답 client 에 전송됨.
@@ -1327,7 +1334,7 @@ namespace _mp {
 				req.set_cmd(cio_packet::cmd_self_request);
 				req.set_data(type_v_buffer());
 
-				std::tie(std::ignore, ptr_evt, std::ignore, std::ignore) = m_mgmt_q.qm_sync_push_back(*ptr_req);
+				std::tie(std::ignore, ptr_evt, std::ignore, std::ignore) = m_mgmt_q.qm_sync_push_back(ptr_req);
 				wptr_dev.lock()->start_cancel(cdev_ctl_fn::_cb_dev_for_sync_req, this, n_session);
 				if (ptr_evt) {
 					ptr_evt->wait_for_at_once();
@@ -1370,7 +1377,7 @@ namespace _mp {
 				switch (ptr_req->get_action())
 				{
 				case cio_packet::act_dev_read:
-					if (m_mgmt_q.qm_read_push_back(*ptr_req)) {
+					if (m_mgmt_q.qm_read_push_back(ptr_req)) {
 						if (m_b_cur_shared_mode) {
 							wptr_dev.lock()->start_read(cdev_ctl_fn::_cb_dev_read_on_shared, this, n_session);
 						}

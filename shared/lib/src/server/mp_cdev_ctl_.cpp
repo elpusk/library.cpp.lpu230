@@ -34,8 +34,9 @@ namespace _mp {
 
 			bool b_complete(true);
 			type_v_buffer v_rsp;
-			type_pair_bool_result_bool_complete result_from_fn;
+			cdev_ctl_fn::type_result_event result_from_fn;
 			cbase_ctl_fn::cresult::type_ptr ptr_result_error;
+			cio_packet::type_ptr ptr_response;
 
 			do {
 				if (ptr_request->is_response()) {
@@ -67,12 +68,26 @@ namespace _mp {
 				case cio_packet::act_dev_write:
 				case cio_packet::act_dev_read:
 					result_from_fn = m_fun.process_event(ptr_request);
-					b_complete = result_from_fn.second;
+					b_complete = std::get<1>(result_from_fn);
 					if (!b_complete) {
 						break;
 					}
-					if (result_from_fn.first) {
-						_continue(ptr_request);
+					
+					if (std::get<2>(result_from_fn)) {
+						// 처리 결과가 success 이거나 error. 
+						if (_continue(ptr_request)) {
+							break;
+						}
+						//현재 ptr_request 에 대한 ptr_rsp 가 처리되지 않았으면,
+						ptr_response = std::get<2>(result_from_fn);
+						if (!ptr_response) {
+							break;
+						}
+						if (ptr_response->is_self()) {
+							break;
+						}
+						ptr_response->get_packet_by_json_format(v_rsp);
+						cserver::get_instance().send_data_to_client_by_ip4(v_rsp, ptr_request->get_session_number());
 					}
 					else {
 						ptr_result_error = std::make_shared<cbase_ctl_fn::cresult>(*ptr_request);
@@ -82,7 +97,7 @@ namespace _mp {
 					break;
 				case cio_packet::act_dev_sub_bootloader:
 				case cio_packet::act_dev_independent_bootloader:
-				default:
+				default:// 현재는 지원하지 않으므로 그냥 에러 처리.
 					ptr_result_error = std::make_shared<cbase_ctl_fn::cresult>(*ptr_request);
 					ptr_result_error->after_processing_set_rsp_with_error_complete(cio_packet::error_reason_action_code);
 					break;
@@ -112,23 +127,27 @@ namespace _mp {
 			bool b_complete(false);
 			do {
 				// 여기는 read request 에 대한 응답만 처리 될 것임.
-				auto ptr_v_r = m_fun.get_all_complete_response();
-				if (!ptr_v_r) {
+				auto ptr_v_req_rsp = m_fun.get_all_complete_response();
+				if (!ptr_v_req_rsp) {
 					// 아직 결과가 없음.
 					continue;
 				}
-				
-				b_complete = true;
 
-				for (auto item : *ptr_v_r) {
-					if (item->is_self()) {
+				for (auto item : *ptr_v_req_rsp) {
+					if (item.first.get() == ptr_request.get()) {
+						// complete 된 것 중. 현재 실행 중인 request 가 있으면 contine 를 cmplete 로 종료해서,
+						// 상위 프로세스에서 현재 request 에 대한 메모리 해제를 요청함.
+						b_complete = true; 
+					}
+
+					if (item.first->is_self()) {
 						continue;
 					}
 
 					type_v_buffer v_rsp;
-					item->get_packet_by_json_format(v_rsp);
-					cserver::get_instance().send_data_to_client_by_ip4(v_rsp, item->get_session_number());
-				}
+					item.second->get_packet_by_json_format(v_rsp);
+					cserver::get_instance().send_data_to_client_by_ip4(v_rsp, item.second->get_session_number());
+				}//end for
 				
 			} while (false);
 			return b_complete;

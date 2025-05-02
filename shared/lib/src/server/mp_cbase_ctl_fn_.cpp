@@ -472,6 +472,11 @@ namespace _mp {
 		return m_ptr_req;
 	}
 
+	const cio_packet::type_ptr& cbase_ctl_fn::cresult::get_rsp() const
+	{
+		return m_ptr_rsp;
+	}
+
 	unsigned long cbase_ctl_fn::cresult::get_session_number() const
 	{
 		unsigned long n_session(_MP_TOOLS_INVALID_SESSION_NUMBER);

@@ -68,20 +68,20 @@ namespace _mp {
 				switch (ptr_request->get_action())
 				{
 				case cio_packet::act_mgmt_get_echo:
-					b_completet = _execute_mgmt_get_echo(m_p_log, ptr_request, response);
+					b_completet = _execute_mgmt_get_echo(m_p_log, *ptr_request, response);
 					break;
 				case cio_packet::act_mgmt_get_device_list:
 					ptr_request->get_data_field(list_wstring_data_field);
-					b_completet = _execute_mgmt_get_device_list(m_p_log, list_wstring_data_field, ptr_request, response);
+					b_completet = _execute_mgmt_get_device_list(m_p_log, list_wstring_data_field, *ptr_request, response);
 					break;
 				case cio_packet::act_mgmt_ctl_show:
-					b_completet = _execute_mgmt_ctl_show(m_p_log, ptr_request, response);
+					b_completet = _execute_mgmt_ctl_show(m_p_log, *ptr_request, response);
 					break;
 				case cio_packet::act_mgmt_file_operation:
-					b_completet = _execute_file_operation(m_p_log, ptr_request, response);
+					b_completet = _execute_file_operation(m_p_log, *ptr_request, response);
 					break;
 				case cio_packet::act_mgmt_advance_operation:
-					b_completet = _execute_advance_operation(m_p_log, ptr_request, response, response_for_the_other_session);
+					b_completet = _execute_advance_operation(m_p_log, *ptr_request, response, response_for_the_other_session);
 					break;
 				default:
 					b_completet = true;

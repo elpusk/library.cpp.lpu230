@@ -20,7 +20,7 @@
 
 namespace _mp
 {
-	ckernel_ctl::ckernel_ctl(clog* p_log) : cworker_ctl(p_log), cmain_ctl_fn(p_log), cdev_ctl_fn(p_log)
+	ckernel_ctl::ckernel_ctl(clog* p_log) : cworker_ctl(p_log), cmain_ctl_fn(p_log), m_dev_ctl_fun(p_log)
 	{
 	}
 	ckernel_ctl::~ckernel_ctl()
@@ -67,7 +67,7 @@ namespace _mp
 			switch (ptr_request->get_action())
 			{
 			case cio_packet::act_mgmt_dev_kernel_operation:
-				b_completet = _execute_kernel_operation(ptr_request, response);
+				b_completet = _execute_kernel_operation(*ptr_request, response);
 				break;
 			default:
 				b_completet = true;
@@ -196,14 +196,14 @@ namespace _mp
 			//
 			if (s_type.compare(L"device") == 0) {
 				if (s_action.compare(L"open") == 0) {
-					pair_bool_result_bool_complete = _execute_open_sync(m_p_log, request, response);
+					//pair_bool_result_bool_complete = _execute_open_sync(m_p_log, request, response);
 					b_result = pair_bool_result_bool_complete.first;
 					b_complete = pair_bool_result_bool_complete.second;
 					response.set_kernel_device_open(true);
 					continue;
 				}
 				if (s_action.compare(L"close") == 0) {
-					pair_bool_result_bool_complete = _execute_close_sync(m_p_log, request, response, get_dev_path());
+					//pair_bool_result_bool_complete = _execute_close_sync(m_p_log, request, response, get_dev_path());
 					b_result = pair_bool_result_bool_complete.first;
 					b_complete = pair_bool_result_bool_complete.second;
 					response.set_kernel_device_close(true);

@@ -204,17 +204,17 @@ namespace _mp {
 		/**
 		* executed by worker thread.
 		* processing request.
-		* @paramter request request reference
+		* @paramter request request ptr
 		* @return true -> complete(with error or success), false -> not complete
 		*/
-		virtual bool _execute(cclient_cb_qitem& request);
+		virtual bool _execute(cclient_cb_qitem::type_ptr& ptr_request);
 
 		/**
 		* executed by worker thread. when _execute return false(not complete),and none new request
-		* @paramter request request reference
+		* @paramter request request ptr
 		* @return true -> complete(with error or success), false -> not complete(_continue() will be recalled at next time)
 		*/
-		virtual bool _continue(cclient_cb_qitem& request);
+		virtual bool _continue(cclient_cb_qitem::type_ptr& ptr_request);
 
 	private:
 		void _run_user_callback_resolve(unsigned long n_result);

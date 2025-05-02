@@ -18,7 +18,7 @@
 namespace _mp
 {
 
-	class ckernel_ctl : public _mp::cworker_ctl, _mp::cmain_ctl_fn, _mp::cdev_ctl_fn
+	class ckernel_ctl : public _mp::cworker_ctl, _mp::cmain_ctl_fn
 	{
 	private:
 		typedef	std::pair<size_t, cdll_service::type_ptr_cdll_service>	_type_pair_ref_cnt_ptr_dll;
@@ -58,6 +58,8 @@ namespace _mp
 		ckernel_ctl::_type_map_path_pair_ref_cnt_ptr_dll m_map_default_path_pair_ref_cnt_ptr_dll;
 		ckernel_ctl::_type_map_path_pair_ref_cnt_ptr_dll m_map_3th_path_pair_ref_cnt_ptr_dll;
 		type_set_wstring m_set_loaded_dll_path;// items are - default/xxx.dll or 3thpart/xxx.dll
+
+		cdev_ctl_fn m_dev_ctl_fun;
 
 	private://don't call these method.
 		ckernel_ctl();

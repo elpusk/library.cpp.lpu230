@@ -201,6 +201,12 @@ namespace _mp {
 			const cio_packet::type_ptr& get_req() const;
 
 			/**
+			* @brief get rsp packet.
+			* @return the response packet ptr.
+			*/
+			const cio_packet::type_ptr& get_rsp() const;
+
+			/**
 			* @brief get session number of the current processing.
 			* @return the session number of the current processing.
 			*/

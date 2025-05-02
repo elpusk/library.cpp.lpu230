@@ -44,9 +44,11 @@ namespace _mp {
 		/**
 		* @brief executed by worker thread.
 		* 
-		* this function will be called when _execute return false(not complete),and none new request.
+		*	this function will be called when _execute return false(not complete),and none new request.
 		* 
-		* @param request-request ptr
+		*	if the completed request is exsited in read or sync Q, get all completed response packet.
+		* 
+		* @param request - request ptr
 		* @return true -> complete(with error or success), false -> not complete(_continue() will be recalled at next time)
 		*/
 		virtual bool _continue(cio_packet::type_ptr& ptr_request);
