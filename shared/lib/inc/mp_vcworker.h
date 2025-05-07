@@ -78,7 +78,7 @@ namespace _mp {
 		* 
 		* @paramter the current request ptr. this parameter must be allocated.
 		* 
-		* @return true -> complete(with error or success), false -> not complete(_continue() will be recalled at next time) 
+		* @return true -> complete(the current request ptr with error or success), false -> not complete(_continue() will be recalled at next time) 
 		*/
 		virtual bool _continue(std::shared_ptr<T>& ptr_request) = 0;
 

@@ -628,6 +628,7 @@ namespace _mp {
 		// device path
 		std::wstring m_s_dev_path;
 
+		// manager of request and response Q
 		cdev_ctl_fn::_cq_mgmt m_mgmt_q;
 
 	private://don't call these methods

@@ -83,7 +83,7 @@ namespace _mp {
 		* 
 		* @paramter request ptr
 		* 
-		* @return true -> complete(with error or success), false -> not complete(_continue() will be recalled at next time)
+		* @return true -> complete(the current request ptr with error or success), false -> not complete(_continue() will be recalled at next time)
 		*/
 		virtual bool _continue(cio_packet::type_ptr& ptr_request)
 		{

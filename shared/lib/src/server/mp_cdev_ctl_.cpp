@@ -73,6 +73,7 @@ namespace _mp {
 						break;
 					}
 					
+					// 여기는 동기식 또는 비동기식의 시작에러만 옴.
 					if (std::get<2>(result_from_fn)) {
 						// 처리 결과가 success 이거나 error. 
 						if (_continue(ptr_request)) {

@@ -142,6 +142,9 @@ namespace _mp {
 					if (it->second->empty()) {
 						// q 에 item이 없으면 항상 q 자체를 소멸 시킴. 
 						it = m_map_ptr_q_ptr_cur_req_read.erase(it);
+						if (it == std::end(m_map_ptr_q_ptr_cur_req_read)) {
+							break; //exit for
+						}
 					}
 				}//end for
 
@@ -262,6 +265,10 @@ namespace _mp {
 						it = m_map_ptr_q_ptr_cur_req_read.erase(it);
 					}
 					v_result.push_back(r);
+
+					if (it == std::end(m_map_ptr_q_ptr_cur_req_read)) {
+						break;//exit for
+					}
 				}//end for
 
 			} while (false);
@@ -312,6 +319,10 @@ namespace _mp {
 					}
 
 					ptr_v_req_rsp->emplace_back(std::get<0>(r),std::get<3>(r));
+
+					if (it == std::end(m_map_ptr_q_ptr_cur_req_read)) {
+						break;//exit for
+					}
 				}//end for
 
 			} while (false);
@@ -356,6 +367,9 @@ namespace _mp {
 					if (it->second->empty()) {
 						// q 에 item이 없으면 항상 q 자체를 소멸 시킴. 
 						it = m_map_ptr_q_ptr_cur_req_read.erase(it);
+						if (it == std::end(m_map_ptr_q_ptr_cur_req_read)) {
+							break; // exit for
+						}
 					}
 				}//end for
 
@@ -964,6 +978,8 @@ namespace _mp {
 					}
 				}
 
+				m_s_dev_path = s_dev_path;
+
 				result.after_processing_set_rsp_with_succss_complete(std::wstring(), s_dev_path);
 
 				//이 경우 에러 일겨우 상태변경은 없으므로, _transit_state_by_processing_result() 를 호출 할 필요 없음. 
@@ -1392,6 +1408,7 @@ namespace _mp {
 					continue;
 				}//end switch
 
+				b_result = true;
 			} while (false);
 
 			return b_result;
