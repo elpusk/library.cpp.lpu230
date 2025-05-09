@@ -86,6 +86,7 @@ unsigned long cash_msdata::get_data(unsigned long n_zero_base_iso_track)
 		case LPU237_DLL_RESULT_ICC_REMOVED:
 		case LPU237_DLL_RESULT_CANCEL:
 		case LPU237_DLL_RESULT_ERROR:
+		case LPU237_DLL_RESULT_ERROR_MSR:
 			b_reset = true;
 			break;
 		default://data size

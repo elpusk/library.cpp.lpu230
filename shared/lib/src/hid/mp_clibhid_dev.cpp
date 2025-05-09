@@ -726,17 +726,28 @@ namespace _mp {
                     std::tie(b_complete,b_request_is_cancel) = _process_new_request_and_set_result(ptr_new, ptr_cur);
                     if (b_request_is_cancel) {
                         // 이 경우 b_complete 는 항상 true.
+                        // ptr_new 는 cancel req 로 ptr_cur가 있는 경우, ptr_cur 를 cancel 시킴.
+                        // 따라서 구조상, ptr_cur 에 대한 cancel nortificate 먼저 하고, 
+                        // ptr_new 에 대한 nortificate 나중에.(notification AREA)
                         continue;
                     }
                     if (b_complete) {
+                        // ptr_new 가 동기명령인 경우는 여기에.
+                        // 기존 ptr_cur 이 있는 경우, 동기명령 ptr_new 에 의해 취소되므로,
+                        // 따라서 구조상, ptr_cur 에 대한 cancel nortificate 먼저 하고,
+                        // ptr_new 에 대한 nortificate 나중에.(notification AREA)
                         continue; // 새로운 명령은 처리됨.
                     }
 
                     if (ptr_cur) {
                         // 새로운 명령 처리가 더 필요하므로 기존 명령이 cancel 된 것을,
                         // callback 해서 알려 준다. 
+                        // ptr_new 가 비동기명령인 경우는 여기에.
+                        // ptr_cur가 있는 경우, ptr_cur 를 cancel 시키고 cancel nortificate 를 아래 코드로.
                         ptr_cur->run_callback();
                     }
+
+                    // ptr_new 가 비동기명령인 경우는 여기에.
                     // 새로운 명령 처리가 더 필요하므로, 현재 명령으로 설정.
                     ptr_cur = ptr_new;
                     ptr_new.reset();
@@ -759,10 +770,15 @@ namespace _mp {
             } while (false);//main do-while(false)
 
             // notify 는 항상 실행하고 있던 것 부터하고, 신규는 그 나중에 알림을 한다.
+            // notification AREA
             if (ptr_cur) {
                 if (ptr_cur->is_complete()) {
                     if (ptr_cur->run_callback()) {
                         ptr_cur.reset();
+                    }
+                    else {
+                        //callback 이 false 를 return 하면, rx 를 다시 시도.
+                        ptr_cur->reset_result();
                     }
                 }
             }
@@ -771,6 +787,7 @@ namespace _mp {
                 if (ptr_new->is_complete()) {
                     ptr_new->run_callback();//impossible re-read
                 }
+                // 새로운 명령은 complete 면, callback 실행 결과와 무관하게 삭제.
                 ptr_new.reset();
             }
 

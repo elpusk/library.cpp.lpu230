@@ -740,6 +740,9 @@ unsigned long _CALLTYPE_ LPU237_get_data(unsigned long dwBufferIndex, unsigned l
 		case LPU237_DLL_RESULT_ERROR:
 			_mp::clog::get_instance().log_fmt(L" : RET : %ls : error\n", __WFUNCTION__);
 			continue;
+		case LPU237_DLL_RESULT_ERROR_MSR:
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : error msr\n", __WFUNCTION__);
+			continue;
 		case LPU237_DLL_RESULT_SUCCESS:
 		default:
 			if (dw_client_result > 0 && sTrackData != NULL) {

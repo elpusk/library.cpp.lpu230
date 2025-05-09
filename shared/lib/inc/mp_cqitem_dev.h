@@ -159,13 +159,21 @@ namespace _mp{
             return std::make_tuple(s[0], s[1], s[2]);
         }
 
-        cqitem_dev set_result(cqitem_dev::type_result result, const type_v_buffer& v_rx, const std::wstring& s_info = L"")
+        cqitem_dev& set_result(cqitem_dev::type_result result, const type_v_buffer& v_rx, const std::wstring& s_info = L"")
         {
             std::lock_guard<std::mutex> lock(m_mutex);
             m_result = result;
             m_v_rx = v_rx;
             m_s_info = s_info;
             return *this;
+        }
+
+        void reset_result()
+        {
+            std::lock_guard<std::mutex> lock(m_mutex);
+            m_result = cqitem_dev::result_not_yet;
+            m_v_rx.resize(0);
+            m_s_info.clear();
         }
 
         bool run_callback()

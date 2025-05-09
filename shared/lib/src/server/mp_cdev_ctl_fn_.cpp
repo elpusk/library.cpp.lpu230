@@ -16,6 +16,7 @@
 #include <server/mp_cdev_ctl_fn_.h>
 
 #include <hid/mp_clibhid.h>
+#include <hid/_vhid_info_lpu237.h>
 
 #if defined(_WIN32) && defined(_DEBUG)
 #include <atltrace.h>
@@ -465,12 +466,56 @@ namespace _mp {
 			bool b_complete(true);
 			cdev_ctl_fn* p_obj((cdev_ctl_fn*)p_user);
 
+			cio_packet::type_ptr ptr_rsp;
+			
 			do {
+				bool b_pass_this_response(false);
+				do{
+					// 암호화 응답을 구별하기 위해, response 를 set 하기 전에 응답 검사.
+					// himalia 에서 추가된 암호화 기능 지원과 기존 protocol 과 호환성 유지를 위해 필요한 코드.
+					std::tuple<cqitem_dev::type_result, type_v_buffer, std::wstring> rqi = qi.get_result_all();
+					if (std::get<0>(rqi) != cqitem_dev::result_success) {
+						continue;
+					}
+					if (std::get<1>(rqi).size() < 3) {
+						continue;
+					}
+					std::array<char, 3> ar_c_len{ std::get<1>(rqi)[0], std::get<1>(rqi)[1], std::get<1>(rqi)[2] };
+					if (ar_c_len[0] >= 0) {
+						continue;
+					}
+					if (ar_c_len[1] >= 0) {
+						continue;
+					}
+					if (ar_c_len[2] >= 0) {
+						continue;
+					}
+
+					if(_vhid_info_lpu237::is_rx_msr_extension(std::get<1>(rqi))) {
+						// 응답값의 각 track len 의 값이 음수로 에러를 표시하는 듯하지만,
+						// himalia 에서 추가된 암호화 응답 구조를 갖는 것으로 확인되어,
+						// 무시하지 말고 계속 처리.
+						continue;
+					}
+
+					b_pass_this_response = true; // 이번 응답 무시.
+
+				} while (false);
+
+				if (b_pass_this_response) {
+					b_complete = false;
+					continue;//more processing
+				}
+				
+				// 현재 수신을 응답으로 설정. 
 				std::vector<cdev_ctl_fn::type_tuple_full> v_tuple = p_obj->m_mgmt_q.qm_read_set_response_front(qi);
 				if (v_tuple.empty()) {
 					b_complete = false;
 					continue;//more processing
 				}
+				//////////////////////
+
+
 			} while (false);
 
 			return b_complete;
@@ -484,13 +529,54 @@ namespace _mp {
 			bool b_complete(true);
 			cdev_ctl_fn* p_obj((cdev_ctl_fn*)p_user);
 
+			cio_packet::type_ptr ptr_rsp;
+
 			do {
+				bool b_pass_this_response(false);
+				do {
+					// 암호화 응답을 구별하기 위해, response 를 set 하기 전에 응답 검사.
+					// himalia 에서 추가된 암호화 기능 지원과 기존 protocol 과 호환성 유지를 위해 필요한 코드.
+					std::tuple<cqitem_dev::type_result, type_v_buffer, std::wstring> rqi = qi.get_result_all();
+					if (std::get<0>(rqi) != cqitem_dev::result_success) {
+						continue;
+					}
+					if (std::get<1>(rqi).size() < 3) {
+						continue;
+					}
+					std::array<char, 3> ar_c_len{ std::get<1>(rqi)[0], std::get<1>(rqi)[1], std::get<1>(rqi)[2] };
+					if (ar_c_len[0] >= 0) {
+						continue;
+					}
+					if (ar_c_len[1] >= 0) {
+						continue;
+					}
+					if (ar_c_len[2] >= 0) {
+						continue;
+					}
+
+					if (_vhid_info_lpu237::is_rx_msr_extension(std::get<1>(rqi))) {
+						// 응답값의 각 track len 의 값이 음수로 에러를 표시하는 듯하지만,
+						// himalia 에서 추가된 암호화 응답 구조를 갖는 것으로 확인되어,
+						// 무시하지 말고 계속 처리.
+						continue;
+					}
+
+					b_pass_this_response = true; // 이번 응답 무시.
+
+				} while (false);
+
+				if (b_pass_this_response) {
+					b_complete = false;
+					continue;//more processing
+				}
+
 				//응답 공유 상태에서는 모든 read 에 대해 응답을 동일하게 설정해주어야 함.
 				std::vector<cdev_ctl_fn::type_tuple_full> v_tuple = p_obj->m_mgmt_q.qm_read_set_response_front(qi);
 				if (v_tuple.empty()) {
 					b_complete = false;
 					continue;//more processing
 				}
+				//////////////////////
 
 			} while (false);
 

@@ -16,6 +16,54 @@
 class _vhid_info_lpu237 : public _vhid_info
 {
 public:
+	/**
+	 * const_msr_extension is defined for encryption msr data.
+	 * If msr data is started with  tripple const_msr_extension,
+	 * then msr data has a extension format.
+	 * const_msr_extension is defined also in firmware code as C_MSR_EXTENSION(msrbasepbj.h, himalia).
+	 * extension format :
+	 * 0 offset bytes - const_msr_extension
+	 * 1 offset bytes - const_msr_extension
+	 * 2 offset bytes - const_msr_extension
+	 * 3 ~ 6 offset bytes - data field length with hex ascii string
+	 * ( converted from little endian unsigned short type).
+	*/
+	enum : unsigned char {
+		const_msr_extension = 0xe6 //(-26) msr data format is extension format(0xe6)
+	};
+	enum : unsigned long
+	{
+		const_size_min_ms_extension_response = 3 + 4, //triple prefix(3 bytes)  + data field length(4 bytes - hex string of unsigned shotr little-endian.
+		const_size_min_ms_extension_response_of_data_field = 4
+	};
+
+	enum
+	{
+		const_size_random_number = 16,
+		const_size_ksn = 10,
+		const_size_mac4 = 4
+	};
+
+	enum {
+		const_max_pre_pan_value = 6,
+		const_max_post_pan_value = 4,
+		const_max_authenticate_error = 5
+	};
+
+	enum {
+		const_size_get_random_return = 20,
+		const_size_security_key = 16
+	};
+
+	enum {
+		const_size_encryption_key = 16
+	};
+
+	enum {
+		const_buffer_size_security_buffer = 16
+	};
+
+public:
 	typedef	std::shared_ptr<_vhid_info_lpu237>	type_ptr;
 
 private:
@@ -30,6 +78,37 @@ private:
 
 public:
 	//static member
+
+	/**
+	* @brief check that the received data is msr extension format( for encrypted data).
+	* 
+	*	may be the first 3 bytes is 0xe6, 0xe6, 0xe6.
+	* 
+	* @return true : msr extension format.
+	*/
+	static bool is_rx_msr_extension(const _mp::type_v_buffer& v_rx)
+	{
+		bool b_result(false);
+
+		do {
+			if (v_rx.size() < _vhid_info_lpu237::const_size_min_ms_extension_response) {
+				continue;
+			}
+			if (v_rx[0] != _vhid_info_lpu237::const_msr_extension) {
+				continue;
+			}
+			if (v_rx[1] != _vhid_info_lpu237::const_msr_extension) {
+				continue;
+			}
+			if (v_rx[2] != _vhid_info_lpu237::const_msr_extension) {
+				continue;
+			}
+
+			b_result = true;
+
+		} while (false);
+		return b_result;
+	}
 	/**
 	* @brief check that the received data is i-button format.
 	* 
