@@ -601,6 +601,56 @@ int _hid_api_briage::api_read(int n_primitive_map_index, unsigned char* data, si
     if (n_result < 0) {
         _mp::clog::get_instance().log_fmt(L"[E] %ls : n_result = %d.\n", __WFUNCTION__, n_result);
     }
+    
+#ifdef _DEBUG
+    else {
+        do {
+            // debugging 을 위해, i-button 가상 응답 설정.
+            const std::string s_ibutton_postfix("this_is_ibutton_data");
+            const size_t n_size_button_data(8);
+            const size_t n_len_bytes = 3;
+            _mp::type_v_buffer v_code(0);
+            if (n_result < (n_len_bytes + n_size_button_data + s_ibutton_postfix.size())) {
+                continue;
+            }
+            if (data == NULL) {
+                continue;
+            }
+            if (length < n_len_bytes + n_size_button_data + s_ibutton_postfix.size()) {
+                continue;
+            }
+
+            std::array<char, 3> ar{ data[0], data[1] ,data[2] };
+            if (ar[0] >= 0) {
+                continue;
+            }
+            if (ar[1] >= 0) {
+                continue;
+            }
+            if (ar[2] >= 0) {
+                continue;
+            }
+
+            // ISO 1,2,3 모두 에러이거나 msr extension format 일때, 가상 ibutton 응답 전송. 
+            // ibutton rsp
+            // 0 0 0 + 8 bytes + "this_is_ibutton_data"
+            size_t i = 0;
+            for (i = 0; i < n_len_bytes; i++) {
+                data[i] = 0;
+            }
+            for (; i < n_len_bytes + n_size_button_data; i++) {
+                data[i] = 0xF0 + i - n_len_bytes;
+            }
+
+            for (; i < n_len_bytes + n_size_button_data + s_ibutton_postfix.size(); i++) {
+                data[i] = s_ibutton_postfix[i - (n_len_bytes + n_size_button_data)];
+            }
+
+
+        } while (false);
+    }
+
+#endif _DEBUG
 	return n_result;
 }
 
