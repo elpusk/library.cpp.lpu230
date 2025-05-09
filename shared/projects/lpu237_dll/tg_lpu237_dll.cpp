@@ -679,6 +679,11 @@ unsigned long _CALLTYPE_ LPU237_get_data(unsigned long dwBufferIndex, unsigned l
 		}
 
 		n_result_index = (int)dwBufferIndex;
+		if (n_result_index < 0) {
+			dw_client_result = n_result_index;
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : %u\n", __WFUNCTION__, dw_client_result);
+			continue;
+		}
 
 		if (cash.is_cashed(n_result_index)) {
 			if (sTrackData) {
