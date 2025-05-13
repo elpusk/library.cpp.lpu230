@@ -68,47 +68,63 @@ namespace _mp {
 		*
 		* @parameter the new request ptr. this parameter must be allocated.
 		* 
-		* @return true -> complete(with error or success), false -> not complete 
+		* @parameter the current request ptr.
+		* 
+		* @return the current request ptr : 
+		* 
+		*	if the stored pointer is a null pointer -> complete(with error or success), 
+		*
+		*	else -> not complete( need more running by _continue() ). 
 		*/
-		virtual bool _execute(std::shared_ptr<T>& ptr_request) = 0;
+		virtual std::shared_ptr<T> _execute(std::shared_ptr<T>& ptr_req_new, std::shared_ptr<T>& ptr_req_cur) = 0;
 
 		/**
-		* @brief executed by worker thread. when _execute return false(not complete),and none new request
+		* @brief executed by worker thread. when the return of _execute() is the allocated ptr(not complete),and none new request
 		*	if the return is true, the allocated memeory of request will be freed.
 		* 
 		* @paramter the current request ptr. this parameter must be allocated.
 		* 
 		* @return true -> complete(the current request ptr with error or success), false -> not complete(_continue() will be recalled at next time) 
 		*/
-		virtual bool _continue(std::shared_ptr<T>& ptr_request) = 0;
+		virtual bool _continue(std::shared_ptr<T>& ptr_req_cur) = 0;
 
 	protected:
 		static void _worker(vcworker& obj)
         {
-			std::shared_ptr<T> ptr_request;
+			std::shared_ptr<T> ptr_req_cur, ptr_req_new;
 			bool b_completet(true);
 
 			while (obj.m_b_run_th_worker) {
 				do {
-					if (obj.m_q.try_pop(ptr_request)) {
-						if (!ptr_request) {
-							b_completet = true;
-							continue;//idle
-						}
-						//
-						b_completet = obj._execute(ptr_request);
-						if (b_completet) {
-							ptr_request.reset();
-						}
-						continue;
+					if (!obj.m_q.try_pop(ptr_req_new)) {
+						ptr_req_new.reset();
 					}
 
-					if (b_completet) {
-						continue;//idle
+					if (ptr_req_new) {
+						if (ptr_req_cur) {
+							// case : ptr_req_new & ptr_req_cur
+							ptr_req_cur = obj._execute(ptr_req_new, ptr_req_cur);
+							ptr_req_new.reset();
+						}
+						else {
+							// case : ptr_req_new & !ptr_req_cur
+							ptr_req_cur = obj._execute(ptr_req_new, ptr_req_cur);
+							ptr_req_new.reset();
+						}
 					}
-					b_completet = obj._continue(ptr_request);
-					if (b_completet) {
-						ptr_request.reset();
+					else {
+						if (ptr_req_cur) {
+							// case : !ptr_req_new & ptr_req_cur
+							b_completet = obj._continue(ptr_req_cur);
+							if (b_completet) {
+								ptr_req_cur.reset();
+							}
+						}
+						else {
+							// case : !ptr_req_new & !ptr_req_cur
+							b_completet = true;
+							//idle
+						}
 					}
 
 				}while (false);

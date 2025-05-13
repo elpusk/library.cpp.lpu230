@@ -184,17 +184,16 @@ namespace _mp {
 
 			/**
 			* @brief from read-queue. set response of current request set of all session.
-			*  and set result event.
+			* 
+			*	and set result event. if a request have recover flag, the reponse of request is NOT set,
+			*	
+			*	and removed recover flag.
+			* 
 			* @param qi - processing result
-			* @param b_also_cancel is
-			*
-			*	true : result info set to all session front.
-			*
-			*	false  : if qi.get_request_type() == req_cancel, result info set to the session front of qi.get_session_number()
 			*
 			* @return vector of tuple(0 - request, 1-event, 2 - event index, 3 - response)
 			*/
-			std::vector<cdev_ctl_fn::type_tuple_full> qm_read_set_response_front(cqitem_dev& qi, bool b_also_cancel = false);
+			std::vector<cdev_ctl_fn::type_tuple_full> qm_read_set_response_front(cqitem_dev& qi);
 
 			
 			/**

@@ -386,7 +386,13 @@ int _vhid_api_briage::api_read(int n_map_index, unsigned char* data, size_t leng
 #ifdef _WIN32
 #ifdef _DEBUG
         static size_t n_ct(0);
-        if (n_result > 1) {
+        if (n_result > 2) {
+            ATLTRACE(L"0x%08x:0x%08X(%s)-RX%u (n_result,rx[0],rx[1],rx[2]) = (%d, 0x%x, 0x%x, 0x%x)\n", \
+                GetCurrentThreadId(), n_map_index,
+                _vhid_info::get_type_wstring_from_compositive_map_index(n_map_index).c_str(),
+                n_ct++, n_result, v_rx[0], v_rx[1], v_rx[2]);
+        }
+        else if (n_result > 1) {
             ATLTRACE(L"0x%08x:0x%08X(%s)-RX%u (n_result,rx[0],rx[1]) = (%d, 0x%x, 0x%x)\n",\
                 GetCurrentThreadId(), n_map_index,
                 _vhid_info::get_type_wstring_from_compositive_map_index(n_map_index).c_str(),

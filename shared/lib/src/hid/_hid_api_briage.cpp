@@ -605,15 +605,20 @@ int _hid_api_briage::api_read(int n_primitive_map_index, unsigned char* data, si
 #ifdef _DEBUG
     else {
         do {
+            // 빠른 실행을 위한 코드
+            if (n_result <= 0) {
+                continue;
+            }
+            if (data == NULL) {
+                continue;
+            }
+
             // debugging 을 위해, i-button 가상 응답 설정.
             const std::string s_ibutton_postfix("this_is_ibutton_data");
             const size_t n_size_button_data(8);
             const size_t n_len_bytes = 3;
             _mp::type_v_buffer v_code(0);
             if (n_result < (n_len_bytes + n_size_button_data + s_ibutton_postfix.size())) {
-                continue;
-            }
-            if (data == NULL) {
                 continue;
             }
             if (length < n_len_bytes + n_size_button_data + s_ibutton_postfix.size()) {
@@ -645,7 +650,9 @@ int _hid_api_briage::api_read(int n_primitive_map_index, unsigned char* data, si
             for (; i < n_len_bytes + n_size_button_data + s_ibutton_postfix.size(); i++) {
                 data[i] = s_ibutton_postfix[i - (n_len_bytes + n_size_button_data)];
             }
-
+            // n_result 를 변경 할 필요 없음.
+            
+            std::fill(&data[i], &data[length], 0);// clear remainder buffer.
 
         } while (false);
     }

@@ -153,9 +153,11 @@ namespace _mp {
 			return v_result;
 		}
 
-		std::vector<cdev_ctl_fn::type_tuple_full> cdev_ctl_fn::_cq_mgmt::qm_read_set_response_front(cqitem_dev& qi, bool b_also_cancel/*=false*/)
+		std::vector<cdev_ctl_fn::type_tuple_full> cdev_ctl_fn::_cq_mgmt::qm_read_set_response_front(cqitem_dev& qi)
 		{
 			cwait::type_ptr ptr_evt;
+			cio_packet::type_ptr ptr_req, ptr_rsp;
+			int n_evt(-1);
 			std::vector<cdev_ctl_fn::type_tuple_full> v_result;
 
 			do {
@@ -169,26 +171,33 @@ namespace _mp {
 
 				it = std::begin(m_map_ptr_q_ptr_cur_req_read);
 
-				if (b_also_cancel || qi.get_request_type() != cqitem_dev::req_cancel) {
-					// cancel 에 대한 결과가 아니거나, canecel 일 때도 모든 session 에 결과를 setting 하라고 하면.
+				if (qi.get_request_type() != cqitem_dev::req_cancel) {
+					// cancel 에 대한 결과가 아니면
 
 					for (; it != std::end(m_map_ptr_q_ptr_cur_req_read); ++it) {
 						auto r = it->second->pop_front(false);
-						ptr_evt = std::get<1>(r);
+						std::tie(ptr_req, ptr_evt, n_evt, ptr_rsp) = r;
+						if (ptr_req) {
+							if (ptr_req->is_recover_reserved()) {
+								ptr_req->set_recover_reserve(false);// recover flag 삭제.
+								continue;// recover flag 있는 것은 response 를 설정하지 않음.
+							}
+						}
+
 						if (!ptr_evt) {
 							continue;
 						}
-						if (!cbase_ctl_fn::_set_response(*std::get<3>(r), qi, *std::get<0>(r))) {
+						if (!cbase_ctl_fn::_set_response(*ptr_rsp, qi, *ptr_req)) {
 							continue;
 						}
 						v_result.push_back(r);
 
-						ptr_evt->set(std::get<2>(r));
+						ptr_evt->set(n_evt);
 					}//end for
 					continue;
 				}
 
-				// b_also_cancel is false and qi.get_request_type() == cqitem_dev::req_cancel
+				// qi.get_request_type() == cqitem_dev::req_cancel
 				// 같은 session 에 있는 것만 결과 setting.
 				for (; it != std::end(m_map_ptr_q_ptr_cur_req_read); ++it) {
 					auto r = it->second->pop_front(false);
@@ -217,14 +226,22 @@ namespace _mp {
 
 			std::lock_guard<std::mutex> lock(m_mutex);
 
+			cio_packet::type_ptr ptr_req;
+
 			for (auto item : m_map_ptr_q_ptr_cur_req_read) {
 				if (item.first == n_session_number) {
 					continue;
 				}
 				_cq_mgmt::_cq::type_ptr ptr_q = item.second;
-				auto r = ptr_q->pop_front(false);
-				std::get<0>(r)->set_recover_reserve(true);
+				std::tie(ptr_req,std::ignore, std::ignore, std::ignore) = ptr_q->pop_front(false);
+				if (!ptr_req) {
+					continue;
+				}
+				ptr_req->set_recover_reserve(true);
 				++n_cnt;
+#if defined(_WIN32) && defined(_DEBUG)
+				ATLTRACE(L"-- [%09u] SET recover flag %09u + %s\n", n_session_number, ptr_req->get_session_number());
+#endif
 			}//end for
 			return n_cnt;
 		}
@@ -697,10 +714,8 @@ namespace _mp {
 					continue;
 				}
 
-				if (ptr_result) {
-					std::tie(std::get<0>(rc_ptr_rsp), std::get<1>(rc_ptr_rsp)) = ptr_result->process_get_result();
-					std::get<2>(rc_ptr_rsp) = ptr_result->get_rsp();
-				}
+				std::tie(std::get<0>(rc_ptr_rsp), std::get<1>(rc_ptr_rsp)) = ptr_result->process_get_result();
+				std::get<2>(rc_ptr_rsp) = ptr_result->get_rsp();
 
 			} while (false);
 			return rc_ptr_rsp;
@@ -724,7 +739,7 @@ namespace _mp {
 			cbase_ctl_fn::cresult::type_ptr ptr_result = std::make_shared<cbase_ctl_fn::cresult>(ptr_request); //contructure, only increase reference request, isn't create response.
 
 			do {
-				switch (st_cur)
+				switch (st_sel_another)
 				{
 				case cbase_ctl_fn::_cstate::st_snot_anot://result 설정을 하위 함수에서 설정.
 					_process_shared_selected_session_st_not_another_session_st_not(*ptr_result);

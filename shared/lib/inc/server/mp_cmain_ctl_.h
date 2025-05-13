@@ -32,10 +32,15 @@ namespace _mp {
 		/**
 		* executed by worker thread.
 		* processing request.
-		* @paramter request request reference
-		* @return true -> complete(with error or success), false -> not complete 
+		* @paramter new request ptr
+		* @paramter cur request ptr
+		* @return the current request ptr :
+		*
+		*	if the stored pointer is a null pointer -> complete(with error or success),
+		*
+		*	else -> not complete( need more running by _continue() ).
 		*/
-		virtual bool _execute(cio_packet::type_ptr& ptr_request);
+		virtual cio_packet::type_ptr _execute(cio_packet::type_ptr& ptr_req_new, cio_packet::type_ptr& ptr_req_cur);
 
 	private://don't call these methods
 		cmain_ctl();

@@ -37,17 +37,22 @@ namespace _mp
 		/**
 		* executed by worker thread.
 		* processing request.
-		* @paramter request ptr
-		* @return true -> complete(with error or success), false -> not complete
+		* @paramter new request ptr
+		* @paramter cur request ptr
+		* @return the current request ptr :
+		*
+		*	if the stored pointer is a null pointer -> complete(with error or success),
+		*
+		*	else -> not complete( need more running by _continue() ).
 		*/
-		virtual bool _execute(cio_packet::type_ptr& ptr_request);
+		virtual cio_packet::type_ptr _execute(cio_packet::type_ptr& ptr_req_new, cio_packet::type_ptr& ptr_req_cur);
 
 		/**
-		* executed by worker thread. when _execute return false(not complete),and none new request
+		* executed by worker thread. when the return of _execute() is the allocated ptr(not complete),and none new request
 		* @paramter request request reference
 		* @return true -> complete(the current request ptr with error or success), false -> not complete(_continue() will be recalled at next time)
 		*/
-		virtual bool _continue(cio_packet::type_ptr& ptr_request);
+		virtual bool _continue(cio_packet::type_ptr& ptr_req_cur);
 
 	private:
 		bool _execute_kernel_operation(cio_packet& request, cio_packet& response);
