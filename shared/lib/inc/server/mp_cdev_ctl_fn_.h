@@ -322,16 +322,17 @@ namespace _mp {
 		/**
 		* @brief process request. transaction state with the given event.
 		*
-		* @param request[in] - request ptr ( must be allocated ! )
-		* @return tuple< bool, bool, cio_packet::type_ptr > type
-		*
-		*	0 - true( processing result is success), false( processing result is error)
-		*
-		*	1 - true( processing is complete), false( processing is not complete)
+		* @param ptr_req_new[in] - new request ptr ( must be allocated ! )
 		* 
-		*	2 - response packet ptr
+		* @param ptr_req_cur[in] - currnet request ptr
+		* 
+		* @return result type
 		*/
-		cdev_ctl_fn::type_result_event process_event(const cio_packet::type_ptr & ptr_request);
+		cbase_ctl_fn::cresult::type_ptr process_event
+		(
+			const cio_packet::type_ptr & ptr_req_new,
+			const cio_packet::type_ptr& ptr_req_cur
+		);
 
 		/**
 		* @brief get all completed response for sending to clients.
@@ -352,10 +353,15 @@ namespace _mp {
 		*
 		* 	this function have to be called in process_event() on exclusive mode.
 		*
-		* @param request[in] - request
+		* @param ptr_req_new[in] - new request ptr
+		* @param ptr_req_cur[in] - current request ptr
 		* @return cresult::type_ptr - event pricessing total info ptr.
 		*/
-		cbase_ctl_fn::cresult::type_ptr _process_event_on_exclusive_mode(const cio_packet::type_ptr& ptr_request);
+		cbase_ctl_fn::cresult::type_ptr _process_event_on_exclusive_mode
+		(
+			const cio_packet::type_ptr& ptr_req_new,
+			const cio_packet::type_ptr& ptr_req_cur
+		);
 
 		/**
 		* @brief process st_not statse by the given event.
@@ -395,12 +401,15 @@ namespace _mp {
 		*
 		* 	this function have to be called in process_event() on shared mode.
 		*
-		* @param request[in] - request
+		* @param ptr_req_new[in] - new request ptr
+		* @param ptr_req_cur[in] - current request ptr
 		* @return cresult::type_ptr - event processing total info ptr.
 		*/
-
-
-		cbase_ctl_fn::cresult::type_ptr _process_event_on_shared_mode(const cio_packet::type_ptr& ptr_request);
+		cbase_ctl_fn::cresult::type_ptr _process_event_on_shared_mode
+		(
+			const cio_packet::type_ptr& ptr_req_new,
+			const cio_packet::type_ptr& ptr_req_cur
+		);
 
 		/**
 		* @brief process the selected session state is st_not state
@@ -432,11 +441,17 @@ namespace _mp {
 		*
 		* 	this function have to be called in _process_event_on_shared_mode().
 		*
-		* @param cresult[in/out] - result of processing.
+		* @param cresult[in/out] - new req result of processing.
+		* 
+		* @param ptr_req_cur[in] - current req ptr
 		*
 		*	ptr_req member of cresult class must be set before be calling.
 		*/
-		void _process_shared_selected_session_st_not_another_session_st_asy(cbase_ctl_fn::cresult& result);
+		void _process_shared_selected_session_st_not_another_session_st_asy
+		(
+			cbase_ctl_fn::cresult& result_new,
+			const cio_packet::type_ptr& ptr_req_cur
+		);
 
 		/**
 		* @brief process the selected session state is st_idl state
@@ -469,10 +484,15 @@ namespace _mp {
 		* 	this function have to be called in _process_event_on_shared_mode().
 		*
 		* @param cresult[in/out] - result of processing.
-		*
+		* @param ptr_req_cur[in] - current req ptr.
+		* 
 		*	ptr_req member of cresult class must be set before be calling.
 		*/
-		void _process_shared_selected_session_st_idl_another_session_st_asy(cbase_ctl_fn::cresult& result);
+		void _process_shared_selected_session_st_idl_another_session_st_asy
+		(
+			cbase_ctl_fn::cresult& result,
+			const cio_packet::type_ptr& ptr_req_cur
+		);
 
 		/**
 		* @brief process the selected session state is st_asy state
@@ -481,10 +501,15 @@ namespace _mp {
 		* 	this function have to be called in _process_event_on_shared_mode().
 		*
 		* @param cresult[in/out] - result of processing.
+		* @param ptr_req_cur[in] - current req ptr
 		*
 		*	ptr_req member of cresult class must be set before be calling.
 		*/
-		void _process_shared_selected_session_st_asy_another_session_st_not(cbase_ctl_fn::cresult& result);
+		void _process_shared_selected_session_st_asy_another_session_st_not
+		(
+			cbase_ctl_fn::cresult& result,
+			const cio_packet::type_ptr& ptr_req_cur
+		);
 
 		/**
 		* @brief process the selected session state is st_asy state
@@ -493,10 +518,15 @@ namespace _mp {
 		* 	this function have to be called in _process_event_on_shared_mode().
 		*
 		* @param cresult[in/out] - result of processing.
+		* @param ptr_req_cur[in] current req ptr.
 		*
 		*	ptr_req member of cresult class must be set before be calling.
 		*/
-		void _process_shared_selected_session_st_asy_another_session_st_idl(cbase_ctl_fn::cresult& result);
+		void _process_shared_selected_session_st_asy_another_session_st_idl
+		(
+			cbase_ctl_fn::cresult& result,
+			const cio_packet::type_ptr& ptr_req_cur
+		);
 
 		/**
 		* @brief process the selected session state is st_asy state
@@ -505,10 +535,15 @@ namespace _mp {
 		* 	this function have to be called in _process_event_on_shared_mode().
 		*
 		* @param cresult[in/out] - result of processing.
+		* @param ptr_req_cur[in] - current req ptr.
 		*
 		*	ptr_req member of cresult class must be set before be calling.
 		*/
-		void _process_shared_selected_session_st_asy_another_session_st_asy(cbase_ctl_fn::cresult& result);
+		void _process_shared_selected_session_st_asy_another_session_st_asy
+		(
+			cbase_ctl_fn::cresult& result,
+			const cio_packet::type_ptr& ptr_req_cur
+		);
 
 		/**
 		* @brief process open event.

@@ -204,17 +204,22 @@ namespace _mp {
 		/**
 		* executed by worker thread.
 		* processing request.
-		* @paramter request request ptr
-		* @return true -> complete(with error or success), false -> not complete
+		* @paramter new request ptr
+		* @paramter current request ptr
+		* @return the current request ptr :
+		*
+		*	if the stored pointer is a null pointer -> complete(with error or success),
+		*
+		*	else -> not complete( need more running by _continue() ).
 		*/
-		virtual bool _execute(cclient_cb_qitem::type_ptr& ptr_request);
+		virtual cclient_cb_qitem::type_ptr _execute(cclient_cb_qitem::type_ptr& ptr_req_new, cclient_cb_qitem::type_ptr& ptr_req_cur);
 
 		/**
-		* executed by worker thread. when _execute return false(not complete),and none new request
-		* @paramter request request ptr
+		* executed by worker thread. when the return of _execute() is allocated(not complete),and none new request
+		* @paramter current request ptr
 		* @return true -> complete(with error or success), false -> not complete(_continue() will be recalled at next time)
 		*/
-		virtual bool _continue(cclient_cb_qitem::type_ptr& ptr_request);
+		virtual bool _continue(cclient_cb_qitem::type_ptr& ptr_req_cur);
 
 	private:
 		void _run_user_callback_resolve(unsigned long n_result);

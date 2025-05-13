@@ -36,7 +36,7 @@ namespace _mp {
 			cio_packet::type_ptr ptr_return;
 			type_v_buffer v_rsp;
 			cdev_ctl_fn::type_result_event result_from_fn;
-			cbase_ctl_fn::cresult::type_ptr ptr_result_error;
+			cbase_ctl_fn::cresult::type_ptr ptr_result_error, ptr_result;
 			cio_packet::type_ptr ptr_response;
 
 			do {
@@ -68,23 +68,27 @@ namespace _mp {
 				case cio_packet::act_dev_cancel:
 				case cio_packet::act_dev_write:
 				case cio_packet::act_dev_read:
-					result_from_fn = m_fun.process_event(ptr_req_new);
-					b_complete = std::get<1>(result_from_fn);
+					ptr_result = m_fun.process_event(ptr_req_new, ptr_req_cur);
+					if (!ptr_result) {
+						ptr_result_error = std::make_shared<cbase_ctl_fn::cresult>(*ptr_req_new);
+						ptr_result_error->after_processing_set_rsp_with_error_complete(cio_packet::error_reason_action_code);
+						break;
+					}
+
+					std::tie(std::ignore, b_complete) = ptr_result->process_get_result();
 					if (!b_complete) {
+						ptr_return = ptr_result->get_req();// 계속 실행 중인 req 를 return 으로 설정.
 						break;
 					}
 					
 					// 여기는 동기식 또는 비동기식의 시작에러만 옴.
-					if (std::get<2>(result_from_fn)) {
+					if (ptr_result->get_rsp()) {
 						// 처리 결과가 success 이거나 error. 
 						if (_continue(ptr_req_new)) {
 							break;
 						}
 						//현재 ptr_req_new 에 대한 ptr_rsp 가 처리되지 않았으면,
-						ptr_response = std::get<2>(result_from_fn);
-						if (!ptr_response) {
-							break;
-						}
+						ptr_response = ptr_result->get_rsp();
 						if (ptr_response->is_self()) {
 							break;
 						}

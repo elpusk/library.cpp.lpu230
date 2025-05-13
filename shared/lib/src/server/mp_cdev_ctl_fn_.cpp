@@ -687,16 +687,19 @@ namespace _mp {
 			return ptr_v_req_rsp;
 		}
 
-		cdev_ctl_fn::type_result_event cdev_ctl_fn::process_event( const cio_packet::type_ptr& ptr_request )
+		cbase_ctl_fn::cresult::type_ptr cdev_ctl_fn::process_event
+		(
+			const cio_packet::type_ptr& ptr_req_new,
+			const cio_packet::type_ptr& ptr_req_cur
+		)
 		{
 			// 논리적으로 각 session 의 장비는 독립된 것으로 보기 때문에
 			// 이벤트가 발생한 session 이 외의 session 의 state 에 영향은 없어야 함. 
 			// result.b_process_complete 이 true 면, result.ptr_rsp 에 결과가 설정되어야 함.
 			// cresult.ptr_rsp is must be created in this function.
 
-			cdev_ctl_fn::type_result_event rc_ptr_rsp(false,true, cio_packet::type_ptr());
 			cbase_ctl_fn::cresult::type_ptr ptr_result; // default contructure, not yet ptr response.
-			auto evt = cbase_ctl_fn::_cstate::get_event_from_request_action(ptr_request->get_action());
+			auto evt = cbase_ctl_fn::_cstate::get_event_from_request_action(ptr_req_new->get_action());
 
 			do {
 				if (evt == cbase_ctl_fn::_cstate::ev_none) {
@@ -704,80 +707,77 @@ namespace _mp {
 				}
 
 				if (m_b_cur_shared_mode) {
-					ptr_result = _process_event_on_shared_mode(ptr_request);
+					ptr_result = _process_event_on_shared_mode(ptr_req_new, ptr_req_cur);
 				}
 				else {
-					ptr_result = _process_event_on_exclusive_mode(ptr_request);
+					ptr_result = _process_event_on_exclusive_mode(ptr_req_new, ptr_req_cur);
 				}
-
-				if (!ptr_result) {
-					continue;
-				}
-
-				std::tie(std::get<0>(rc_ptr_rsp), std::get<1>(rc_ptr_rsp)) = ptr_result->process_get_result();
-				std::get<2>(rc_ptr_rsp) = ptr_result->get_rsp();
 
 			} while (false);
-			return rc_ptr_rsp;
+			return ptr_result;
 		}
 
-		cbase_ctl_fn::cresult::type_ptr cdev_ctl_fn::_process_event_on_shared_mode(const cio_packet::type_ptr& ptr_request)
+		cbase_ctl_fn::cresult::type_ptr cdev_ctl_fn::_process_event_on_shared_mode
+		(
+			const cio_packet::type_ptr& ptr_req_new,
+			const cio_packet::type_ptr& ptr_req_cur
+		)
 		{
 			// 논린적으로 각 session 의 장비는 독립된 것으로 보기 때문에
 			// 이벤트가 발생한 session 이 외의 session 의 state 에 영향은 없어야 함.
 			cbase_ctl_fn::_cstate::type_state st_cur(cbase_ctl_fn::_cstate::st_not), st_another(cbase_ctl_fn::_cstate::st_not);
 
-			std::tie(std::ignore, st_cur, std::ignore ) = _get_state_cur_(ptr_request->get_session_number());
+			std::tie(std::ignore, st_cur, std::ignore ) = _get_state_cur_(ptr_req_new->get_session_number());
 
 			// 선택된 session 을 제외한 나머지 session 의 상태의 combination state를 얻는다.
 			bool b_exist_another(false);
-			std::tie(b_exist_another, st_another) = _get_state_another_(ptr_request->get_session_number());
+			std::tie(b_exist_another, st_another) = _get_state_another_(ptr_req_new->get_session_number());
 
 			// 선태된 session state 와 나머지 session 의 상태를 연결 상태를 얻는다.
 			_cstate::type_state_sel_another st_sel_another = (_cstate::type_state_sel_another)((int)(st_cur * 100 + st_another));
 
-			cbase_ctl_fn::cresult::type_ptr ptr_result = std::make_shared<cbase_ctl_fn::cresult>(ptr_request); //contructure, only increase reference request, isn't create response.
+			cbase_ctl_fn::cresult::type_ptr ptr_result_new = std::make_shared<cbase_ctl_fn::cresult>(ptr_req_new); //contructure, only increase reference request, isn't create response.
 
-			do {
+			do {// 새로운 req 실행 전, 현재 실행 중인, req 가 있는 경우가 주의 대상.
 				switch (st_sel_another)
 				{
 				case cbase_ctl_fn::_cstate::st_snot_anot://result 설정을 하위 함수에서 설정.
-					_process_shared_selected_session_st_not_another_session_st_not(*ptr_result);
+					_process_shared_selected_session_st_not_another_session_st_not(*ptr_result_new);
 					break;
 				case cbase_ctl_fn::_cstate::st_snot_aidl://result 설정을 하위 함수에서 설정.
-					_process_shared_selected_session_st_not_another_session_st_idl(*ptr_result);
+					_process_shared_selected_session_st_not_another_session_st_idl(*ptr_result_new);
 					break;
 				case cbase_ctl_fn::_cstate::st_snot_aasy://result 설정을 하위 함수에서 설정.
-					_process_shared_selected_session_st_not_another_session_st_asy(*ptr_result);
+					_process_shared_selected_session_st_not_another_session_st_asy(*ptr_result_new, ptr_req_cur); //<< 현재하는 것이 있음.
 					break;
 
 				case cbase_ctl_fn::_cstate::st_sidl_anot://result 설정을 하위 함수에서 설정.
-					_process_shared_selected_session_st_idl_another_session_st_not(*ptr_result);
+					_process_shared_selected_session_st_idl_another_session_st_not(*ptr_result_new);
 					break;
 				case cbase_ctl_fn::_cstate::st_sidl_aidl://result 설정을 하위 함수에서 설정.
-					_process_shared_selected_session_st_idl_another_session_st_idl(*ptr_result);
+					_process_shared_selected_session_st_idl_another_session_st_idl(*ptr_result_new);
 					break;
 				case cbase_ctl_fn::_cstate::st_sidl_aasy://result 설정을 하위 함수에서 설정.
-					_process_shared_selected_session_st_idl_another_session_st_asy(*ptr_result);
+					_process_shared_selected_session_st_idl_another_session_st_asy(*ptr_result_new, ptr_req_cur); //<< 현재하는 것이 있음.
 					break;
 
 				case cbase_ctl_fn::_cstate::st_sasy_anot://result 설정을 하위 함수에서 설정.
-					_process_shared_selected_session_st_asy_another_session_st_not(*ptr_result);
+					_process_shared_selected_session_st_asy_another_session_st_not(*ptr_result_new, ptr_req_cur); //<< 현재하는 것이 있음.
 					break;
 				case cbase_ctl_fn::_cstate::st_sasy_aidl://result 설정을 하위 함수에서 설정.
-					_process_shared_selected_session_st_asy_another_session_st_idl(*ptr_result);
+					_process_shared_selected_session_st_asy_another_session_st_idl(*ptr_result_new, ptr_req_cur); //<< 현재하는 것이 있음.
 					break;
 				case cbase_ctl_fn::_cstate::st_sasy_aasy://result 설정을 하위 함수에서 설정.
-					_process_shared_selected_session_st_asy_another_session_st_asy(*ptr_result);
+					_process_shared_selected_session_st_asy_another_session_st_asy(*ptr_result_new, ptr_req_cur); //<< 현재하는 것이 있음.
 					break;
 				default:
 					// 에러 complete.
-					ptr_result->after_processing_set_rsp_with_error_complete(cio_packet::error_reason_session);
+					ptr_result_new->after_processing_set_rsp_with_error_complete(cio_packet::error_reason_session);
 					continue;
 				}
 
 			} while (false);
-			return ptr_result;
+			return ptr_result_new;
 		}
 
 		///////////////////////////////////////////////
@@ -820,9 +820,13 @@ namespace _mp {
 
 		}
 
-		void cdev_ctl_fn::_process_shared_selected_session_st_not_another_session_st_asy(cbase_ctl_fn::cresult& result)
+		void cdev_ctl_fn::_process_shared_selected_session_st_not_another_session_st_asy
+		(
+			cbase_ctl_fn::cresult& result_new,
+			const cio_packet::type_ptr& ptr_req_cur
+		)
 		{
-			cbase_ctl_fn::_cstate::type_evt evt = result.get_cur_event();
+			cbase_ctl_fn::_cstate::type_evt evt = result_new.get_cur_event();
 
 			do {
 				std::wstring s_dev_path;
@@ -831,15 +835,15 @@ namespace _mp {
 				switch (evt)
 				{
 				case cbase_ctl_fn::_cstate::ev_open:
-					_proc_event_open(result, false);
+					_proc_event_open(result_new, false);
 					break;
 				case cbase_ctl_fn::_cstate::ev_close:
 				case cbase_ctl_fn::_cstate::ev_sync:
 				case cbase_ctl_fn::_cstate::ev_asy:
-					result.after_processing_set_rsp_with_error_complete(cio_packet::error_reason_device_not_open);
+					result_new.after_processing_set_rsp_with_error_complete(cio_packet::error_reason_device_not_open);
 
-					m_p_ctl_fun_log->log_fmt(L"[E] - %ls | error_reason_device_not_open : session = %u.\n", __WFUNCTION__, result.get_session_number());
-					m_p_ctl_fun_log->trace(L"[E] - %ls | error_reason_device_not_open : session = %u.\n", __WFUNCTION__, result.get_session_number());
+					m_p_ctl_fun_log->log_fmt(L"[E] - %ls | error_reason_device_not_open : session = %u.\n", __WFUNCTION__, result_new.get_session_number());
+					m_p_ctl_fun_log->trace(L"[E] - %ls | error_reason_device_not_open : session = %u.\n", __WFUNCTION__, result_new.get_session_number());
 					break;
 				case cbase_ctl_fn::_cstate::ev_rx:
 					// 무시되는 event
@@ -915,7 +919,11 @@ namespace _mp {
 			} while (false);
 		}
 
-		void cdev_ctl_fn::_process_shared_selected_session_st_idl_another_session_st_asy(cbase_ctl_fn::cresult& result)
+		void cdev_ctl_fn::_process_shared_selected_session_st_idl_another_session_st_asy
+		(
+			cbase_ctl_fn::cresult& result,
+			const cio_packet::type_ptr& ptr_req_cur
+		)
 		{
 			cbase_ctl_fn::_cstate::type_evt evt = result.get_cur_event();
 
@@ -976,17 +984,29 @@ namespace _mp {
 			} while (false);
 		}
 
-		void cdev_ctl_fn::_process_shared_selected_session_st_asy_another_session_st_not(cbase_ctl_fn::cresult& result)
+		void cdev_ctl_fn::_process_shared_selected_session_st_asy_another_session_st_not
+		(
+			cbase_ctl_fn::cresult& result,
+			const cio_packet::type_ptr& ptr_req_cur
+		)
 		{
 			_process_exclusive_st_asy(result);
 		}
 
-		void cdev_ctl_fn::_process_shared_selected_session_st_asy_another_session_st_idl(cbase_ctl_fn::cresult& result)
+		void cdev_ctl_fn::_process_shared_selected_session_st_asy_another_session_st_idl
+		(
+			cbase_ctl_fn::cresult& result,
+			const cio_packet::type_ptr& ptr_req_cur
+		)
 		{
 			_process_exclusive_st_asy(result);
 		}
 
-		void cdev_ctl_fn::_process_shared_selected_session_st_asy_another_session_st_asy(cbase_ctl_fn::cresult& result)
+		void cdev_ctl_fn::_process_shared_selected_session_st_asy_another_session_st_asy
+		(
+			cbase_ctl_fn::cresult& result,
+			const cio_packet::type_ptr& ptr_req_cur
+		)
 		{
 			cbase_ctl_fn::_cstate::type_evt evt = result.get_cur_event();
 
@@ -1092,14 +1112,18 @@ namespace _mp {
 			return b_result;
 		}
 
-		cbase_ctl_fn::cresult::type_ptr cdev_ctl_fn::_process_event_on_exclusive_mode(const cio_packet::type_ptr& ptr_request)
+		cbase_ctl_fn::cresult::type_ptr cdev_ctl_fn::_process_event_on_exclusive_mode
+		(
+			const cio_packet::type_ptr& ptr_req_new,
+			const cio_packet::type_ptr& ptr_req_cur
+		)
 		{
 			// 논린적으로 각 session 의 장비는 독립된 것으로 보기 때문에
 			// 이벤트가 발생한 session 이 외의 session 의 state 에 영향은 없어야 함.
 			// result.b_process_complete 이 true 면, result.ptr_rsp 에 결과가 설정되어야 함.
 
 			//contructure, only increase reference request, isn't create response.
-			cbase_ctl_fn::cresult::type_ptr ptr_result = std::make_shared<cbase_ctl_fn::cresult>(ptr_request);
+			cbase_ctl_fn::cresult::type_ptr ptr_result = std::make_shared<cbase_ctl_fn::cresult>(ptr_req_new);
 			cbase_ctl_fn::_cstate::type_state st_cur(cbase_ctl_fn::_cstate::st_not);
 
 			std::tie(std::ignore, st_cur, std::ignore) = _get_state_cur_(ptr_result->get_session_number());
@@ -1271,6 +1295,7 @@ namespace _mp {
 					_transit_state_by_processing_result(result);
 					break;
 				case cbase_ctl_fn::_cstate::ev_asy:
+					// asyc 명령을 실행하면 하단에서 현재 실행 중인 async 를 취소해서 결과가 callback 에서 설정됨.
 					if (!_start_by_async_req(m_s_dev_path, result.get_req())) {
 						result.after_processing_set_rsp_with_error_complete(cio_packet::error_reason_device_operation, m_s_dev_path);
 

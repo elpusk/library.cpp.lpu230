@@ -104,47 +104,41 @@ namespace _mp {
 	}
 
 
-	/**
-	* executed by worker thread.
-	* processing request.
-	* @paramter request request reference
-	* @return true -> complete(with error or success), false -> not complete
-	*/
-	bool cclient_cb::_execute(cclient_cb_qitem::type_ptr& ptr_request)
+	cclient_cb_qitem::type_ptr cclient_cb::_execute(cclient_cb_qitem::type_ptr& ptr_req_new, cclient_cb_qitem::type_ptr& ptr_req_cur)
 	{
-		switch (ptr_request->get_type_index()) {
+		switch (ptr_req_new->get_type_index()) {
 		case cclient_cb_qitem::index_resolve:
-			_run_user_callback_resolve(ptr_request->get_result());
+			_run_user_callback_resolve(ptr_req_new->get_result());
 			break;
 		case cclient_cb_qitem::index_connect:
-			_run_user_callback_connect(ptr_request->get_result());
+			_run_user_callback_connect(ptr_req_new->get_result());
 			break;
 		case cclient_cb_qitem::index_handshake:
-			_run_user_callback_handshake(ptr_request->get_result());
+			_run_user_callback_handshake(ptr_req_new->get_result());
 			break;
 		case cclient_cb_qitem::index_handshake_ssl:
-			_run_user_callback_ssl_handshake(ptr_request->get_result());
+			_run_user_callback_ssl_handshake(ptr_req_new->get_result());
 			break;
 		case cclient_cb_qitem::index_write:
-			_run_user_callback_write(ptr_request->get_result());
+			_run_user_callback_write(ptr_req_new->get_result());
 			break;
 		case cclient_cb_qitem::index_close:
-			_run_user_callback_close(ptr_request->get_result());
+			_run_user_callback_close(ptr_req_new->get_result());
 			break;
 		case cclient_cb_qitem::index_read:
 			_run_user_callback_read(
-				ptr_request->get_action_code()
-				, ptr_request->get_result()
-				, ptr_request->get_device_index()
-				, ptr_request->get_in_id()
-				, ptr_request->get_rx()
+				ptr_req_new->get_action_code()
+				, ptr_req_new->get_result()
+				, ptr_req_new->get_device_index()
+				, ptr_req_new->get_in_id()
+				, ptr_req_new->get_rx()
 			);
 			break;
 		default:
 			break;
 		}//end switch
 
-		return true;
+		return cclient_cb_qitem::type_ptr();//complete processing
 	}
 
 	/**
@@ -152,7 +146,7 @@ namespace _mp {
 	* @paramter request request reference
 	* @return true -> complete(with error or success), false -> not complete(_continue() will be recalled at next time)
 	*/
-	bool cclient_cb::_continue(cclient_cb_qitem::type_ptr& ptr_request)
+	bool cclient_cb::_continue(cclient_cb_qitem::type_ptr& ptr_req_cur)
 	{
 		return true;
 	}
