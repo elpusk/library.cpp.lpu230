@@ -36,6 +36,11 @@ namespace _mp {
 		// 0 - processing result, 1 - processing complete, 2 - response packet ptr
 		typedef std::tuple<bool, bool, cio_packet::type_ptr> type_result_event;
 
+		// first - request ptr, second - response ptr
+		typedef std::pair<cio_packet::type_ptr, cio_packet::type_ptr> type_pair_ptr_req_ptr_rsp;
+
+		typedef std::shared_ptr< std::vector< cdev_ctl_fn::type_pair_ptr_req_ptr_rsp> > type_ptr_v_pair_ptr_req_ptr_rsp;
+
 	private:
 		/**
 		* inner queue manager of request and so on.......
@@ -326,7 +331,7 @@ namespace _mp {
 		* 
 		* @param ptr_req_cur[in] - currnet request ptr
 		* 
-		* @return result type
+		* @return result type - this ptr must be allocated in the body of this function.
 		*/
 		cbase_ctl_fn::cresult::type_ptr process_event
 		(
@@ -337,6 +342,8 @@ namespace _mp {
 		/**
 		* @brief get all completed response for sending to clients.
 		* 
+		* @param pair_ptr_req_ptr_rsp_additional[in] : If the element is not already in the returned vector, add it to the end of the vector.
+		* 
 		* @return std::shared_ptr<std::vector<cio_packet::type_ptr>> - the vector ptr of pair( req ptr,rsp ptr ).
 		*
 		*	The order of vector is the order in which it is sent.
@@ -344,8 +351,20 @@ namespace _mp {
 		*	If the returned vector is allocated, it have to a item.( size() must be greater then 0)
 		* 
 		*	If the sync item is exsited on vector, it is posited on the last position.( asyn-s-first, sync-last)
+		* 
+		*	Requests that are not pushed, such as open and close, are not included in the return vector except the given parameter.
 		*/
-		std::shared_ptr< std::vector< std::pair<cio_packet::type_ptr, cio_packet::type_ptr>> > get_all_complete_response();
+		cdev_ctl_fn::type_ptr_v_pair_ptr_req_ptr_rsp get_all_complete_response
+		(
+			const cdev_ctl_fn::type_pair_ptr_req_ptr_rsp & pair_ptr_req_ptr_rsp_additional
+			= std::make_pair(cio_packet::type_ptr(), cio_packet::type_ptr())
+		);
+
+		/**
+		* @brief get the set front value of all session on read queue.
+		* @return the vector of req ptr of front all read queue.
+		*/
+		std::vector<cio_packet::type_ptr> get_front_of_read_queue();
 
 	private:
 		/**

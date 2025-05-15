@@ -660,9 +660,13 @@ namespace _mp {
 			return std::make_tuple(b_exist,st_cur.get(), m_st_combi);
 		}
 
-		std::shared_ptr< std::vector< std::pair<cio_packet::type_ptr, cio_packet::type_ptr>> > cdev_ctl_fn::get_all_complete_response()
+		cdev_ctl_fn::type_ptr_v_pair_ptr_req_ptr_rsp cdev_ctl_fn::get_all_complete_response
+		(
+			const cdev_ctl_fn::type_pair_ptr_req_ptr_rsp& pair_ptr_req_ptr_rsp_additional 
+			/*= std::make_pair(cio_packet::type_ptr(),cio_packet::type_ptr())*/
+		)
 		{
-			std::shared_ptr< std::vector< std::pair<cio_packet::type_ptr, cio_packet::type_ptr>> > ptr_v_req_rsp;
+			cdev_ctl_fn::type_ptr_v_pair_ptr_req_ptr_rsp ptr_v_req_rsp;
 
 			do {
 				// 모든 session 의 reading( asyn ) 에서 complete 된 req를 먼저 얻고, reading Q 에서 제거.
@@ -682,9 +686,58 @@ namespace _mp {
 					ptr_v_req_rsp->emplace_back(ptr_req_sync,ptr_rsp_sync);
 				}
 
+				if (!pair_ptr_req_ptr_rsp_additional.first) {
+					continue;
+				}
+				if (!pair_ptr_req_ptr_rsp_additional.second) {
+					continue;
+				}
+
+				// 이미 vector 에 있는지 조사.
+				bool b_already_exsit(false);
+				if (ptr_v_req_rsp) {
+					for (auto item : *ptr_v_req_rsp) {
+						if (!item.first) {
+							continue;
+						}
+						if (!item.second) {
+							continue;
+						}
+						if (item.first.get() == pair_ptr_req_ptr_rsp_additional.first.get()) {
+							// 동일한 req 찾기 성공.
+							b_already_exsit = true;
+							break;// exit for
+						}
+					}//end for
+				}
+
+				if (b_already_exsit) {
+					continue; // 이미 존재하면, 추가하지 않는다.
+				}
+				if (!ptr_v_req_rsp) {
+					ptr_v_req_rsp = std::make_shared<std::vector<std::pair<cio_packet::type_ptr, cio_packet::type_ptr>>>();
+				}
+				ptr_v_req_rsp->emplace_back(pair_ptr_req_ptr_rsp_additional);
+
 			} while (false);
 
+			
+
 			return ptr_v_req_rsp;
+		}
+
+		std::vector<cio_packet::type_ptr> cdev_ctl_fn::get_front_of_read_queue()
+		{
+			std::vector<cio_packet::type_ptr> v_ptr_req;
+
+			auto v = m_mgmt_q.qm_read_pop_front(_MP_TOOLS_INVALID_SESSION_NUMBER,false);
+
+			for (auto item : v) {
+				if (std::get<0>(item)) {
+					v_ptr_req.push_back(std::get<0>(item));
+				}
+			}//end for
+			return v_ptr_req;
 		}
 
 		cbase_ctl_fn::cresult::type_ptr cdev_ctl_fn::process_event
@@ -1123,34 +1176,34 @@ namespace _mp {
 			// result.b_process_complete 이 true 면, result.ptr_rsp 에 결과가 설정되어야 함.
 
 			//contructure, only increase reference request, isn't create response.
-			cbase_ctl_fn::cresult::type_ptr ptr_result = std::make_shared<cbase_ctl_fn::cresult>(ptr_req_new);
+			cbase_ctl_fn::cresult::type_ptr ptr_result_new = std::make_shared<cbase_ctl_fn::cresult>(ptr_req_new);
 			cbase_ctl_fn::_cstate::type_state st_cur(cbase_ctl_fn::_cstate::st_not);
 
-			std::tie(std::ignore, st_cur, std::ignore) = _get_state_cur_(ptr_result->get_session_number());
+			std::tie(std::ignore, st_cur, std::ignore) = _get_state_cur_(ptr_result_new->get_session_number());
 
 			do {
 				switch (st_cur)
 				{
 				case cbase_ctl_fn::_cstate::st_not:
 					//result 설정을 하위 함수에서 설정. rsp ptr 은 하위 함수에서 생성.
-					_process_exclusive_st_not(*ptr_result);
+					_process_exclusive_st_not(*ptr_result_new);
 					break;
 				case cbase_ctl_fn::_cstate::st_idl:
 					//result 설정을 하위 함수에서 설정. rsp ptr 은 하위 함수에서 생성..
-					_process_exclusive_st_idl(*ptr_result);
+					_process_exclusive_st_idl(*ptr_result_new);
 					break;
 				case cbase_ctl_fn::_cstate::st_asy:
 					//result 설정을 하위 함수에서 설정.. rsp ptr 은 하위 함수에서 생성.
-					_process_exclusive_st_asy(*ptr_result);
+					_process_exclusive_st_asy(*ptr_result_new);
 					break;
 				default:
 					// 에러 complete. rsp ptr 생성.
-					ptr_result->after_processing_set_rsp_with_error_complete(cio_packet::error_reason_session);
+					ptr_result_new->after_processing_set_rsp_with_error_complete(cio_packet::error_reason_session);
 					continue;
 				}
 
 			} while (false);
-			return ptr_result;
+			return ptr_result_new;
 		}
 
 		///////////////////////////////////////////////

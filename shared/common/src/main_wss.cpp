@@ -54,7 +54,7 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 
 		//setup tracing system
 		_mp::clog& log(_mp::clog::get_instance());
-		log.enable_trace(s_pipe_name_of_trace, true);
+		log.enable_trace(s_pipe_name_of_trace, true); //enable trace by server mode
 
 		//setup logging system
 		log.config(s_log_folder_except_backslash, 6);

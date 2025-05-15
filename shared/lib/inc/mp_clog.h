@@ -97,9 +97,12 @@ namespace _mp
 		///////////////////////////////////////
 		// for tracing system
 		/**
-		* create or remove tracing server.
+		* @brief create or remove tracing server bu owner.
+		* @param s_pipe_name_of_trace - the name of trace pipe.
+		* @param b_enable : true(enable trace), false(disable trace).
+		* @param b_owner : true( owner of trace pipe , use in server), false(use in client)
 		*/
-		bool enable_trace(const std::wstring& s_pipe_name_of_trace, bool b_enable)
+		bool enable_trace(const std::wstring& s_pipe_name_of_trace, bool b_enable, bool b_owner = true)
 		{
 			bool b_result(false);
 
@@ -120,7 +123,7 @@ namespace _mp
 				if (s_pipe_name_of_trace.empty()) {
 					continue;
 				}
-				m_ptr_track_pipe = std::make_shared<_mp::cnamed_pipe>(s_pipe_name_of_trace, true);
+				m_ptr_track_pipe = std::make_shared<_mp::cnamed_pipe>(s_pipe_name_of_trace, b_owner);
 				if (!m_ptr_track_pipe->is_ini()) {
 					m_ptr_track_pipe.reset();
 					continue;
@@ -607,6 +610,7 @@ namespace _mp
 	public:
 		virtual ~clog()
 		{
+			m_ptr_track_pipe.reset();
 		}
 		bool is_ini()
 		{ 
