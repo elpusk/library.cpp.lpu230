@@ -111,6 +111,9 @@ namespace _mp {
 			*	st_undefined - error
 			*/
 			static _cstate::type_state get_state_from_mask(int n_mask);
+
+			static std::wstring get_string_from_state(_cstate::type_state st);
+
 		public:
 			_cstate();
 			~_cstate();
@@ -129,6 +132,12 @@ namespace _mp {
 			* @return the current state
 			*/
 			_cstate::type_state get() const;
+
+			/**
+			* @brief get the current state
+			* @return the current state string.
+			*/
+			std::wstring get_by_wstring() const;
 
 			/**
 			* @brief get the last event

@@ -664,6 +664,14 @@ namespace _mp {
 			const cio_packet::type_ptr& ptr_req
 		);
 
+		/**
+		* @brief if a state is changed in _transit_state_by_processing_result(),
+		* 
+		*	logging and trace state information. this function will be used for debugging.
+		* 
+		*	but it is included at release build time also. 
+		*/
+		void _logging_if_state_is_changed();
 
 	public:
 		cdev_ctl_fn(clog* p_log);
@@ -671,12 +679,15 @@ namespace _mp {
 
 	protected:
 		bool m_b_cur_shared_mode;// the current open mode : true - shared mode, false - exclusive mode(default)
+		bool m_b_cur_shared_mode_old_for_debug; // For runtime debugging.
 
 		// key is session number, value  the current status ptr.
 		cbase_ctl_fn::_cstate::type_map_ptr_state m_map_ptr_state_cur;
+		cbase_ctl_fn::_cstate::type_map_ptr_state m_map_ptr_state_cur_old_for_debug; // For runtime debugging.
 
 		// current combination state of all session
 		cbase_ctl_fn::_cstate::type_state m_st_combi;
+		cbase_ctl_fn::_cstate::type_state m_st_combi_old_for_debug; // For runtime debugging.
 
 		// device path
 		std::wstring m_s_dev_path;

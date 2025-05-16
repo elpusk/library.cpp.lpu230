@@ -11,6 +11,7 @@
 #include <mp_type.h>
 #include <mp_cqueue.h>
 #include <mp_coffee_path.h>
+#include <mp_cstring.h>
 
 #include <server/mp_cserver_.h>
 #include <server/mp_cdev_ctl_fn_.h>
@@ -28,11 +29,139 @@ namespace _mp {
 		{
 		}
 
-		cdev_ctl_fn::cdev_ctl_fn(clog* p_log) : 
+		void cdev_ctl_fn::_logging_if_state_is_changed()
+		{
+			std::vector<std::wstring> v_s_info;
+
+			std::wstring s_out;
+
+			if (m_st_combi != m_st_combi_old_for_debug) {
+				_mp::cstring::format_stl_style(s_out, L"[I][STATE] CHANGE - all session state = ( %ls -> %ls ).\n",
+					cbase_ctl_fn::_cstate::get_string_from_state(m_st_combi_old_for_debug).c_str(),
+					cbase_ctl_fn::_cstate::get_string_from_state(m_st_combi).c_str()
+				);
+				if (!s_out.empty()) {
+					v_s_info.push_back(s_out);
+				}
+			}
+			if (m_b_cur_shared_mode != m_b_cur_shared_mode_old_for_debug) {
+				std::wstring s_cur_shared_mode = L"OFF";
+				std::wstring s_cur_shared_mode_old_for_debug = L"OFF";
+
+				if (m_b_cur_shared_mode) {
+					s_cur_shared_mode = L"ON";
+				}
+				if (m_b_cur_shared_mode_old_for_debug) {
+					s_cur_shared_mode_old_for_debug = L"ON";
+				}
+
+				_mp::cstring::format_stl_style(s_out, L"[I][STATE] CHANGE - share mode = ( %ls -> %ls ).\n",
+					s_cur_shared_mode_old_for_debug.c_str(),
+					s_cur_shared_mode.c_str()
+				);
+				if (!s_out.empty()) {
+					v_s_info.push_back(s_out);
+				}
+			}
+
+			//
+			// old map - new map 
+			//cbase_ctl_fn::_cstate::type_map_ptr_state union_map;   // í•©ì§‘í•©
+			cbase_ctl_fn::_cstate::type_map_ptr_state intersection_map; // êµì§‘í•©
+			cbase_ctl_fn::_cstate::type_map_ptr_state diff_new_old; // map_new - map_old
+			cbase_ctl_fn::_cstate::type_map_ptr_state diff_old_new; // map_old - map_new
+
+			// ì°¨ì§‘í•©, í•©ì§‘í•© ë° êµì§‘í•© ê³„ì‚°
+			for (const auto& item : m_map_ptr_state_cur) {
+				//union_map[item.first] = item.second; // ë¨¼ì € map_newì˜ ëª¨ë“  ìš”ì†Œ ì¶”ê°€
+				if (m_map_ptr_state_cur_old_for_debug.count(item.first)) {
+					intersection_map[item.first] = item.second; // ê³µí†µ í‚¤ì¸ ê²½ìš° êµì§‘í•©ì— ì¶”ê°€
+				}
+				else {
+					diff_new_old[item.first] = item.second; // map_oldì— ì—†ëŠ” ê²½ìš° ì°¨ì§‘í•© (map_new - map_old) ì¶”ê°€
+				}
+			}//end for
+
+			for (const auto& item : m_map_ptr_state_cur_old_for_debug) {
+				//union_map[item.first] = item.second; // ê¸°ì¡´ í•©ì§‘í•©ì— map_oldì˜ ìš”ì†Œ ì¶”ê°€ (ì¤‘ë³µëœ í‚¤ëŠ” ë®ì–´ì”€)
+				if (!m_map_ptr_state_cur.count(item.first)) {
+					diff_old_new[item.first] = item.second; // map_newì— ì—†ëŠ” ê²½ìš° ì°¨ì§‘í•© (map_old - map_new) ì¶”ê°€
+				}
+			}//end for
+
+				
+			// ìƒˆë¡œìš´ session
+			for (const auto& item : diff_new_old) {
+				if (!item.second) {
+					continue;
+				}
+				_mp::cstring::format_stl_style(s_out, L"[I][STATE] NEW    - (session , state) = ( %u , %ls ).\n", item.first, item.second->get_by_wstring().c_str());
+				if (!s_out.empty()) {
+					v_s_info.push_back(s_out);
+				}
+			}//end for
+
+			// ì œê±°ëœ session
+			for (const auto& item : diff_old_new) {
+				if (!item.second) {
+					continue;
+				}
+				_mp::cstring::format_stl_style(s_out, L"[I][STATE] REMOVE - (session , state) = ( %u , %ls ).\n", item.first, item.second->get_by_wstring().c_str());
+				if (!s_out.empty()) {
+					v_s_info.push_back(s_out);
+				}
+			}//end for
+
+			// ìœ ì§€ë˜ëŠ” session ëŠ” state ë³€í™” ê²€ì‚¬
+			for (const auto& item : intersection_map) {
+				if (m_map_ptr_state_cur[item.first]->get() == m_map_ptr_state_cur_old_for_debug[item.first]->get()) {
+					continue;
+				}
+				//
+				_mp::cstring::format_stl_style(s_out, L"[I][STATE] CHANGE - (session , state) = ( %u , %ls -> %ls ).\n",
+					item.first,
+					m_map_ptr_state_cur_old_for_debug[item.first]->get_by_wstring().c_str(),
+					m_map_ptr_state_cur[item.first]->get_by_wstring().c_str()
+				);
+				if (!s_out.empty()) {
+					v_s_info.push_back(s_out);
+				}
+			}//end for
+
+			//////////////////////////////
+
+			if (!v_s_info.empty()) {
+				// ìƒíƒœ í‘œì‹œ.
+				for (auto item : v_s_info) {
+					m_p_ctl_fun_log->log_fmt(L"%ls", item.c_str());
+					m_p_ctl_fun_log->trace(L"%ls", item.c_str());
+				}
+
+				///////////////////////////////
+				// ìƒˆë¡œìš´ ìƒíƒœ ì €ì¥.
+				m_st_combi_old_for_debug = m_st_combi;
+				m_b_cur_shared_mode_old_for_debug = m_b_cur_shared_mode;
+				// 
+				// m_map_ptr_state_cur_old_for_debug = m_map_ptr_state_cur; ì´ì™€ ê°™ì•„ í•˜ë©´
+				// m_map_ptr_state_cur_old_for_debug ê³¼ m_map_ptr_state_cur ì˜ shared_ptr ì´ ê°™ì€ pointer ê°€ë¦¬í‚¤ê²Œ ë˜ì„œ,
+				// m_map_ptr_state_cur ì˜ ìƒíƒœê°€ ë³€ê²½ë˜ë©´, m_map_ptr_state_cur_old_for_debug ë„ ë³€ê²½ë˜ë¯€ë¡œ ì“¸ì—†ê²Œ ë˜ë¯€ë¡œ,
+				// m_map_ptr_state_cur ë¥¼ m_map_ptr_state_cur_old_for_debug ì— deep copy í•´ì•¼í•œë‹¤. overhead.......
+				m_map_ptr_state_cur_old_for_debug.clear();
+				for (const auto& item : m_map_ptr_state_cur) {
+					if (item.second) {
+						m_map_ptr_state_cur_old_for_debug[item.first] = std::make_shared<cbase_ctl_fn::_cstate>(*item.second);
+					}
+				}// end for
+
+			}
+		}
+
+		cdev_ctl_fn::cdev_ctl_fn(clog* p_log) :
 			cbase_ctl_fn(p_log),
-			m_b_cur_shared_mode(false)
+			m_b_cur_shared_mode(false), m_b_cur_shared_mode_old_for_debug(false)
 		{
 			m_st_combi = cbase_ctl_fn::_cstate::st_not;
+			m_st_combi_old_for_debug = m_st_combi;
 		}
 
 		cdev_ctl_fn::type_tuple_full cdev_ctl_fn::_cq_mgmt::qm_sync_push_back(const cio_packet::type_ptr& ptr_request)
@@ -42,9 +171,9 @@ namespace _mp {
 			auto r = m_q_sync_req_evt_rsp.push_back(ptr_request);
 
 			//
-			// m_map_ptr_q_ptr_cur_req_read ¿¡ ±âÁ¸ read ¸í·ÉÀº device start_X ¸í·É ½ÇÇàÀ¸·Î
-			// ÇÏÀ§ device io ¿¡¼­ ÀÚµ¿ Ãë¼Ò µÇ¼­, ±âÁ¸ read ¸í·É ½ÇÇà½Ã ¼³Á¤ÇÑ callback ÀÌ cancel result ¸¦ °¡Áö°í È£ÃâµÈ´Ù.
-			// µû¶ó¼­, m_map_ptr_q_ptr_cur_req_read ¿¡ ±âÁ¸ ¸í·ÉÀÌ ÀÖ¾îµµ ÀÚµ¿À¸·Î Ã³¸®µÈ´Ù.
+			// m_map_ptr_q_ptr_cur_req_read ì— ê¸°ì¡´ read ëª…ë ¹ì€ device start_X ëª…ë ¹ ì‹¤í–‰ìœ¼ë¡œ
+			// í•˜ìœ„ device io ì—ì„œ ìë™ ì·¨ì†Œ ë˜ì„œ, ê¸°ì¡´ read ëª…ë ¹ ì‹¤í–‰ì‹œ ì„¤ì •í•œ callback ì´ cancel result ë¥¼ ê°€ì§€ê³  í˜¸ì¶œëœë‹¤.
+			// ë”°ë¼ì„œ, m_map_ptr_q_ptr_cur_req_read ì— ê¸°ì¡´ ëª…ë ¹ì´ ìˆì–´ë„ ìë™ìœ¼ë¡œ ì²˜ë¦¬ëœë‹¤.
 
 			return r;
 		}
@@ -74,7 +203,7 @@ namespace _mp {
 		{
 			bool b_first(false);
 
-			// key °¡ ÀÖÀ¸¸é, Ç×»ó value °ªÀÎ ptr_q ´Â Ç×»ó ÇÒ´çµÇ¾î¾ß ÇÑ´Ù.
+			// key ê°€ ìˆìœ¼ë©´, í•­ìƒ value ê°’ì¸ ptr_q ëŠ” í•­ìƒ í• ë‹¹ë˜ì–´ì•¼ í•œë‹¤.
 
 			unsigned long n_session = ptr_request->get_session_number();
 			cdev_ctl_fn::_cq_mgmt::_cq::type_ptr ptr_q;
@@ -95,7 +224,7 @@ namespace _mp {
 			}
 
 			if (b_first) {
-				// start_read ¸¦ ¹ß»ı½ÃÅ°´Â read request ptr ¸¦ m_ptr_cur_req_read ¿¡ ÀúÀå.
+				// start_read ë¥¼ ë°œìƒì‹œí‚¤ëŠ” read request ptr ë¥¼ m_ptr_cur_req_read ì— ì €ì¥.
 				std::tie(m_ptr_cur_req_read, std::ignore, std::ignore, std::ignore) = ptr_q->push_back(ptr_request);
 			}
 			else {
@@ -129,7 +258,7 @@ namespace _mp {
 					ptr_q = it->second;
 					v_result.push_back(ptr_q->pop_front(b_remove));
 					if (ptr_q->empty()) {
-						// q ¿¡ itemÀÌ ¾øÀ¸¸é Ç×»ó q ÀÚÃ¼¸¦ ¼Ò¸ê ½ÃÅ´. 
+						// q ì— itemì´ ì—†ìœ¼ë©´ í•­ìƒ q ìì²´ë¥¼ ì†Œë©¸ ì‹œí‚´. 
 						m_map_ptr_q_ptr_cur_req_read.erase(n_session_number);
 					}
 					continue;
@@ -141,7 +270,7 @@ namespace _mp {
 				for (; it != std::end(m_map_ptr_q_ptr_cur_req_read); ++it) {
 					v_result.push_back(it->second->pop_front(b_remove));
 					if (it->second->empty()) {
-						// q ¿¡ itemÀÌ ¾øÀ¸¸é Ç×»ó q ÀÚÃ¼¸¦ ¼Ò¸ê ½ÃÅ´. 
+						// q ì— itemì´ ì—†ìœ¼ë©´ í•­ìƒ q ìì²´ë¥¼ ì†Œë©¸ ì‹œí‚´. 
 						it = m_map_ptr_q_ptr_cur_req_read.erase(it);
 						if (it == std::end(m_map_ptr_q_ptr_cur_req_read)) {
 							break; //exit for
@@ -172,15 +301,15 @@ namespace _mp {
 				it = std::begin(m_map_ptr_q_ptr_cur_req_read);
 
 				if (qi.get_request_type() != cqitem_dev::req_cancel) {
-					// cancel ¿¡ ´ëÇÑ °á°ú°¡ ¾Æ´Ï¸é
+					// cancel ì— ëŒ€í•œ ê²°ê³¼ê°€ ì•„ë‹ˆë©´
 
 					for (; it != std::end(m_map_ptr_q_ptr_cur_req_read); ++it) {
 						auto r = it->second->pop_front(false);
 						std::tie(ptr_req, ptr_evt, n_evt, ptr_rsp) = r;
 						if (ptr_req) {
 							if (ptr_req->is_recover_reserved()) {
-								ptr_req->set_recover_reserve(false);// recover flag »èÁ¦.
-								continue;// recover flag ÀÖ´Â °ÍÀº response ¸¦ ¼³Á¤ÇÏÁö ¾ÊÀ½.
+								ptr_req->set_recover_reserve(false);// recover flag ì‚­ì œ.
+								continue;// recover flag ìˆëŠ” ê²ƒì€ response ë¥¼ ì„¤ì •í•˜ì§€ ì•ŠìŒ.
 							}
 						}
 
@@ -198,7 +327,7 @@ namespace _mp {
 				}
 
 				// qi.get_request_type() == cqitem_dev::req_cancel
-				// °°Àº session ¿¡ ÀÖ´Â °Í¸¸ °á°ú setting.
+				// ê°™ì€ session ì— ìˆëŠ” ê²ƒë§Œ ê²°ê³¼ setting.
 				for (; it != std::end(m_map_ptr_q_ptr_cur_req_read); ++it) {
 					auto r = it->second->pop_front(false);
 					ptr_evt = std::get<1>(r);
@@ -264,7 +393,7 @@ namespace _mp {
 
 				for (; it != std::end(m_map_ptr_q_ptr_cur_req_read); ++it) {
 					_cq_mgmt::_cq::type_ptr ptr_q = it->second;
-					auto r = ptr_q->pop_front(false);// event set µÈ °Í¸¸ »èÁ¦ÇØ¾ß ÇÏ±â ¶§¹®¿¡ Áö±İ pop ÇÏ¸é¼­ »èÁ¦ ÇÏ¸é ¾È‰Î.
+					auto r = ptr_q->pop_front(false);// event set ëœ ê²ƒë§Œ ì‚­ì œí•´ì•¼ í•˜ê¸° ë•Œë¬¸ì— ì§€ê¸ˆ pop í•˜ë©´ì„œ ì‚­ì œ í•˜ë©´ ì•ˆëŒ.
 					ptr_evt = std::get<1>(r);
 					if (!ptr_evt) {
 						continue;
@@ -276,10 +405,10 @@ namespace _mp {
 						continue;
 					}
 
-					// event setµÊ.
-					ptr_q->remove_front();// queue ¿¡¼­ »èÁ¦.
+					// event setë¨.
+					ptr_q->remove_front();// queue ì—ì„œ ì‚­ì œ.
 					if (ptr_q->empty()) {
-						// ºó queue ´Â map¿¡¼­ »èÁ¦.
+						// ë¹ˆ queue ëŠ” mapì—ì„œ ì‚­ì œ.
 						it = m_map_ptr_q_ptr_cur_req_read.erase(it);
 					}
 					v_result.push_back(r);
@@ -312,7 +441,7 @@ namespace _mp {
 
 				for (; it != std::end(m_map_ptr_q_ptr_cur_req_read); ++it) {
 					_cq_mgmt::_cq::type_ptr ptr_q = it->second;
-					auto r = ptr_q->pop_front(false);// event set µÈ °Í¸¸ »èÁ¦ÇØ¾ß ÇÏ±â ¶§¹®¿¡ Áö±İ pop ÇÏ¸é¼­ »èÁ¦ ÇÏ¸é ¾È‰Î.
+					auto r = ptr_q->pop_front(false);// event set ëœ ê²ƒë§Œ ì‚­ì œí•´ì•¼ í•˜ê¸° ë•Œë¬¸ì— ì§€ê¸ˆ pop í•˜ë©´ì„œ ì‚­ì œ í•˜ë©´ ì•ˆëŒ.
 					ptr_evt = std::get<1>(r);
 					if (!ptr_evt) {
 						continue;
@@ -324,15 +453,15 @@ namespace _mp {
 						continue;
 					}
 
-					// event setµÊ.
+					// event setë¨.
 
-					if (!ptr_v_req_rsp) {// return vector »ı¼º.
+					if (!ptr_v_req_rsp) {// return vector ìƒì„±.
 						ptr_v_req_rsp = std::make_shared<std::vector<std::pair<cio_packet::type_ptr, cio_packet::type_ptr>>>();
 					}
 					
-					ptr_q->remove_front();// queue ¿¡¼­ »èÁ¦.
+					ptr_q->remove_front();// queue ì—ì„œ ì‚­ì œ.
 					if (ptr_q->empty()) {
-						// ºó queue ´Â map¿¡¼­ »èÁ¦.
+						// ë¹ˆ queue ëŠ” mapì—ì„œ ì‚­ì œ.
 						it = m_map_ptr_q_ptr_cur_req_read.erase(it);
 					}
 
@@ -361,7 +490,7 @@ namespace _mp {
 				auto ptr_q = it->second;
 				ptr_q->remove_front();
 				if (ptr_q->empty()) {
-					// q ¿¡ itemÀÌ ¾øÀ¸¸é Ç×»ó q ÀÚÃ¼¸¦ ¼Ò¸ê ½ÃÅ´. 
+					// q ì— itemì´ ì—†ìœ¼ë©´ í•­ìƒ q ìì²´ë¥¼ ì†Œë©¸ ì‹œí‚´. 
 					m_map_ptr_q_ptr_cur_req_read.erase(n_session_number);
 				}
 
@@ -383,7 +512,7 @@ namespace _mp {
 				for (; it != std::end(m_map_ptr_q_ptr_cur_req_read); ++it) {
 					it->second->remove_front();
 					if (it->second->empty()) {
-						// q ¿¡ itemÀÌ ¾øÀ¸¸é Ç×»ó q ÀÚÃ¼¸¦ ¼Ò¸ê ½ÃÅ´. 
+						// q ì— itemì´ ì—†ìœ¼ë©´ í•­ìƒ q ìì²´ë¥¼ ì†Œë©¸ ì‹œí‚´. 
 						it = m_map_ptr_q_ptr_cur_req_read.erase(it);
 						if (it == std::end(m_map_ptr_q_ptr_cur_req_read)) {
 							break; // exit for
@@ -422,7 +551,7 @@ namespace _mp {
 
 			ptr_evt = std::make_shared<cwait>();
 
-			// »ı¼º ÈÄ, Ã¹ event »ı¼ºÀÌ¹Ç·Î »ı¼ºµÈ event index ´Â Ç×»ó 0.
+			// ìƒì„± í›„, ì²« event ìƒì„±ì´ë¯€ë¡œ ìƒì„±ëœ event index ëŠ” í•­ìƒ 0.
 			n_evt = ptr_evt->generate_new_event(); // return waits 0( construct and the first generation)
 			m_q.push_back(std::make_tuple(ptr_req, ptr_evt, n_evt, ptr_rsp));
 
@@ -476,7 +605,7 @@ namespace _mp {
 		//_cstatus_mgmt member
 
 		/**
-		* callback ¿¡¼­ ¼­¹ö¿¡ ¹Ù·Î Àü¼ÛÇÏÁö ¸»ÀÚ.
+		* callback ì—ì„œ ì„œë²„ì— ë°”ë¡œ ì „ì†¡í•˜ì§€ ë§ì.
 		*/
 		bool cdev_ctl_fn::_cb_dev_read_on_exclusive(cqitem_dev& qi, void* p_user)
 		{
@@ -488,8 +617,8 @@ namespace _mp {
 			do {
 				bool b_pass_this_response(false);
 				do{
-					// ¾ÏÈ£È­ ÀÀ´äÀ» ±¸º°ÇÏ±â À§ÇØ, response ¸¦ set ÇÏ±â Àü¿¡ ÀÀ´ä °Ë»ç.
-					// himalia ¿¡¼­ Ãß°¡µÈ ¾ÏÈ£È­ ±â´É Áö¿ø°ú ±âÁ¸ protocol °ú È£È¯¼º À¯Áö¸¦ À§ÇØ ÇÊ¿äÇÑ ÄÚµå.
+					// ì•”í˜¸í™” ì‘ë‹µì„ êµ¬ë³„í•˜ê¸° ìœ„í•´, response ë¥¼ set í•˜ê¸° ì „ì— ì‘ë‹µ ê²€ì‚¬.
+					// himalia ì—ì„œ ì¶”ê°€ëœ ì•”í˜¸í™” ê¸°ëŠ¥ ì§€ì›ê³¼ ê¸°ì¡´ protocol ê³¼ í˜¸í™˜ì„± ìœ ì§€ë¥¼ ìœ„í•´ í•„ìš”í•œ ì½”ë“œ.
 					std::tuple<cqitem_dev::type_result, type_v_buffer, std::wstring> rqi = qi.get_result_all();
 					if (std::get<0>(rqi) != cqitem_dev::result_success) {
 						continue;
@@ -509,13 +638,13 @@ namespace _mp {
 					}
 
 					if(_vhid_info_lpu237::is_rx_msr_extension(std::get<1>(rqi))) {
-						// ÀÀ´ä°ªÀÇ °¢ track len ÀÇ °ªÀÌ À½¼ö·Î ¿¡·¯¸¦ Ç¥½ÃÇÏ´Â µíÇÏÁö¸¸,
-						// himalia ¿¡¼­ Ãß°¡µÈ ¾ÏÈ£È­ ÀÀ´ä ±¸Á¶¸¦ °®´Â °ÍÀ¸·Î È®ÀÎµÇ¾î,
-						// ¹«½ÃÇÏÁö ¸»°í °è¼Ó Ã³¸®.
+						// ì‘ë‹µê°’ì˜ ê° track len ì˜ ê°’ì´ ìŒìˆ˜ë¡œ ì—ëŸ¬ë¥¼ í‘œì‹œí•˜ëŠ” ë“¯í•˜ì§€ë§Œ,
+						// himalia ì—ì„œ ì¶”ê°€ëœ ì•”í˜¸í™” ì‘ë‹µ êµ¬ì¡°ë¥¼ ê°–ëŠ” ê²ƒìœ¼ë¡œ í™•ì¸ë˜ì–´,
+						// ë¬´ì‹œí•˜ì§€ ë§ê³  ê³„ì† ì²˜ë¦¬.
 						continue;
 					}
 
-					b_pass_this_response = true; // ÀÌ¹ø ÀÀ´ä ¹«½Ã.
+					b_pass_this_response = true; // ì´ë²ˆ ì‘ë‹µ ë¬´ì‹œ.
 
 				} while (false);
 
@@ -524,7 +653,7 @@ namespace _mp {
 					continue;//more processing
 				}
 				
-				// ÇöÀç ¼ö½ÅÀ» ÀÀ´äÀ¸·Î ¼³Á¤. 
+				// í˜„ì¬ ìˆ˜ì‹ ì„ ì‘ë‹µìœ¼ë¡œ ì„¤ì •. 
 				std::vector<cdev_ctl_fn::type_tuple_full> v_tuple = p_obj->m_mgmt_q.qm_read_set_response_front(qi);
 				if (v_tuple.empty()) {
 					b_complete = false;
@@ -539,7 +668,7 @@ namespace _mp {
 		}
 
 		/**
-		* callback ¿¡¼­ ¼­¹ö¿¡ ¹Ù·Î Àü¼ÛÇÏÁö ¸»ÀÚ.
+		* callback ì—ì„œ ì„œë²„ì— ë°”ë¡œ ì „ì†¡í•˜ì§€ ë§ì.
 		*/
 		bool cdev_ctl_fn::_cb_dev_read_on_shared(cqitem_dev& qi, void* p_user)
 		{
@@ -551,8 +680,8 @@ namespace _mp {
 			do {
 				bool b_pass_this_response(false);
 				do {
-					// ¾ÏÈ£È­ ÀÀ´äÀ» ±¸º°ÇÏ±â À§ÇØ, response ¸¦ set ÇÏ±â Àü¿¡ ÀÀ´ä °Ë»ç.
-					// himalia ¿¡¼­ Ãß°¡µÈ ¾ÏÈ£È­ ±â´É Áö¿ø°ú ±âÁ¸ protocol °ú È£È¯¼º À¯Áö¸¦ À§ÇØ ÇÊ¿äÇÑ ÄÚµå.
+					// ì•”í˜¸í™” ì‘ë‹µì„ êµ¬ë³„í•˜ê¸° ìœ„í•´, response ë¥¼ set í•˜ê¸° ì „ì— ì‘ë‹µ ê²€ì‚¬.
+					// himalia ì—ì„œ ì¶”ê°€ëœ ì•”í˜¸í™” ê¸°ëŠ¥ ì§€ì›ê³¼ ê¸°ì¡´ protocol ê³¼ í˜¸í™˜ì„± ìœ ì§€ë¥¼ ìœ„í•´ í•„ìš”í•œ ì½”ë“œ.
 					std::tuple<cqitem_dev::type_result, type_v_buffer, std::wstring> rqi = qi.get_result_all();
 					if (std::get<0>(rqi) != cqitem_dev::result_success) {
 						continue;
@@ -572,13 +701,13 @@ namespace _mp {
 					}
 
 					if (_vhid_info_lpu237::is_rx_msr_extension(std::get<1>(rqi))) {
-						// ÀÀ´ä°ªÀÇ °¢ track len ÀÇ °ªÀÌ À½¼ö·Î ¿¡·¯¸¦ Ç¥½ÃÇÏ´Â µíÇÏÁö¸¸,
-						// himalia ¿¡¼­ Ãß°¡µÈ ¾ÏÈ£È­ ÀÀ´ä ±¸Á¶¸¦ °®´Â °ÍÀ¸·Î È®ÀÎµÇ¾î,
-						// ¹«½ÃÇÏÁö ¸»°í °è¼Ó Ã³¸®.
+						// ì‘ë‹µê°’ì˜ ê° track len ì˜ ê°’ì´ ìŒìˆ˜ë¡œ ì—ëŸ¬ë¥¼ í‘œì‹œí•˜ëŠ” ë“¯í•˜ì§€ë§Œ,
+						// himalia ì—ì„œ ì¶”ê°€ëœ ì•”í˜¸í™” ì‘ë‹µ êµ¬ì¡°ë¥¼ ê°–ëŠ” ê²ƒìœ¼ë¡œ í™•ì¸ë˜ì–´,
+						// ë¬´ì‹œí•˜ì§€ ë§ê³  ê³„ì† ì²˜ë¦¬.
 						continue;
 					}
 
-					b_pass_this_response = true; // ÀÌ¹ø ÀÀ´ä ¹«½Ã.
+					b_pass_this_response = true; // ì´ë²ˆ ì‘ë‹µ ë¬´ì‹œ.
 
 				} while (false);
 
@@ -587,7 +716,7 @@ namespace _mp {
 					continue;//more processing
 				}
 
-				//ÀÀ´ä °øÀ¯ »óÅÂ¿¡¼­´Â ¸ğµç read ¿¡ ´ëÇØ ÀÀ´äÀ» µ¿ÀÏÇÏ°Ô ¼³Á¤ÇØÁÖ¾î¾ß ÇÔ.
+				//ì‘ë‹µ ê³µìœ  ìƒíƒœì—ì„œëŠ” ëª¨ë“  read ì— ëŒ€í•´ ì‘ë‹µì„ ë™ì¼í•˜ê²Œ ì„¤ì •í•´ì£¼ì–´ì•¼ í•¨.
 				std::vector<cdev_ctl_fn::type_tuple_full> v_tuple = p_obj->m_mgmt_q.qm_read_set_response_front(qi);
 				if (v_tuple.empty()) {
 					b_complete = false;
@@ -608,7 +737,7 @@ namespace _mp {
 		*/
 		bool cdev_ctl_fn::_cb_dev_for_sync_req(cqitem_dev& qi, void* p_user)
 		{
-			//callback ¿¡¼­ ¼­¹ö¿¡ ¹Ù·Î Àü¼ÛÇÏÁö ¸»ÀÚ.
+			//callback ì—ì„œ ì„œë²„ì— ë°”ë¡œ ì „ì†¡í•˜ì§€ ë§ì.
 			bool b_complete(true);
 			cdev_ctl_fn* p_obj((cdev_ctl_fn*)p_user);
 
@@ -617,20 +746,20 @@ namespace _mp {
 			int n_evt_index(-1);
 
 			do {
-				// pop ¿¡¼­ request ¾ò´Â°ú °á°ú setting ÀÌ ºĞ¸®µÇ¾îµµ, µ¿±â½ÄÀ¸·Î event set µÉ¶§ ±îÁö ±â´Ù¸®´Ï±î ¾ÈÀü.
+				// pop ì—ì„œ request ì–»ëŠ”ê³¼ ê²°ê³¼ setting ì´ ë¶„ë¦¬ë˜ì–´ë„, ë™ê¸°ì‹ìœ¼ë¡œ event set ë ë•Œ ê¹Œì§€ ê¸°ë‹¤ë¦¬ë‹ˆê¹Œ ì•ˆì „.
 				std::tie(ptr_req, ptr_evt, n_evt_index, ptr_rsp) = p_obj->m_mgmt_q.qm_sync_pop_front(false);
 				if (!ptr_req) {
-					continue;// ¿äÃ»ÇÑ session ÀÇ ÀÀ´äÀÌ ¾Æ´Ï¸é, ¹«½Ã.
+					continue;// ìš”ì²­í•œ session ì˜ ì‘ë‹µì´ ì•„ë‹ˆë©´, ë¬´ì‹œ.
 				}
 
 				if (!cbase_ctl_fn::_set_response(*ptr_rsp, qi, *ptr_req)) {
-					//ÇöÀç ¿äÃ»Àº ¾ÆÁ÷ °á°ú¸¦ ¸ô¶ó¼­ Å¥¿¡¼­ »èÁ¦ÇÏ¸é ¾È‰Î.
+					//í˜„ì¬ ìš”ì²­ì€ ì•„ì§ ê²°ê³¼ë¥¼ ëª°ë¼ì„œ íì—ì„œ ì‚­ì œí•˜ë©´ ì•ˆëŒ.
 					b_complete = false;
 					continue;//more processing
 				}
 				//
 				if (ptr_evt) {
-					ptr_evt->set(n_evt_index); //µ¿±â½Ä ÀÀ´ä ±â´Ù¸®´Â event ±â´Ù¸² ÇØÁ¦.
+					ptr_evt->set(n_evt_index); //ë™ê¸°ì‹ ì‘ë‹µ ê¸°ë‹¤ë¦¬ëŠ” event ê¸°ë‹¤ë¦¼ í•´ì œ.
 				}
 
 			} while (false);
@@ -669,10 +798,10 @@ namespace _mp {
 			cdev_ctl_fn::type_ptr_v_pair_ptr_req_ptr_rsp ptr_v_req_rsp;
 
 			do {
-				// ¸ğµç session ÀÇ reading( asyn ) ¿¡¼­ complete µÈ req¸¦ ¸ÕÀú ¾ò°í, reading Q ¿¡¼­ Á¦°Å.
+				// ëª¨ë“  session ì˜ reading( asyn ) ì—ì„œ complete ëœ reqë¥¼ ë¨¼ì € ì–»ê³ , reading Q ì—ì„œ ì œê±°.
 				ptr_v_req_rsp = m_mgmt_q.qm_read_pop_front_remove_complete_of_all_by_rsp_ptr();
 
-				// sync ¿¡¼­ ¾òÀ½.
+				// sync ì—ì„œ ì–»ìŒ.
 				cio_packet::type_ptr ptr_rsp_sync, ptr_req_sync;
 				std::tie(ptr_req_sync, std::ignore, std::ignore, ptr_rsp_sync) = m_mgmt_q.qm_sync_pop_front(true);// pop nad remove
 
@@ -681,8 +810,8 @@ namespace _mp {
 						ptr_v_req_rsp = std::make_shared<std::vector<std::pair<cio_packet::type_ptr, cio_packet::type_ptr>>>();
 					}
 
-					// ºñµ¿±â Ã³¸® °á°ú¸¦ ¾òÀ½.
-					// ºñµ¿±â °á°ú´Â Æ¯¼º »ó Á¸ÀçÇÏ¸é, 1°³ ¹Û¿¡ ¾øÀ½. 
+					// ë¹„ë™ê¸° ì²˜ë¦¬ ê²°ê³¼ë¥¼ ì–»ìŒ.
+					// ë¹„ë™ê¸° ê²°ê³¼ëŠ” íŠ¹ì„± ìƒ ì¡´ì¬í•˜ë©´, 1ê°œ ë°–ì— ì—†ìŒ. 
 					ptr_v_req_rsp->emplace_back(ptr_req_sync,ptr_rsp_sync);
 				}
 
@@ -693,7 +822,7 @@ namespace _mp {
 					continue;
 				}
 
-				// ÀÌ¹Ì vector ¿¡ ÀÖ´ÂÁö Á¶»ç.
+				// ì´ë¯¸ vector ì— ìˆëŠ”ì§€ ì¡°ì‚¬.
 				bool b_already_exsit(false);
 				if (ptr_v_req_rsp) {
 					for (auto item : *ptr_v_req_rsp) {
@@ -704,7 +833,7 @@ namespace _mp {
 							continue;
 						}
 						if (item.first.get() == pair_ptr_req_ptr_rsp_additional.first.get()) {
-							// µ¿ÀÏÇÑ req Ã£±â ¼º°ø.
+							// ë™ì¼í•œ req ì°¾ê¸° ì„±ê³µ.
 							b_already_exsit = true;
 							break;// exit for
 						}
@@ -712,7 +841,7 @@ namespace _mp {
 				}
 
 				if (b_already_exsit) {
-					continue; // ÀÌ¹Ì Á¸ÀçÇÏ¸é, Ãß°¡ÇÏÁö ¾Ê´Â´Ù.
+					continue; // ì´ë¯¸ ì¡´ì¬í•˜ë©´, ì¶”ê°€í•˜ì§€ ì•ŠëŠ”ë‹¤.
 				}
 				if (!ptr_v_req_rsp) {
 					ptr_v_req_rsp = std::make_shared<std::vector<std::pair<cio_packet::type_ptr, cio_packet::type_ptr>>>();
@@ -746,9 +875,9 @@ namespace _mp {
 			const cio_packet::type_ptr& ptr_req_cur
 		)
 		{
-			// ³í¸®ÀûÀ¸·Î °¢ session ÀÇ Àåºñ´Â µ¶¸³µÈ °ÍÀ¸·Î º¸±â ¶§¹®¿¡
-			// ÀÌº¥Æ®°¡ ¹ß»ıÇÑ session ÀÌ ¿ÜÀÇ session ÀÇ state ¿¡ ¿µÇâÀº ¾ø¾î¾ß ÇÔ. 
-			// result.b_process_complete ÀÌ true ¸é, result.ptr_rsp ¿¡ °á°ú°¡ ¼³Á¤µÇ¾î¾ß ÇÔ.
+			// ë…¼ë¦¬ì ìœ¼ë¡œ ê° session ì˜ ì¥ë¹„ëŠ” ë…ë¦½ëœ ê²ƒìœ¼ë¡œ ë³´ê¸° ë•Œë¬¸ì—
+			// ì´ë²¤íŠ¸ê°€ ë°œìƒí•œ session ì´ ì™¸ì˜ session ì˜ state ì— ì˜í–¥ì€ ì—†ì–´ì•¼ í•¨. 
+			// result.b_process_complete ì´ true ë©´, result.ptr_rsp ì— ê²°ê³¼ê°€ ì„¤ì •ë˜ì–´ì•¼ í•¨.
 			// cresult.ptr_rsp is must be created in this function.
 
 			cbase_ctl_fn::cresult::type_ptr ptr_result; // default contructure, not yet ptr response.
@@ -776,55 +905,55 @@ namespace _mp {
 			const cio_packet::type_ptr& ptr_req_cur
 		)
 		{
-			// ³í¸°ÀûÀ¸·Î °¢ session ÀÇ Àåºñ´Â µ¶¸³µÈ °ÍÀ¸·Î º¸±â ¶§¹®¿¡
-			// ÀÌº¥Æ®°¡ ¹ß»ıÇÑ session ÀÌ ¿ÜÀÇ session ÀÇ state ¿¡ ¿µÇâÀº ¾ø¾î¾ß ÇÔ.
+			// ë…¼ë¦°ì ìœ¼ë¡œ ê° session ì˜ ì¥ë¹„ëŠ” ë…ë¦½ëœ ê²ƒìœ¼ë¡œ ë³´ê¸° ë•Œë¬¸ì—
+			// ì´ë²¤íŠ¸ê°€ ë°œìƒí•œ session ì´ ì™¸ì˜ session ì˜ state ì— ì˜í–¥ì€ ì—†ì–´ì•¼ í•¨.
 			cbase_ctl_fn::_cstate::type_state st_cur(cbase_ctl_fn::_cstate::st_not), st_another(cbase_ctl_fn::_cstate::st_not);
 
 			std::tie(std::ignore, st_cur, std::ignore ) = _get_state_cur_(ptr_req_new->get_session_number());
 
-			// ¼±ÅÃµÈ session À» Á¦¿ÜÇÑ ³ª¸ÓÁö session ÀÇ »óÅÂÀÇ combination state¸¦ ¾ò´Â´Ù.
+			// ì„ íƒëœ session ì„ ì œì™¸í•œ ë‚˜ë¨¸ì§€ session ì˜ ìƒíƒœì˜ combination stateë¥¼ ì–»ëŠ”ë‹¤.
 			bool b_exist_another(false);
 			std::tie(b_exist_another, st_another) = _get_state_another_(ptr_req_new->get_session_number());
 
-			// ¼±ÅÂµÈ session state ¿Í ³ª¸ÓÁö session ÀÇ »óÅÂ¸¦ ¿¬°á »óÅÂ¸¦ ¾ò´Â´Ù.
+			// ì„ íƒœëœ session state ì™€ ë‚˜ë¨¸ì§€ session ì˜ ìƒíƒœë¥¼ ì—°ê²° ìƒíƒœë¥¼ ì–»ëŠ”ë‹¤.
 			_cstate::type_state_sel_another st_sel_another = (_cstate::type_state_sel_another)((int)(st_cur * 100 + st_another));
 
 			cbase_ctl_fn::cresult::type_ptr ptr_result_new = std::make_shared<cbase_ctl_fn::cresult>(ptr_req_new); //contructure, only increase reference request, isn't create response.
 
-			do {// »õ·Î¿î req ½ÇÇà Àü, ÇöÀç ½ÇÇà ÁßÀÎ, req °¡ ÀÖ´Â °æ¿ì°¡ ÁÖÀÇ ´ë»ó.
+			do {// ìƒˆë¡œìš´ req ì‹¤í–‰ ì „, í˜„ì¬ ì‹¤í–‰ ì¤‘ì¸, req ê°€ ìˆëŠ” ê²½ìš°ê°€ ì£¼ì˜ ëŒ€ìƒ.
 				switch (st_sel_another)
 				{
-				case cbase_ctl_fn::_cstate::st_snot_anot://result ¼³Á¤À» ÇÏÀ§ ÇÔ¼ö¿¡¼­ ¼³Á¤.
+				case cbase_ctl_fn::_cstate::st_snot_anot://result ì„¤ì •ì„ í•˜ìœ„ í•¨ìˆ˜ì—ì„œ ì„¤ì •.
 					_process_shared_selected_session_st_not_another_session_st_not(*ptr_result_new);
 					break;
-				case cbase_ctl_fn::_cstate::st_snot_aidl://result ¼³Á¤À» ÇÏÀ§ ÇÔ¼ö¿¡¼­ ¼³Á¤.
+				case cbase_ctl_fn::_cstate::st_snot_aidl://result ì„¤ì •ì„ í•˜ìœ„ í•¨ìˆ˜ì—ì„œ ì„¤ì •.
 					_process_shared_selected_session_st_not_another_session_st_idl(*ptr_result_new);
 					break;
-				case cbase_ctl_fn::_cstate::st_snot_aasy://result ¼³Á¤À» ÇÏÀ§ ÇÔ¼ö¿¡¼­ ¼³Á¤.
-					_process_shared_selected_session_st_not_another_session_st_asy(*ptr_result_new, ptr_req_cur); //<< ÇöÀçÇÏ´Â °ÍÀÌ ÀÖÀ½.
+				case cbase_ctl_fn::_cstate::st_snot_aasy://result ì„¤ì •ì„ í•˜ìœ„ í•¨ìˆ˜ì—ì„œ ì„¤ì •.
+					_process_shared_selected_session_st_not_another_session_st_asy(*ptr_result_new, ptr_req_cur); //<< í˜„ì¬í•˜ëŠ” ê²ƒì´ ìˆìŒ.
 					break;
 
-				case cbase_ctl_fn::_cstate::st_sidl_anot://result ¼³Á¤À» ÇÏÀ§ ÇÔ¼ö¿¡¼­ ¼³Á¤.
+				case cbase_ctl_fn::_cstate::st_sidl_anot://result ì„¤ì •ì„ í•˜ìœ„ í•¨ìˆ˜ì—ì„œ ì„¤ì •.
 					_process_shared_selected_session_st_idl_another_session_st_not(*ptr_result_new);
 					break;
-				case cbase_ctl_fn::_cstate::st_sidl_aidl://result ¼³Á¤À» ÇÏÀ§ ÇÔ¼ö¿¡¼­ ¼³Á¤.
+				case cbase_ctl_fn::_cstate::st_sidl_aidl://result ì„¤ì •ì„ í•˜ìœ„ í•¨ìˆ˜ì—ì„œ ì„¤ì •.
 					_process_shared_selected_session_st_idl_another_session_st_idl(*ptr_result_new);
 					break;
-				case cbase_ctl_fn::_cstate::st_sidl_aasy://result ¼³Á¤À» ÇÏÀ§ ÇÔ¼ö¿¡¼­ ¼³Á¤.
-					_process_shared_selected_session_st_idl_another_session_st_asy(*ptr_result_new, ptr_req_cur); //<< ÇöÀçÇÏ´Â °ÍÀÌ ÀÖÀ½.
+				case cbase_ctl_fn::_cstate::st_sidl_aasy://result ì„¤ì •ì„ í•˜ìœ„ í•¨ìˆ˜ì—ì„œ ì„¤ì •.
+					_process_shared_selected_session_st_idl_another_session_st_asy(*ptr_result_new, ptr_req_cur); //<< í˜„ì¬í•˜ëŠ” ê²ƒì´ ìˆìŒ.
 					break;
 
-				case cbase_ctl_fn::_cstate::st_sasy_anot://result ¼³Á¤À» ÇÏÀ§ ÇÔ¼ö¿¡¼­ ¼³Á¤.
-					_process_shared_selected_session_st_asy_another_session_st_not(*ptr_result_new, ptr_req_cur); //<< ÇöÀçÇÏ´Â °ÍÀÌ ÀÖÀ½.
+				case cbase_ctl_fn::_cstate::st_sasy_anot://result ì„¤ì •ì„ í•˜ìœ„ í•¨ìˆ˜ì—ì„œ ì„¤ì •.
+					_process_shared_selected_session_st_asy_another_session_st_not(*ptr_result_new, ptr_req_cur); //<< í˜„ì¬í•˜ëŠ” ê²ƒì´ ìˆìŒ.
 					break;
-				case cbase_ctl_fn::_cstate::st_sasy_aidl://result ¼³Á¤À» ÇÏÀ§ ÇÔ¼ö¿¡¼­ ¼³Á¤.
-					_process_shared_selected_session_st_asy_another_session_st_idl(*ptr_result_new, ptr_req_cur); //<< ÇöÀçÇÏ´Â °ÍÀÌ ÀÖÀ½.
+				case cbase_ctl_fn::_cstate::st_sasy_aidl://result ì„¤ì •ì„ í•˜ìœ„ í•¨ìˆ˜ì—ì„œ ì„¤ì •.
+					_process_shared_selected_session_st_asy_another_session_st_idl(*ptr_result_new, ptr_req_cur); //<< í˜„ì¬í•˜ëŠ” ê²ƒì´ ìˆìŒ.
 					break;
-				case cbase_ctl_fn::_cstate::st_sasy_aasy://result ¼³Á¤À» ÇÏÀ§ ÇÔ¼ö¿¡¼­ ¼³Á¤.
-					_process_shared_selected_session_st_asy_another_session_st_asy(*ptr_result_new, ptr_req_cur); //<< ÇöÀçÇÏ´Â °ÍÀÌ ÀÖÀ½.
+				case cbase_ctl_fn::_cstate::st_sasy_aasy://result ì„¤ì •ì„ í•˜ìœ„ í•¨ìˆ˜ì—ì„œ ì„¤ì •.
+					_process_shared_selected_session_st_asy_another_session_st_asy(*ptr_result_new, ptr_req_cur); //<< í˜„ì¬í•˜ëŠ” ê²ƒì´ ìˆìŒ.
 					break;
 				default:
-					// ¿¡·¯ complete.
+					// ì—ëŸ¬ complete.
 					ptr_result_new->after_processing_set_rsp_with_error_complete(cio_packet::error_reason_session);
 					continue;
 				}
@@ -838,7 +967,7 @@ namespace _mp {
 		///////////////////////////////////////////////
 		void cdev_ctl_fn::_process_shared_selected_session_st_not_another_session_st_not(cbase_ctl_fn::cresult& result)
 		{	
-			//excluisive mode ¿¡¼­ open ÀÌ ¾ÈµÈ »óÅÂ¿Í µ¿ÀÏÇÏ°Ô Ã³¸®.
+			//excluisive mode ì—ì„œ open ì´ ì•ˆëœ ìƒíƒœì™€ ë™ì¼í•˜ê²Œ ì²˜ë¦¬.
 			_process_exclusive_st_not(result);
 		}
 
@@ -864,7 +993,7 @@ namespace _mp {
 					m_p_ctl_fun_log->trace(L"[E] - %ls | error_reason_device_not_open : session = %u.\n", __WFUNCTION__, result.get_session_number());
 					break;
 				case cbase_ctl_fn::_cstate::ev_rx:
-					// ¹«½ÃµÇ´Â event
+					// ë¬´ì‹œë˜ëŠ” event
 					break;
 				default:
 					continue;
@@ -899,7 +1028,7 @@ namespace _mp {
 					m_p_ctl_fun_log->trace(L"[E] - %ls | error_reason_device_not_open : session = %u.\n", __WFUNCTION__, result_new.get_session_number());
 					break;
 				case cbase_ctl_fn::_cstate::ev_rx:
-					// ¹«½ÃµÇ´Â event
+					// ë¬´ì‹œë˜ëŠ” event
 					break;
 				default:
 					continue;
@@ -928,10 +1057,10 @@ namespace _mp {
 					result.after_processing_set_rsp_with_error_complete(cio_packet::error_reason_device_open);
 					break;
 				case cbase_ctl_fn::_cstate::ev_close:
-					// ÇöÀç »óÅÂ°¡ IDL ÀÌ¹Ç·Î ÇØ´ç session ÀÌ ÀÖÀ¸¸é, ÇØ´ç session ÀÇ Å°¿Í °ª¸¸ map ¿¡¼­ »èÁ¦ ÇÏ¸éµÊ.
+					// í˜„ì¬ ìƒíƒœê°€ IDL ì´ë¯€ë¡œ í•´ë‹¹ session ì´ ìˆìœ¼ë©´, í•´ë‹¹ session ì˜ í‚¤ì™€ ê°’ë§Œ map ì—ì„œ ì‚­ì œ í•˜ë©´ë¨.
 					result.after_processing_set_rsp_with_succss_complete(std::wstring(), m_s_dev_path);
 
-					// »óÅÂº¯°æ
+					// ìƒíƒœë³€ê²½
 					_transit_state_by_processing_result(result);
 					break;
 				case cbase_ctl_fn::_cstate::ev_sync:
@@ -946,7 +1075,7 @@ namespace _mp {
 
 					result.after_processing_set_rsp_with_succss_complete(ptr_rsp, m_s_dev_path);
 
-					// »óÅÂº¯°æ
+					// ìƒíƒœë³€ê²½
 					_transit_state_by_processing_result(result);
 					break;
 				case cbase_ctl_fn::_cstate::ev_asy:
@@ -960,11 +1089,11 @@ namespace _mp {
 
 					result.after_starting_process_set_rsp_with_succss_ing(m_s_dev_path);
 
-					// »óÅÂº¯°æ
+					// ìƒíƒœë³€ê²½
 					_transit_state_by_processing_result(result);
 					break;
 				case cbase_ctl_fn::_cstate::ev_rx:
-					// ¹«½ÃµÇ´Â event
+					// ë¬´ì‹œë˜ëŠ” event
 					break;
 				default:
 					continue;
@@ -992,15 +1121,15 @@ namespace _mp {
 					result.after_processing_set_rsp_with_error_complete(cio_packet::error_reason_device_open);
 					break;
 				case cbase_ctl_fn::_cstate::ev_close:
-					// ÇöÀç »óÅÂ°¡ IDL ÀÌ¹Ç·Î ÇØ´ç session ÀÌ ÀÖÀ¸¸é, ÇØ´ç session ÀÇ Å°¿Í °ª¸¸ map ¿¡¼­ »èÁ¦ ÇÏ¸éµÊ.
+					// í˜„ì¬ ìƒíƒœê°€ IDL ì´ë¯€ë¡œ í•´ë‹¹ session ì´ ìˆìœ¼ë©´, í•´ë‹¹ session ì˜ í‚¤ì™€ ê°’ë§Œ map ì—ì„œ ì‚­ì œ í•˜ë©´ë¨.
 					result.after_processing_set_rsp_with_succss_complete(std::wstring(), m_s_dev_path);
 
-					// »óÅÂº¯°æ
+					// ìƒíƒœë³€ê²½
 					_transit_state_by_processing_result(result);
 					break;
 				case cbase_ctl_fn::_cstate::ev_sync:
-					// »õ·Î¿î request ¸¦ ³»¸®¸é, another ´Â ÇÏÀ§´Ü¿¡¼­ ÀÚµ¿ cancel ÀÌ ¹ß»ıÇÏ¹Ç·Î ½ÃÅ°¹Ç·Î
-					// ³»¸®±â Àü¿¡ , ½ÇÇà ÁßÀÎ another request¿¡ º¹±¸ ¼³Á¤ ÇØ¾ßÇÔ.
+					// ìƒˆë¡œìš´ request ë¥¼ ë‚´ë¦¬ë©´, another ëŠ” í•˜ìœ„ë‹¨ì—ì„œ ìë™ cancel ì´ ë°œìƒí•˜ë¯€ë¡œ ì‹œí‚¤ë¯€ë¡œ
+					// ë‚´ë¦¬ê¸° ì „ì— , ì‹¤í–‰ ì¤‘ì¸ another requestì— ë³µêµ¬ ì„¤ì • í•´ì•¼í•¨.
 					m_mgmt_q.qm_read_set_request_front_to_recover_of_another_session(result.get_session_number());
 					ptr_rsp = _start_and_complete_by_sync_req(m_s_dev_path, result.get_req());
 					if (!ptr_rsp) {
@@ -1013,23 +1142,23 @@ namespace _mp {
 
 					result.after_processing_set_rsp_with_succss_complete(ptr_rsp, m_s_dev_path);
 
-					// »óÅÂº¯°æ
+					// ìƒíƒœë³€ê²½
 					_transit_state_by_processing_result(result);
 					break;
 				case cbase_ctl_fn::_cstate::ev_asy:
-					// »õ·Î¿î request ¸¦ ³»¸®¸é, another ´Â ÇÏÀ§´Ü¿¡¼­ ÀÚµ¿ cancel ÀÌ ¹ß»ıÇÏ¹Ç·Î ½ÃÅ°¹Ç·Î
-					// ³»¸®±â Àü¿¡ , ½ÇÇà ÁßÀÎ another request¿¡ º¹±¸ ¼³Á¤ ÇØ¾ßÇÔ.
+					// ìƒˆë¡œìš´ request ë¥¼ ë‚´ë¦¬ë©´, another ëŠ” í•˜ìœ„ë‹¨ì—ì„œ ìë™ cancel ì´ ë°œìƒí•˜ë¯€ë¡œ ì‹œí‚¤ë¯€ë¡œ
+					// ë‚´ë¦¬ê¸° ì „ì— , ì‹¤í–‰ ì¤‘ì¸ another requestì— ë³µêµ¬ ì„¤ì • í•´ì•¼í•¨.
 
-					// another session ÀÌ ÀÌ¹Ì asyn ÀÌ¹Ç·Î, asy queue ¿¡ ÇöÀç session Ãß°¡¸¸ ÇÏ¸é. OK.
+					// another session ì´ ì´ë¯¸ asyn ì´ë¯€ë¡œ, asy queue ì— í˜„ì¬ session ì¶”ê°€ë§Œ í•˜ë©´. OK.
 					m_mgmt_q.qm_read_push_back(result.get_req());;
 
 					result.after_starting_process_set_rsp_with_succss_ing(m_s_dev_path);
 
-					// »óÅÂº¯°æ
+					// ìƒíƒœë³€ê²½
 					_transit_state_by_processing_result(result);
 					break;
 				case cbase_ctl_fn::_cstate::ev_rx:
-					// ¹«½ÃµÇ´Â event
+					// ë¬´ì‹œë˜ëŠ” event
 					break;
 				default:
 					continue;
@@ -1075,15 +1204,15 @@ namespace _mp {
 					result.after_processing_set_rsp_with_error_complete(cio_packet::error_reason_device_open);
 					break;
 				case cbase_ctl_fn::_cstate::ev_close:
-					//another session ÀÌ asy »óÅÂÀÌ¹Ç·Î, ÇØ´ç session ÀÇ Å°¿Í °ª¸¸ map ¿¡¼­ »èÁ¦ ÇÏ¸éµÊ.
+					//another session ì´ asy ìƒíƒœì´ë¯€ë¡œ, í•´ë‹¹ session ì˜ í‚¤ì™€ ê°’ë§Œ map ì—ì„œ ì‚­ì œ í•˜ë©´ë¨.
 					result.after_processing_set_rsp_with_succss_complete(std::wstring(), m_s_dev_path);
 
-					// »óÅÂº¯°æ°ú result ¸¦ success ·Î ¼³Á¤.
+					// ìƒíƒœë³€ê²½ê³¼ result ë¥¼ success ë¡œ ì„¤ì •.
 					_transit_state_by_processing_result(result);
 					break;
 				case cbase_ctl_fn::_cstate::ev_sync:
-					// »õ·Î¿î request ¸¦ ³»¸®¸é, another ´Â ÇÏÀ§´Ü¿¡¼­ ÀÚµ¿ cancel ÀÌ ¹ß»ıÇÏ¹Ç·Î ½ÃÅ°¹Ç·Î
-					// ³»¸®±â Àü¿¡ , ½ÇÇà ÁßÀÎ another request¿¡ º¹±¸ ¼³Á¤ ÇØ¾ßÇÔ.
+					// ìƒˆë¡œìš´ request ë¥¼ ë‚´ë¦¬ë©´, another ëŠ” í•˜ìœ„ë‹¨ì—ì„œ ìë™ cancel ì´ ë°œìƒí•˜ë¯€ë¡œ ì‹œí‚¤ë¯€ë¡œ
+					// ë‚´ë¦¬ê¸° ì „ì— , ì‹¤í–‰ ì¤‘ì¸ another requestì— ë³µêµ¬ ì„¤ì • í•´ì•¼í•¨.
 					m_mgmt_q.qm_read_set_request_front_to_recover_of_another_session(result.get_session_number());
 					ptr_rsp = _start_and_complete_by_sync_req(m_s_dev_path, result.get_req());
 					if (!ptr_rsp) {
@@ -1096,12 +1225,12 @@ namespace _mp {
 
 					result.after_processing_set_rsp_with_succss_complete(ptr_rsp, m_s_dev_path);
 
-					// »óÅÂº¯°æ
+					// ìƒíƒœë³€ê²½
 					_transit_state_by_processing_result(result);
 					break;
 				case cbase_ctl_fn::_cstate::ev_asy:
-					// »õ·Î¿î request ¸¦ ³»¸®¸é, another ´Â ÇÏÀ§´Ü¿¡¼­ ÀÚµ¿ cancel ÀÌ ¹ß»ıÇÏ¹Ç·Î ½ÃÅ°¹Ç·Î
-					// ³»¸®±â Àü¿¡ , ½ÇÇà ÁßÀÎ another request¿¡ º¹±¸ ¼³Á¤ ÇØ¾ßÇÔ.
+					// ìƒˆë¡œìš´ request ë¥¼ ë‚´ë¦¬ë©´, another ëŠ” í•˜ìœ„ë‹¨ì—ì„œ ìë™ cancel ì´ ë°œìƒí•˜ë¯€ë¡œ ì‹œí‚¤ë¯€ë¡œ
+					// ë‚´ë¦¬ê¸° ì „ì— , ì‹¤í–‰ ì¤‘ì¸ another requestì— ë³µêµ¬ ì„¤ì • í•´ì•¼í•¨.
 					m_mgmt_q.qm_read_set_request_front_to_recover_of_another_session(result.get_session_number());
 
 					if (!_start_by_async_req(m_s_dev_path, result.get_req())) {
@@ -1114,11 +1243,11 @@ namespace _mp {
 
 					result.after_starting_process_set_rsp_with_succss_ing(m_s_dev_path);
 
-					// »óÅÂº¯°æ
+					// ìƒíƒœë³€ê²½
 					_transit_state_by_processing_result(result);
 					break;
 				case cbase_ctl_fn::_cstate::ev_rx:
-					// ¹«½ÃµÇ´Â event
+					// ë¬´ì‹œë˜ëŠ” event
 					break;
 				default:
 					continue;
@@ -1139,7 +1268,7 @@ namespace _mp {
 
 					m_p_ctl_fun_log->log_fmt(L"[E] - %ls | _get_device_path_from_req() : session = %u.\n", __WFUNCTION__, result.get_session_number());
 					m_p_ctl_fun_log->trace(L"[E] - %ls | _get_device_path_from_req() : session = %u.\n", __WFUNCTION__, result.get_session_number());
-					continue; //error ÀÏ¶§¸¸ result ¸¦ _get_device_path_from_open_req ¿¡¼­ ¼³Á¤ÇÔ.
+					continue; //error ì¼ë•Œë§Œ result ë¥¼ _get_device_path_from_open_req ì—ì„œ ì„¤ì •í•¨.
 				}
 
 				if (b_need_low_level) {
@@ -1156,7 +1285,7 @@ namespace _mp {
 
 				result.after_processing_set_rsp_with_succss_complete(std::wstring(), s_dev_path);
 
-				//ÀÌ °æ¿ì ¿¡·¯ ÀÏ°Ü¿ì »óÅÂº¯°æÀº ¾øÀ¸¹Ç·Î, _transit_state_by_processing_result() ¸¦ È£Ãâ ÇÒ ÇÊ¿ä ¾øÀ½. 
+				//ì´ ê²½ìš° ì—ëŸ¬ ì¼ê²¨ìš° ìƒíƒœë³€ê²½ì€ ì—†ìœ¼ë¯€ë¡œ, _transit_state_by_processing_result() ë¥¼ í˜¸ì¶œ í•  í•„ìš” ì—†ìŒ. 
 				_transit_state_by_processing_result(result, b_user_shared_mode);
 
 				b_result = true;
@@ -1171,9 +1300,9 @@ namespace _mp {
 			const cio_packet::type_ptr& ptr_req_cur
 		)
 		{
-			// ³í¸°ÀûÀ¸·Î °¢ session ÀÇ Àåºñ´Â µ¶¸³µÈ °ÍÀ¸·Î º¸±â ¶§¹®¿¡
-			// ÀÌº¥Æ®°¡ ¹ß»ıÇÑ session ÀÌ ¿ÜÀÇ session ÀÇ state ¿¡ ¿µÇâÀº ¾ø¾î¾ß ÇÔ.
-			// result.b_process_complete ÀÌ true ¸é, result.ptr_rsp ¿¡ °á°ú°¡ ¼³Á¤µÇ¾î¾ß ÇÔ.
+			// ë…¼ë¦°ì ìœ¼ë¡œ ê° session ì˜ ì¥ë¹„ëŠ” ë…ë¦½ëœ ê²ƒìœ¼ë¡œ ë³´ê¸° ë•Œë¬¸ì—
+			// ì´ë²¤íŠ¸ê°€ ë°œìƒí•œ session ì´ ì™¸ì˜ session ì˜ state ì— ì˜í–¥ì€ ì—†ì–´ì•¼ í•¨.
+			// result.b_process_complete ì´ true ë©´, result.ptr_rsp ì— ê²°ê³¼ê°€ ì„¤ì •ë˜ì–´ì•¼ í•¨.
 
 			//contructure, only increase reference request, isn't create response.
 			cbase_ctl_fn::cresult::type_ptr ptr_result_new = std::make_shared<cbase_ctl_fn::cresult>(ptr_req_new);
@@ -1185,19 +1314,19 @@ namespace _mp {
 				switch (st_cur)
 				{
 				case cbase_ctl_fn::_cstate::st_not:
-					//result ¼³Á¤À» ÇÏÀ§ ÇÔ¼ö¿¡¼­ ¼³Á¤. rsp ptr Àº ÇÏÀ§ ÇÔ¼ö¿¡¼­ »ı¼º.
+					//result ì„¤ì •ì„ í•˜ìœ„ í•¨ìˆ˜ì—ì„œ ì„¤ì •. rsp ptr ì€ í•˜ìœ„ í•¨ìˆ˜ì—ì„œ ìƒì„±.
 					_process_exclusive_st_not(*ptr_result_new);
 					break;
 				case cbase_ctl_fn::_cstate::st_idl:
-					//result ¼³Á¤À» ÇÏÀ§ ÇÔ¼ö¿¡¼­ ¼³Á¤. rsp ptr Àº ÇÏÀ§ ÇÔ¼ö¿¡¼­ »ı¼º..
+					//result ì„¤ì •ì„ í•˜ìœ„ í•¨ìˆ˜ì—ì„œ ì„¤ì •. rsp ptr ì€ í•˜ìœ„ í•¨ìˆ˜ì—ì„œ ìƒì„±..
 					_process_exclusive_st_idl(*ptr_result_new);
 					break;
 				case cbase_ctl_fn::_cstate::st_asy:
-					//result ¼³Á¤À» ÇÏÀ§ ÇÔ¼ö¿¡¼­ ¼³Á¤.. rsp ptr Àº ÇÏÀ§ ÇÔ¼ö¿¡¼­ »ı¼º.
+					//result ì„¤ì •ì„ í•˜ìœ„ í•¨ìˆ˜ì—ì„œ ì„¤ì •.. rsp ptr ì€ í•˜ìœ„ í•¨ìˆ˜ì—ì„œ ìƒì„±.
 					_process_exclusive_st_asy(*ptr_result_new);
 					break;
 				default:
-					// ¿¡·¯ complete. rsp ptr »ı¼º.
+					// ì—ëŸ¬ complete. rsp ptr ìƒì„±.
 					ptr_result_new->after_processing_set_rsp_with_error_complete(cio_packet::error_reason_session);
 					continue;
 				}
@@ -1211,11 +1340,11 @@ namespace _mp {
 		///////////////////////////////////////////////
 		void cdev_ctl_fn::_process_exclusive_st_not(cbase_ctl_fn::cresult& result)
 		{
-			//excluisive mode ¿¡¼­ open ÀÌ ¾ÈµÈ »óÅÂ.
+			//excluisive mode ì—ì„œ open ì´ ì•ˆëœ ìƒíƒœ.
 			
 			cbase_ctl_fn::_cstate::type_evt evt = result.get_cur_event();
 			
-			// state °¡ st_not ÀÎ °æ¿ì´Â ¸ğµÎ sync Å¸ÀÔ.
+			// state ê°€ st_not ì¸ ê²½ìš°ëŠ” ëª¨ë‘ sync íƒ€ì….
 			do {
 				std::wstring s_dev_path;
 				bool b_user_shared_mode(false);
@@ -1234,7 +1363,7 @@ namespace _mp {
 					m_p_ctl_fun_log->trace(L"[E] - %ls | error_reason_device_not_open : session = %u.\n", __WFUNCTION__, result.get_session_number());
 					break;
 				case cbase_ctl_fn::_cstate::ev_rx:
-					// ¹«½ÃµÇ´Â event
+					// ë¬´ì‹œë˜ëŠ” event
 					break;
 				default:
 					continue;
@@ -1244,10 +1373,10 @@ namespace _mp {
 
 		void cdev_ctl_fn::_process_exclusive_st_idl(cbase_ctl_fn::cresult& result)
 		{
-			// result.b_process_complete ÀÌ true ¸é, result.ptr_rsp ¿¡ °á°ú°¡ ¼³Á¤µÇ¾î¾ß ÇÔ.
+			// result.b_process_complete ì´ true ë©´, result.ptr_rsp ì— ê²°ê³¼ê°€ ì„¤ì •ë˜ì–´ì•¼ í•¨.
 			cbase_ctl_fn::_cstate::type_evt evt = result.get_cur_event();
 
-			// state °¡ st_idl ÀÎ °æ¿ì´Â asy ¸¦ Á¦¿ÜÇÏ°í ¸ğµÎ sync Å¸ÀÔ.
+			// state ê°€ st_idl ì¸ ê²½ìš°ëŠ” asy ë¥¼ ì œì™¸í•˜ê³  ëª¨ë‘ sync íƒ€ì….
 			cio_packet::type_ptr ptr_rsp;
 
 			do {
@@ -1258,10 +1387,10 @@ namespace _mp {
 					result.after_processing_set_rsp_with_error_complete(cio_packet::error_reason_device_open);
 					break;
 				case cbase_ctl_fn::_cstate::ev_close:
-					// ÇöÀç »óÅÂ°¡ IDL ÀÌ¹Ç·Î ÇØ´ç session ÀÌ ÀÖÀ¸¸é, ÇØ´ç session ÀÇ Å°¿Í °ª¸¸ map ¿¡¼­ »èÁ¦ ÇÏ¸éµÊ.
+					// í˜„ì¬ ìƒíƒœê°€ IDL ì´ë¯€ë¡œ í•´ë‹¹ session ì´ ìˆìœ¼ë©´, í•´ë‹¹ session ì˜ í‚¤ì™€ ê°’ë§Œ map ì—ì„œ ì‚­ì œ í•˜ë©´ë¨.
 					result.after_processing_set_rsp_with_succss_complete(std::wstring(), m_s_dev_path);
 
-					// »óÅÂº¯°æ
+					// ìƒíƒœë³€ê²½
 					_transit_state_by_processing_result(result);
 					break;
 				case cbase_ctl_fn::_cstate::ev_sync:
@@ -1276,7 +1405,7 @@ namespace _mp {
 
 					result.after_processing_set_rsp_with_succss_complete(ptr_rsp,m_s_dev_path);
 
-					// »óÅÂº¯°æ
+					// ìƒíƒœë³€ê²½
 					_transit_state_by_processing_result(result);
 					break;
 				case cbase_ctl_fn::_cstate::ev_asy:
@@ -1290,7 +1419,7 @@ namespace _mp {
 
 					result.after_starting_process_set_rsp_with_succss_ing(m_s_dev_path);
 
-					// »óÅÂº¯°æ
+					// ìƒíƒœë³€ê²½
 					_transit_state_by_processing_result(result);
 					break;
 				case cbase_ctl_fn::_cstate::ev_rx:
@@ -1303,10 +1432,10 @@ namespace _mp {
 
 		void cdev_ctl_fn::_process_exclusive_st_asy(cbase_ctl_fn::cresult& result)
 		{
-			// result.b_process_complete ÀÌ true ¸é, result.ptr_rsp ¿¡ °á°ú°¡ ¼³Á¤µÇ¾î¾ß ÇÔ.
+			// result.b_process_complete ì´ true ë©´, result.ptr_rsp ì— ê²°ê³¼ê°€ ì„¤ì •ë˜ì–´ì•¼ í•¨.
 			cbase_ctl_fn::_cstate::type_evt evt = result.get_cur_event();
 
-			// state °¡ st_asy ÀÎ °æ¿ì´Â asy ¸¦ Á¦¿ÜÇÏ°í ¸ğµÎ sync Å¸ÀÔ.
+			// state ê°€ st_asy ì¸ ê²½ìš°ëŠ” asy ë¥¼ ì œì™¸í•˜ê³  ëª¨ë‘ sync íƒ€ì….
 
 			cio_packet::type_ptr ptr_rsp;
 
@@ -1328,11 +1457,11 @@ namespace _mp {
 
 					result.after_processing_set_rsp_with_succss_complete(std::wstring(), m_s_dev_path);
 
-					// »óÅÂº¯°æ°ú result ¸¦ success ·Î ¼³Á¤.
+					// ìƒíƒœë³€ê²½ê³¼ result ë¥¼ success ë¡œ ì„¤ì •.
 					_transit_state_by_processing_result(result);
 					break;
 				case cbase_ctl_fn::_cstate::ev_sync:
-					// syc ¸í·ÉÀ» ½ÇÇàÇÏ¸é ÇÏ´Ü¿¡¼­ ÇöÀç ½ÇÇà ÁßÀÎ async ¸¦ Ãë¼ÒÇØ¼­ °á°ú°¡ callback ¿¡¼­ ¼³Á¤µÊ.
+					// syc ëª…ë ¹ì„ ì‹¤í–‰í•˜ë©´ í•˜ë‹¨ì—ì„œ í˜„ì¬ ì‹¤í–‰ ì¤‘ì¸ async ë¥¼ ì·¨ì†Œí•´ì„œ ê²°ê³¼ê°€ callback ì—ì„œ ì„¤ì •ë¨.
 					ptr_rsp = _start_and_complete_by_sync_req(m_s_dev_path, result.get_req());
 					if (!ptr_rsp) {
 						result.after_processing_set_rsp_with_error_complete(cio_packet::error_reason_device_operation, m_s_dev_path);
@@ -1344,11 +1473,11 @@ namespace _mp {
 
 					result.after_processing_set_rsp_with_succss_complete(ptr_rsp, m_s_dev_path);
 
-					// »óÅÂº¯°æ
+					// ìƒíƒœë³€ê²½
 					_transit_state_by_processing_result(result);
 					break;
 				case cbase_ctl_fn::_cstate::ev_asy:
-					// asyc ¸í·ÉÀ» ½ÇÇàÇÏ¸é ÇÏ´Ü¿¡¼­ ÇöÀç ½ÇÇà ÁßÀÎ async ¸¦ Ãë¼ÒÇØ¼­ °á°ú°¡ callback ¿¡¼­ ¼³Á¤µÊ.
+					// asyc ëª…ë ¹ì„ ì‹¤í–‰í•˜ë©´ í•˜ë‹¨ì—ì„œ í˜„ì¬ ì‹¤í–‰ ì¤‘ì¸ async ë¥¼ ì·¨ì†Œí•´ì„œ ê²°ê³¼ê°€ callback ì—ì„œ ì„¤ì •ë¨.
 					if (!_start_by_async_req(m_s_dev_path, result.get_req())) {
 						result.after_processing_set_rsp_with_error_complete(cio_packet::error_reason_device_operation, m_s_dev_path);
 
@@ -1359,7 +1488,7 @@ namespace _mp {
 
 					result.after_starting_process_set_rsp_with_succss_ing(m_s_dev_path);
 
-					// »óÅÂº¯°æ
+					// ìƒíƒœë³€ê²½
 					_transit_state_by_processing_result(result);
 					break;
 				case cbase_ctl_fn::_cstate::ev_rx:
@@ -1383,14 +1512,14 @@ namespace _mp {
 			cbase_ctl_fn::_cstate::type_map_ptr_state::iterator it_sel = m_map_ptr_state_cur.find(n_session);
 
 			if (result.get_cur_event() == cbase_ctl_fn::_cstate::ev_open) {
-				// ÀÌ ÇÔ¼ö´Â request °¡ ¼º°ø ÀÏ¶§¸¸  È£ÃâµÇ¹Ç·Î, session ÀÌ map ¿¡ ¾ø´Â °æ¿ì´Â open request ÀÏ¶§ ¹Û¿¡ ¾øÀ½.
+				// ì´ í•¨ìˆ˜ëŠ” request ê°€ ì„±ê³µ ì¼ë•Œë§Œ  í˜¸ì¶œë˜ë¯€ë¡œ, session ì´ map ì— ì—†ëŠ” ê²½ìš°ëŠ” open request ì¼ë•Œ ë°–ì— ì—†ìŒ.
 				if (m_map_ptr_state_cur.empty()) {
-					// open µÈ Àû ¾øÀ» ¶§ÀÇ open ¸í·ÉÀÌ¹Ç·Î shared ¶Ç´Â exclusive mode º¯°æ.
+					// open ëœ ì  ì—†ì„ ë•Œì˜ open ëª…ë ¹ì´ë¯€ë¡œ shared ë˜ëŠ” exclusive mode ë³€ê²½.
 					_reset_(b_user_shared_mode_on_open_request);
 				}
 
 				if (it_sel == std::end(m_map_ptr_state_cur)) {
-					// open request ÀÌ¹Ç·Î ¼¼¼Ç¿¡ ´ëÇÑ state ¸¦ map ¿¡ »ı¼º.
+					// open request ì´ë¯€ë¡œ ì„¸ì…˜ì— ëŒ€í•œ state ë¥¼ map ì— ìƒì„±.
 					std::tie(it_sel, std::ignore) = m_map_ptr_state_cur.emplace(n_session, std::make_shared<cbase_ctl_fn::_cstate>());
 				}
 				result_state = it_sel->second->set(result.get_cur_event());
@@ -1412,7 +1541,7 @@ namespace _mp {
 			result.set_selected_session_state(result_state);
 
 			if (!m_b_cur_shared_mode) {
-				// exclusive mode ¿¡¼­´Â session ÀÌ ÇÏ³ª ÀÌ¹Ç·Î combination state ¿Í session state °¡ Ç×»ó °°´Ù.
+				// exclusive mode ì—ì„œëŠ” session ì´ í•˜ë‚˜ ì´ë¯€ë¡œ combination state ì™€ session state ê°€ í•­ìƒ ê°™ë‹¤.
 				result.set_combination_state(std::get<1>(result_state), std::get<2>(result_state));
 				// the end of exclusive mode
 			}
@@ -1423,11 +1552,13 @@ namespace _mp {
 				if (exist_st.first) {
 					result.set_combination_state(exist_st.second, m_st_combi);
 				}
-				else {// session ÀÌ selected session ¸¸ ÀÖÀ½.
+				else {// session ì´ selected session ë§Œ ìˆìŒ.
 					result.set_combination_state(std::get<1>(result_state), m_st_combi);
 				}
 			}
 			std::tie(m_st_combi, std::ignore) = result.get_combination_state();
+
+			_logging_if_state_is_changed();
 		}
 
 		cio_packet::type_ptr cdev_ctl_fn::_start_and_complete_by_sync_req
@@ -1465,7 +1596,7 @@ namespace _mp {
 					std::tie(std::ignore, ptr_evt, std::ignore, ptr_rsp) = m_mgmt_q.qm_sync_push_back(ptr_req);
 					wptr_dev.lock()->start_write_read(v_tx, cdev_ctl_fn::_cb_dev_for_sync_req, this, n_session);
 					if (ptr_evt) {
-						// ¸¸¾à ÀÚµ¿ cancel µÇ´Â request °¡ ÀÖÀ¸¸é, ÇöÀç request º¸´Ù q ¾ÕÂÊ¿¡¼­ ÀÖ±â ¶§¹®¿¡, cdev_ctl::_execute() ¿¡¼­ ÀÚµ¿ ÀÀ´ä client ¿¡ Àü¼ÛµÊ.
+						// ë§Œì•½ ìë™ cancel ë˜ëŠ” request ê°€ ìˆìœ¼ë©´, í˜„ì¬ request ë³´ë‹¤ q ì•ìª½ì—ì„œ ìˆê¸° ë•Œë¬¸ì—, cdev_ctl::_execute() ì—ì„œ ìë™ ì‘ë‹µ client ì— ì „ì†¡ë¨.
 						ptr_evt->wait_for_at_once();
 					}
 					break;
@@ -1473,7 +1604,7 @@ namespace _mp {
 					std::tie(std::ignore, ptr_evt, std::ignore, ptr_rsp) = m_mgmt_q.qm_sync_push_back(ptr_req);
 					wptr_dev.lock()->start_cancel(cdev_ctl_fn::_cb_dev_for_sync_req, this, n_session);
 					if (ptr_evt) {
-						// ¸¸¾à ÀÚµ¿ cancel µÇ´Â request °¡ ÀÖÀ¸¸é, ÇöÀç request º¸´Ù q ¾ÕÂÊ¿¡¼­ ÀÖ±â ¶§¹®¿¡, cdev_ctl::_execute() ¿¡¼­ ÀÚµ¿ ÀÀ´ä client ¿¡ Àü¼ÛµÊ.
+						// ë§Œì•½ ìë™ cancel ë˜ëŠ” request ê°€ ìˆìœ¼ë©´, í˜„ì¬ request ë³´ë‹¤ q ì•ìª½ì—ì„œ ìˆê¸° ë•Œë¬¸ì—, cdev_ctl::_execute() ì—ì„œ ìë™ ì‘ë‹µ client ì— ì „ì†¡ë¨.
 						ptr_evt->wait_for_at_once();
 					}
 					break;
@@ -1481,7 +1612,7 @@ namespace _mp {
 					std::tie(std::ignore, ptr_evt, std::ignore, ptr_rsp) = m_mgmt_q.qm_sync_push_back(ptr_req);
 					wptr_dev.lock()->start_write(v_tx, cdev_ctl_fn::_cb_dev_for_sync_req, this, n_session);
 					if (ptr_evt) {
-						// ¸¸¾à ÀÚµ¿ cancel µÇ´Â request °¡ ÀÖÀ¸¸é, ÇöÀç request º¸´Ù q ¾ÕÂÊ¿¡¼­ ÀÖ±â ¶§¹®¿¡, cdev_ctl::_execute() ¿¡¼­ ÀÚµ¿ ÀÀ´ä client ¿¡ Àü¼ÛµÊ.
+						// ë§Œì•½ ìë™ cancel ë˜ëŠ” request ê°€ ìˆìœ¼ë©´, í˜„ì¬ request ë³´ë‹¤ q ì•ìª½ì—ì„œ ìˆê¸° ë•Œë¬¸ì—, cdev_ctl::_execute() ì—ì„œ ìë™ ì‘ë‹µ client ì— ì „ì†¡ë¨.
 						ptr_evt->wait_for_at_once();
 					}
 					break;

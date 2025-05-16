@@ -17,7 +17,7 @@ namespace _mp {
 
 	cio_packet::type_ptr cbase_ctl_fn::_generate_error_response(const cio_packet& request, cio_packet::type_error_reason n_reason /*= cio_packet::error_reason_none*/)
 	{
-		// logg code ¸¦ ¿©±â¿¡ ³ÖÀ»½Ã, m_p_ctl_fun_log ¸¦ »ç¿ëÇØ¾ß ÇÏ¹Ç·Î static À¸·Î ¸¸µé¸é ¾ÈµÅ!
+		// logg code ë¥¼ ì—¬ê¸°ì— ë„£ì„ì‹œ, m_p_ctl_fun_log ë¥¼ ì‚¬ìš©í•´ì•¼ í•˜ë¯€ë¡œ static ìœ¼ë¡œ ë§Œë“¤ë©´ ì•ˆë¼!
 
 		cio_packet::type_ptr ptr_rsp = std::make_shared<cio_packet>(request);
 
@@ -32,13 +32,13 @@ namespace _mp {
 
 	std::pair<std::wstring, bool> cbase_ctl_fn::_get_device_path_from_req(const cio_packet::type_ptr& ptr_request)
 	{
-		// ¿¡·¯ÀÏ °æ¿ì´Â result ¿¡ °á°ú¸¦ ¼³Á¤ÇÑ´Ù.
-		// ¼º°øÀÏ °æ¿ì´Â ÀÌ ÇÔ¼ö´Â ÇÏ³ªÀÇ transaction Áß¿¡ ÇÏ³ªÀÇ phase ÀÌ¹Ç·Î °á°ú¸¦ ¼³Á¤ ºÒ°¡ÇÏ´Ù.
+		// ì—ëŸ¬ì¼ ê²½ìš°ëŠ” result ì— ê²°ê³¼ë¥¼ ì„¤ì •í•œë‹¤.
+		// ì„±ê³µì¼ ê²½ìš°ëŠ” ì´ í•¨ìˆ˜ëŠ” í•˜ë‚˜ì˜ transaction ì¤‘ì— í•˜ë‚˜ì˜ phase ì´ë¯€ë¡œ ê²°ê³¼ë¥¼ ì„¤ì • ë¶ˆê°€í•˜ë‹¤.
 		std::wstring s_dev_path;
 		bool b_user_shared_mode = false;
 
 		do {
-			// client ºÎÅÍ ¹ŞÀº parameter ¾ò±â.
+			// client ë¶€í„° ë°›ì€ parameter ì–»ê¸°.
 			_mp::clibhid& lib_hid(_mp::clibhid::get_instance());
 			if (!lib_hid.is_ini()) {
 				continue;
@@ -81,7 +81,7 @@ namespace _mp {
 
 			_mp::clibhid& lib_hid(_mp::clibhid::get_instance());
 
-			// ÇÏÀ§ ¶óÀÌºê·¯¸®·Î open °¡´É¼º Á¶»ç.
+			// í•˜ìœ„ ë¼ì´ë¸ŒëŸ¬ë¦¬ë¡œ open ê°€ëŠ¥ì„± ì¡°ì‚¬.
 			_mp::clibhid_dev::type_wptr wptr_dev = lib_hid.get_device(s_dev_path);
 			if (wptr_dev.expired()) {
 				//p_log->log_fmt(L"[E] - %ls | lib_hid.get_device() is expired() : session = %u.\n", __WFUNCTION__, result.ptr_req->get_session_number());
@@ -97,14 +97,14 @@ namespace _mp {
 
 			bool b_support_shared = wptr_dev.lock()->is_support_shared_open();
 
-			// shared ¸¦ device ¿¡¼­ Áö¿øÇÏ´Â ¿©ºÎ, »ç¿ëÀÚ°¡ shared ¸¦ ¿äÃ»Çß´ÂÁö ¿©ºÎ, ÇöÀç device °¡ ¿­·Á ÀÖ´ÂÁö ¿©ºÎ¸¦ °í·ÁÇØ¼­
-			// »ç¿ëÀÚ°¡ ¿äÃ»ÇÑ ¸ğµåÀÇ open À» ÇÒ ¼ö ÀÖ´ÂÁö °Ë»ç ÇÑ´Ù,
+			// shared ë¥¼ device ì—ì„œ ì§€ì›í•˜ëŠ” ì—¬ë¶€, ì‚¬ìš©ìê°€ shared ë¥¼ ìš”ì²­í–ˆëŠ”ì§€ ì—¬ë¶€, í˜„ì¬ device ê°€ ì—´ë ¤ ìˆëŠ”ì§€ ì—¬ë¶€ë¥¼ ê³ ë ¤í•´ì„œ
+			// ì‚¬ìš©ìê°€ ìš”ì²­í•œ ëª¨ë“œì˜ open ì„ í•  ìˆ˜ ìˆëŠ”ì§€ ê²€ì‚¬ í•œë‹¤,
 			if (!cbase_ctl_fn::_is_openable(b_support_shared, b_open_by_shared_mode, n_open_cnt)) {
-				// open À» ½ÃµµÇÒ precondition ¸¸Á·ÇÏÁö ¾ÊÀ½.
+				// open ì„ ì‹œë„í•  precondition ë§Œì¡±í•˜ì§€ ì•ŠìŒ.
 				continue;
 			}
 
-			// ¿©±â´Â openable ÇÑ »óÅÂ ÀÎµ¥, 
+			// ì—¬ê¸°ëŠ” openable í•œ ìƒíƒœ ì¸ë°, 
 
 			b_result = true;
 		} while (false);
@@ -246,7 +246,7 @@ namespace _mp {
 	//=======================================//=======================================
 	//=======================================//=======================================
 	//cbase_ctl_fn::_cstate member
-	// m_trans_table_base ´Â exclusive ¶Ç´Â ÇÏ³ªÀÇ session ÀÇ ±âº» state transaction table.
+	// m_trans_table_base ëŠ” exclusive ë˜ëŠ” í•˜ë‚˜ì˜ session ì˜ ê¸°ë³¸ state transaction table.
 	const int cbase_ctl_fn::_cstate::_m_trans_table_base[cbase_ctl_fn::_cstate::st_total][cbase_ctl_fn::_cstate::ev_total]
 		= {
 			{st_idl,st_not,st_not,st_not,st_not},
@@ -271,7 +271,7 @@ namespace _mp {
 			cbase_ctl_fn::_cstate::type_map_ptr_state::const_iterator it_sel = map_ptr_state_cur.find(n_selected_session_number);
 			if (it_sel != map_ptr_state_cur.cend()) {
 				if (map_ptr_state_cur.size() == 1) {
-					continue; // n_session ÀÇ state ¸¸ Á¸ÀçÇÏ´Â °æ¿ì. - another session is none.
+					continue; // n_session ì˜ state ë§Œ ì¡´ì¬í•˜ëŠ” ê²½ìš°. - another session is none.
 				}
 			}
 
@@ -354,6 +354,25 @@ namespace _mp {
 		return st;
 	}
 
+	std::wstring cbase_ctl_fn::_cstate::get_string_from_state(_cstate::type_state st)
+	{
+		std::wstring s_out;
+
+		switch (st) {
+		case cbase_ctl_fn::_cstate::st_undefined:
+			s_out = L"st_undefined";	break;
+		case cbase_ctl_fn::_cstate::st_not:
+			s_out = L"st_not";	break;
+		case cbase_ctl_fn::_cstate::st_idl:
+			s_out = L"st_idl";	break;
+		case cbase_ctl_fn::_cstate::st_asy:
+			s_out = L"st_asy";	break;
+		default:
+			break;
+		}//end switch
+		return s_out;
+	}
+
 	cbase_ctl_fn::_cstate::_cstate()
 	{
 		this->reset();
@@ -383,6 +402,11 @@ namespace _mp {
 	cbase_ctl_fn::_cstate::type_state cbase_ctl_fn::_cstate::get() const
 	{
 		return m_st_cur;
+	}
+
+	std::wstring cbase_ctl_fn::_cstate::get_by_wstring() const
+	{
+		return cbase_ctl_fn::_cstate::get_string_from_state(m_st_cur);
 	}
 
 	cbase_ctl_fn::_cstate::type_evt cbase_ctl_fn::_cstate::get_last_event() const
