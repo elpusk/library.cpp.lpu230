@@ -88,6 +88,27 @@ namespace _mp{
             return t;
         }
 
+        std::wstring get_request_type_by_string()
+        {
+            std::wstring r;
+
+            std::lock_guard<std::mutex> lock(m_mutex);
+            if (m_v_tx.empty() && m_b_need_read) {
+                r = L"req_only_rx";
+            }
+            else if (!m_v_tx.empty() && m_b_need_read) {
+                r = L"req_tx_rx";
+            }
+            else if (!m_v_tx.empty() && !m_b_need_read) {
+                r = L"req_only_tx";
+            }
+            else {
+                r = L"req_cancel";
+            }
+
+            return r;
+        }
+
         bool is_empty_tx() const
         {
             if (m_v_tx.size() == 0)

@@ -114,9 +114,11 @@ namespace _mp {
 
 			// 유지되는 session 는 state 변화 검사
 			for (const auto& item : intersection_map) {
+				/*
 				if (m_map_ptr_state_cur[item.first]->get() == m_map_ptr_state_cur_old_for_debug[item.first]->get()) {
-					continue;
+					continue; // 상태변화 없으면 pass
 				}
+				*/
 				//
 				_mp::cstring::format_stl_style(s_out, L"[I][STATE] CHANGE - (session , state) = ( %u , %ls -> %ls ).\n",
 					item.first,
@@ -218,6 +220,9 @@ namespace _mp {
 			if (it == std::end(m_map_ptr_q_ptr_cur_req_read)) {
 				ptr_q = std::make_shared<cdev_ctl_fn::_cq_mgmt::_cq>(n_session);
 				m_map_ptr_q_ptr_cur_req_read[n_session] = ptr_q;
+#if defined(_WIN32) && defined(_DEBUG)
+				ATLTRACE(L"~~~~~ [%09u] Create cur req read Q.\n", n_session);
+#endif
 			}
 			else {
 				ptr_q = it->second;
@@ -226,9 +231,15 @@ namespace _mp {
 			if (b_first) {
 				// start_read 를 발생시키는 read request ptr 를 m_ptr_cur_req_read 에 저장.
 				std::tie(m_ptr_cur_req_read, std::ignore, std::ignore, std::ignore) = ptr_q->push_back(ptr_request);
+#if defined(_WIN32) && defined(_DEBUG)
+				ATLTRACE(L"~~~~~ [%09u] First push cur req read Q.\n", n_session);
+#endif
 			}
 			else {
 				ptr_q->push_back(ptr_request);
+#if defined(_WIN32) && defined(_DEBUG)
+				ATLTRACE(L"~~~~~ [%09u] Push cur req read Q.\n", n_session);
+#endif
 			}
 			return b_first;
 		}
@@ -309,6 +320,9 @@ namespace _mp {
 						if (ptr_req) {
 							if (ptr_req->is_recover_reserved()) {
 								ptr_req->set_recover_reserve(false);// recover flag 삭제.
+#if defined(_WIN32) && defined(_DEBUG)
+								ATLTRACE(L"-- RESET recover flag %09u.\n", ptr_req->get_session_number());
+#endif
 								continue;// recover flag 있는 것은 response 를 설정하지 않음.
 							}
 						}
@@ -321,6 +335,9 @@ namespace _mp {
 						}
 						v_result.push_back(r);
 
+#if defined(_WIN32) && defined(_DEBUG)
+						ATLTRACE(L"~~~~~ [%09u] Set response of  req read Q.\n", ptr_req->get_session_number());
+#endif
 						ptr_evt->set(n_evt);
 					}//end for
 					continue;
@@ -369,7 +386,7 @@ namespace _mp {
 				ptr_req->set_recover_reserve(true);
 				++n_cnt;
 #if defined(_WIN32) && defined(_DEBUG)
-				ATLTRACE(L"-- [%09u] SET recover flag %09u + %s\n", n_session_number, ptr_req->get_session_number());
+				ATLTRACE(L"-- [%09u] SET recover flag %09u.\n", n_session_number, ptr_req->get_session_number());
 #endif
 			}//end for
 			return n_cnt;
@@ -621,19 +638,34 @@ namespace _mp {
 					// himalia 에서 추가된 암호화 기능 지원과 기존 protocol 과 호환성 유지를 위해 필요한 코드.
 					std::tuple<cqitem_dev::type_result, type_v_buffer, std::wstring> rqi = qi.get_result_all();
 					if (std::get<0>(rqi) != cqitem_dev::result_success) {
+#if defined(_WIN32) && defined(_DEBUG)
+						ATLTRACE(L">>>>>>> [%ls] result !=cqitem_dev::result_success.\n", __WFUNCTION__);
+#endif
 						continue;
 					}
 					if (std::get<1>(rqi).size() < 3) {
+#if defined(_WIN32) && defined(_DEBUG)
+						ATLTRACE(L">>>>>>> [%ls] rx-size < 3.\n", __WFUNCTION__);
+#endif
 						continue;
 					}
 					std::array<char, 3> ar_c_len{ std::get<1>(rqi)[0], std::get<1>(rqi)[1], std::get<1>(rqi)[2] };
 					if (ar_c_len[0] >= 0) {
+#if defined(_WIN32) && defined(_DEBUG)
+						ATLTRACE(L">>>>>>> [%ls] ar_c_len[0] >= 0.\n", __WFUNCTION__);
+#endif
 						continue;
 					}
 					if (ar_c_len[1] >= 0) {
+#if defined(_WIN32) && defined(_DEBUG)
+						ATLTRACE(L">>>>>>> [%ls] ar_c_len[1] >= 0.\n", __WFUNCTION__);
+#endif
 						continue;
 					}
 					if (ar_c_len[2] >= 0) {
+#if defined(_WIN32) && defined(_DEBUG)
+						ATLTRACE(L">>>>>>> [%ls] ar_c_len[2] >= 0.\n", __WFUNCTION__);
+#endif
 						continue;
 					}
 
@@ -641,6 +673,9 @@ namespace _mp {
 						// 응답값의 각 track len 의 값이 음수로 에러를 표시하는 듯하지만,
 						// himalia 에서 추가된 암호화 응답 구조를 갖는 것으로 확인되어,
 						// 무시하지 말고 계속 처리.
+#if defined(_WIN32) && defined(_DEBUG)
+						ATLTRACE(L">>>>>>> [%ls] rx.is_rx_msr_extension = true .\n", __WFUNCTION__);
+#endif
 						continue;
 					}
 
@@ -650,6 +685,9 @@ namespace _mp {
 
 				if (b_pass_this_response) {
 					b_complete = false;
+#if defined(_WIN32) && defined(_DEBUG)
+					ATLTRACE(L">>>>>>> [%ls] ignore. more processing .\n", __WFUNCTION__);
+#endif
 					continue;//more processing
 				}
 				
@@ -657,10 +695,15 @@ namespace _mp {
 				std::vector<cdev_ctl_fn::type_tuple_full> v_tuple = p_obj->m_mgmt_q.qm_read_set_response_front(qi);
 				if (v_tuple.empty()) {
 					b_complete = false;
+#if defined(_WIN32) && defined(_DEBUG)
+					ATLTRACE(L">>>>>>> [%ls] more processing .\n", __WFUNCTION__);
+#endif
 					continue;//more processing
 				}
 				//////////////////////
-
+#if defined(_WIN32) && defined(_DEBUG)
+				ATLTRACE(L">>>>>>> [%ls] normal complete .\n", __WFUNCTION__);
+#endif
 
 			} while (false);
 
@@ -684,19 +727,34 @@ namespace _mp {
 					// himalia 에서 추가된 암호화 기능 지원과 기존 protocol 과 호환성 유지를 위해 필요한 코드.
 					std::tuple<cqitem_dev::type_result, type_v_buffer, std::wstring> rqi = qi.get_result_all();
 					if (std::get<0>(rqi) != cqitem_dev::result_success) {
+#if defined(_WIN32) && defined(_DEBUG)
+						ATLTRACE(L">>>>>>> [%ls] result !=cqitem_dev::result_success.\n", __WFUNCTION__);
+#endif
 						continue;
 					}
 					if (std::get<1>(rqi).size() < 3) {
+#if defined(_WIN32) && defined(_DEBUG)
+						ATLTRACE(L">>>>>>> [%ls] rx-size < 3.\n", __WFUNCTION__);
+#endif
 						continue;
 					}
 					std::array<char, 3> ar_c_len{ std::get<1>(rqi)[0], std::get<1>(rqi)[1], std::get<1>(rqi)[2] };
 					if (ar_c_len[0] >= 0) {
+#if defined(_WIN32) && defined(_DEBUG)
+						ATLTRACE(L">>>>>>> [%ls] ar_c_len[0] >= 0.\n", __WFUNCTION__);
+#endif
 						continue;
 					}
 					if (ar_c_len[1] >= 0) {
+#if defined(_WIN32) && defined(_DEBUG)
+						ATLTRACE(L">>>>>>> [%ls] ar_c_len[1] >= 0.\n", __WFUNCTION__);
+#endif
 						continue;
 					}
 					if (ar_c_len[2] >= 0) {
+#if defined(_WIN32) && defined(_DEBUG)
+						ATLTRACE(L">>>>>>> [%ls] ar_c_len[2] >= 0.\n", __WFUNCTION__);
+#endif
 						continue;
 					}
 
@@ -704,6 +762,9 @@ namespace _mp {
 						// 응답값의 각 track len 의 값이 음수로 에러를 표시하는 듯하지만,
 						// himalia 에서 추가된 암호화 응답 구조를 갖는 것으로 확인되어,
 						// 무시하지 말고 계속 처리.
+#if defined(_WIN32) && defined(_DEBUG)
+						ATLTRACE(L">>>>>>> [%ls] rx.is_rx_msr_extension = true .\n", __WFUNCTION__);
+#endif
 						continue;
 					}
 
@@ -713,6 +774,9 @@ namespace _mp {
 
 				if (b_pass_this_response) {
 					b_complete = false;
+#if defined(_WIN32) && defined(_DEBUG)
+					ATLTRACE(L">>>>>>> [%ls] ignore. more processing .\n", __WFUNCTION__);
+#endif
 					continue;//more processing
 				}
 
@@ -720,10 +784,15 @@ namespace _mp {
 				std::vector<cdev_ctl_fn::type_tuple_full> v_tuple = p_obj->m_mgmt_q.qm_read_set_response_front(qi);
 				if (v_tuple.empty()) {
 					b_complete = false;
+#if defined(_WIN32) && defined(_DEBUG)
+					ATLTRACE(L">>>>>>> [%ls] more processing .\n", __WFUNCTION__);
+#endif
 					continue;//more processing
 				}
 				//////////////////////
-
+#if defined(_WIN32) && defined(_DEBUG)
+				ATLTRACE(L">>>>>>> [%ls] normal complete .\n", __WFUNCTION__);
+#endif
 			} while (false);
 
 			return b_complete;
@@ -749,17 +818,30 @@ namespace _mp {
 				// pop 에서 request 얻는과 결과 setting 이 분리되어도, 동기식으로 event set 될때 까지 기다리니까 안전.
 				std::tie(ptr_req, ptr_evt, n_evt_index, ptr_rsp) = p_obj->m_mgmt_q.qm_sync_pop_front(false);
 				if (!ptr_req) {
+#if defined(_WIN32) && defined(_DEBUG)
+					ATLTRACE(L">>>>>>> [%ls] qm_sync_pop_front.false.\n", __WFUNCTION__);
+#endif
 					continue;// 요청한 session 의 응답이 아니면, 무시.
 				}
 
 				if (!cbase_ctl_fn::_set_response(*ptr_rsp, qi, *ptr_req)) {
 					//현재 요청은 아직 결과를 몰라서 큐에서 삭제하면 안됌.
 					b_complete = false;
+#if defined(_WIN32) && defined(_DEBUG)
+					ATLTRACE(L">>>>>>> [%ls] _set_response.false.\n", __WFUNCTION__);
+#endif
 					continue;//more processing
 				}
 				//
 				if (ptr_evt) {
+#if defined(_WIN32) && defined(_DEBUG)
+					ATLTRACE(L">>>>>>> [%ls] set.before\n", __WFUNCTION__);
+#endif
 					ptr_evt->set(n_evt_index); //동기식 응답 기다리는 event 기다림 해제.
+
+#if defined(_WIN32) && defined(_DEBUG)
+					ATLTRACE(L">>>>>>> [%ls] set.after\n", __WFUNCTION__);
+#endif
 				}
 
 			} while (false);
@@ -1150,7 +1232,7 @@ namespace _mp {
 					// 내리기 전에 , 실행 중인 another request에 복구 설정 해야함.
 
 					// another session 이 이미 asyn 이므로, asy queue 에 현재 session 추가만 하면. OK.
-					m_mgmt_q.qm_read_push_back(result.get_req());;
+					m_mgmt_q.qm_read_push_back(result.get_req());
 
 					result.after_starting_process_set_rsp_with_succss_ing(m_s_dev_path);
 

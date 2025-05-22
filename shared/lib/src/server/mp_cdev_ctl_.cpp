@@ -28,10 +28,42 @@ namespace _mp {
 
 		cio_packet::type_ptr cdev_ctl::_execute(cio_packet::type_ptr& ptr_req_new, cio_packet::type_ptr& ptr_req_cur)
 		{
-			// true ·Î return (transaction ¿Ï·á)³ªÅ¸³»±â À§ÇØ¼­´Â client ¿¡¼¼ º¸³¾ µ¥ÀÌÅÍ¸¦ return ÇÏ±â Àü¿¡
-			// send_data_to_client_by_ip4() ·Î Àü¼ÛÇØ¾ß ÇÔ.
-			// false ·Î return ÇÏ¸é, _continue() ÀÌ transaction ÀÌ ¿Ï·á µÉ¶§ ±îÁö ¹İº¹ÀûÀ¸·Î È£ÃâµÇ¼­, Ã³¸®ÇÏ°í,
-			// _continue() ¿¡¼­  client ¿¡¼¼ º¸³¾ µ¥ÀÌÅÍ¸¦ send_data_to_client_by_ip4() ·Î Àü¼Û
+			// true ë¡œ return (transaction ì™„ë£Œ)ë‚˜íƒ€ë‚´ê¸° ìœ„í•´ì„œëŠ” client ì—ì„¸ ë³´ë‚¼ ë°ì´í„°ë¥¼ return í•˜ê¸° ì „ì—
+			// send_data_to_client_by_ip4() ë¡œ ì „ì†¡í•´ì•¼ í•¨.
+			// false ë¡œ return í•˜ë©´, _continue() ì´ transaction ì´ ì™„ë£Œ ë ë•Œ ê¹Œì§€ ë°˜ë³µì ìœ¼ë¡œ í˜¸ì¶œë˜ì„œ, ì²˜ë¦¬í•˜ê³ ,
+			// _continue() ì—ì„œ  client ì—ì„¸ ë³´ë‚¼ ë°ì´í„°ë¥¼ send_data_to_client_by_ip4() ë¡œ ì „ì†¡
+
+			if (!ptr_req_new && !ptr_req_cur) {
+				m_p_log->log_fmt(L"[I][_EXE] ENTER - new(none), cur(none)\n");
+				m_p_log->trace(L"[I][_EXE] ENTER - new(none), cur(none)\n");
+			}
+			else if (ptr_req_new && !ptr_req_cur) {
+				m_p_log->log_fmt(L"[I][_EXE] ENTER - new(%u, %ls), cur(none)\n",
+					ptr_req_new->get_session_number(), ptr_req_new->get_action_by_string().c_str()
+				);
+				m_p_log->trace(L"[I][_EXE] ENTER - new(%u, %ls), cur(none)\n",
+					ptr_req_new->get_session_number(), ptr_req_new->get_action_by_string().c_str()
+				);
+			}
+			else if (!ptr_req_new && ptr_req_cur) {
+				m_p_log->log_fmt(L"[I][_EXE] ENTER - new(none), cur( %u, %ls )\n",
+					ptr_req_cur->get_session_number(), ptr_req_cur->get_action_by_string().c_str()
+				);
+				m_p_log->trace(L"[I][_EXE] ENTER - new(none), cur( %u, %ls )\n",
+					ptr_req_cur->get_session_number(), ptr_req_cur->get_action_by_string().c_str()
+				);
+			}
+			else{
+				m_p_log->log_fmt(L"[I][_EXE] ENTER - new(%u, %ls), cur( %u, %ls )\n",
+					ptr_req_new->get_session_number(), ptr_req_new->get_action_by_string().c_str(),
+					ptr_req_cur->get_session_number(), ptr_req_cur->get_action_by_string().c_str()
+				);
+				m_p_log->trace(L"[I][_EXE] ENTER - new(%u, %ls), cur( %u, %ls )\n",
+					ptr_req_new->get_session_number(), ptr_req_new->get_action_by_string().c_str(),
+					ptr_req_cur->get_session_number(), ptr_req_cur->get_action_by_string().c_str()
+				);
+			}
+
 
 			bool b_complete(true);
 			cio_packet::type_ptr ptr_req_ing;
@@ -70,15 +102,15 @@ namespace _mp {
 				case cio_packet::act_dev_write:
 				case cio_packet::act_dev_read:
 					ptr_result = m_fun.process_event(ptr_req_new, ptr_req_cur);
-					assert(ptr_result); // process_event() ÀÇ Á¦¾à Á¶°Ç.
+					assert(ptr_result); // process_event() ì˜ ì œì•½ ì¡°ê±´.
 
 					std::tie(std::ignore, b_complete) = ptr_result->process_get_result();
 					if (!b_complete) {
-						ptr_req_ing = ptr_result->get_req();// °è¼Ó ½ÇÇà ÁßÀÎ req ¸¦ return À¸·Î ¼³Á¤.
+						ptr_req_ing = ptr_result->get_req();// ê³„ì† ì‹¤í–‰ ì¤‘ì¸ req ë¥¼ return ìœ¼ë¡œ ì„¤ì •.
 						break;
 					}
 					
-					// Ã³¸®°¡ ³¡³­ °æ¿ì.
+					// ì²˜ë¦¬ê°€ ëë‚œ ê²½ìš°.
 					ptr_response = ptr_result->get_rsp();
 					if (!ptr_response) {
 						ptr_result_error = std::make_shared<cbase_ctl_fn::cresult>(*ptr_req_new);
@@ -88,7 +120,7 @@ namespace _mp {
 					break;
 				case cio_packet::act_dev_sub_bootloader:
 				case cio_packet::act_dev_independent_bootloader:
-				default:// ÇöÀç´Â Áö¿øÇÏÁö ¾ÊÀ¸¹Ç·Î ±×³É ¿¡·¯ Ã³¸®.
+				default:// í˜„ì¬ëŠ” ì§€ì›í•˜ì§€ ì•Šìœ¼ë¯€ë¡œ ê·¸ëƒ¥ ì—ëŸ¬ ì²˜ë¦¬.
 					ptr_result_error = std::make_shared<cbase_ctl_fn::cresult>(*ptr_req_new);
 					ptr_result_error->after_processing_set_rsp_with_error_complete(cio_packet::error_reason_action_code);
 					continue;
@@ -96,52 +128,52 @@ namespace _mp {
 
 			} while (false);
 
-			// ptr_result_error °¡ ÇÒ´çµÇ¾î ÀÖÀ¸¸é ¿¡·¯ »óÅÂ.
+			// ptr_result_error ê°€ í• ë‹¹ë˜ì–´ ìˆìœ¼ë©´ ì—ëŸ¬ ìƒíƒœ.
 			if (ptr_result_error) {
-				// Ã³¸® Àü °á°ú´Â ¿¡·¯
+				// ì²˜ë¦¬ ì „ ê²°ê³¼ëŠ” ì—ëŸ¬
 				if (!ptr_result_error->get_req()->is_self()) {
-					// ¿¡·¯¸¦ Àü¼Û
+					// ì—ëŸ¬ë¥¼ ì „ì†¡
 					ptr_result_error->get_rx(v_rsp);
 					cserver::get_instance().send_data_to_client_by_ip4(v_rsp, ptr_req_new->get_session_number());
 				}
 				if (ptr_req_cur) {
-					// ¾î¶² ½ÇÇà Áß¿¡ »õ·Î¿î °ÍÀÌ ¿Â »óÅÂ¸é, »õ·Î¿î °Í ½ÇÇà Àü¿¡ ¿¡·¯ ÀÌ¹Ç·Î
-					// ½ÇÇà ÇÏ´ø °Í °è¼Ó ½ÇÇà
+					// ì–´ë–¤ ì‹¤í–‰ ì¤‘ì— ìƒˆë¡œìš´ ê²ƒì´ ì˜¨ ìƒíƒœë©´, ìƒˆë¡œìš´ ê²ƒ ì‹¤í–‰ ì „ì— ì—ëŸ¬ ì´ë¯€ë¡œ
+					// ì‹¤í–‰ í•˜ë˜ ê²ƒ ê³„ì† ì‹¤í–‰
 					ptr_req_ing = ptr_req_cur;
 				}
 			}
 			else {
-				// Ã³¸® Àü ¿¡·¯ ¾øÀ½. 
+				// ì²˜ë¦¬ ì „ ì—ëŸ¬ ì—†ìŒ. 
 				if (!ptr_req_ing) {
-					// »õ·Ó°Ô Ã³¸® ÁßÀÎ °ÍÀÌ ¾øÀ¸¸é(»õ·Î¿î req Ã³¸® ¿Ï·á.)
-					assert(ptr_response); // ptr_response °ÍÀÌ ¾øÀ¸¸é ¹«Á¶°Ç ptr_result_error ÀÌ ÀÖ¾î¾ß.
+					// ìƒˆë¡­ê²Œ ì²˜ë¦¬ ì¤‘ì¸ ê²ƒì´ ì—†ìœ¼ë©´(ìƒˆë¡œìš´ req ì²˜ë¦¬ ì™„ë£Œ.)
+					assert(ptr_response); // ptr_response ê²ƒì´ ì—†ìœ¼ë©´ ë¬´ì¡°ê±´ ptr_result_error ì´ ìˆì–´ì•¼.
 
-					// open close complete °æ¿ì, q ¿¡ Æ÷ÇÔµÇÁö ¾Ê¾Æ, 
-					// get_all_complete_response() ¿¡ ptr_response °¡ Æ÷ÇÔµÇÁö ¾Ê´Â °æ¿ì, Æ÷ÇÔÇÏµµ·Ï
-					// get_all_complete_response() ÀÇ ÀÎÀÚ·Î ptr_req_new, ptr_response pair ¸¦ ÁØ´Ù.
-					ptr_v_req_rsp = m_fun.get_all_complete_response(std::make_pair(ptr_req_new, ptr_response));//complete µÈ ¸ğµç req, rsp pair ¸¦ ¾ò±â
+					// open close complete ê²½ìš°, q ì— í¬í•¨ë˜ì§€ ì•Šì•„, 
+					// get_all_complete_response() ì— ptr_response ê°€ í¬í•¨ë˜ì§€ ì•ŠëŠ” ê²½ìš°, í¬í•¨í•˜ë„ë¡
+					// get_all_complete_response() ì˜ ì¸ìë¡œ ptr_req_new, ptr_response pair ë¥¼ ì¤€ë‹¤.
+					ptr_v_req_rsp = m_fun.get_all_complete_response(std::make_pair(ptr_req_new, ptr_response));//complete ëœ ëª¨ë“  req, rsp pair ë¥¼ ì–»ê¸°
 					
-					// ¾ÆÁ÷ ¾È‰Î.
+					// ì•„ì§ ì•ˆëŒ.
 					if (!ptr_v_req_rsp) {
-						//complete µÈ °Í ¾ø´Â °æ¿ì
-						ptr_req_ing = ptr_req_cur; // ±âÁ¸ Ã³¸® ÁßÀÎ °ÍÀÌ ÀÖÀ¸¸é. ±× °ÍÀ» °è¼Ó Ã³¸®. ¾øÀ¸¸é ¾ø´Â °ÍÀ» return.
+						//complete ëœ ê²ƒ ì—†ëŠ” ê²½ìš°
+						ptr_req_ing = ptr_req_cur; // ê¸°ì¡´ ì²˜ë¦¬ ì¤‘ì¸ ê²ƒì´ ìˆìœ¼ë©´. ê·¸ ê²ƒì„ ê³„ì† ì²˜ë¦¬. ì—†ìœ¼ë©´ ì—†ëŠ” ê²ƒì„ return.
 					}
 					else {
-						// complete µÈ °ÍÀÌ Á¸Àç ÇÏ¸é, ¼­¹ö·Î ÀÀ´äÀ» º¸³»´Âµ¥ .......
-						// ¾ÆÁ÷±îÁö ptr_req_ing ´Â null ÀÎ »óÅÂ.
+						// complete ëœ ê²ƒì´ ì¡´ì¬ í•˜ë©´, ì„œë²„ë¡œ ì‘ë‹µì„ ë³´ë‚´ëŠ”ë° .......
+						// ì•„ì§ê¹Œì§€ ptr_req_ing ëŠ” null ì¸ ìƒíƒœ.
 						for (auto item : *ptr_v_req_rsp) {
 							if (item.first.get() == ptr_req_cur.get()) {
-								// Àü¿¡ ½ÇÇà ÁßÀÌ´ø req´Â complete µÇ¾î¼­ reference decrease µÇ°í, 
-								// ¾Æ·¡¿¡¼­ server ·Î Àü¼Û.
+								// ì „ì— ì‹¤í–‰ ì¤‘ì´ë˜ reqëŠ” complete ë˜ì–´ì„œ reference decrease ë˜ê³ , 
+								// ì•„ë˜ì—ì„œ server ë¡œ ì „ì†¡.
 								ptr_req_cur.reset(); 
 							}
 							else if (item.first.get() == ptr_req_new.get()) {
-								// »õ·Î¿î req Ã³¸® ¿Ï·á.
-								// get_all_complete_response() ÀÇ return vector item ¼ø¼­»ó.
-								// Àü¿¡ ½ÇÇà ÁßÀÌ´ø ptr_req_cur °¡ complete µÇ¸é , ÀÌ °÷¿¡ ¿À±â Àü¿¡
-								// À§ ÄÚµå¿¡¼­ Ç×»ó ptr_req_cur.reset() µÊ.
-								// ÀÌ °÷ Ã³¸® ÈÄ, ptr_req_cur.reset() ´Â ½ÇÇàµÇÁö ¾ÊÀ½.
-								ptr_req_ing = ptr_req_cur; // °è¼Ó ½ÇÇà ÇÒ req¸¦ ¼³Á¤.
+								// ìƒˆë¡œìš´ req ì²˜ë¦¬ ì™„ë£Œ.
+								// get_all_complete_response() ì˜ return vector item ìˆœì„œìƒ.
+								// ì „ì— ì‹¤í–‰ ì¤‘ì´ë˜ ptr_req_cur ê°€ complete ë˜ë©´ , ì´ ê³³ì— ì˜¤ê¸° ì „ì—
+								// ìœ„ ì½”ë“œì—ì„œ í•­ìƒ ptr_req_cur.reset() ë¨.
+								// ì´ ê³³ ì²˜ë¦¬ í›„, ptr_req_cur.reset() ëŠ” ì‹¤í–‰ë˜ì§€ ì•ŠìŒ.
+								ptr_req_ing = ptr_req_cur; // ê³„ì† ì‹¤í–‰ í•  reqë¥¼ ì„¤ì •.
 							}
 
 							if (item.first->is_self()) {
@@ -154,19 +186,64 @@ namespace _mp {
 						}//end for
 
 						if (!ptr_req_ing) {
-							// ¸¸¾à °è¼Ó ½ÇÇàÇØ¾ßÇÏ´Â req °¡ ¾øÀ¸¸é, read q ¿¡¼­ complete µÇÁö ¾ÊÀº req¸¦ Ã£¾Æ¼­
-							// ÇàÇØ¾ßÇÏ´Â req·Î ¼³Á¤.
+							// ë§Œì•½ ê³„ì† ì‹¤í–‰í•´ì•¼í•˜ëŠ” req ê°€ ì—†ìœ¼ë©´, read q ì—ì„œ complete ë˜ì§€ ì•Šì€ reqë¥¼ ì°¾ì•„ì„œ
+							// í–‰í•´ì•¼í•˜ëŠ” reqë¡œ ì„¤ì •.
 							auto v_ptr_req = m_fun.get_front_of_read_queue();
 							if (!v_ptr_req.empty()) {
 								ptr_req_ing = v_ptr_req[0];
 							}
+
+							for (auto item : v_ptr_req) {
+								m_p_log->log_fmt(L"[I][_EXE] !ING- (%u, %ls)\n",
+									item->get_session_number(), item->get_action_by_string().c_str()
+								);
+								m_p_log->trace(L"[I][_EXE] !ING- (%u, %ls)\n",
+									item->get_session_number(), item->get_action_by_string().c_str()
+								);
+							}// end for 
+						}
+						else {
+							// ë””ë²„ê¹…ì„ ìœ„í•œ ì½”ë“œ
+							auto v_ptr_req = m_fun.get_front_of_read_queue();
+							for (auto item : v_ptr_req) {
+								m_p_log->log_fmt(L"[I][_EXE] ING - (%u, %ls)\n",
+									item->get_session_number(), item->get_action_by_string().c_str()
+								);
+								m_p_log->trace(L"[I][_EXE] ING - (%u, %ls)\n",
+									item->get_session_number(), item->get_action_by_string().c_str()
+								);
+							}// end for 
 						}
 					}
 				}
 				else {
-					// »õ·Ó°Ô Ã³¸® ÁßÀÎ °ÍÀÌ ÀÖÀ¸¸é, ±âÁ¸ Ã³¸® ÁßÀÎ °ÍÀÌ ÀÖ´Â °Í°ú ¹«°üÇÏ°Ô, 
-					// »õ·Î¿î °Í °è¼Ó Ã³¸®.
+					// ìƒˆë¡­ê²Œ ì²˜ë¦¬ ì¤‘ì¸ ê²ƒì´ ìˆìœ¼ë©´, ê¸°ì¡´ ì²˜ë¦¬ ì¤‘ì¸ ê²ƒì´ ìˆëŠ” ê²ƒê³¼ ë¬´ê´€í•˜ê²Œ, 
+					// ìƒˆë¡œìš´ ê²ƒ ê³„ì† ì²˜ë¦¬.
+					 
+					// ë””ë²„ê¹…ì„ ìœ„í•œ ì½”ë“œ
+					auto v_ptr_req = m_fun.get_front_of_read_queue();
+					for (auto item : v_ptr_req) {
+						m_p_log->log_fmt(L"[I][_EXE] ING*- (%u, %ls)\n",
+							item->get_session_number(), item->get_action_by_string().c_str()
+						);
+						m_p_log->trace(L"[I][_EXE] ING*- (%u, %ls)\n",
+							item->get_session_number(), item->get_action_by_string().c_str()
+						);
+					}// end for 
 				}
+			}
+
+			if (!ptr_req_ing) {
+				m_p_log->log_fmt(L"[I][_EXE] EXIT - ptr_req_ing(none)\n");
+				m_p_log->trace(L"[I][_EXE] EXIT - ptr_req_ing(none)\n");
+			}
+			else{
+				m_p_log->log_fmt(L"[I][_EXE] EXIT - ptr_req_ing(%u, %ls)\n",
+					ptr_req_ing->get_session_number(), ptr_req_ing->get_action_by_string().c_str()
+				);
+				m_p_log->trace(L"[I][_EXE] EXIT - ptr_req_ing(%u, %ls)\n",
+					ptr_req_ing->get_session_number(), ptr_req_ing->get_action_by_string().c_str()
+				);
 			}
 
 			return ptr_req_ing;
@@ -174,25 +251,44 @@ namespace _mp {
 
 		bool cdev_ctl::_continue(cio_packet::type_ptr& ptr_req_cur)
 		{
-			// _execute() ÀÇ return ÀÌ nullptr ÀÌ ¾Æ´Ï¸é, vcworker::_worker() ¿¡ ÀÇÇØ ¿©±â È£ÃâµÊ.
+			// _execute() ì˜ return ì´ nullptr ì´ ì•„ë‹ˆë©´, vcworker::_worker() ì— ì˜í•´ ì—¬ê¸° í˜¸ì¶œë¨.
 			bool b_complete(false);
 			do {
-				// ¿©±â´Â read request ¿¡ ´ëÇÑ ÀÀ´ä¸¸ Ã³¸® µÉ °ÍÀÓ.
+				// ì—¬ê¸°ëŠ” read request ì— ëŒ€í•œ ì‘ë‹µë§Œ ì²˜ë¦¬ ë  ê²ƒì„.
 				cdev_ctl_fn::cdev_ctl_fn::type_ptr_v_pair_ptr_req_ptr_rsp ptr_v_req_rsp = m_fun.get_all_complete_response();
 				if (!ptr_v_req_rsp) {
-					// ¾ÆÁ÷ °á°ú°¡ ¾øÀ½.
+					// ì•„ì§ ê²°ê³¼ê°€ ì—†ìŒ.
 					continue;
 				}
 
 				for (auto item : *ptr_v_req_rsp) {
 					if (item.first.get() == ptr_req_cur.get()) {
-						// complete µÈ °Í Áß. ÇöÀç ½ÇÇà ÁßÀÎ request °¡ ÀÖÀ¸¸é contine ¸¦ cmplete ·Î Á¾·áÇØ¼­,
-						// »óÀ§ ÇÁ·Î¼¼½º¿¡¼­ ÇöÀç request ¿¡ ´ëÇÑ ¸Ş¸ğ¸® ÇØÁ¦¸¦ ¿äÃ»ÇÔ.
+						// complete ëœ ê²ƒ ì¤‘. í˜„ì¬ ì‹¤í–‰ ì¤‘ì¸ request ê°€ ìˆìœ¼ë©´ contine ë¥¼ cmplete ë¡œ ì¢…ë£Œí•´ì„œ,
+						// ìƒìœ„ í”„ë¡œì„¸ìŠ¤ì—ì„œ í˜„ì¬ request ì— ëŒ€í•œ ë©”ëª¨ë¦¬ í•´ì œë¥¼ ìš”ì²­í•¨.
 						b_complete = true; 
 					}
 
 					if (item.first->is_self()) {
 						continue;
+					}
+
+					if (!ptr_req_cur) {
+						m_p_log->log_fmt(L"[I][_CON] - cur(none), send(%u, %ls)\n",
+							item.first->get_session_number(), item.first->get_action_by_string().c_str()
+						);
+						m_p_log->trace(L"[I][_CON] - cur(none), send(%u, %ls)\n",
+							item.first->get_session_number(), item.first->get_action_by_string().c_str()
+						);
+					}
+					else {
+						m_p_log->log_fmt(L"[I][_CON] - cur(%u, %ls), send(%u, %ls)\n",
+							ptr_req_cur->get_session_number(), ptr_req_cur->get_action_by_string().c_str(),
+							item.first->get_session_number(), item.first->get_action_by_string().c_str()
+						);
+						m_p_log->trace(L"[I][_CON] - cur(%u, %ls), send(%u, %ls)\n",
+							ptr_req_cur->get_session_number(), ptr_req_cur->get_action_by_string().c_str(),
+							item.first->get_session_number(), item.first->get_action_by_string().c_str()
+						);
 					}
 
 					type_v_buffer v_rsp;

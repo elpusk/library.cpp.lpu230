@@ -185,11 +185,17 @@ namespace _mp {
     protected:
         /**
         * @brief receiving worker thread. this thread will be construct & destruct on _worker().
-        * from device, receving a data by in-report size unit. and it enqueue to m_q_ptr.
+        * 
+        *   from device, receving a data by in-report size unit. and it enqueue to m_q_ptr.
         */
         void _worker_rx();
+
         /**
-        * @brief device io worker
+        * @brief For supporting device async-io, worker thread by Q.
+        * 
+        *   1. create & run rx pump thread( for supporting linux, clibhid_dev::_worker_rx() )
+        * 
+        *   2. get request from Q, 
         */
         void _worker();
 
@@ -207,6 +213,7 @@ namespace _mp {
 
 		std::atomic<bool> m_b_detect_replugin;// error status. if true, need to remove this instance.
 
+        int m_n_debug_line; //for debugging
     private:
         clibhid_dev();
         clibhid_dev(const clibhid_dev&);

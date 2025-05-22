@@ -17,7 +17,8 @@ namespace _mp {
         m_b_run_th_worker(false),
         m_dev_info(info),
         m_b_detect_replugin(false),
-        m_p_hid_api_briage(p_hid_api_briage)
+        m_p_hid_api_briage(p_hid_api_briage),
+        m_n_debug_line(0)
     {
        if (!m_p_hid_api_briage) {
             return;
@@ -408,8 +409,8 @@ namespace _mp {
 
 
         do {
-            // ÇöÀç ½ÇÇà ÁßÀÎ ¸í·ÉÀÌ ÀÖÀ¸¸é, »õ·Î¿î °Í ½ÇÇàÇÏ±â Àü¿¡ Ãë¼Ò.
-            // ptr_cur ÀÇ °á°ú¸¦ ¼³Á¤ÇÑ´Ù.
+            // í˜„ì¬ ì‹¤í–‰ ì¤‘ì¸ ëª…ë ¹ì´ ìˆìœ¼ë©´, ìƒˆë¡œìš´ ê²ƒ ì‹¤í–‰í•˜ê¸° ì „ì— ì·¨ì†Œ.
+            // ptr_cur ì˜ ê²°ê³¼ë¥¼ ì„¤ì •í•œë‹¤.
             if (ptr_req_cur) {
                 ptr_req_cur->set_result(cqitem_dev::result_cancel, type_v_buffer(0), L"CANCELLED BY ANOTHER REQ AUTO");
             }
@@ -538,9 +539,9 @@ namespace _mp {
             if (ptr_req->get_request_type() == cqitem_dev::req_tx_rx) {
                 if (v_rx[0] != 'R') {//lpu237 specific protocol
                     // very important code - fix miss-matching txrx protocol. 
-                    // Æè¿ş¾î¿¡¼­, msr ÀÌ³ª ibutton µ¥ÀÌÅÍ¸¦ º¸³»·Á°í, usb buffer ¿¡ µ¥ÀÌÅ¸¸¦ ¾²°í ÀÖ´Â ¶§,
-                    // tx °¡ Àü¼ÛµÇ¸é, api ´Â tx ¿¡ ´ëÇÑ ÀÀ´äÀ¸·Î msr ÀÌ³ª ibutton µ¥ÀÌÅÍ¸¦ ¹ŞÀ»¼ö ÀÖ´Ù.
-                    // ÀÌ·¯ÇÑ °æ¿ì ÇÁ·ÎÅäÄİ ¹Ì½º·Î ¹®Á¦°¡ »ı±â¹Ç·Î, ÀÌ msr ÀÌ³ª ibutton Àº ¹«½ÃµÇ¾î¾ß ÇÑ´Ù. ¹«Á¶°Ç !
+                    // í¨ì›¨ì–´ì—ì„œ, msr ì´ë‚˜ ibutton ë°ì´í„°ë¥¼ ë³´ë‚´ë ¤ê³ , usb buffer ì— ë°ì´íƒ€ë¥¼ ì“°ê³  ìˆëŠ” ë•Œ,
+                    // tx ê°€ ì „ì†¡ë˜ë©´, api ëŠ” tx ì— ëŒ€í•œ ì‘ë‹µìœ¼ë¡œ msr ì´ë‚˜ ibutton ë°ì´í„°ë¥¼ ë°›ì„ìˆ˜ ìˆë‹¤.
+                    // ì´ëŸ¬í•œ ê²½ìš° í”„ë¡œí† ì½œ ë¯¸ìŠ¤ë¡œ ë¬¸ì œê°€ ìƒê¸°ë¯€ë¡œ, ì´ msr ì´ë‚˜ ibutton ì€ ë¬´ì‹œë˜ì–´ì•¼ í•œë‹¤. ë¬´ì¡°ê±´ !
                     b_complete = false;
                     v_rx.resize(0);
                     //
@@ -588,14 +589,14 @@ namespace _mp {
     {
 #ifdef _WIN32
 #ifdef _DEBUG
-        ATLTRACE(L"start clibhid_dev::_worker_rx(0x%x).\n", m_n_dev);
+        ATLTRACE(L"start clibhid_dev::_worker_rx(0x%08x).\n", m_n_dev);
 #endif
 #endif
         size_t n_report = m_dev_info.get_size_in_report();
         if (n_report <= 0) {
 #ifdef _WIN32
 #ifdef _DEBUG
-            ATLTRACE(L"Exit[E] clibhid_dev::_worker_rx(0x%x).\n", m_n_dev);
+            ATLTRACE(L"Exit[E] clibhid_dev::_worker_rx(0x%08x).\n", m_n_dev);
 #endif
 #endif
             return;
@@ -635,7 +636,7 @@ namespace _mp {
                 }
                 //here n_result > 0 recevied some data.
                 if (n_result < v_report_in.size()) {
-                    // _vhid_api_briage::api_read() ´Â ¿¡·¯°¡ ¾Æ´Ñ °æ¿ì,Ç×»ó in-report Å©±â·Î rx ¸¦ ¹İÈ¯ÇÏ´Âµ¥ ÀÌ·± °æ¿ì´Â ¹º°¡ ¾öÃ» Àß¸ø
+                    // _vhid_api_briage::api_read() ëŠ” ì—ëŸ¬ê°€ ì•„ë‹Œ ê²½ìš°,í•­ìƒ in-report í¬ê¸°ë¡œ rx ë¥¼ ë°˜í™˜í•˜ëŠ”ë° ì´ëŸ° ê²½ìš°ëŠ” ë­”ê°€ ì—„ì²­ ì˜ëª»
                     m_q_rx_ptr_v.push(std::make_shared<_mp::type_v_buffer>(0));
                     _mp::clog::get_instance().log_fmt(L"[E] %ls : lost packet - push zero size buffer.\n", __WFUNCTION__);
                     continue;
@@ -663,9 +664,6 @@ namespace _mp {
 #endif
     }
 
-    /**
-    * device io worker
-    */
     void clibhid_dev::_worker()
     {
 #ifdef _WIN32
@@ -675,6 +673,7 @@ namespace _mp {
 #endif
 
         cqitem_dev::type_ptr ptr_new, ptr_cur;
+        cqitem_dev::type_ptr ptr_cur_old; // ì´ê²ƒì„ ì‚¬ìš©í•˜ë©´, ibutton ë‘ê°œ ì‹¤í–‰í•˜ë©´, ëª‡ë²ˆë˜ë‹¤ê°€ ë‘˜ê°œ ë‹¤ ì‘ë‹µì—†ìŒ.
         int n_size_in_report(m_dev_info.get_size_in_report());
         _mp::type_v_buffer v_rx(n_size_in_report, 0);
 
@@ -703,81 +702,255 @@ namespace _mp {
 
             do {
                 if (!m_q_ptr.try_pop(ptr_new)) {
-                    // »õ·Î¿î ¸í·É ¾øÀ½.
+                    // ìƒˆë¡œìš´ ëª…ë ¹ ì—†ìŒ.
                     if (!ptr_cur) {
-                        // ÇöÀç ÀÛ¾÷ ÁÖÀÎ °Í ¾øÀ¸¸é.
+                        // í˜„ì¬ ì‘ì—… ì£¼ì¸ ê²ƒ ì—†ìœ¼ë©´.
+                        // ì²˜ë¦¬ ì•ˆëœ, async ê°€ ìˆìœ¼ë©´, ptr_cur ì— ë‹¤ì‹œ assing í•´ì„œ ë‹¤ìŒ loop ì—ì„œ ì‹¤í–‰.
+                        // TODO
+                        if (ptr_cur_old) {
+                            ptr_cur_old->reset_result();// ì¬ì‹œì‘ì„ ìœ„í•´ ê²°ê³¼ ì´ˆê¸°í™”.
+                            ptr_cur = ptr_cur_old;
+                            ptr_cur_old.reset();
+#if defined(_WIN32) && defined(_DEBUG)
+                            if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
+                                if (m_n_debug_line != (__LINE__ + 1)) {
+                                    m_n_debug_line = __LINE__;
+                                    ATLTRACE(L" =======(%ls) old cur req(%ls) -> cur\n",
+                                        _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str(),
+                                        ptr_cur->get_request_type_by_string().c_str()
+                                    );
+                                }
+                            }
+#endif
+                            continue;
+                        }
+
+                        // pumping
                         std::tie(b_read_ok, b_expected_replugin) = _pump();//pumpping.
+#if defined(_WIN32) && defined(_DEBUG)
+                        if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
+                            if (m_n_debug_line != (__LINE__+1)) {
+                                m_n_debug_line = __LINE__;
+                                ATLTRACE(L" =======(%ls) pump().\n",
+                                    _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str()
+                                );
+                            }
+                        }
+#endif
                         continue;
                     }
 
-                    // ÇöÀç ÀÛ¾÷ ÁßÀÎ °Í ÀÖÀ¸¸é,
+                    // í˜„ì¬ ì‘ì—… ì¤‘ì¸ ê²ƒ ìˆìœ¼ë©´,
                 }
                 else {
-                    // popµÈ »õ·Î¿î ¸í·ÉÀÇ °æ¿ì.
+                    // popëœ ìƒˆë¡œìš´ ëª…ë ¹ì˜ ê²½ìš°.
                     if (!b_read_ok) {
-                        // »õ·Î¿î ¸í·ÉÀ» pop  ÇßÁö¸¸, ÇöÀç rx °¡ ¿¡·¯ »óÅÂÀÌ¹Ç·Î »õ·Î¿î ¸í·ÉÀº ¹Ù·Î ¿¡·¯·Î Ã³¸®.
+                        // ìƒˆë¡œìš´ ëª…ë ¹ì„ pop  í–ˆì§€ë§Œ, í˜„ì¬ rx ê°€ ì—ëŸ¬ ìƒíƒœì´ë¯€ë¡œ ìƒˆë¡œìš´ ëª…ë ¹ì€ ë°”ë¡œ ì—ëŸ¬ë¡œ ì²˜ë¦¬.
                         clog::get_instance().trace(L"T[E] - %ls - new request but read is error status.\n", __WFUNCTION__);
                         clog::get_instance().log_fmt(L"[E] - %ls - new request but read is error status.\n", __WFUNCTION__);
                         ptr_new->set_result(cqitem_dev::result_error, type_v_buffer(0), L"RX");
+#if defined(_WIN32) && defined(_DEBUG)
+                        if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
+                            if (m_n_debug_line != (__LINE__+1)) {
+                                m_n_debug_line = __LINE__;
+                                ATLTRACE(L" =======(%ls) new req(%ls).b_read_ok.false.\n",
+                                    _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str(),
+                                    ptr_new->get_request_type_by_string().c_str()
+                                );
+                            }
+                        }
+#endif
                         continue;
                     }
 
-                    // »õ·Î¿î ¸í·ÉÀ» Ã³¸®.
+                    // ìƒˆë¡œìš´ ëª…ë ¹ì„ ì²˜ë¦¬.
                     std::tie(b_complete,b_request_is_cancel) = _process_new_request_and_set_result(ptr_new, ptr_cur);
+
+#if defined(_WIN32) && defined(_DEBUG)
+                    if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
+                        if (m_n_debug_line != (__LINE__ + 1)) {
+                            m_n_debug_line = __LINE__;
+
+                            std::wstring __s_complete(L"complete"), __s_cancel(L"req is cancel");
+                            if (!b_complete) {
+                                __s_complete = L"ing";
+                            }
+                            if (!b_request_is_cancel) {
+                                __s_cancel = L"req not cancel";
+                            }
+                            std::wstring __s_new(L"none"), __s_cur(L"none");
+                            if (ptr_new) {
+                                __s_new = ptr_new->get_request_type_by_string();
+                            }
+                            if (ptr_cur) {
+                                __s_cur = ptr_cur->get_request_type_by_string();
+                            }
+
+                            ATLTRACE(L" =======(%ls) _process_new_request_and_set_result( new:%ls, cur:%ls ) = (%ls,%ls)\n",
+                                _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str(),
+                                __s_new.c_str(),
+                                __s_cur.c_str(),
+                                __s_complete.c_str(),
+                                __s_cancel.c_str()
+                            );
+                        }
+                    }
+#endif
+
                     if (b_request_is_cancel) {
-                        // ÀÌ °æ¿ì b_complete ´Â Ç×»ó true.
-                        // ptr_new ´Â cancel req ·Î ptr_cur°¡ ÀÖ´Â °æ¿ì, ptr_cur ¸¦ cancel ½ÃÅ´.
-                        // µû¶ó¼­ ±¸Á¶»ó, ptr_cur ¿¡ ´ëÇÑ cancel nortificate ¸ÕÀú ÇÏ°í, 
-                        // ptr_new ¿¡ ´ëÇÑ nortificate ³ªÁß¿¡.(notification AREA)
+                        // ì´ ê²½ìš° b_complete ëŠ” í•­ìƒ true.
+                        // ptr_new ëŠ” cancel req ë¡œ ptr_curê°€ ìˆëŠ” ê²½ìš°, ptr_cur ë¥¼ cancel ì‹œí‚´.
+                        // ë”°ë¼ì„œ êµ¬ì¡°ìƒ, ptr_cur ì— ëŒ€í•œ cancel nortificate ë¨¼ì € í•˜ê³ , 
+                        // ptr_new ì— ëŒ€í•œ nortificate ë‚˜ì¤‘ì—.(notification AREA)
+#if defined(_WIN32) && defined(_DEBUG)
+                        if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
+                            if (m_n_debug_line != (__LINE__+1)) {
+                                m_n_debug_line = __LINE__;
+                                ATLTRACE(L" =======(%ls) new req(%ls).b_request_is_cancel.true.\n",
+                                    _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str(),
+                                    ptr_new->get_request_type_by_string().c_str()
+                                );
+                            }
+                        }
+#endif
                         continue;
                     }
                     if (b_complete) {
-                        // ptr_new °¡ µ¿±â¸í·ÉÀÎ °æ¿ì´Â ¿©±â¿¡.
-                        // ±âÁ¸ ptr_cur ÀÌ ÀÖ´Â °æ¿ì, µ¿±â¸í·É ptr_new ¿¡ ÀÇÇØ Ãë¼ÒµÇ¹Ç·Î,
-                        // µû¶ó¼­ ±¸Á¶»ó, ptr_cur ¿¡ ´ëÇÑ cancel nortificate ¸ÕÀú ÇÏ°í,
-                        // ptr_new ¿¡ ´ëÇÑ nortificate ³ªÁß¿¡.(notification AREA)
-                        continue; // »õ·Î¿î ¸í·ÉÀº Ã³¸®µÊ.
+                        // ptr_new ê°€ ë™ê¸°ëª…ë ¹ì¸ ê²½ìš°ëŠ” ì—¬ê¸°ì—.
+                        // ê¸°ì¡´ ptr_cur ì´ ìˆëŠ” ê²½ìš°, ë™ê¸°ëª…ë ¹ ptr_new ì— ì˜í•´ ì·¨ì†Œë˜ë¯€ë¡œ,
+                        // ë”°ë¼ì„œ êµ¬ì¡°ìƒ, ptr_cur ì— ëŒ€í•œ cancel notificate ë¨¼ì € í•˜ê³ ,
+                        // ptr_new ì— ëŒ€í•œ nortificate ë‚˜ì¤‘ì—.(notification AREA)
+#if defined(_WIN32) && defined(_DEBUG)
+                        if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
+                            if (m_n_debug_line != (__LINE__+1)) {
+                                m_n_debug_line = __LINE__;
+                                ATLTRACE(L" =======(%ls) new req(%ls).b_complete.true.\n",
+                                    _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str(),
+                                    ptr_new->get_request_type_by_string().c_str()
+                                );
+                            }
+                        }
+#endif
+                        continue; // ìƒˆë¡œìš´ ëª…ë ¹ì€ ì²˜ë¦¬ë¨.
                     }
 
                     if (ptr_cur) {
-                        // »õ·Î¿î ¸í·É Ã³¸®°¡ ´õ ÇÊ¿äÇÏ¹Ç·Î ±âÁ¸ ¸í·ÉÀÌ cancel µÈ °ÍÀ»,
-                        // callback ÇØ¼­ ¾Ë·Á ÁØ´Ù. 
-                        // ptr_new °¡ ºñµ¿±â¸í·ÉÀÎ °æ¿ì´Â ¿©±â¿¡.
-                        // ptr_cur°¡ ÀÖ´Â °æ¿ì, ptr_cur ¸¦ cancel ½ÃÅ°°í cancel nortificate ¸¦ ¾Æ·¡ ÄÚµå·Î.
+                        // ìƒˆë¡œìš´ ëª…ë ¹ ì²˜ë¦¬ê°€ ë” í•„ìš”í•˜ë¯€ë¡œ ê¸°ì¡´ ëª…ë ¹ì´ cancel ëœ ê²ƒì„,
+                        // callback í•´ì„œ ì•Œë ¤ ì¤€ë‹¤. 
+                        // ptr_new ê°€ ë¹„ë™ê¸°ëª…ë ¹ì¸ ê²½ìš°ëŠ” ì—¬ê¸°ì—.
+                        // ptr_curê°€ ìˆëŠ” ê²½ìš°, ptr_cur ë¥¼ cancel ì‹œí‚¤ê³  cancel notificate ë¥¼ ì•„ë˜ ì½”ë“œë¡œ.
                         ptr_cur->run_callback();
+#if defined(_WIN32) && defined(_DEBUG)
+                        if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
+                            if (m_n_debug_line != (__LINE__ + 1)) {
+                                m_n_debug_line = __LINE__;
+                                ATLTRACE(L" =======(%ls) cur req(%ls).canceled.\n",
+                                    _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str(),
+                                    ptr_cur->get_request_type_by_string().c_str()
+                                );
+                            }
+                        }
+#endif
                     }
 
-                    // ptr_new °¡ ºñµ¿±â¸í·ÉÀÎ °æ¿ì´Â ¿©±â¿¡.
-                    // »õ·Î¿î ¸í·É Ã³¸®°¡ ´õ ÇÊ¿äÇÏ¹Ç·Î, ÇöÀç ¸í·ÉÀ¸·Î ¼³Á¤.
+                    // ptr_new ê°€ ë¹„ë™ê¸°ëª…ë ¹ ë˜ëŠ” ë™ê¸°ì‹ì´ë‚˜ ì‘ë‹µ ìˆ˜ì‹ ì „ì¸ ê²½ìš° ì—¬ê¸°ì—.
+                    // ìƒˆë¡œìš´ ëª…ë ¹ ì²˜ë¦¬ê°€ ë” í•„ìš”í•˜ë¯€ë¡œ, í˜„ì¬ ëª…ë ¹ìœ¼ë¡œ ì„¤ì •.
+#if defined(_WIN32) && defined(_DEBUG)
+                    if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
+                        if (m_n_debug_line != (__LINE__ + 1)) {
+                            m_n_debug_line = __LINE__;
+                            std::wstring __s_new(L"none"), __s_cur(L"none");
+                            if (ptr_new) {
+                                __s_new = ptr_new->get_request_type_by_string();
+                            }
+                            if (ptr_cur) {
+                                __s_cur = ptr_cur->get_request_type_by_string();
+                            }
+                            ATLTRACE(L" =======(%ls) new req(%ls) -> cur req(%ls).\n",
+                                _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str(),
+                                __s_new.c_str(),
+                                __s_cur.c_str()
+                            );
+                        }
+                    }
+#endif
+                    if (ptr_cur) {
+                        ptr_cur_old = ptr_cur;// backup current req. ë‚˜ì¤‘ ë³µêµ¬ë¥¼ ìœ„í•´.
+                    }
                     ptr_cur = ptr_new;
                     ptr_new.reset();
                 }
 
-                // ÇöÀç ¸í·ÉÀ¸·Î ¼³Á¤µÈ ¸í·ÉÀ» À§ÇØ °è¼Ó ¼ö½Å ½ÃµµÇÔ.
+                // í˜„ì¬ ëª…ë ¹ìœ¼ë¡œ ì„¤ì •ëœ ëª…ë ¹ì„ ìœ„í•´ ê³„ì† ìˆ˜ì‹  ì‹œë„í•¨.
                 std::tie(b_read_ok, b_complete, v_rx) = _process_only_rx(ptr_cur);
                 if (!b_complete) {
 #if defined(_WIN32) && defined(_DEBUG)
-                    //ATLTRACE(L" =======(%s) _process_only_rx.\n", _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str());
+                    if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
+                        if (m_n_debug_line != (__LINE__+1)) {
+                            m_n_debug_line = __LINE__;
+                            ATLTRACE(L" =======(%s) _process_only_rx.\n", _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str());
+                        }
+                    }
 #endif
                     continue;
                 }
+
                 if (b_read_ok) {
                     ptr_cur->set_result(cqitem_dev::result_success, v_rx, L"SUCCESS");
+#if defined(_WIN32) && defined(_DEBUG)
+                    if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
+                        if (m_n_debug_line != (__LINE__+1)) {
+                            m_n_debug_line = __LINE__;
+                            ATLTRACE(L" =======(%s) _process_only_rx : complete.success.\n", _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str());
+                        }
+                    }
+#endif
                 }
                 else {
                     ptr_cur->set_result(cqitem_dev::result_error, v_rx, L"ERROR-_process_only_rx()");
+#if defined(_WIN32) && defined(_DEBUG)
+                    if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
+                        if (m_n_debug_line != (__LINE__+1)) {
+                            m_n_debug_line = __LINE__;
+                            ATLTRACE(L" =======(%s) _process_only_rx : complete.error.\n", _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str());
+                        }
+                    }
+#endif
                 }
             } while (false);//main do-while(false)
 
-            // notify ´Â Ç×»ó ½ÇÇàÇÏ°í ÀÖ´ø °Í ºÎÅÍÇÏ°í, ½Å±Ô´Â ±× ³ªÁß¿¡ ¾Ë¸²À» ÇÑ´Ù.
+            // notify ëŠ” í•­ìƒ ì‹¤í–‰í•˜ê³  ìˆë˜ ê²ƒ ë¶€í„°í•˜ê³ , ì‹ ê·œëŠ” ê·¸ ë‚˜ì¤‘ì— ì•Œë¦¼ì„ í•œë‹¤.
             // notification AREA
             if (ptr_cur) {
                 if (ptr_cur->is_complete()) {
                     if (ptr_cur->run_callback()) {
+#if defined(_WIN32) && defined(_DEBUG)
+                        if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
+                            if (m_n_debug_line != (__LINE__ + 1)) {
+                                m_n_debug_line = __LINE__;
+                                ATLTRACE(L" =======(%ls)[%09u] cur req(%ls).callback.complete\n",
+                                    _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str(),
+                                    ptr_cur->get_session_number(),
+                                    ptr_cur->get_request_type_by_string().c_str()
+                                );
+                            }
+                        }
+#endif
                         ptr_cur.reset();
                     }
                     else {
-                        //callback ÀÌ false ¸¦ return ÇÏ¸é, rx ¸¦ ´Ù½Ã ½Ãµµ.
+                        //callback ì´ false ë¥¼ return í•˜ë©´, rx ë¥¼ ë‹¤ì‹œ ì‹œë„.
+#if defined(_WIN32) && defined(_DEBUG)
+                        if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
+                            if (m_n_debug_line != (__LINE__ + 1)) {
+                                m_n_debug_line = __LINE__;
+                                ATLTRACE(L" =======(%ls) cur req(%ls).reset_result() for re-reading.\n",
+                                    _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str(),
+                                    ptr_cur->get_request_type_by_string().c_str()
+                                );
+                            }
+                        }
+#endif
                         ptr_cur->reset_result();
                     }
                 }
@@ -786,8 +959,19 @@ namespace _mp {
             if (ptr_new) {
                 if (ptr_new->is_complete()) {
                     ptr_new->run_callback();//impossible re-read
+#if defined(_WIN32) && defined(_DEBUG)
+                    if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
+                        if (m_n_debug_line != (__LINE__ + 1)) {
+                            m_n_debug_line = __LINE__;
+                            ATLTRACE(L" =======(%ls) new req(%ls).callback.end\n",
+                                _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str(),
+                                ptr_new->get_request_type_by_string().c_str()
+                            );
+                        }
+                    }
+#endif
                 }
-                // »õ·Î¿î ¸í·ÉÀº complete ¸é, callback ½ÇÇà °á°ú¿Í ¹«°üÇÏ°Ô »èÁ¦.
+                // ìƒˆë¡œìš´ ëª…ë ¹ì€ complete ë©´, callback ì‹¤í–‰ ê²°ê³¼ì™€ ë¬´ê´€í•˜ê²Œ ì‚­ì œ.
                 ptr_new.reset();
             }
 

@@ -524,7 +524,7 @@ void _vhid_api_briage::_q_worker::_worker(_vhid_api_briage* p_api_briage)
 
         do {
             // main work here!
-            // sw ÀÛ¾÷ÀÚÀÇ ¼ö½Å ¿äÃ»¸¸ ÀÖÀ»¶§, pop µÇ°í, ±× ¶§, ¸¶Ä§ MSR µ¥ÀÌÅÍ°¡ µµÂøÇÏ¸é, msr Àº µ¥ÀÌÅÍ¸¦ ³õÄ¡´Â ÀÏÀÌ ¹ß»ıÇÏ¹Ç·Î. ÁÖÀÇ ±í°Ô µ¿ÀÛÀ» °áÁ¤ÇØ¾ß ÇÑ´Ù.
+            // sw ì‘ì—…ìì˜ ìˆ˜ì‹  ìš”ì²­ë§Œ ìˆì„ë•Œ, pop ë˜ê³ , ê·¸ ë•Œ, ë§ˆì¹¨ MSR ë°ì´í„°ê°€ ë„ì°©í•˜ë©´, msr ì€ ë°ì´í„°ë¥¼ ë†“ì¹˜ëŠ” ì¼ì´ ë°œìƒí•˜ë¯€ë¡œ. ì£¼ì˜ ê¹Šê²Œ ë™ì‘ì„ ê²°ì •í•´ì•¼ í•œë‹¤.
             std::tie(b_exsit_data,b_canceled) = _try_pop(ptr_list);
             if (!b_exsit_data) {
                 continue;
@@ -708,8 +708,8 @@ std::pair<bool, _mp::type_v_buffer> _vhid_api_briage::_q_worker::_process(
         }
 
         //tx_rx mode
-        // Àåºñ·Î ºÎÅÍ ¹ŞÀº msr ÀÌ³ª ibutton µ¥ÀÌÅÍ°¡ ¾ÆÁ÷ rx ¿äÃ»¿¡ ÀÇÇØ Àü´ŞµÇÁö ¸øÇØµµ. 
-        // ¸ğµÎ »èÁ¦ÇØ¾ß. ¾û¶×ÇÑ µ¥ÀÌÅÍ°¡ ¾îÇÃ¿¡°Ô Àü¼ÛµÇ´Â °ÍÀ» ¸·À» ¼ö ÀÖ´Ù.
+        // ì¥ë¹„ë¡œ ë¶€í„° ë°›ì€ msr ì´ë‚˜ ibutton ë°ì´í„°ê°€ ì•„ì§ rx ìš”ì²­ì— ì˜í•´ ì „ë‹¬ë˜ì§€ ëª»í•´ë„. 
+        // ëª¨ë‘ ì‚­ì œí•´ì•¼. ì—‰ëš±í•œ ë°ì´í„°ê°€ ì–´í”Œì—ê²Œ ì „ì†¡ë˜ëŠ” ê²ƒì„ ë§‰ì„ ìˆ˜ ìˆë‹¤.
         m_q_result_msr.clear();
         m_q_result_ibutton.clear();
 #ifdef _WIN32
@@ -792,13 +792,13 @@ bool _vhid_api_briage::_q_worker::_process_cancel(_q_container::type_ptr_list& p
         }
         //
         if (ptr_list->size() == 1) {
-            // cancel request ÇÏ³ª·Î¸¸ ±¸¼ºµÈ list
+            // cancel request í•˜ë‚˜ë¡œë§Œ êµ¬ì„±ëœ list
             (*ptr_list->begin())->set_result(n_result).set_rx(v_rx).set_event();
             b_result = true;
             continue;
         }
 
-        //cancel request ´Â Ç×»ó list ÀÇ ¸¶Áö¸·À» ÀÖ¾î¾ßÇÔ.
+        //cancel request ëŠ” í•­ìƒ list ì˜ ë§ˆì§€ë§‰ì„ ìˆì–´ì•¼í•¨.
         auto it = ptr_list->end();
         --it;
         _q_item::type_ptr ptr_item_cancel(*it);
@@ -806,16 +806,16 @@ bool _vhid_api_briage::_q_worker::_process_cancel(_q_container::type_ptr_list& p
         _mp::type_v_buffer v_tx_last(ptr_item_cancel->get_tx());
         int n_map_index_cancel(ptr_item_cancel->get_map_index());
 
-        //¸¶Áö¸·ÀÌ cancel ¸í·ÉÀÎÁö °Ë»ç
+        //ë§ˆì§€ë§‰ì´ cancel ëª…ë ¹ì¸ì§€ ê²€ì‚¬
         if (cmd_last != _q_item::cmd_write) {
-            continue; // ¿¡·¯ cancel request ´Â tx size°¡ 0ÀÎ write ¸í·É.
+            continue; // ì—ëŸ¬ cancel request ëŠ” tx sizeê°€ 0ì¸ write ëª…ë ¹.
         }
         if (!v_tx_last.empty()) {
-            continue; // ¿¡·¯ cancel request ´Â tx size°¡ 0ÀÎ write ¸í·É.
+            continue; // ì—ëŸ¬ cancel request ëŠ” tx sizeê°€ 0ì¸ write ëª…ë ¹.
         }
         //
 
-        // cancel ¹Ù·Î ¾Õ ¸í·É ¾ò±â.
+        // cancel ë°”ë¡œ ì• ëª…ë ¹ ì–»ê¸°.
         --it;
         _q_item::type_ptr ptr_item_normal_last(*it);
         _hid_api_briage::type_next_io next_io_normal_last(ptr_item_normal_last->get_next_io_type());
@@ -833,7 +833,7 @@ bool _vhid_api_briage::_q_worker::_process_cancel(_q_container::type_ptr_list& p
                 continue;
             }
 
-            // ¸¶Áö¸· request ÀÎ cancel Àº »èÁ¦.
+            // ë§ˆì§€ë§‰ request ì¸ cancel ì€ ì‚­ì œ.
             ptr_list->pop_back();
             _q_container::type_list::iterator it_found = std::find_if(std::begin(*ptr_list), std::end(*ptr_list), [&](_q_item::type_ptr & ptr_req)->bool {
                 if (ptr_req->get_map_index() == n_map_index_cancel) {
@@ -865,8 +865,8 @@ bool _vhid_api_briage::_q_worker::_notify_in_single_or_multi_rx_requests(
     const _mp::type_ptr_v_buffer& ptr_v_rx
 )
 {
-    // ¹«ÀÛÁ¤ ±â´Ù¸®´Â ÀÛ¾÷ÀÚ°¡ ÀÖÀ¸¹Ç·Î, ÅëÁö¸¦ ÇÏÁö ¾ÊÀ¸¸é, ¹«ÇÑ ±â´Ù¸²ÀÌ ¹ß»ıÇÑ´Ù.
-    // µû¶ó¼­ ±âº» °ªÀº ÅëÁö.
+    // ë¬´ì‘ì • ê¸°ë‹¤ë¦¬ëŠ” ì‘ì—…ìê°€ ìˆìœ¼ë¯€ë¡œ, í†µì§€ë¥¼ í•˜ì§€ ì•Šìœ¼ë©´, ë¬´í•œ ê¸°ë‹¤ë¦¼ì´ ë°œìƒí•œë‹¤.
+    // ë”°ë¼ì„œ ê¸°ë³¸ ê°’ì€ í†µì§€.
     bool b_notified(true);
     _mp::type_v_buffer v(0);
 
@@ -876,11 +876,11 @@ bool _vhid_api_briage::_q_worker::_notify_in_single_or_multi_rx_requests(
 
     do {
         if (!ptr_req) {
-            b_notified = false;//ÅëÁö ÇÒ Á¤º¸°¡ ¾øÀ½À¸·Î ¹«½Ã.
+            b_notified = false;//í†µì§€ í•  ì •ë³´ê°€ ì—†ìŒìœ¼ë¡œ ë¬´ì‹œ.
             continue;
         }
         if (ptr_req->get_cmd() != _vhid_api_briage::_q_item::cmd_read) {
-            // read ÀÎ °ÍÀº ¹«Á¶°Ç ÅëÁö.
+            // read ì¸ ê²ƒì€ ë¬´ì¡°ê±´ í†µì§€.
             continue;
         }
 
@@ -900,27 +900,25 @@ bool _vhid_api_briage::_q_worker::_notify_in_single_or_multi_rx_requests(
         case _mp::type_bm_dev_hid:
         case _mp::type_bm_dev_lpu200_scr0:
             if (n_result <= 0) {
-                //¿¡·¯³ª ±â´Ù¸² ÇÊ¿ä´Â ¹«Á¶°Ç ÅëÁö.
+                //ì—ëŸ¬ë‚˜ ê¸°ë‹¤ë¦¼ í•„ìš”ëŠ” ë¬´ì¡°ê±´ í†µì§€.
                 break;
             }
 
             n_result = 0;
             v.resize(0);
-            break; // ÀÌ Å¸ÀÔÀº txrx ¸¸ Áö¿øÇÏ¹Ç·Î, pump Áö¿øÀ» À§ÇØ ±â´Ù¸² ÅëÁö.
-            // n_result = 1 ,¿¡·¯·Î ÅëÁöÇÏ¸é, deep recover ½ÃµµÇØ¼­ »óÀ§ ÀÛ¾÷ÀÚ Á×ÀÌ°í, ´Ù½Ã »ı¼ºÇØ¼­ ¹®Á¦ ¹ß»ı.
+            break; // ì´ íƒ€ì…ì€ txrx ë§Œ ì§€ì›í•˜ë¯€ë¡œ, pump ì§€ì›ì„ ìœ„í•´ ê¸°ë‹¤ë¦¼ í†µì§€.
+            // n_result = 1 ,ì—ëŸ¬ë¡œ í†µì§€í•˜ë©´, deep recover ì‹œë„í•´ì„œ ìƒìœ„ ì‘ì—…ì ì£½ì´ê³ , ë‹¤ì‹œ ìƒì„±í•´ì„œ ë¬¸ì œ ë°œìƒ.
         case _mp::type_bm_dev_lpu200_msr:
             if (m_q_result_msr.empty()) {
-                // msr µ¥ÀÌÅÍ°¡ ÇÊ¿äÇÑµ¥, ¾øÀ½.
-                // ±â´Ù¸² ÇÊ¿ä·Î ÅëÁö.
+                // msr ë°ì´í„°ê°€ í•„ìš”í•œë°, ì—†ìŒ.
+                // ê¸°ë‹¤ë¦¼ í•„ìš”ë¡œ í†µì§€.
                 n_result = 0;
                 v.resize(0);
                 break;
             }
-            
-#ifdef _WIN32
-#ifdef _DEBUG
+#if defined(_WIN32) && defined(_DEBUG)
             ATLTRACE(L"-_- ;; NOTIFY - MSR.\n");
-#endif
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
 #endif
             item = m_q_result_msr.front();
             m_q_result_msr.pop_front();
@@ -935,13 +933,16 @@ bool _vhid_api_briage::_q_worker::_notify_in_single_or_multi_rx_requests(
             break;
         case _mp::type_bm_dev_lpu200_ibutton:
             if (m_q_result_ibutton.empty()) {
-                // ibutton µ¥ÀÌÅÍ°¡ ÇÊ¿äÇÑµ¥, ¾øÀ½..
-                // ±â´Ù¸² ÇÊ¿ä·Î ÅëÁö.
+                // ibutton ë°ì´í„°ê°€ í•„ìš”í•œë°, ì—†ìŒ..
+                // ê¸°ë‹¤ë¦¼ í•„ìš”ë¡œ í†µì§€.
                 n_result = 0;
                 v.resize(0);
                 break;
             }
-
+#if defined(_WIN32) && defined(_DEBUG)
+            ATLTRACE(L"-_- ;; NOTIFY - IBUTTON.\n");
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+#endif
             item = m_q_result_ibutton.front();
             m_q_result_ibutton.pop_front();
             //
@@ -954,10 +955,10 @@ bool _vhid_api_briage::_q_worker::_notify_in_single_or_multi_rx_requests(
             }
             break;
         case _mp::type_bm_dev_lpu200_switch0:
-            // µğ¹ö±×¸¦ À§ÇØ ±×³É ÅëÁö.
+            // ë””ë²„ê·¸ë¥¼ ìœ„í•´ ê·¸ëƒ¥ í†µì§€.
             break;
         default:
-            // ¾Ë¼ö ¾ø´Â µğ¹ÙÀÌ½º Å¸ÀÔÀº ±×³É ÅëÁö.
+            // ì•Œìˆ˜ ì—†ëŠ” ë””ë°”ì´ìŠ¤ íƒ€ì…ì€ ê·¸ëƒ¥ í†µì§€.
             break;
         }//emd switch
 
@@ -980,39 +981,51 @@ void _vhid_api_briage::_q_worker::_save_rx_to_msr_or_ibutton_buffer_in_single_or
 
     do {
         if (ptr_req) {
-            // single request ÀÇ °æ¿ì.
+            // single request ì˜ ê²½ìš°.
             if (ptr_req->get_cmd() != _vhid_api_briage::_q_item::cmd_read) {
-                continue;// read ¿äÃ»¿¡¼­¸¸ °í·ÁÇÒ »çÇ×
+                continue;// read ìš”ì²­ì—ì„œë§Œ ê³ ë ¤í•  ì‚¬í•­
             }
         }
 
         if (n_result == 0) {
-            // m_q_result_msr ³ª m_q_result_ibutton °¡ empty ÀÌ¸é, ÀÚµ¿À¸·Î ±â´Ù¸² ¿äÃ»µÊ.
+            // m_q_result_msr ë‚˜ m_q_result_ibutton ê°€ empty ì´ë©´, ìë™ìœ¼ë¡œ ê¸°ë‹¤ë¦¼ ìš”ì²­ë¨.
             continue;
         }
 
         //
         if (n_result < 0) {
-            // read ¿¡·¯.
+            // read ì—ëŸ¬.
             m_q_result_msr.push_back(std::make_pair(n_result, _mp::type_ptr_v_buffer()));
             m_q_result_ibutton.push_back(std::make_pair(n_result, _mp::type_ptr_v_buffer()));
             continue;
         }
 
-        // n_result °¡ ¿µ º¸´Ù Å« °æ¿ì, ptr_v_rx ´Â ¹«Á¶°Ç ÇÒ´çµÇ¾î °ªÀ» °¡Áö°í ÀÖ´Ù.
+        // n_result ê°€ ì˜ ë³´ë‹¤ í° ê²½ìš°, ptr_v_rx ëŠ” ë¬´ì¡°ê±´ í• ë‹¹ë˜ì–´ ê°’ì„ ê°€ì§€ê³  ìˆë‹¤.
         bool b_is_ibutton_format(false);
         std::tie(b_is_ibutton_format,std::ignore) = _vhid_info_lpu237::is_rx_ibutton(*ptr_v_rx);
         if (b_is_ibutton_format) {
+
+#if defined(_WIN32) && defined(_DEBUG)
+            if (ptr_req) {
+                ATLTRACE(L" IBUTTON [0x%08X] : pushed rx.(q size = %u)\n", ptr_req->get_map_index(), m_q_result_ibutton.size() + 1);
+            }
+            else {
+                ATLTRACE(L" IBUTTON [none] : pushed rx.(q size = %u)\n", m_q_result_ibutton.size() + 1);
+            }
+#endif
             m_q_result_ibutton.push_back(std::make_pair(n_result, ptr_v_rx));
             continue;
         }
 
+#if defined(_WIN32) && defined(_DEBUG)
+        if (ptr_req) {
+            ATLTRACE(L" MSR [0x%08X] : pushed rx.(q size = %u)\n", ptr_req->get_map_index(), m_q_result_msr.size() + 1);
+        }
+        else {
+            ATLTRACE(L" MSR [none] : pushed rx.(q size = %u)\n", m_q_result_msr.size() + 1);
+        }
+#endif
         m_q_result_msr.push_back(std::make_pair(n_result, ptr_v_rx));
-#ifdef _WIN32
-#ifdef _DEBUG
-         ATLTRACE(L" MSR : pushed rx.(q size = %u)\n", m_q_result_msr.size());
-#endif
-#endif
 
     } while (false);
 }
@@ -1041,8 +1054,8 @@ int _vhid_api_briage::_q_worker::_rx(_mp::type_v_buffer& v_rx, _hid_api_briage* 
                 //self loop
                 ++n_retry;
                 if (n_retry >= _q_worker::_const_one_packet_of_in_report_retry_counter) {
-                    // fail rx over retry. ÇÏ³ªÀÇ in-report ¸¦ ±¸¼ºÇÏ´Â packet »çÀÌÀÇ °£°İÀÌ 
-                    //_const_one_packet_of_in_report_retry_counter*_const_txrx_pair_rx_interval_mmsec ¸¦ ÃÊ°ú.
+                    // fail rx over retry. í•˜ë‚˜ì˜ in-report ë¥¼ êµ¬ì„±í•˜ëŠ” packet ì‚¬ì´ì˜ ê°„ê²©ì´ 
+                    //_const_one_packet_of_in_report_retry_counter*_const_txrx_pair_rx_interval_mmsec ë¥¼ ì´ˆê³¼.
                     n_result = -1;
                     break;
                 }
@@ -1369,23 +1382,23 @@ bool _vhid_api_briage::_q_container::push( const _vhid_api_briage::_q_item::type
         _mp::type_v_buffer v_tx(ptr_item->get_tx());
 
         if (next_type != _hid_api_briage::next_io_none) {
-            //ÇÏ³ªÀÇ transaction ÀÇ ¸¶Áö¸· request ´Â next_type ÀÌ next_io_none ÀÓ.
+            //í•˜ë‚˜ì˜ transaction ì˜ ë§ˆì§€ë§‰ request ëŠ” next_type ì´ next_io_none ì„.
             status_transaction = _q_container::st_not_yet_transaction;
         }
         else if ((cmd == _q_item::cmd_write) && (v_tx.empty())) {
-            //º¸³¾ µ¥ÀÌÅÍ°¡ ¾ø´Â comd_write ¸í·ÉÀº ÇØ´ç map_index ÀÇ ¸í·ÉÀ» Ãë¼Ò ÇÏ´Â ¿äÃ».
+            //ë³´ë‚¼ ë°ì´í„°ê°€ ì—†ëŠ” comd_write ëª…ë ¹ì€ í•´ë‹¹ map_index ì˜ ëª…ë ¹ì„ ì·¨ì†Œ í•˜ëŠ” ìš”ì²­.
             status_transaction = _q_container::st_cancel;
         }
 
-        // »õ·Î¿î request ÀÇ list »ı¼º.
+        // ìƒˆë¡œìš´ request ì˜ list ìƒì„±.
         _q_container::type_ptr_list ptr_list(new _q_container::type_list());
         ptr_list->push_back(ptr_item);
 
-        // q ¿¡ ³ÖÀ» ¿ä¼Ò »ı¼º.
+        // q ì— ë„£ì„ ìš”ì†Œ ìƒì„±.
         auto new_item = std::make_pair(status_transaction, ptr_list);
         //
         if (m_q_pair.empty()) {
-            // q °¡ ºó °æ¿ì.
+            // q ê°€ ë¹ˆ ê²½ìš°.
             m_q_pair.push_back(new_item);
             _dump_map();// for debuggig
             continue;
@@ -1395,13 +1408,13 @@ bool _vhid_api_briage::_q_container::push( const _vhid_api_briage::_q_item::type
             // cancel request mode.
             bool b_cancel_pushed(false);
 
-            // ÇöÀç ÀúÀåµÈ request list ÀÇ queue ¿¡¼­ cancel ¿äÃ»ÀÌ ¿Â map_index °ªÀ» °®´Â request °¡ ÀÖ´Â list ¸¦ Ã£´Â´Ù.
+            // í˜„ì¬ ì €ì¥ëœ request list ì˜ queue ì—ì„œ cancel ìš”ì²­ì´ ì˜¨ map_index ê°’ì„ ê°–ëŠ” request ê°€ ìˆëŠ” list ë¥¼ ì°¾ëŠ”ë‹¤.
             for (_q_container::type_pair_st_ptr_list& item_q : m_q_pair) {
                 if (item_q.first == _q_container::st_cancel) {
-                    continue; //cancel µÈ request list ¿¡ ¶Ç ´Ù½Ã cancel request ¸¦ Ãß°¡ ÇÒ¼ö ¾ø´Ù.
+                    continue; //cancel ëœ request list ì— ë˜ ë‹¤ì‹œ cancel request ë¥¼ ì¶”ê°€ í• ìˆ˜ ì—†ë‹¤.
                 }
 
-                // ÇöÀç item_q ÀÇ list ¸ğµç ¿ä¼Ò¿¡¼­ »õ·Î¿î ptr_item °ú map index °¡ µ¿ÀÏÇÑ ¿ä¼Ò¸¦ Ã£´Â´Ù.
+                // í˜„ì¬ item_q ì˜ list ëª¨ë“  ìš”ì†Œì—ì„œ ìƒˆë¡œìš´ ptr_item ê³¼ map index ê°€ ë™ì¼í•œ ìš”ì†Œë¥¼ ì°¾ëŠ”ë‹¤.
                 auto it_q_cancel = std::find_if(item_q.second->begin(), item_q.second->end(), [&](_q_item::type_ptr& item)->bool {
                     if (item->get_map_index() == n_map_index) {
                         return true;
@@ -1412,11 +1425,11 @@ bool _vhid_api_briage::_q_container::push( const _vhid_api_briage::_q_item::type
                 });
 
                 if (it_q_cancel == item_q.second->end()) {
-                    continue; // ÇöÀç item_q ÀÇ list ¸ğµç ¿ä¼Ò¿¡ »õ·Î¿î ptr_item °ú map index °¡ µ¿ÀÏÇÑ ¿ä¼Ò°¡ ¾ø´Ù.
+                    continue; // í˜„ì¬ item_q ì˜ list ëª¨ë“  ìš”ì†Œì— ìƒˆë¡œìš´ ptr_item ê³¼ map index ê°€ ë™ì¼í•œ ìš”ì†Œê°€ ì—†ë‹¤.
                 }
                 
-                // ÇöÀç item_q ÀÇ list ¸ğµç ¿ä¼Ò¿¡ »õ·Î¿î ptr_item °ú map index °¡ µ¿ÀÏÇÑ ¿ä¼Ò°¡
-                // ÀÖÀ¸¸é, item_q »óÅÂ¸¦ cancel ·Î ¹Ù²Ù°í, ±× ³¡¿¡ »õ·Î ¹ŞÀº cancel request ¸¦ Ãß°¡.
+                // í˜„ì¬ item_q ì˜ list ëª¨ë“  ìš”ì†Œì— ìƒˆë¡œìš´ ptr_item ê³¼ map index ê°€ ë™ì¼í•œ ìš”ì†Œê°€
+                // ìˆìœ¼ë©´, item_q ìƒíƒœë¥¼ cancel ë¡œ ë°”ê¾¸ê³ , ê·¸ ëì— ìƒˆë¡œ ë°›ì€ cancel request ë¥¼ ì¶”ê°€.
                 item_q.first = _q_container::st_cancel; // this transaction is canceled
                 item_q.second->push_back(ptr_item); //push cancel request
                 b_cancel_pushed = true;
@@ -1424,8 +1437,8 @@ bool _vhid_api_briage::_q_container::push( const _vhid_api_briage::_q_item::type
             }//end for
 
             if (!b_cancel_pushed) {
-                //cancel request 1°³ ¸¸ ÀÖ´Â list »ı¼º ÇÊ¿ä.
-                // cancel request ´Â  write ¸í·ÉÀÇ º¯°æÀÌ°í, write ¸í·ÉÀº push ÇÏ°í, °á°ú¸¦ wait ÇÏ±â ¶§¹®¿¡ ½ÇÁ¦ push °¡ ÇÊ¿ä.
+                //cancel request 1ê°œ ë§Œ ìˆëŠ” list ìƒì„± í•„ìš”.
+                // cancel request ëŠ”  write ëª…ë ¹ì˜ ë³€ê²½ì´ê³ , write ëª…ë ¹ì€ push í•˜ê³ , ê²°ê³¼ë¥¼ wait í•˜ê¸° ë•Œë¬¸ì— ì‹¤ì œ push ê°€ í•„ìš”.
                 m_q_pair.push_back(new_item);
                 _dump_map();
             }
@@ -1434,17 +1447,17 @@ bool _vhid_api_briage::_q_container::push( const _vhid_api_briage::_q_item::type
         }
 
         //
-        //back search - µÚ·Î ºÎÅÍ Ã£´Â ÀÌÀ¯´Â °¡Àå ÃÖ±Ù¿¡ push µÈ request list ¿¡ request °¡ Ãß°¡ µÉ È®·üÀÌ ³ôÀ½.
+        //back search - ë’¤ë¡œ ë¶€í„° ì°¾ëŠ” ì´ìœ ëŠ” ê°€ì¥ ìµœê·¼ì— push ëœ request list ì— request ê°€ ì¶”ê°€ ë  í™•ë¥ ì´ ë†’ìŒ.
         auto it_q = std::find_if(m_q_pair.rbegin(), m_q_pair.rend(), [&](_q_container::type_pair_st_ptr_list & item)->bool{
-            // return ÀÌ true ÀÏ Á¶°Ç.
-            // 1. item ÀÌ complete ÀÌ°í, list ÀÇ ¸ğµç cmd °¡ _q_item::cmd_read, ±×¸®°í b_complete_transaction µµ true
-            // 2. item ÀÌ not complete ÀÌ°í, list ÀÇ ¸ğµç map index °¡ n_map_index ¿Í µ¿ÀÏ.
+            // return ì´ true ì¼ ì¡°ê±´.
+            // 1. item ì´ complete ì´ê³ , list ì˜ ëª¨ë“  cmd ê°€ _q_item::cmd_read, ê·¸ë¦¬ê³  b_complete_transaction ë„ true
+            // 2. item ì´ not complete ì´ê³ , list ì˜ ëª¨ë“  map index ê°€ n_map_index ì™€ ë™ì¼.
             // check complete transaction.
             bool b_found(false);
 
             do {
                 if (item.first == _q_container::st_cancel) {
-                    continue;//cancel µÈ request list ¿¡ request ¸¦ Ãß°¡ÇÒ ¼ö ¾øÀ½
+                    continue;//cancel ëœ request list ì— request ë¥¼ ì¶”ê°€í•  ìˆ˜ ì—†ìŒ
                 }
                 if (item.first == _q_container::st_not_yet_transaction) {
                     if (item.second->back()->get_map_index() == n_map_index) {
@@ -1547,7 +1560,7 @@ void _vhid_api_briage::_q_container::pop_all(int n_result, const _mp::type_v_buf
             if (it->first == _q_container::st_not_yet_transaction) {
                 continue;
             }
-            //ÇÏ³ªÀÇ Æ®·£Á§¼ÇÀ» ±¸¼ºÇÒ °æ¿ì ¶Ç´Â cancel µÈ °æ¿ì, result ¸¦ ¾Ë¸².
+            //í•˜ë‚˜ì˜ íŠ¸ëœì ì…˜ì„ êµ¬ì„±í•  ê²½ìš° ë˜ëŠ” cancel ëœ ê²½ìš°, result ë¥¼ ì•Œë¦¼.
             it->second->back()->set_result(n_result).set_rx(v_rx);
             it->second->back()->set_event();
         }//end for

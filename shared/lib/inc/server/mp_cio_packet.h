@@ -485,6 +485,13 @@ public:
 		const type_packect* p_packet = (type_packect*)& m_v_packet[0];
 		return p_packet->c_act;
 	}
+	std::wstring get_action_by_string() const
+	{
+		const type_packect* p_packet = (type_packect*)&m_v_packet[0];
+
+		return cio_packet::get_action_code_by_string(p_packet->c_act);
+	}
+
 	unsigned char get_in_id() const
 	{
 		const type_packect* p_packet = (type_packect*)&m_v_packet[0];

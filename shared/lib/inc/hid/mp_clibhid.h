@@ -43,6 +43,21 @@ namespace _mp{
             _const_dev_pluginout_check_interval_mmsec = 100
         };
     public:
+        /**
+        * @brief create singleton instance of clibhid class.(device manager)
+        * 
+        *   1. set default device filter to lpu237, lpu238, hidbootloader.
+        * 
+        *   2. create _vhid_api_briage instance.
+        * 
+        *   3. get the current connected device list.
+        * 
+        *   4. create & open clibhid_dev instatnce. (virtual device - using _vhid_api_briage instance) and register these to map.
+        * 
+        *   5. create & run device plug in/out thread.( clibhid::_worker_pluginout() ) 
+        * 
+        * @return the instance of clibhid class.
+        */
         static clibhid& get_instance();
 
         ~clibhid();
