@@ -7,6 +7,8 @@
 
 #ifdef _WIN32
 #ifdef _DEBUG
+#undef __THIS_FILE_ONLY__
+//#define __THIS_FILE_ONLY__
 #include <atltrace.h>
 #endif
 #endif
@@ -124,6 +126,16 @@ namespace _mp {
     void clibhid_dev::start_write(const std::vector<unsigned char>& v_tx, cqitem_dev::type_cb cb, void* p_user_for_cb, unsigned long n_session_number/*=0*/)
     {
         cqitem_dev::type_ptr ptr(new cqitem_dev(v_tx,false,cb,p_user_for_cb, n_session_number));
+
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+        if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
+            ATLTRACE(L" =======(%ls) push req(%ls).\n",
+                _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str(),
+                ptr->get_request_type_by_string().c_str()
+            );
+        }
+#endif
+
         m_q_ptr.push(ptr);
     }
 
@@ -131,12 +143,28 @@ namespace _mp {
     void clibhid_dev::start_read(cqitem_dev::type_cb cb, void* p_user_for_cb, unsigned long n_session_number/*=0*/)
     {
         cqitem_dev::type_ptr ptr(new cqitem_dev(_mp::type_v_buffer(0), true, cb, p_user_for_cb, n_session_number));
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+        if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
+            ATLTRACE(L" =======(%ls) push req(%ls).\n",
+                _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str(),
+                ptr->get_request_type_by_string().c_str()
+            );
+        }
+#endif
         m_q_ptr.push(ptr);
     }
 
     void clibhid_dev::start_write_read(const std::vector<unsigned char>& v_tx, cqitem_dev::type_cb cb, void* p_user_for_cb, unsigned long n_session_number/*=0*/)
     {
         cqitem_dev::type_ptr ptr_tx(new cqitem_dev(v_tx, true, cb, p_user_for_cb, n_session_number));
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+        if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
+            ATLTRACE(L" =======(%ls) push req(%ls).\n",
+                _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str(),
+                ptr_tx->get_request_type_by_string().c_str()
+            );
+        }
+#endif
         m_q_ptr.push(ptr_tx);
     }
 
@@ -144,6 +172,14 @@ namespace _mp {
     {
         //cancel -> tx is none, no need rx!
         cqitem_dev::type_ptr ptr(new cqitem_dev(_mp::type_v_buffer(0), false, cb, p_user_for_cb, n_session_number));
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+        if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
+            ATLTRACE(L" =======(%ls) push req(%ls).\n",
+                _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str(),
+                ptr->get_request_type_by_string().c_str()
+            );
+        }
+#endif
         m_q_ptr.push(ptr);
     }
 
@@ -170,7 +206,7 @@ namespace _mp {
             clog::get_instance().trace(L"T[W] - %ls - _read_using_thread() in pump.\n", __WFUNCTION__);
             clog::get_instance().log_fmt(L"[W] - %ls - _read_using_thread() in pump.\n", __WFUNCTION__);
             if (b_expected_replugin) {
-#if defined(_WIN32) && defined(_DEBUG)
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
                 ATLTRACE(L" =******= DECTECT plugout.\n");
 #endif
                 m_b_detect_replugin = true;//need this device instance removed
@@ -522,7 +558,7 @@ namespace _mp {
                 clog::get_instance().log_fmt(L"[E] - %ls - _read_using_thread().\n", __WFUNCTION__);
 
                 if (b_expected_replugin) {
-#if defined(_WIN32) && defined(_DEBUG)
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
                     ATLTRACE(L" =******= DECTECT plugout.\n");
 #endif
                     m_b_detect_replugin = true;//need this device instance removed
@@ -587,17 +623,13 @@ namespace _mp {
     */
     void clibhid_dev::_worker_rx()
     {
-#ifdef _WIN32
-#ifdef _DEBUG
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
         ATLTRACE(L"start clibhid_dev::_worker_rx(0x%08x).\n", m_n_dev);
-#endif
 #endif
         size_t n_report = m_dev_info.get_size_in_report();
         if (n_report <= 0) {
-#ifdef _WIN32
-#ifdef _DEBUG
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
             ATLTRACE(L"Exit[E] clibhid_dev::_worker_rx(0x%08x).\n", m_n_dev);
-#endif
 #endif
             return;
         }
@@ -657,19 +689,15 @@ namespace _mp {
         std::wstring s_id = ss.str();
         //_mp::clog::get_instance().log_fmt(L"[I] exit : %ls : id = %ls.\n", __WFUNCTION__, s_id.c_str()); ,, dead lock
 
-#ifdef _WIN32
-#ifdef _DEBUG
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
         ATLTRACE(L"Exit clibhid_dev::_worker_rx(0x%08x-%s).\n", m_n_dev, _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str());
-#endif
 #endif
     }
 
     void clibhid_dev::_worker()
     {
-#ifdef _WIN32
-#ifdef _DEBUG
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
         ATLTRACE(L"start clibhid_dev::_worker(0x%08x-%s).\n", m_n_dev, _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str());
-#endif
 #endif
 
         cqitem_dev::type_ptr ptr_new, ptr_cur;
@@ -711,7 +739,7 @@ namespace _mp {
                             ptr_cur_old->reset_result();// 재시작을 위해 결과 초기화.
                             ptr_cur = ptr_cur_old;
                             ptr_cur_old.reset();
-#if defined(_WIN32) && defined(_DEBUG)
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
                             if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
                                 if (m_n_debug_line != (__LINE__ + 1)) {
                                     m_n_debug_line = __LINE__;
@@ -727,7 +755,7 @@ namespace _mp {
 
                         // pumping
                         std::tie(b_read_ok, b_expected_replugin) = _pump();//pumpping.
-#if defined(_WIN32) && defined(_DEBUG)
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
                         if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
                             if (m_n_debug_line != (__LINE__+1)) {
                                 m_n_debug_line = __LINE__;
@@ -749,7 +777,7 @@ namespace _mp {
                         clog::get_instance().trace(L"T[E] - %ls - new request but read is error status.\n", __WFUNCTION__);
                         clog::get_instance().log_fmt(L"[E] - %ls - new request but read is error status.\n", __WFUNCTION__);
                         ptr_new->set_result(cqitem_dev::result_error, type_v_buffer(0), L"RX");
-#if defined(_WIN32) && defined(_DEBUG)
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
                         if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
                             if (m_n_debug_line != (__LINE__+1)) {
                                 m_n_debug_line = __LINE__;
@@ -766,7 +794,7 @@ namespace _mp {
                     // 새로운 명령을 처리.
                     std::tie(b_complete,b_request_is_cancel) = _process_new_request_and_set_result(ptr_new, ptr_cur);
 
-#if defined(_WIN32) && defined(_DEBUG)
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
                     if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
                         if (m_n_debug_line != (__LINE__ + 1)) {
                             m_n_debug_line = __LINE__;
@@ -802,7 +830,7 @@ namespace _mp {
                         // ptr_new 는 cancel req 로 ptr_cur가 있는 경우, ptr_cur 를 cancel 시킴.
                         // 따라서 구조상, ptr_cur 에 대한 cancel nortificate 먼저 하고, 
                         // ptr_new 에 대한 nortificate 나중에.(notification AREA)
-#if defined(_WIN32) && defined(_DEBUG)
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
                         if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
                             if (m_n_debug_line != (__LINE__+1)) {
                                 m_n_debug_line = __LINE__;
@@ -820,7 +848,7 @@ namespace _mp {
                         // 기존 ptr_cur 이 있는 경우, 동기명령 ptr_new 에 의해 취소되므로,
                         // 따라서 구조상, ptr_cur 에 대한 cancel notificate 먼저 하고,
                         // ptr_new 에 대한 nortificate 나중에.(notification AREA)
-#if defined(_WIN32) && defined(_DEBUG)
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
                         if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
                             if (m_n_debug_line != (__LINE__+1)) {
                                 m_n_debug_line = __LINE__;
@@ -840,7 +868,7 @@ namespace _mp {
                         // ptr_new 가 비동기명령인 경우는 여기에.
                         // ptr_cur가 있는 경우, ptr_cur 를 cancel 시키고 cancel notificate 를 아래 코드로.
                         ptr_cur->run_callback();
-#if defined(_WIN32) && defined(_DEBUG)
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
                         if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
                             if (m_n_debug_line != (__LINE__ + 1)) {
                                 m_n_debug_line = __LINE__;
@@ -855,7 +883,7 @@ namespace _mp {
 
                     // ptr_new 가 비동기명령 또는 동기식이나 응답 수신전인 경우 여기에.
                     // 새로운 명령 처리가 더 필요하므로, 현재 명령으로 설정.
-#if defined(_WIN32) && defined(_DEBUG)
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
                     if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
                         if (m_n_debug_line != (__LINE__ + 1)) {
                             m_n_debug_line = __LINE__;
@@ -884,7 +912,7 @@ namespace _mp {
                 // 현재 명령으로 설정된 명령을 위해 계속 수신 시도함.
                 std::tie(b_read_ok, b_complete, v_rx) = _process_only_rx(ptr_cur);
                 if (!b_complete) {
-#if defined(_WIN32) && defined(_DEBUG)
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
                     if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
                         if (m_n_debug_line != (__LINE__+1)) {
                             m_n_debug_line = __LINE__;
@@ -897,7 +925,7 @@ namespace _mp {
 
                 if (b_read_ok) {
                     ptr_cur->set_result(cqitem_dev::result_success, v_rx, L"SUCCESS");
-#if defined(_WIN32) && defined(_DEBUG)
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
                     if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
                         if (m_n_debug_line != (__LINE__+1)) {
                             m_n_debug_line = __LINE__;
@@ -908,7 +936,7 @@ namespace _mp {
                 }
                 else {
                     ptr_cur->set_result(cqitem_dev::result_error, v_rx, L"ERROR-_process_only_rx()");
-#if defined(_WIN32) && defined(_DEBUG)
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
                     if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
                         if (m_n_debug_line != (__LINE__+1)) {
                             m_n_debug_line = __LINE__;
@@ -924,11 +952,11 @@ namespace _mp {
             if (ptr_cur) {
                 if (ptr_cur->is_complete()) {
                     if (ptr_cur->run_callback()) {
-#if defined(_WIN32) && defined(_DEBUG)
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
                         if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
                             if (m_n_debug_line != (__LINE__ + 1)) {
                                 m_n_debug_line = __LINE__;
-                                ATLTRACE(L" =======(%ls)[%09u] cur req(%ls).callback.complete\n",
+                                ATLTRACE(L" =======(%ls)[%09u] cur req(%ls).callback.complete(ptr_cur will be reset)\n",
                                     _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str(),
                                     ptr_cur->get_session_number(),
                                     ptr_cur->get_request_type_by_string().c_str()
@@ -940,7 +968,7 @@ namespace _mp {
                     }
                     else {
                         //callback 이 false 를 return 하면, rx 를 다시 시도.
-#if defined(_WIN32) && defined(_DEBUG)
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
                         if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
                             if (m_n_debug_line != (__LINE__ + 1)) {
                                 m_n_debug_line = __LINE__;
@@ -959,7 +987,7 @@ namespace _mp {
             if (ptr_new) {
                 if (ptr_new->is_complete()) {
                     ptr_new->run_callback();//impossible re-read
-#if defined(_WIN32) && defined(_DEBUG)
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
                     if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
                         if (m_n_debug_line != (__LINE__ + 1)) {
                             m_n_debug_line = __LINE__;
@@ -992,12 +1020,9 @@ namespace _mp {
         std::wstring s_id = ss.str();
         //_mp::clog::get_instance().log_fmt(L"[I] exit : %ls : id = %ls.\n", __WFUNCTION__, s_id.c_str());<<dead lock
 
-#ifdef _WIN32
-#ifdef _DEBUG
-        ATLTRACE(L"Exit clibhid_dev::_worker(0x%08x-%s).\n", m_n_dev, _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str());
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+        ATLTRACE(L"Exit clibhid_dev::_worker(0x%08x-%ls).\n", m_n_dev, _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str());
 #endif
-#endif
-
     }
 
 }

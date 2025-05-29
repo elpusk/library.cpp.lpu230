@@ -373,6 +373,38 @@ namespace _mp {
 		return s_out;
 	}
 
+	std::wstring cbase_ctl_fn::_cstate::get_string_from_sel_another_state(_cstate::type_state_sel_another st_sel_another)
+	{
+		std::wstring s_out;
+
+		switch (st_sel_another) {
+		case cbase_ctl_fn::_cstate::st_snot_anot:
+			s_out = L"st_snot_anot";	break;
+		case cbase_ctl_fn::_cstate::st_snot_aidl:
+			s_out = L"st_snot_aidl";	break;
+		case cbase_ctl_fn::_cstate::st_snot_aasy:
+			s_out = L"st_snot_aasy";	break;
+
+		case cbase_ctl_fn::_cstate::st_sidl_anot:
+			s_out = L"st_sidl_anot";	break;
+		case cbase_ctl_fn::_cstate::st_sidl_aidl:
+			s_out = L"st_sidl_aidl";	break;
+		case cbase_ctl_fn::_cstate::st_sidl_aasy:
+			s_out = L"st_sidl_aasy";	break;
+
+		case cbase_ctl_fn::_cstate::st_sasy_anot:
+			s_out = L"st_sasy_anot";	break;
+		case cbase_ctl_fn::_cstate::st_sasy_aidl:
+			s_out = L"st_sasy_aidl";	break;
+		case cbase_ctl_fn::_cstate::st_sasy_aasy:
+			s_out = L"st_sasy_aasy";	break;
+
+		default:
+			break;
+		}//end switch
+		return s_out;
+	}
+
 	cbase_ctl_fn::_cstate::_cstate()
 	{
 		this->reset();

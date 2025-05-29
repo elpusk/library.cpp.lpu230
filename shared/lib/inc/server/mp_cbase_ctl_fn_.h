@@ -112,7 +112,19 @@ namespace _mp {
 			*/
 			static _cstate::type_state get_state_from_mask(int n_mask);
 
+			/**
+			* @brief get state string from state code.
+			* @param st - state code
+			* @return wstring - state string.
+			*/
 			static std::wstring get_string_from_state(_cstate::type_state st);
+
+			/**
+			* @brief get sel-another string from sel-another state code.
+			* @param st - _cstate::type_state_sel_another state code
+			* @return wstring - _cstate::type_state_sel_another state string.
+			*/
+			static std::wstring get_string_from_sel_another_state(_cstate::type_state_sel_another st_sel_another);
 
 		public:
 			_cstate();

@@ -28,8 +28,11 @@ namespace _mp {
 		typedef	std::weak_ptr< cdev_ctl_fn >	type_wptr;
 		typedef	std::shared_ptr< cdev_ctl_fn >	type_ptr;
 
-		// 0 - request ptr, 1-event, 2 - event index ,3 - response ptr
+		// 0 - request ptr, 1-event ptr, 2 - event index ,3 - response ptr
 		typedef	std::tuple< cio_packet::type_ptr, cwait::type_ptr, int, cio_packet::type_ptr> type_tuple_full;
+
+		// vector of tuple : 0 - request ptr, 1-event ptr, 2 - event index ,3 - response ptr
+		typedef std::vector< cdev_ctl_fn::type_tuple_full > type_v_tuple_full;
 
 		typedef std::shared_ptr< std::map<unsigned long, _mp::type_ptr_v_buffer > > type_ptr_map_ptr_rx;
 
@@ -366,6 +369,41 @@ namespace _mp {
 		*/
 		std::vector<cio_packet::type_ptr> get_front_of_read_queue();
 
+		/**
+		* @brief the job of this functions.
+		* 
+		*	this function must be call at occuring rx-event in processing a async-request.
+		*
+		*	1. transit state of all completed async req.
+		*
+		*	2. if need to change mode, this function will change the mode.(shared/exclusive)
+		*
+		*	3. this function is designed for state transition by aync function. 
+		*
+		* @param [in] v_tuple_full - vector of tuple : 0 - request ptr, 1-event ptr, 2 - event index ,3 - response ptr
+		*
+		*/
+		void transit_state_for_only_all_async_by_rx_event(const cdev_ctl_fn::type_v_tuple_full & v_tuple_full);
+
+		/**
+		* @brief the job of this functions.
+		*
+		*	1. transit state by a request event.
+		*
+		*	2. if need to change mode, this function will change the mode.(shared/exclusive)
+		*
+		*	3. add new session to map in open request if the condition is satisfied with creating it.
+		*
+		*	4. remove a session from map in close request if the condition is satisfied with removing it.
+		*
+		* @param [in/out]result - result class instance. DON't touch result.b_processing_complete member in this function.
+		*
+		* @param [in]b_user_shared_mode_on_open_request - true : open request is shared mode. false : exclusive mode.
+		*
+		*	this paramer is used only in open request.
+		*/
+		void transit_state_by_processing_result(cbase_ctl_fn::cresult& result, bool b_user_shared_mode_on_open_request = false);
+
 	private:
 		/**
 		* @brief process transaction state by the given event.
@@ -588,25 +626,6 @@ namespace _mp {
 		bool _proc_event_open(cbase_ctl_fn::cresult& result, bool b_need_low_level);
 
 		/**
-		* @brief the job of this functions.
-		*
-		*	1. transit state by a request event.
-		*
-		*	2. if need to change mode, this function will change the mode.(shared/exclusive)
-		*
-		*	3. add new session to map in open request if the condition is satisfied with creating it.
-		*
-		*	4. remove a session from map in close request if the condition is satisfied with removing it.
-		*
-		* @param [in/out]result - result class instance. DON't touch result.b_processing_complete member in this function.
-		*
-		* @param [in]b_user_shared_mode_on_open_request - true : open request is shared mode. false : exclusive mode.
-		*
-		*	this paramer is used only in open request.
-		*/
-		void _transit_state_by_processing_result(cbase_ctl_fn::cresult& result, bool b_user_shared_mode_on_open_request = false);
-
-		/**
 		* @brief start sync pattern request transaction. and wait for complete.
 		*
 		*	This function does "not" remove the request from the sync pattern request queue.
@@ -665,7 +684,7 @@ namespace _mp {
 		);
 
 		/**
-		* @brief if a state is changed in _transit_state_by_processing_result(),
+		* @brief if a state is changed in transit_state_by_processing_result(),
 		* 
 		*	logging and trace state information. this function will be used for debugging.
 		* 
@@ -678,6 +697,7 @@ namespace _mp {
 		virtual ~cdev_ctl_fn();
 
 	protected:
+		std::mutex m_mutex_for_state;
 		bool m_b_cur_shared_mode;// the current open mode : true - shared mode, false - exclusive mode(default)
 		bool m_b_cur_shared_mode_old_for_debug; // For runtime debugging.
 
