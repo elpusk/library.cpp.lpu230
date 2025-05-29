@@ -20,8 +20,8 @@
 #include <hid/_vhid_info_lpu237.h>
 
 #if defined(_WIN32) && defined(_DEBUG)
-//#undef __THIS_FILE_ONLY__
-#define __THIS_FILE_ONLY__
+#undef __THIS_FILE_ONLY__
+//#define __THIS_FILE_ONLY__
 
 #include <atltrace.h>
 #endif

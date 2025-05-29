@@ -8,7 +8,7 @@
 #ifdef _WIN32
 #ifdef _DEBUG
 #undef __THIS_FILE_ONLY__
-//#define __THIS_FILE_ONLY__
+#define __THIS_FILE_ONLY__
 #include <atltrace.h>
 #endif
 #endif
