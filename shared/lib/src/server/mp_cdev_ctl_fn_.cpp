@@ -631,7 +631,7 @@ namespace _mp {
 		/**
 		* callback 에서 서버에 바로 전송하지 말자.
 		*/
-		bool cdev_ctl_fn::_cb_dev_read_on_exclusive(cqitem_dev& qi, void* p_user)
+		std::pair<bool, cqitem_dev::type_ptr> cdev_ctl_fn::_cb_dev_read_on_exclusive(cqitem_dev& qi, void* p_user)
 		{
 			bool b_complete(true);
 			cdev_ctl_fn* p_obj((cdev_ctl_fn*)p_user);
@@ -718,18 +718,19 @@ namespace _mp {
 
 			} while (false);
 
-			return b_complete;
+			return std::make_pair(b_complete, cqitem_dev::type_ptr());
 		}
 
 		/**
 		* callback 에서 서버에 바로 전송하지 말자.
 		*/
-		bool cdev_ctl_fn::_cb_dev_read_on_shared(cqitem_dev& qi, void* p_user)
+		std::pair<bool, cqitem_dev::type_ptr> cdev_ctl_fn::_cb_dev_read_on_shared(cqitem_dev& qi, void* p_user)
 		{
 			bool b_complete(true);
 			cdev_ctl_fn* p_obj((cdev_ctl_fn*)p_user);
 
 			cio_packet::type_ptr ptr_rsp;
+			cqitem_dev::type_ptr ptr_next; //TODO 다음에 reading 을 계속 필요한 것을 설정해주어 하는데.
 
 			do {
 				bool b_pass_this_response(false);
@@ -810,7 +811,7 @@ namespace _mp {
 #endif
 			} while (false);
 
-			return b_complete;
+			return std::make_pair(b_complete, ptr_next);
 		}
 
 		/**
@@ -819,7 +820,7 @@ namespace _mp {
 		* @param second user data
 		* @return true -> complete, false -> read more
 		*/
-		bool cdev_ctl_fn::_cb_dev_for_sync_req(cqitem_dev& qi, void* p_user)
+		std::pair<bool, cqitem_dev::type_ptr> cdev_ctl_fn::_cb_dev_for_sync_req(cqitem_dev& qi, void* p_user)
 		{
 			//callback 에서 서버에 바로 전송하지 말자.
 			bool b_complete(true);
@@ -860,7 +861,7 @@ namespace _mp {
 				}
 
 			} while (false);
-			return b_complete;
+			return std::make_pair(b_complete, cqitem_dev::type_ptr());
 		}
 
 		void cdev_ctl_fn::_reset_(bool b_shared_mode)

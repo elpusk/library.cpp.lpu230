@@ -35,6 +35,18 @@ namespace _mp{
         */
         typedef	bool(* type_cb)(cqitem_dev &,void*);
 
+
+        /**
+        * for cio_packet,callback type 
+        * @param first this reference
+        * @param second user data
+        * @return
+        *   first : true -> complete, false -> read more
+        * 
+        *   second : cqitem_dev::type_ptr next reading request.
+        */
+        typedef	std::pair<bool, cqitem_dev::type_ptr>(*type_cb_for_packet)(cqitem_dev&, void*);
+
     public:
         cqitem_dev( const cqitem_dev& src )
         {
@@ -47,6 +59,8 @@ namespace _mp{
             m_v_rx = src.m_v_rx;
 
             m_cb = src.m_cb;
+            m_cb_for_packet = src.m_cb_for_packet;
+
             m_p_user_for_cb = src.m_p_user_for_cb;
             m_result = src.m_result;
             m_s_info = src.m_s_info;
@@ -61,6 +75,18 @@ namespace _mp{
             m_v_tx = v_tx;
             m_b_need_read = b_need_read;
             m_cb = cb;
+            m_cb_for_packet = nullptr;
+            m_p_user_for_cb = p_user_for_cb;
+            m_n_session_number = n_session_number;
+        }
+
+        cqitem_dev(const type_v_buffer& v_tx, bool b_need_read, type_cb_for_packet cb_for_packet, void* p_user_for_cb, unsigned long n_session_number)
+        {
+            _ini();
+            m_v_tx = v_tx;
+            m_b_need_read = b_need_read;
+            m_cb = nullptr;
+            m_cb_for_packet = cb_for_packet;
             m_p_user_for_cb = p_user_for_cb;
             m_n_session_number = n_session_number;
         }
@@ -210,6 +236,28 @@ namespace _mp{
             return m_cb(*this, m_p_user_for_cb);
         }
 
+        /**
+        * @brief execute callback for packet
+        * @return
+        *   first : true -> complete, false -> read more
+        * 
+        *   second : request which need more reading.
+        * 
+        *   if first is false, second is always cqitem_dev::type_ptr().
+        * 
+        *   else second is cqitem_dev::type_ptr()(stop reading, all complete) 
+        *
+        *   or the allocated req ptr( the current complete, need reading for the next req).
+        */
+
+        std::pair<bool, cqitem_dev::type_ptr> run_callback_for_packet()
+        {
+            if (!m_cb_for_packet) {
+                return std::make_pair(true, cqitem_dev::type_ptr() );//No need repeat reading
+            }
+            return m_cb_for_packet(*this, m_p_user_for_cb);
+        }
+
     protected:
         void _ini()
         {
@@ -217,6 +265,7 @@ namespace _mp{
             m_v_rx.resize(0);
             m_b_need_read = false;
             m_cb = nullptr;
+            m_cb_for_packet = nullptr;
             m_p_user_for_cb = nullptr;
             m_result = cqitem_dev::result_not_yet;
             m_s_info.clear();
@@ -228,6 +277,8 @@ namespace _mp{
         type_v_buffer m_v_tx;//set by constrcuture
         bool m_b_need_read;
         cqitem_dev::type_cb m_cb;//set by constrcuture
+        cqitem_dev::type_cb_for_packet m_cb_for_packet;//set by constrcuture
+
         void* m_p_user_for_cb;//set by constrcuture
         unsigned long m_n_session_number;//set by constrcuture
 

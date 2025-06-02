@@ -257,25 +257,34 @@ namespace _mp {
 		* @brief callback of clibhid_dev.start_read on exclusive mode
 		* @param first cqitem_dev reference
 		* @param second user data
-		* @return : true -> complete, false -> read more
+		* @return
+		*   first : true -> complete, false -> read more
+		*
+		*   second : cqitem_dev::type_ptr()
 		*/
-		static bool _cb_dev_read_on_exclusive(cqitem_dev& qi, void* p_user);
+		static std::pair<bool, cqitem_dev::type_ptr> _cb_dev_read_on_exclusive(cqitem_dev& qi, void* p_user);
 
 		/**
 		* @brief callback of clibhid_dev.start_read on shared mode
 		* @param first cqitem_dev reference
 		* @param second user data
-		* @return : true -> complete, false -> read more
+		* @return
+		*   first : true -> complete, false -> read more
+		*
+		*   second : cqitem_dev::type_ptr next reading request.
 		*/
-		static bool _cb_dev_read_on_shared(cqitem_dev& qi, void* p_user);
+		static std::pair<bool, cqitem_dev::type_ptr> _cb_dev_read_on_shared(cqitem_dev& qi, void* p_user);
 
 		/**
 		* callback of clibhid_dev.start_write. start_write_read. start_cancel.( sync style)
 		* @param first cqitem_dev reference
 		* @param second user data
-		* @return true -> complete, false -> read more
+		* @return
+		*   first : true -> complete, false -> read more
+		*
+		*   second : cqitem_dev::type_ptr()
 		*/
-		static bool _cb_dev_for_sync_req(cqitem_dev& qi, void* p_user);
+		static std::pair<bool, cqitem_dev::type_ptr> _cb_dev_for_sync_req(cqitem_dev& qi, void* p_user);
 
 	private:
 		/**

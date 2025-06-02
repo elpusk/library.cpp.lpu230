@@ -79,6 +79,8 @@ namespace _mp {
         */
         void start_write(const std::vector<unsigned char>& v_tx, cqitem_dev::type_cb cb, void* p_user_for_cb, unsigned long n_session_number=0);
 
+        void start_write(const std::vector<unsigned char>& v_tx, cqitem_dev::type_cb_for_packet cb_for_packet, void* p_user_for_cb, unsigned long n_session_number = 0);
+
         /**
         * @brief Staring Read an Input report from a HID device.
         * Input reports are returned
@@ -93,6 +95,8 @@ namespace _mp {
         */
         void start_read(cqitem_dev::type_cb cb, void* p_user_for_cb, unsigned long n_session_number = 0);
 
+        void start_read(cqitem_dev::type_cb_for_packet cb_for_packet, void* p_user_for_cb, unsigned long n_session_number = 0);
+
         /**
         * @brief Staring Write an Output report to a HID device. and read operation
         * the fist byte must be report ID. start write operation.
@@ -105,6 +109,8 @@ namespace _mp {
         */
         void start_write_read(const std::vector<unsigned char>& v_tx, cqitem_dev::type_cb cb, void* p_user_for_cb, unsigned long n_session_number = 0);
 
+        void start_write_read(const std::vector<unsigned char>& v_tx, cqitem_dev::type_cb_for_packet cb_for_packet, void* p_user_for_cb, unsigned long n_session_number = 0);
+
         /**
         * @brief Staring cancel operation.
         * If there's an ongoing read request, cancel it and notify the previous request's callback with the response.
@@ -114,6 +120,8 @@ namespace _mp {
         * @param n_session_number - session number, if not used it, use Zero.
         */
         void start_cancel(cqitem_dev::type_cb cb, void* p_user_for_cb, unsigned long n_session_number = 0);
+
+        void start_cancel(cqitem_dev::type_cb_for_packet cb_for_packet, void* p_user_for_cb, unsigned long n_session_number = 0);
 
         /**
         * @brief get device type.

@@ -139,10 +139,40 @@ namespace _mp {
         m_q_ptr.push(ptr);
     }
 
+    void clibhid_dev::start_write(const std::vector<unsigned char>& v_tx, cqitem_dev::type_cb_for_packet cb_for_packet, void* p_user_for_cb, unsigned long n_session_number/*=0*/)
+    {
+        cqitem_dev::type_ptr ptr(new cqitem_dev(v_tx, false, cb_for_packet, p_user_for_cb, n_session_number));
+
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+        if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
+            ATLTRACE(L" =======(%ls) push req(%ls).\n",
+                _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str(),
+                ptr->get_request_type_by_string().c_str()
+            );
+        }
+#endif
+
+        m_q_ptr.push(ptr);
+    }
+
 
     void clibhid_dev::start_read(cqitem_dev::type_cb cb, void* p_user_for_cb, unsigned long n_session_number/*=0*/)
     {
         cqitem_dev::type_ptr ptr(new cqitem_dev(_mp::type_v_buffer(0), true, cb, p_user_for_cb, n_session_number));
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+        if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
+            ATLTRACE(L" =======(%ls) push req(%ls).\n",
+                _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str(),
+                ptr->get_request_type_by_string().c_str()
+            );
+        }
+#endif
+        m_q_ptr.push(ptr);
+    }
+
+    void clibhid_dev::start_read(cqitem_dev::type_cb_for_packet cb_for_packet, void* p_user_for_cb, unsigned long n_session_number/*=0*/)
+    {
+        cqitem_dev::type_ptr ptr(new cqitem_dev(_mp::type_v_buffer(0), true, cb_for_packet, p_user_for_cb, n_session_number));
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
         if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
             ATLTRACE(L" =======(%ls) push req(%ls).\n",
@@ -168,10 +198,39 @@ namespace _mp {
         m_q_ptr.push(ptr_tx);
     }
 
+    void clibhid_dev::start_write_read(const std::vector<unsigned char>& v_tx, cqitem_dev::type_cb_for_packet cb_for_packet, void* p_user_for_cb, unsigned long n_session_number/*=0*/)
+    {
+        cqitem_dev::type_ptr ptr_tx(new cqitem_dev(v_tx, true, cb_for_packet, p_user_for_cb, n_session_number));
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+        if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
+            ATLTRACE(L" =======(%ls) push req(%ls).\n",
+                _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str(),
+                ptr_tx->get_request_type_by_string().c_str()
+            );
+        }
+#endif
+        m_q_ptr.push(ptr_tx);
+    }
+
     void clibhid_dev::start_cancel(cqitem_dev::type_cb cb, void* p_user_for_cb, unsigned long n_session_number/*=0*/)
     {
         //cancel -> tx is none, no need rx!
         cqitem_dev::type_ptr ptr(new cqitem_dev(_mp::type_v_buffer(0), false, cb, p_user_for_cb, n_session_number));
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+        if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
+            ATLTRACE(L" =======(%ls) push req(%ls).\n",
+                _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str(),
+                ptr->get_request_type_by_string().c_str()
+            );
+        }
+#endif
+        m_q_ptr.push(ptr);
+    }
+
+    void clibhid_dev::start_cancel(cqitem_dev::type_cb_for_packet cb_for_packet, void* p_user_for_cb, unsigned long n_session_number/*=0*/)
+    {
+        //cancel -> tx is none, no need rx!
+        cqitem_dev::type_ptr ptr(new cqitem_dev(_mp::type_v_buffer(0), false, cb_for_packet, p_user_for_cb, n_session_number));
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
         if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
             ATLTRACE(L" =======(%ls) push req(%ls).\n",
@@ -701,7 +760,6 @@ namespace _mp {
 #endif
 
         cqitem_dev::type_ptr ptr_new, ptr_cur;
-        cqitem_dev::type_ptr ptr_cur_old; // 이것을 사용하면, ibutton 두개 실행하면, 몇번되다가 둘개 다 응답없음.
         int n_size_in_report(m_dev_info.get_size_in_report());
         _mp::type_v_buffer v_rx(n_size_in_report, 0);
 
@@ -734,24 +792,6 @@ namespace _mp {
                     if (!ptr_cur) {
                         // 현재 작업 주인 것 없으면.
                         // 처리 안된, async 가 있으면, ptr_cur 에 다시 assing 해서 다음 loop 에서 실행.
-                        // TODO
-                        if (ptr_cur_old) {
-                            ptr_cur_old->reset_result();// 재시작을 위해 결과 초기화.
-                            ptr_cur = ptr_cur_old;
-                            ptr_cur_old.reset();
-#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-                            if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
-                                if (m_n_debug_line != (__LINE__ + 1)) {
-                                    m_n_debug_line = __LINE__;
-                                    ATLTRACE(L" =======(%ls) old cur req(%ls) -> cur\n",
-                                        _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str(),
-                                        ptr_cur->get_request_type_by_string().c_str()
-                                    );
-                                }
-                            }
-#endif
-                            continue;
-                        }
 
                         // pumping
                         std::tie(b_read_ok, b_expected_replugin) = _pump();//pumpping.
@@ -867,7 +907,7 @@ namespace _mp {
                         // callback 해서 알려 준다. 
                         // ptr_new 가 비동기명령인 경우는 여기에.
                         // ptr_cur가 있는 경우, ptr_cur 를 cancel 시키고 cancel notificate 를 아래 코드로.
-                        ptr_cur->run_callback();
+                        ptr_cur->run_callback_for_packet();
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
                         if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
                             if (m_n_debug_line != (__LINE__ + 1)) {
@@ -902,10 +942,7 @@ namespace _mp {
                         }
                     }
 #endif
-                    if (ptr_cur) {
-                        ptr_cur_old = ptr_cur;// backup current req. 나중 복구를 위해.
-                    }
-                    ptr_cur = ptr_new;
+                    ptr_cur = ptr_new; // ptr_cur 이 overwrite 되어도 내부 q 에서 유지되어 메모리에서 제거 되지 않음. 
                     ptr_new.reset();
                 }
 
@@ -951,7 +988,9 @@ namespace _mp {
             // notification AREA
             if (ptr_cur) {
                 if (ptr_cur->is_complete()) {
-                    if (ptr_cur->run_callback()) {
+
+                    auto cb_result = ptr_cur->run_callback_for_packet();
+                    if (cb_result.first) {
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
                         if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
                             if (m_n_debug_line != (__LINE__ + 1)) {
@@ -965,6 +1004,7 @@ namespace _mp {
                         }
 #endif
                         ptr_cur.reset();
+                        ptr_cur = cb_result.second; // 현재 req 를 제거, 또는 다음 reading req 를 설정.
                     }
                     else {
                         //callback 이 false 를 return 하면, rx 를 다시 시도.
@@ -986,7 +1026,7 @@ namespace _mp {
 
             if (ptr_new) {
                 if (ptr_new->is_complete()) {
-                    ptr_new->run_callback();//impossible re-read
+                    ptr_new->run_callback_for_packet();//impossible re-read
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
                     if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
                         if (m_n_debug_line != (__LINE__ + 1)) {
