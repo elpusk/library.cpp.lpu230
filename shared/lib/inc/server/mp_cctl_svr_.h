@@ -8,7 +8,7 @@
 #include <vector>
 
 #include <mp_type.h>
-#include <server/mp_cio_packet.h>
+#include <mp_cio_packet.h>
 #include <server/mp_cworker_ctl.h>
 
 #include <hid/mp_clibhid_dev_info.h>

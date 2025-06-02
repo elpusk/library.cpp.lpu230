@@ -7,7 +7,7 @@
 #include <websocket/mp_cws_client.h>
 #include <mp_clog.h>
 
-#include <server/mp_cio_packet.h>
+#include <mp_cio_packet.h>
 #include <server/mp_cclient_cb.h>
 
 namespace _mp {

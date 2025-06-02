@@ -10,7 +10,7 @@
 #include <mp_type.h>
 #include <mp_cqueue.h>
 #include <mp_clog.h>
-#include <server/mp_cio_packet.h>
+#include <mp_cio_packet.h>
 #include <server/mp_cbase_ctl_fn_.h>
 
 namespace _mp {

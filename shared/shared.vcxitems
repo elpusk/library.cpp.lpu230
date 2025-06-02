@@ -62,6 +62,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\mp_casync_result_manager.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\mp_cconvert.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\mp_cfile.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\mp_cio_packet.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\mp_cnamed_pipe_.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\mp_coffee.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\mp_cstring.h" />
@@ -84,7 +85,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\server\mp_cclient_cb_qitem.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\server\mp_cclient_manager.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\server\mp_cdev_ctl_.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\server\mp_cio_packet.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\server\mp_ckernel_ctl_.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\server\mp_cmain_ctl_.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\server\mp_cserver_.h" />

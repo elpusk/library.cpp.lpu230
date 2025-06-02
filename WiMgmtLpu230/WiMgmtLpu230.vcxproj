@@ -46,6 +46,7 @@
     <ClInclude Include="..\shared\lib\inc\mp_cconsole.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cconvert.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cfile.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_cio_packet.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cnamed_pipe_.h" />
     <ClInclude Include="..\shared\lib\inc\mp_coffee.h" />
     <ClInclude Include="..\shared\lib\inc\mp_coffee_path.h" />

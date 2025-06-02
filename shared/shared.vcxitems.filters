@@ -227,9 +227,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\mp_vcpacket.h">
       <Filter>lib\inc</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\server\mp_cio_packet.h">
-      <Filter>lib\inc\svr</Filter>
-    </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\server\mp_cctl_svr_.h">
       <Filter>lib\inc\svr</Filter>
     </ClInclude>
@@ -313,6 +310,9 @@
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\server\mp_cbase_ctl_fn_.h">
       <Filter>lib\inc\svr</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\mp_cio_packet.h">
+      <Filter>lib\inc</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -170,9 +170,6 @@
     <ClInclude Include="..\shared\lib\inc\server\mp_cdev_ctl_.h">
       <Filter>lib\svr</Filter>
     </ClInclude>
-    <ClInclude Include="..\shared\lib\inc\server\mp_cio_packet.h">
-      <Filter>lib\svr</Filter>
-    </ClInclude>
     <ClInclude Include="..\shared\lib\inc\server\mp_cmain_ctl_.h">
       <Filter>lib\svr</Filter>
     </ClInclude>
@@ -241,6 +238,9 @@
     </ClInclude>
     <ClInclude Include="..\shared\lib\inc\server\mp_cbase_ctl_fn_.h">
       <Filter>lib\svr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cio_packet.h">
+      <Filter>lib</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

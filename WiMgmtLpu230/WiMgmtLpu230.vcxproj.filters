@@ -152,5 +152,8 @@
     <ClInclude Include="..\shared\lib\inc\hid\_vhid_info_lpu237.h">
       <Filter>lib\hid</Filter>
     </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cio_packet.h">
+      <Filter>lib</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

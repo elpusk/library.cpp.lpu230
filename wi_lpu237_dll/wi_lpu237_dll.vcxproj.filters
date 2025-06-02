@@ -162,9 +162,6 @@
     <ClInclude Include="..\shared\lib\inc\mp_vcpacket.h">
       <Filter>lib</Filter>
     </ClInclude>
-    <ClInclude Include="..\shared\lib\inc\server\mp_cio_packet.h">
-      <Filter>lib\svr</Filter>
-    </ClInclude>
     <ClInclude Include="..\shared\common\inc\lpu230\compiler.h">
       <Filter>common\lpu230</Filter>
     </ClInclude>
@@ -185,6 +182,9 @@
     </ClInclude>
     <ClInclude Include="..\shared\common\inc\cdef.h">
       <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cio_packet.h">
+      <Filter>lib</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -4,7 +4,7 @@
 #include <memory>
 
 #include <mp_coffee_path.h>
-#include <server/mp_cio_packet.h>
+#include <mp_cio_packet.h>
 #include <server/mp_cserver_.h>
 #include <server/mp_cctl_svr_.h>
 

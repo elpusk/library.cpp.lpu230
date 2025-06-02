@@ -78,9 +78,6 @@
     <ClInclude Include="..\shared\lib\inc\server\mp_cclient_manager.h">
       <Filter>lib\svr</Filter>
     </ClInclude>
-    <ClInclude Include="..\shared\lib\inc\server\mp_cio_packet.h">
-      <Filter>lib\svr</Filter>
-    </ClInclude>
     <ClInclude Include="..\shared\lib\inc\websocket\mp_cws_client.h">
       <Filter>lib\ws</Filter>
     </ClInclude>
@@ -145,6 +142,9 @@
       <Filter>lib</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\lib\inc\mp_vcworker.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cio_packet.h">
       <Filter>lib</Filter>
     </ClInclude>
   </ItemGroup>

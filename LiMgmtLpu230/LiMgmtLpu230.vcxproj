@@ -162,6 +162,7 @@
     <ClInclude Include="..\shared\lib\inc\mp_cconsole.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cconvert.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cfile.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_cio_packet.h" />
     <ClInclude Include="..\shared\lib\inc\mp_clog.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cnamed_pipe_.h" />
     <ClInclude Include="..\shared\lib\inc\mp_coffee.h" />
@@ -180,7 +181,6 @@
     <ClInclude Include="..\shared\lib\inc\server\mp_cctl_svr_.h" />
     <ClInclude Include="..\shared\lib\inc\server\mp_cdev_ctl_.h" />
     <ClInclude Include="..\shared\lib\inc\server\mp_cdev_ctl_fn_.h" />
-    <ClInclude Include="..\shared\lib\inc\server\mp_cio_packet.h" />
     <ClInclude Include="..\shared\lib\inc\server\mp_ckernel_ctl_.h" />
     <ClInclude Include="..\shared\lib\inc\server\mp_cmain_ctl_.h" />
     <ClInclude Include="..\shared\lib\inc\server\mp_cmain_ctl_fn_.h" />

@@ -197,6 +197,7 @@
     <ClInclude Include="..\shared\lib\inc\mp_cconsole.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cconvert.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cfile.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_cio_packet.h" />
     <ClInclude Include="..\shared\lib\inc\mp_clog.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cnamed_pipe_.h" />
     <ClInclude Include="..\shared\lib\inc\mp_coffee.h" />
@@ -216,7 +217,6 @@
     <ClInclude Include="..\shared\lib\inc\server\mp_cclient_cb.h" />
     <ClInclude Include="..\shared\lib\inc\server\mp_cclient_cb_qitem.h" />
     <ClInclude Include="..\shared\lib\inc\server\mp_cclient_manager.h" />
-    <ClInclude Include="..\shared\lib\inc\server\mp_cio_packet.h" />
     <ClInclude Include="..\shared\lib\inc\websocket\mp_cws_client.h" />
     <ClInclude Include="..\shared\lib\inc\websocket\mp_win_nt.h" />
     <ClInclude Include="..\shared\lib\inc\websocket\mp_ws_tools.h" />

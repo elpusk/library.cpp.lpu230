@@ -185,6 +185,7 @@
     <ClInclude Include="..\shared\lib\inc\mp_cconsole.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cconvert.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cfile.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_cio_packet.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cnamed_pipe_.h" />
     <ClInclude Include="..\shared\lib\inc\mp_coffee.h" />
     <ClInclude Include="..\shared\lib\inc\mp_coffee_path.h" />
@@ -203,7 +204,6 @@
     <ClInclude Include="..\shared\lib\inc\server\mp_cbase_ctl_fn_.h" />
     <ClInclude Include="..\shared\lib\inc\server\mp_cdev_ctl_.h" />
     <ClInclude Include="..\shared\lib\inc\server\mp_cdev_ctl_fn_.h" />
-    <ClInclude Include="..\shared\lib\inc\server\mp_cio_packet.h" />
     <ClInclude Include="..\shared\lib\inc\server\mp_ckernel_ctl_.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">false</ExcludedFromBuild>

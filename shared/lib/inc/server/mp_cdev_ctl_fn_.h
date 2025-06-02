@@ -13,7 +13,7 @@
 #include <mp_type.h>
 #include <mp_clog.h>
 #include <mp_cwait.h>
-#include <server/mp_cio_packet.h>
+#include <mp_cio_packet.h>
 #include <server/mp_cbase_ctl_fn_.h>
 #include <hid/mp_clibhid_dev.h>
 
@@ -254,18 +254,18 @@ namespace _mp {
 
 	private:
 		/**
-		* callback of clibhid_dev.start_read on exclusive mode
+		* @brief callback of clibhid_dev.start_read on exclusive mode
 		* @param first cqitem_dev reference
 		* @param second user data
-		* @return true -> complete, false -> read more
+		* @return : true -> complete, false -> read more
 		*/
 		static bool _cb_dev_read_on_exclusive(cqitem_dev& qi, void* p_user);
 
 		/**
-		* callback of clibhid_dev.start_read on shared mode
+		* @brief callback of clibhid_dev.start_read on shared mode
 		* @param first cqitem_dev reference
 		* @param second user data
-		* @return true -> complete, false -> read more
+		* @return : true -> complete, false -> read more
 		*/
 		static bool _cb_dev_read_on_shared(cqitem_dev& qi, void* p_user);
 

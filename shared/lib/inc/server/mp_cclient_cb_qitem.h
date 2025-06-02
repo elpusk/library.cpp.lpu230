@@ -6,7 +6,7 @@
 #include <thread>
 
 #include <mp_type.h>
-#include <server/mp_cio_packet.h>
+#include <mp_cio_packet.h>
 
 namespace _mp {
 	/**

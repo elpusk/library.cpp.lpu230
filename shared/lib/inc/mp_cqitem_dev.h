@@ -31,7 +31,7 @@ namespace _mp{
         /**
         * @param first this reference
         * @param second user data
-        * @return true -> complete, false -> read more
+        * @return : true -> complete, false -> read more
         */
         typedef	bool(* type_cb)(cqitem_dev &,void*);
 
@@ -196,6 +196,11 @@ namespace _mp{
             m_v_rx.resize(0);
             m_s_info.clear();
         }
+
+        /**
+        * @brief execute callback
+        * @return : true -> complete, false -> read more
+        */
 
         bool run_callback()
         {

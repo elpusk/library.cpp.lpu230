@@ -11,6 +11,10 @@
 #include <mp_vcpacket.h>
 
 namespace _mp {
+
+	/**
+	* websocket IO packet
+	*/
 class cio_packet : public _mp::vcpacket
 {
 public:

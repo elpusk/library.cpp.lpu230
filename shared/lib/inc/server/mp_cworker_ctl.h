@@ -12,7 +12,7 @@
 #include <mp_cqueue.h>
 #include <mp_clog.h>
 #include <mp_vcworker.h>
-#include <server/mp_cio_packet.h>
+#include <mp_cio_packet.h>
 
 
 namespace _mp {

@@ -4,7 +4,7 @@
 #include <mp_type.h>
 #include <mp_clog.h>
 #include <mp_cqitem_dev.h>
-#include <server/mp_cio_packet.h>
+#include <mp_cio_packet.h>
 
 namespace _mp {
 	class cbase_ctl_fn

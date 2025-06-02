@@ -9,7 +9,7 @@
 
 #include <mp_type.h>
 #include <mp_cqueue.h>
-#include <server/mp_cio_packet.h>
+#include <mp_cio_packet.h>
 #include <server/mp_cworker_ctl.h>
 #include <server/mp_cmain_ctl_fn_.h>
 
