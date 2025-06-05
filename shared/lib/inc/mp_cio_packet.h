@@ -347,7 +347,7 @@ public:
 		,type_owner c_owner,unsigned long dw_device_index, type_act c_act
 		, unsigned char c_in_id, unsigned char c_out_id
 		, cio_packet::type_data_field data_field_type,unsigned long n_data,const unsigned char *ps_data)
-		: m_type_data_field(data_field_type), m_b_must_be_recover(false)
+		: _mp::vcpacket(),m_type_data_field(data_field_type), m_b_must_be_recover(false)
 	{
 		m_v_packet = cio_packet::_build(c_cmd, n_session, c_owner, dw_device_index, c_act, c_in_id,c_out_id, n_data, ps_data);
 	}
@@ -357,7 +357,7 @@ public:
 		, type_owner c_owner, unsigned long dw_device_index, type_act c_act
 		, unsigned char c_in_id, unsigned char c_out_id
 		, cio_packet::type_data_field data_field_type, const type_v_buffer & v_data)
-		: m_type_data_field(data_field_type), m_b_must_be_recover(false)
+		: _mp::vcpacket(), m_type_data_field(data_field_type), m_b_must_be_recover(false)
 	{
 		if (v_data.empty()) {
 			m_v_packet = cio_packet::_build(c_cmd, n_session, c_owner, dw_device_index, c_act, c_in_id,c_out_id, (unsigned long)v_data.size(), NULL);
@@ -369,9 +369,12 @@ public:
 
 	cio_packet & operator=(const cio_packet & src)
 	{
-		m_v_packet = src.m_v_packet;
-		m_type_data_field = src.m_type_data_field;
-		m_b_must_be_recover = src.m_b_must_be_recover;
+		if (this != &src) {
+			vcpacket::operator=(src);
+
+			m_type_data_field = src.m_type_data_field;
+			m_b_must_be_recover = src.m_b_must_be_recover;
+		}
 		return *this;
 	}
 

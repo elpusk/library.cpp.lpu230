@@ -1,6 +1,7 @@
 #pragma once
 
 #include <mutex>
+#include <vector>
 
 #include <mp_type.h>
 #include <mp_cconvert.h>
@@ -43,9 +44,9 @@ namespace _mp{
         * @return
         *   first : true -> complete, false -> read more
         * 
-        *   second : cqitem_dev::type_ptr next reading request.
+        *   second : next reading request uid vector.
         */
-        typedef	std::pair<bool, cqitem_dev::type_ptr>(*type_cb_for_packet)(cqitem_dev&, void*);
+        typedef	std::pair<bool, std::vector<size_t>>(*type_cb_for_packet)(cqitem_dev&, void*);
 
     public:
         cqitem_dev( const cqitem_dev& src )
@@ -55,21 +56,25 @@ namespace _mp{
         }
         cqitem_dev& operator=(const cqitem_dev& src)
         {
-            m_v_tx = src.m_v_tx;
-            m_v_rx = src.m_v_rx;
+            if (this != &src) {
+                m_v_tx = src.m_v_tx;
+                m_v_rx = src.m_v_rx;
 
-            m_cb = src.m_cb;
-            m_cb_for_packet = src.m_cb_for_packet;
+                m_cb = src.m_cb;
+                m_cb_for_packet = src.m_cb_for_packet;
 
-            m_p_user_for_cb = src.m_p_user_for_cb;
-            m_result = src.m_result;
-            m_s_info = src.m_s_info;
-            m_n_session_number = src.m_n_session_number;
+                m_p_user_for_cb = src.m_p_user_for_cb;
+                m_result = src.m_result;
+                m_s_info = src.m_s_info;
+                m_n_session_number = src.m_n_session_number;
+
+                m_n_uid = src.m_n_uid;
+            }
 
             return *this;
         }
 
-        cqitem_dev(const type_v_buffer & v_tx, bool b_need_read, type_cb cb, void* p_user_for_cb, unsigned long n_session_number)
+        cqitem_dev(size_t n_uid,const type_v_buffer & v_tx, bool b_need_read, type_cb cb, void* p_user_for_cb, unsigned long n_session_number)
         {
             _ini();
             m_v_tx = v_tx;
@@ -78,9 +83,11 @@ namespace _mp{
             m_cb_for_packet = nullptr;
             m_p_user_for_cb = p_user_for_cb;
             m_n_session_number = n_session_number;
+
+            m_n_uid = n_uid;
         }
 
-        cqitem_dev(const type_v_buffer& v_tx, bool b_need_read, type_cb_for_packet cb_for_packet, void* p_user_for_cb, unsigned long n_session_number)
+        cqitem_dev(size_t n_uid, const type_v_buffer& v_tx, bool b_need_read, type_cb_for_packet cb_for_packet, void* p_user_for_cb, unsigned long n_session_number)
         {
             _ini();
             m_v_tx = v_tx;
@@ -89,6 +96,8 @@ namespace _mp{
             m_cb_for_packet = cb_for_packet;
             m_p_user_for_cb = p_user_for_cb;
             m_n_session_number = n_session_number;
+
+            m_n_uid = n_uid;
         }
 
         virtual ~cqitem_dev()
@@ -243,21 +252,29 @@ namespace _mp{
         * 
         *   second : request which need more reading.
         * 
-        *   if first is false, second is always cqitem_dev::type_ptr().
+        *   if first is false, second is always std::vector<size_t>().
         * 
-        *   else second is cqitem_dev::type_ptr()(stop reading, all complete) 
+        *   else second is std::vector<size_t>()(stop reading, all complete) 
         *
-        *   or the allocated req ptr( the current complete, need reading for the next req).
+        *   or the next reading request uid vector( the current complete, need reading for the next req).
         */
 
-        std::pair<bool, cqitem_dev::type_ptr> run_callback_for_packet()
+        std::pair<bool, std::vector<size_t>> run_callback_for_packet()
         {
             if (!m_cb_for_packet) {
-                return std::make_pair(true, cqitem_dev::type_ptr() );//No need repeat reading
+                return std::make_pair(true, std::vector<size_t>());//No need repeat reading
             }
             return m_cb_for_packet(*this, m_p_user_for_cb);
         }
 
+        /**
+        * @brief get unique id
+        * @return unique id of this Q item
+        */
+        size_t get_uid() const
+        {
+            return m_n_uid;
+        }
     protected:
         void _ini()
         {
@@ -270,6 +287,8 @@ namespace _mp{
             m_result = cqitem_dev::result_not_yet;
             m_s_info.clear();
             m_n_session_number = 0;
+
+            m_n_uid = 0;
         }
 
     protected:
@@ -286,6 +305,8 @@ namespace _mp{
         type_v_buffer m_v_rx;
         cqitem_dev::type_result m_result;
         std::wstring m_s_info;
+
+        size_t m_n_uid; //unique id 
 
     private:
         cqitem_dev() = delete;

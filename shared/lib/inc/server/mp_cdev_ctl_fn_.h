@@ -197,11 +197,16 @@ namespace _mp {
 			*	
 			*	and removed recover flag.
 			* 
-			* @param qi - processing result
+			* @param qi[in] - processing result
+			* 
+			* @param v_req_uid_need_more_reading[in/out,option] - the uid vector of request which need more reading.
 			*
 			* @return vector of tuple(0 - request, 1-event, 2 - event index, 3 - response)
 			*/
-			std::vector<cdev_ctl_fn::type_tuple_full> qm_read_set_response_front(cqitem_dev& qi);
+			std::vector<cdev_ctl_fn::type_tuple_full> qm_read_set_response_front(
+				cqitem_dev& qi,
+				std::vector<size_t>& v_req_uid_need_more_reading
+			);
 
 			
 			/**
@@ -260,9 +265,9 @@ namespace _mp {
 		* @return
 		*   first : true -> complete, false -> read more
 		*
-		*   second : cqitem_dev::type_ptr()
+		*   second : std::vector<size_t> - next reading request uid vector
 		*/
-		static std::pair<bool, cqitem_dev::type_ptr> _cb_dev_read_on_exclusive(cqitem_dev& qi, void* p_user);
+		static std::pair<bool, std::vector<size_t>> _cb_dev_read_on_exclusive(cqitem_dev& qi, void* p_user);
 
 		/**
 		* @brief callback of clibhid_dev.start_read on shared mode
@@ -271,9 +276,9 @@ namespace _mp {
 		* @return
 		*   first : true -> complete, false -> read more
 		*
-		*   second : cqitem_dev::type_ptr next reading request.
+		*   second : std::vector<size_t> - next reading request uid vector
 		*/
-		static std::pair<bool, cqitem_dev::type_ptr> _cb_dev_read_on_shared(cqitem_dev& qi, void* p_user);
+		static std::pair<bool, std::vector<size_t>> _cb_dev_read_on_shared(cqitem_dev& qi, void* p_user);
 
 		/**
 		* callback of clibhid_dev.start_write. start_write_read. start_cancel.( sync style)
@@ -282,9 +287,9 @@ namespace _mp {
 		* @return
 		*   first : true -> complete, false -> read more
 		*
-		*   second : cqitem_dev::type_ptr()
+		*   second : std::vector<size_t> - next reading request uid vector
 		*/
-		static std::pair<bool, cqitem_dev::type_ptr> _cb_dev_for_sync_req(cqitem_dev& qi, void* p_user);
+		static std::pair<bool, std::vector<size_t>> _cb_dev_for_sync_req(cqitem_dev& qi, void* p_user);
 
 	private:
 		/**

@@ -79,7 +79,7 @@ namespace _mp {
         */
         void start_write(const std::vector<unsigned char>& v_tx, cqitem_dev::type_cb cb, void* p_user_for_cb, unsigned long n_session_number=0);
 
-        void start_write(const std::vector<unsigned char>& v_tx, cqitem_dev::type_cb_for_packet cb_for_packet, void* p_user_for_cb, unsigned long n_session_number = 0);
+        void start_write(size_t n_req_uid, const std::vector<unsigned char>& v_tx, cqitem_dev::type_cb_for_packet cb_for_packet, void* p_user_for_cb, unsigned long n_session_number = 0);
 
         /**
         * @brief Staring Read an Input report from a HID device.
@@ -95,7 +95,7 @@ namespace _mp {
         */
         void start_read(cqitem_dev::type_cb cb, void* p_user_for_cb, unsigned long n_session_number = 0);
 
-        void start_read(cqitem_dev::type_cb_for_packet cb_for_packet, void* p_user_for_cb, unsigned long n_session_number = 0);
+        void start_read(size_t n_req_uid, cqitem_dev::type_cb_for_packet cb_for_packet, void* p_user_for_cb, unsigned long n_session_number = 0);
 
         /**
         * @brief Staring Write an Output report to a HID device. and read operation
@@ -109,7 +109,7 @@ namespace _mp {
         */
         void start_write_read(const std::vector<unsigned char>& v_tx, cqitem_dev::type_cb cb, void* p_user_for_cb, unsigned long n_session_number = 0);
 
-        void start_write_read(const std::vector<unsigned char>& v_tx, cqitem_dev::type_cb_for_packet cb_for_packet, void* p_user_for_cb, unsigned long n_session_number = 0);
+        void start_write_read(size_t n_req_uid, const std::vector<unsigned char>& v_tx, cqitem_dev::type_cb_for_packet cb_for_packet, void* p_user_for_cb, unsigned long n_session_number = 0);
 
         /**
         * @brief Staring cancel operation.
@@ -121,7 +121,7 @@ namespace _mp {
         */
         void start_cancel(cqitem_dev::type_cb cb, void* p_user_for_cb, unsigned long n_session_number = 0);
 
-        void start_cancel(cqitem_dev::type_cb_for_packet cb_for_packet, void* p_user_for_cb, unsigned long n_session_number = 0);
+        void start_cancel(size_t n_req_uid, cqitem_dev::type_cb_for_packet cb_for_packet, void* p_user_for_cb, unsigned long n_session_number = 0);
 
         /**
         * @brief get device type.

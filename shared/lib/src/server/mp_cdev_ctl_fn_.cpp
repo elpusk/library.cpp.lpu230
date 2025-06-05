@@ -300,12 +300,17 @@ namespace _mp {
 			return v_result;
 		}
 
-		std::vector<cdev_ctl_fn::type_tuple_full> cdev_ctl_fn::_cq_mgmt::qm_read_set_response_front(cqitem_dev& qi)
+		std::vector<cdev_ctl_fn::type_tuple_full> cdev_ctl_fn::_cq_mgmt::qm_read_set_response_front(
+			cqitem_dev& qi,
+			std::vector<size_t>& v_req_uid_need_more_reading
+		)
 		{
 			cwait::type_ptr ptr_evt;
 			cio_packet::type_ptr ptr_req, ptr_rsp;
 			int n_evt(-1);
 			std::vector<cdev_ctl_fn::type_tuple_full> v_result;
+
+			v_req_uid_need_more_reading.clear(); // 계속 읽기가 필요한 req 의 uid vector 초기화..
 
 			do {
 				std::lock_guard<std::mutex> lock(m_mutex);
@@ -330,14 +335,21 @@ namespace _mp {
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
 								ATLTRACE(L"-- RESET recover flag %09u.\n", ptr_req->get_session_number());
 #endif
+								v_req_uid_need_more_reading.push_back(ptr_req->get_uid());
 								continue;// recover flag 있는 것은 response 를 설정하지 않음.
 							}
 						}
 
 						if (!ptr_evt) {
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+							ATLTRACE(L"-- ERROR ptr_evt is nullptr %09u.\n", ptr_req->get_session_number());
+#endif
 							continue;
 						}
 						if (!cbase_ctl_fn::_set_response(*ptr_rsp, qi, *ptr_req)) {
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+							ATLTRACE(L"-- ERROR fail set rsp %09u.\n", ptr_req->get_session_number());
+#endif
 							continue;
 						}
 						v_result.push_back(r);
@@ -354,14 +366,21 @@ namespace _mp {
 				// 같은 session 에 있는 것만 결과 setting.
 				for (; it != std::end(m_map_ptr_q_ptr_cur_req_read); ++it) {
 					auto r = it->second->pop_front(false);
-					ptr_evt = std::get<1>(r);
+					std::tie(ptr_req, ptr_evt, n_evt, ptr_rsp) = r;
 					if (!ptr_evt) {
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+						ATLTRACE(L"-- ERROR ptr_evt is nullptr %09u.\n", ptr_req->get_session_number());
+#endif
 						continue;
 					}
 					if (std::get<0>(r)->get_session_number() != qi.get_session_number()) {
+						v_req_uid_need_more_reading.push_back(ptr_req->get_uid());
 						continue;
 					}
 					if (!cbase_ctl_fn::_set_response(*std::get<3>(r), qi, *std::get<0>(r))) {
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+						ATLTRACE(L"~~~~~ [%09u] Set response of  req read Q.\n", ptr_req->get_session_number());
+#endif
 						continue;
 					}
 					v_result.push_back(r);
@@ -631,7 +650,7 @@ namespace _mp {
 		/**
 		* callback 에서 서버에 바로 전송하지 말자.
 		*/
-		std::pair<bool, cqitem_dev::type_ptr> cdev_ctl_fn::_cb_dev_read_on_exclusive(cqitem_dev& qi, void* p_user)
+		std::pair<bool, std::vector<size_t>> cdev_ctl_fn::_cb_dev_read_on_exclusive(cqitem_dev& qi, void* p_user)
 		{
 			bool b_complete(true);
 			cdev_ctl_fn* p_obj((cdev_ctl_fn*)p_user);
@@ -700,7 +719,8 @@ namespace _mp {
 				}
 				
 				// 현재 수신을 응답으로 설정. 
-				std::vector<cdev_ctl_fn::type_tuple_full> v_tuple = p_obj->m_mgmt_q.qm_read_set_response_front(qi);
+				std::vector<size_t> v_dummy_of_req_uid_need_more_reading;
+				std::vector<cdev_ctl_fn::type_tuple_full> v_tuple = p_obj->m_mgmt_q.qm_read_set_response_front(qi, v_dummy_of_req_uid_need_more_reading);
 				if (v_tuple.empty()) {
 					b_complete = false;
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
@@ -718,19 +738,20 @@ namespace _mp {
 
 			} while (false);
 
-			return std::make_pair(b_complete, cqitem_dev::type_ptr());
+			return std::make_pair(b_complete, std::vector<size_t>());
 		}
 
 		/**
 		* callback 에서 서버에 바로 전송하지 말자.
 		*/
-		std::pair<bool, cqitem_dev::type_ptr> cdev_ctl_fn::_cb_dev_read_on_shared(cqitem_dev& qi, void* p_user)
+		std::pair<bool, std::vector<size_t>> cdev_ctl_fn::_cb_dev_read_on_shared(cqitem_dev& qi, void* p_user)
 		{
 			bool b_complete(true);
 			cdev_ctl_fn* p_obj((cdev_ctl_fn*)p_user);
 
 			cio_packet::type_ptr ptr_rsp;
-			cqitem_dev::type_ptr ptr_next; //TODO 다음에 reading 을 계속 필요한 것을 설정해주어 하는데.
+			size_t n_qitem_uid(qi.get_uid());
+			std::vector<size_t> v_req_uid_need_more_reading;
 
 			do {
 				bool b_pass_this_response(false);
@@ -794,7 +815,8 @@ namespace _mp {
 				}
 
 				//응답 공유 상태에서는 모든 read 에 대해 응답을 동일하게 설정해주어야 함.
-				std::vector<cdev_ctl_fn::type_tuple_full> v_tuple = p_obj->m_mgmt_q.qm_read_set_response_front(qi);
+				
+				std::vector<cdev_ctl_fn::type_tuple_full> v_tuple = p_obj->m_mgmt_q.qm_read_set_response_front(qi, v_req_uid_need_more_reading);
 				if (v_tuple.empty()) {
 					b_complete = false;
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
@@ -808,10 +830,13 @@ namespace _mp {
 				//////////////////////
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
 				ATLTRACE(L">>>>>>> [%ls] normal complete with state change(shared).\n", __WFUNCTION__);
+				for (auto item : v_req_uid_need_more_reading) {
+					ATLTRACE(L">>>>>>> more reading uid - %u.\n", item);
+				}
 #endif
 			} while (false);
 
-			return std::make_pair(b_complete, ptr_next);
+			return std::make_pair(b_complete, v_req_uid_need_more_reading);
 		}
 
 		/**
@@ -820,7 +845,7 @@ namespace _mp {
 		* @param second user data
 		* @return true -> complete, false -> read more
 		*/
-		std::pair<bool, cqitem_dev::type_ptr> cdev_ctl_fn::_cb_dev_for_sync_req(cqitem_dev& qi, void* p_user)
+		std::pair<bool, std::vector<size_t>> cdev_ctl_fn::_cb_dev_for_sync_req(cqitem_dev& qi, void* p_user)
 		{
 			//callback 에서 서버에 바로 전송하지 말자.
 			bool b_complete(true);
@@ -861,7 +886,7 @@ namespace _mp {
 				}
 
 			} while (false);
-			return std::make_pair(b_complete, cqitem_dev::type_ptr());
+			return std::make_pair(b_complete, std::vector<size_t>());
 		}
 
 		void cdev_ctl_fn::_reset_(bool b_shared_mode)
@@ -1801,7 +1826,7 @@ namespace _mp {
 				{
 				case cio_packet::act_dev_transmit:
 					std::tie(std::ignore, ptr_evt, std::ignore, ptr_rsp) = m_mgmt_q.qm_sync_push_back(ptr_req);
-					wptr_dev.lock()->start_write_read(v_tx, cdev_ctl_fn::_cb_dev_for_sync_req, this, n_session);
+					wptr_dev.lock()->start_write_read(ptr_req->get_uid(),v_tx, cdev_ctl_fn::_cb_dev_for_sync_req, this, n_session);
 					if (ptr_evt) {
 						// 만약 자동 cancel 되는 request 가 있으면, 현재 request 보다 q 앞쪽에서 있기 때문에, cdev_ctl::_execute() 에서 자동 응답 client 에 전송됨.
 						ptr_evt->wait_for_at_once();
@@ -1809,7 +1834,7 @@ namespace _mp {
 					break;
 				case cio_packet::act_dev_cancel:
 					std::tie(std::ignore, ptr_evt, std::ignore, ptr_rsp) = m_mgmt_q.qm_sync_push_back(ptr_req);
-					wptr_dev.lock()->start_cancel(cdev_ctl_fn::_cb_dev_for_sync_req, this, n_session);
+					wptr_dev.lock()->start_cancel(ptr_req->get_uid(), cdev_ctl_fn::_cb_dev_for_sync_req, this, n_session);
 					if (ptr_evt) {
 						// 만약 자동 cancel 되는 request 가 있으면, 현재 request 보다 q 앞쪽에서 있기 때문에, cdev_ctl::_execute() 에서 자동 응답 client 에 전송됨.
 						ptr_evt->wait_for_at_once();
@@ -1817,7 +1842,7 @@ namespace _mp {
 					break;
 				case cio_packet::act_dev_write:
 					std::tie(std::ignore, ptr_evt, std::ignore, ptr_rsp) = m_mgmt_q.qm_sync_push_back(ptr_req);
-					wptr_dev.lock()->start_write(v_tx, cdev_ctl_fn::_cb_dev_for_sync_req, this, n_session);
+					wptr_dev.lock()->start_write(ptr_req->get_uid(), v_tx, cdev_ctl_fn::_cb_dev_for_sync_req, this, n_session);
 					if (ptr_evt) {
 						// 만약 자동 cancel 되는 request 가 있으면, 현재 request 보다 q 앞쪽에서 있기 때문에, cdev_ctl::_execute() 에서 자동 응답 client 에 전송됨.
 						ptr_evt->wait_for_at_once();
@@ -1868,7 +1893,7 @@ namespace _mp {
 				req.set_data(type_v_buffer());
 
 				std::tie(std::ignore, ptr_evt, std::ignore, std::ignore) = m_mgmt_q.qm_sync_push_back(ptr_req);
-				wptr_dev.lock()->start_cancel(cdev_ctl_fn::_cb_dev_for_sync_req, this, n_session);
+				wptr_dev.lock()->start_cancel(ptr_req->get_uid(), cdev_ctl_fn::_cb_dev_for_sync_req, this, n_session);
 				if (ptr_evt) {
 					ptr_evt->wait_for_at_once();
 				}
@@ -1918,10 +1943,10 @@ namespace _mp {
 						);
 #endif
 						if (m_b_cur_shared_mode) {
-							wptr_dev.lock()->start_read(cdev_ctl_fn::_cb_dev_read_on_shared, this, n_session);
+							wptr_dev.lock()->start_read(ptr_req->get_uid(), cdev_ctl_fn::_cb_dev_read_on_shared, this, n_session);
 						}
 						else {
-							wptr_dev.lock()->start_read(cdev_ctl_fn::_cb_dev_read_on_exclusive, this, n_session);
+							wptr_dev.lock()->start_read(ptr_req->get_uid(), cdev_ctl_fn::_cb_dev_read_on_exclusive, this, n_session);
 						}
 					}
 					else {
