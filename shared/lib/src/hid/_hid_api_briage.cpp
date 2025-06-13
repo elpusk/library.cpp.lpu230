@@ -1,3 +1,6 @@
+#include <iostream>
+#include <sstream>
+
 #include <mp_cstring.h>
 #include <hid/_hid_api_briage.h>
 #include <hid/_vhid_info.h>
@@ -13,6 +16,10 @@ extern "C"
 #include <setupapi.h>
 
 #ifdef _DEBUG
+//#undef __THIS_FILE_ONLY__
+#define __THIS_FILE_ONLY__
+#undef __VIRTUAL_IBUTTON_DATA__
+
 #include <atltrace.h>
 #endif
 
@@ -580,7 +587,22 @@ int _hid_api_briage::api_write(int n_primitive_map_index, const unsigned char* d
     if (m_map_hid_dev.find(n_primitive_map_index) != std::end(m_map_hid_dev)) {
         p_dev = m_map_hid_dev[n_primitive_map_index].first;
     }
-    return hid_write(p_dev, data, length);
+
+    int n_written = hid_write(p_dev, data, length);
+
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+    ATLTRACE(L" !!!!! api_write(n_primitive_map_index:%d,length:%u)->written:%d.\n", n_primitive_map_index, length, n_written);
+    if (n_written > 0) {
+        std::wstringstream woss;
+        for (int i = 0; i < n_written; i++) {
+            woss << std::hex << data[i];
+            woss << L'.';
+        }//end for
+
+        ATLTRACE(L" !!!!! %ls.\n", woss.str().c_str());
+    }
+#endif
+    return n_written;
 }
 
 int _hid_api_briage::api_read(int n_primitive_map_index, unsigned char* data, size_t length, size_t n_report)
@@ -602,10 +624,10 @@ int _hid_api_briage::api_read(int n_primitive_map_index, unsigned char* data, si
         _mp::clog::get_instance().log_fmt(L"[E] %ls : n_result = %d.\n", __WFUNCTION__, n_result);
     }
     
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(__VIRTUAL_IBUTTON_DATA__)
     else {
         do {
-            // ºü¸¥ ½ÇÇàÀ» À§ÇÑ ÄÚµå
+            // ë¹ ë¥¸ ì‹¤í–‰ì„ ìœ„í•œ ì½”ë“œ
             if (n_result <= 0) {
                 continue;
             }
@@ -613,7 +635,7 @@ int _hid_api_briage::api_read(int n_primitive_map_index, unsigned char* data, si
                 continue;
             }
 
-            // debugging À» À§ÇØ, i-button °¡»ó ÀÀ´ä ¼³Á¤.
+            // debugging ì„ ìœ„í•´, i-button ê°€ìƒ ì‘ë‹µ ì„¤ì •.
             const std::string s_ibutton_postfix("this_is_ibutton_data");
             const size_t n_size_button_data(8);
             const size_t n_len_bytes = 3;
@@ -636,7 +658,7 @@ int _hid_api_briage::api_read(int n_primitive_map_index, unsigned char* data, si
                 continue;
             }
 
-            // ISO 1,2,3 ¸ðµÎ ¿¡·¯ÀÌ°Å³ª msr extension format ÀÏ¶§, °¡»ó ibutton ÀÀ´ä Àü¼Û. 
+            // ISO 1,2,3 ëª¨ë‘ ì—ëŸ¬ì´ê±°ë‚˜ msr extension format ì¼ë•Œ, ê°€ìƒ ibutton ì‘ë‹µ ì „ì†¡. 
             // ibutton rsp
             // 0 0 0 + 8 bytes + "this_is_ibutton_data"
             size_t i = 0;
@@ -650,14 +672,14 @@ int _hid_api_briage::api_read(int n_primitive_map_index, unsigned char* data, si
             for (; i < n_len_bytes + n_size_button_data + s_ibutton_postfix.size(); i++) {
                 data[i] = s_ibutton_postfix[i - (n_len_bytes + n_size_button_data)];
             }
-            // n_result ¸¦ º¯°æ ÇÒ ÇÊ¿ä ¾øÀ½.
+            // n_result ë¥¼ ë³€ê²½ í•  í•„ìš” ì—†ìŒ.
             
             std::fill(&data[i], &data[length], 0);// clear remainder buffer.
 
         } while (false);
     }
 
-#endif _DEBUG
+#endif// _DEBUG && __VIRTUAL_IBUTTON_DATA__
 	return n_result;
 }
 

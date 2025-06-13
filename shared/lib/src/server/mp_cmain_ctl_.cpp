@@ -28,7 +28,7 @@ namespace _mp {
 			_mp::clibhid& lib_hid(_mp::clibhid::get_instance());
 		}
 
-		cio_packet::type_ptr cmain_ctl::_execute(cio_packet::type_ptr& ptr_req_new, cio_packet::type_ptr& ptr_req_cur)
+		cio_packet::type_ptr cmain_ctl::_execute(cio_packet::type_ptr& ptr_req_new, const cio_packet::type_ptr& ptr_req_cur)
 		{
 			cio_packet::type_ptr ptr_return;
 			cio_packet response;

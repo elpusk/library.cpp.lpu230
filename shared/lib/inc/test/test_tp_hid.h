@@ -181,7 +181,7 @@ namespace _test{
 		}
 		
 
-		static bool _cb_txrx(_mp::cqitem_dev& item, void* p_user)
+		static std::pair<bool, std::vector<size_t>> _cb_txrx(_mp::cqitem_dev& item, void* p_user)
 		{
 			bool b_complete(true);
 			_mp::cqitem_dev::type_result r;
@@ -218,10 +218,10 @@ namespace _test{
 			fflush(stdout);
 
 			p_evt->trigger();
-			return b_complete;
+			return std::make_pair(b_complete, std::vector<size_t>());
 		}
 
-		static bool _cb_cancel(_mp::cqitem_dev& item, void* p_user)
+		static std::pair<bool, std::vector<size_t>> _cb_cancel(_mp::cqitem_dev& item, void* p_user)
 		{
 			bool b_complete(true);
 			_mp::cqitem_dev::type_result r;
@@ -257,11 +257,11 @@ namespace _test{
 			fflush(stdout);
 
 			p_evt->trigger();
-			return b_complete;
+			return std::make_pair(b_complete, std::vector<size_t>());
 		}
 
 
-		static bool _cb_msr(_mp::cqitem_dev& item, void* p_user)
+		static std::pair<bool, std::vector<size_t>> _cb_msr(_mp::cqitem_dev& item, void* p_user)
 		{
 			bool b_complete(true);
 			_mp::cqitem_dev::type_result r;
@@ -298,10 +298,10 @@ namespace _test{
 			fflush(stdout);
 
 			p_evt->trigger();
-			return b_complete;
+			return std::make_pair(b_complete, std::vector<size_t>());
 		}
 
-		static bool _cb_ibutton(_mp::cqitem_dev& item, void* p_user)
+		static std::pair<bool, std::vector<size_t>> _cb_ibutton(_mp::cqitem_dev& item, void* p_user)
 		{
 			bool b_complete(true);
 			_mp::cqitem_dev::type_result r;
@@ -338,10 +338,10 @@ namespace _test{
 			fflush(stdout);
 
 			p_evt->trigger();
-			return b_complete;
+			return std::make_pair(b_complete, std::vector<size_t>());
 		}
 
-		static bool _cb_msr_ibutton(_mp::cqitem_dev& item, void* p_user)
+		static std::pair<bool, std::vector<size_t>> _cb_msr_ibutton(_mp::cqitem_dev& item, void* p_user)
 		{
 			bool b_complete(true);
 			_mp::cqitem_dev::type_result r;
@@ -386,10 +386,10 @@ namespace _test{
 			fflush(stdout);
 
 			p_evt->trigger();
-			return b_complete;
+			return std::make_pair(b_complete, std::vector<size_t>());
 		}
 
-		static bool _cb_ibutton_multi(_mp::cqitem_dev& item, void* p_user)
+		static std::pair<bool, std::vector<size_t>> _cb_ibutton_multi(_mp::cqitem_dev& item, void* p_user)
 		{
 			bool b_complete(true);
 			_mp::cqitem_dev::type_result r;
@@ -434,7 +434,7 @@ namespace _test{
 			fflush(stdout);
 
 			p_evt->trigger();
-			return b_complete;
+			return std::make_pair(b_complete, std::vector<size_t>());
 		}
 
 		int test_start_logging()
@@ -791,14 +791,14 @@ namespace _test{
 				};
 
 					
-				// Á¶ÇÕÀ» ÀúÀåÇÒ º¤ÅÍ
+				// ì¡°í•©ì„ ì €ì¥í•  ë²¡í„°
 				std::vector<std::set<_mp::type_bm_dev>> all_sets;
 				std::set<_mp::type_bm_dev> current_set;
 
-				// Á¶ÇÕ »ı¼º ÇÔ¼ö È£Ãâ
+				// ì¡°í•© ìƒì„± í•¨ìˆ˜ í˜¸ì¶œ
 				tp_hid::_generate_combinations(ar_type, current_set, all_sets);
 
-				// °á°ú Ãâ·Â
+				// ê²°ê³¼ ì¶œë ¥
 				for (const auto& set_filter : all_sets) {
 					std::cout << "{ ";
 					for (const auto& elem : set_filter) {
@@ -1259,9 +1259,9 @@ namespace _test{
 		}
 
 		/**
-		* msr ÀĞ±â¸¦ À§ÇÑ thread msra ¿Í ibutton ÀĞ±â¸¦ À§ÇÑ thread ibb, ibc ¸¦ ¸¸µé°í,
-		* °¢ thread °¡ µ¶¸³ÀûÀ¸·Î ÀĞ±â¸¦ ½ÃµµÇÑ´Ù.
-		* ms Ä«µå¸¦ ÀĞÀ¸¸é, msra ¿¡¸¸ °ªÀÌ Ç¥½ÃµÇ°í, ibutton À» contact ¶Ç´Â remove ÇÏ¸é, ibb, ibc µÎ °÷¿¡ °ªÀÌ Ç¥½ÃµÇ¸é Á¤»ó.
+		* msr ì½ê¸°ë¥¼ ìœ„í•œ thread msra ì™€ ibutton ì½ê¸°ë¥¼ ìœ„í•œ thread ibb, ibc ë¥¼ ë§Œë“¤ê³ ,
+		* ê° thread ê°€ ë…ë¦½ì ìœ¼ë¡œ ì½ê¸°ë¥¼ ì‹œë„í•œë‹¤.
+		* ms ì¹´ë“œë¥¼ ì½ìœ¼ë©´, msra ì—ë§Œ ê°’ì´ í‘œì‹œë˜ê³ , ibutton ì„ contact ë˜ëŠ” remove í•˜ë©´, ibb, ibc ë‘ ê³³ì— ê°’ì´ í‘œì‹œë˜ë©´ ì •ìƒ.
 		*/
 		int test_msr_ibutton(int n_test_count = 1000)
 		{
@@ -1363,15 +1363,15 @@ namespace _test{
 			std::vector<std::set<_mp::type_bm_dev>>& all_sets,
 			size_t start = 0)
 		{
-			// ÇöÀç ¼¼Æ®¸¦ all_sets¿¡ Ãß°¡
+			// í˜„ì¬ ì„¸íŠ¸ë¥¼ all_setsì— ì¶”ê°€
 			all_sets.push_back(current_set);
 
 			for (size_t i = start; i < ar_type.size(); ++i) {
-				// ÇöÀç ¿ä¼Ò¸¦ ¼¼Æ®¿¡ Ãß°¡
+				// í˜„ì¬ ìš”ì†Œë¥¼ ì„¸íŠ¸ì— ì¶”ê°€
 				current_set.insert(ar_type[i]);
-				// ´ÙÀ½ ¿ä¼Ò·Î Àç±Í È£Ãâ
+				// ë‹¤ìŒ ìš”ì†Œë¡œ ì¬ê·€ í˜¸ì¶œ
 				tp_hid::_generate_combinations(ar_type, current_set, all_sets, i + 1);
-				// ÇöÀç ¿ä¼Ò¸¦ ¼¼Æ®¿¡¼­ Á¦°Å (¹éÆ®·¡Å·)
+				// í˜„ì¬ ìš”ì†Œë¥¼ ì„¸íŠ¸ì—ì„œ ì œê±° (ë°±íŠ¸ë˜í‚¹)
 				current_set.erase(ar_type[i]);
 			}
 		}
@@ -1492,7 +1492,7 @@ namespace _test{
 					continue;
 				}
 
-				// ¼ø¼öÇÑ ibutton µ¥ÀÌÅÍ¸¦ ¾ò´Â´Ù.
+				// ìˆœìˆ˜í•œ ibutton ë°ì´í„°ë¥¼ ì–»ëŠ”ë‹¤.
 				_mp::type_v_buffer v_ibutton;
 				std::copy(v_rx.begin() + n_len_bytes, v_rx.begin() + n_len_bytes + n_size_button_data, std::back_inserter(v_ibutton));
 
@@ -1547,7 +1547,7 @@ namespace _test{
 
 				auto start = std::chrono::high_resolution_clock::now();//start timer
 
-				wptr_dev.lock()->start_write_read(v_tx, tp_hid::_cb_txrx, &m_ar_evt[tp_hid::_index_cb_tx_rx]);
+				wptr_dev.lock()->start_write_read(0,v_tx, tp_hid::_cb_txrx, &m_ar_evt[tp_hid::_index_cb_tx_rx]);
 
 				int n_point = 0;
 				int n_wait_cnt = 200;
@@ -1613,7 +1613,7 @@ namespace _test{
 				//
 				auto start = std::chrono::high_resolution_clock::now();//start timer
 
-				wptr_dev.lock()->start_read( tp_hid::_cb_msr, &m_ar_evt[tp_hid::_index_cb_msr]);
+				wptr_dev.lock()->start_read( 0,tp_hid::_cb_msr, &m_ar_evt[tp_hid::_index_cb_msr]);
 
 				int n_point = 0;
 				int n_wait_cnt = n_timeout_sec*1000/10; //10mmsec counter
@@ -1691,7 +1691,7 @@ namespace _test{
 				//
 				auto start = std::chrono::high_resolution_clock::now();//start timer
 
-				wptr_dev.lock()->start_read(tp_hid::_cb_ibutton, &m_ar_evt[tp_hid::_index_cb_ibutton]);
+				wptr_dev.lock()->start_read(0,tp_hid::_cb_ibutton, &m_ar_evt[tp_hid::_index_cb_ibutton]);
 
 				int n_point = 0;
 				int n_wait_cnt = n_timeout_sec * 1000 / 10; //10mmsec counter
@@ -1784,7 +1784,7 @@ namespace _test{
 				}
 
 				m_ar_evt[tp_hid::_index_cb_ibutton].reset();
-				wptr_ibutton.lock()->start_read(tp_hid::_cb_ibutton_multi, &m_ar_evt[tp_hid::_index_cb_ibutton]);
+				wptr_ibutton.lock()->start_read(0,tp_hid::_cb_ibutton_multi, &m_ar_evt[tp_hid::_index_cb_ibutton]);
 
 				int n_point = 0;
 				int n_wait_cnt = n_timeout_sec * 1000 / 10; //10mmsec counter
@@ -1869,7 +1869,7 @@ namespace _test{
 						continue;
 					}
 					m_ar_evt[tp_hid::_index_cb_msr].reset();
-					wptr_msr.lock()->start_read(tp_hid::_cb_msr_ibutton, &m_ar_evt[tp_hid::_index_cb_msr]);
+					wptr_msr.lock()->start_read(0,tp_hid::_cb_msr_ibutton, &m_ar_evt[tp_hid::_index_cb_msr]);
 				}
 
 				if (p_ibutton_info) {
@@ -1879,7 +1879,7 @@ namespace _test{
 						continue;
 					}
 					m_ar_evt[tp_hid::_index_cb_ibutton].reset();
-					wptr_ibutton.lock()->start_read(tp_hid::_cb_msr_ibutton, &m_ar_evt[tp_hid::_index_cb_ibutton]);
+					wptr_ibutton.lock()->start_read(0,tp_hid::_cb_msr_ibutton, &m_ar_evt[tp_hid::_index_cb_ibutton]);
 				}
 
 				int n_point = 0;
@@ -1975,7 +1975,7 @@ namespace _test{
 
 				auto start = std::chrono::high_resolution_clock::now();//start timer
 
-				wptr_dev.lock()->start_cancel(tp_hid::_cb_cancel, &m_ar_evt[tp_hid::_index_cb_cancel]);
+				wptr_dev.lock()->start_cancel(0,tp_hid::_cb_cancel, &m_ar_evt[tp_hid::_index_cb_cancel]);
 
 				int n_point = 0;
 				int n_wait_cnt = n_timeout_sec * 1000 / 10; //10mmsec counter

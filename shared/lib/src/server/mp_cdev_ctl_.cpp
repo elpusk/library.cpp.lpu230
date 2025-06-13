@@ -15,6 +15,11 @@
 #include <server/mp_cdev_ctl_.h>
 
 #if defined(_WIN32) && defined(_DEBUG)
+
+#undef __THIS_FILE_ONLY__
+//#define __THIS_FILE_ONLY__
+#define __THIS_FILE_ONLY_Q__
+
 #include <atltrace.h>
 #endif
 
@@ -26,42 +31,66 @@ namespace _mp {
 		{
 		}
 
-		cio_packet::type_ptr cdev_ctl::_execute(cio_packet::type_ptr& ptr_req_new, cio_packet::type_ptr& ptr_req_cur)
+		cio_packet::type_ptr cdev_ctl::_execute(cio_packet::type_ptr& ptr_req_new, const cio_packet::type_ptr& ptr_req_cur)
 		{
-			// true 로 return (transaction 완료)나타내기 위해서는 client 에세 보낼 데이터를 return 하기 전에
+			// cio_packet::type_ptr() 로 return (transaction 완료)나타내기 위해서는 client 에세 보낼 데이터를 return 하기 전에
 			// send_data_to_client_by_ip4() 로 전송해야 함.
-			// false 로 return 하면, _continue() 이 transaction 이 완료 될때 까지 반복적으로 호출되서, 처리하고,
+			// return 이 cio_packet::type_ptr() 가 아니면, _continue() 이 transaction 이 완료 될때 까지 반복적으로 호출되서, 처리하고,
 			// _continue() 에서  client 에세 보낼 데이터를 send_data_to_client_by_ip4() 로 전송
 
 			if (!ptr_req_new && !ptr_req_cur) {
 				m_p_log->log_fmt(L"[I][_EXE] ENTER - new(none), cur(none)\n");
 				m_p_log->trace(L"[I][_EXE] ENTER - new(none), cur(none)\n");
+
+#if defined(_WIN32) && defined(_DEBUG) && (defined(__THIS_FILE_ONLY__) || defined(__THIS_FILE_ONLY_Q__))
+				ATLTRACE(L"[I][_EXE] ENTER - new(none), cur(none)\n");
+#endif
 			}
 			else if (ptr_req_new && !ptr_req_cur) {
-				m_p_log->log_fmt(L"[I][_EXE] ENTER - new(%u, %ls), cur(none)\n",
-					ptr_req_new->get_session_number(), ptr_req_new->get_action_by_string().c_str()
+				m_p_log->log_fmt(L"[I][_EXE] ENTER - new([%u:%u], %ls), cur(none)\n",
+					ptr_req_new->get_session_number(), ptr_req_new->get_uid(), ptr_req_new->get_action_by_string().c_str()
 				);
-				m_p_log->trace(L"[I][_EXE] ENTER - new(%u, %ls), cur(none)\n",
-					ptr_req_new->get_session_number(), ptr_req_new->get_action_by_string().c_str()
+				m_p_log->trace(L"[I][_EXE] ENTER - new([%u:%u], %ls), cur(none)\n",
+					ptr_req_new->get_session_number(), ptr_req_new->get_uid(), ptr_req_new->get_action_by_string().c_str()
 				);
+
+#if defined(_WIN32) && defined(_DEBUG) && (defined(__THIS_FILE_ONLY__) || defined(__THIS_FILE_ONLY_Q__))
+				ATLTRACE(L"[I][_EXE] ENTER - new([%u:%u], %ls), cur(none)\n",
+					ptr_req_new->get_session_number(), ptr_req_new->get_uid(), ptr_req_new->get_action_by_string().c_str()
+				);
+#endif
 			}
 			else if (!ptr_req_new && ptr_req_cur) {
-				m_p_log->log_fmt(L"[I][_EXE] ENTER - new(none), cur( %u, %ls )\n",
-					ptr_req_cur->get_session_number(), ptr_req_cur->get_action_by_string().c_str()
+				m_p_log->log_fmt(L"[I][_EXE] ENTER - new(none), cur( [%u:%u], %ls )\n",
+					ptr_req_cur->get_session_number(), ptr_req_cur->get_uid(), ptr_req_cur->get_action_by_string().c_str()
 				);
-				m_p_log->trace(L"[I][_EXE] ENTER - new(none), cur( %u, %ls )\n",
-					ptr_req_cur->get_session_number(), ptr_req_cur->get_action_by_string().c_str()
+				m_p_log->trace(L"[I][_EXE] ENTER - new(none), cur( [%u:%u], %ls )\n",
+					ptr_req_cur->get_session_number(), ptr_req_cur->get_uid(), ptr_req_cur->get_action_by_string().c_str()
 				);
+
+#if defined(_WIN32) && defined(_DEBUG) && (defined(__THIS_FILE_ONLY__) || defined(__THIS_FILE_ONLY_Q__))
+				ATLTRACE(L"[I][_EXE] ENTER - new(none), cur( [%u:%u], %ls )\n",
+					ptr_req_cur->get_session_number(), ptr_req_cur->get_uid(), ptr_req_cur->get_action_by_string().c_str()
+				);
+#endif
 			}
 			else{
-				m_p_log->log_fmt(L"[I][_EXE] ENTER - new(%u, %ls), cur( %u, %ls )\n",
-					ptr_req_new->get_session_number(), ptr_req_new->get_action_by_string().c_str(),
-					ptr_req_cur->get_session_number(), ptr_req_cur->get_action_by_string().c_str()
+				m_p_log->log_fmt(L"[I][_EXE] ENTER - new([%u:%u], %ls), cur( [%u:%u], %ls )\n",
+					ptr_req_new->get_session_number(), ptr_req_new->get_uid(), ptr_req_new->get_action_by_string().c_str(),
+					ptr_req_cur->get_session_number(), ptr_req_cur->get_uid(), ptr_req_cur->get_action_by_string().c_str()
 				);
-				m_p_log->trace(L"[I][_EXE] ENTER - new(%u, %ls), cur( %u, %ls )\n",
-					ptr_req_new->get_session_number(), ptr_req_new->get_action_by_string().c_str(),
-					ptr_req_cur->get_session_number(), ptr_req_cur->get_action_by_string().c_str()
+				m_p_log->trace(L"[I][_EXE] ENTER - new([%u:%u], %ls), cur( [%u:%u], %ls )\n",
+					ptr_req_new->get_session_number(), ptr_req_new->get_uid(), ptr_req_new->get_action_by_string().c_str(),
+					ptr_req_cur->get_session_number(), ptr_req_cur->get_uid(), ptr_req_cur->get_action_by_string().c_str()
 				);
+
+#if defined(_WIN32) && defined(_DEBUG) && (defined(__THIS_FILE_ONLY__) || defined(__THIS_FILE_ONLY_Q__))
+				ATLTRACE(L"[I][_EXE] ENTER - new([%u:%u], %ls), cur( [%u:%u], %ls )\n",
+					ptr_req_new->get_session_number(), ptr_req_new->get_uid(), ptr_req_new->get_action_by_string().c_str(),
+					ptr_req_cur->get_session_number(), ptr_req_cur->get_uid(), ptr_req_cur->get_action_by_string().c_str()
+				);
+#endif
+
 			}
 
 
@@ -145,75 +174,68 @@ namespace _mp {
 			else {
 				// 처리 전 에러 없음. 
 				if (!ptr_req_ing) {
-					// 새롭게 처리 중인 것이 없으면(새로운 req 처리 완료.)
-					assert(ptr_response); // ptr_response 것이 없으면 무조건 ptr_result_error 이 있어야.
+					// 새로운 req 처리 완료.
+					assert(ptr_response); // ptr_result_error 에 값이 없으므로, ptr_response 에는 값이 무조건 있어야.
 
 					// open close complete 경우, q 에 포함되지 않아, 
 					// get_all_complete_response() 에 ptr_response 가 포함되지 않는 경우, 포함하도록
 					// get_all_complete_response() 의 인자로 ptr_req_new, ptr_response pair 를 준다.
 					ptr_v_req_rsp = m_fun.get_all_complete_response(std::make_pair(ptr_req_new, ptr_response));//complete 된 모든 req, rsp pair 를 얻기
 					
-					// 아직 안됌.
-					if (!ptr_v_req_rsp) {
-						//complete 된 것 없는 경우
-						ptr_req_ing = ptr_req_cur; // 기존 처리 중인 것이 있으면. 그 것을 계속 처리. 없으면 없는 것을 return.
+					assert(ptr_v_req_rsp); // ptr_response 에 값이 있으므로 것 ptr_v_req_rsp 에 값이 없을 수 없다.
+					// complete 된 것, 서버로 응답을 보내는데 .......
+					// ptr_v_req_rsp 에 ptr_req_cur 가 있으면, 여기서는 ptr_req_ing 에 값이 없으므로, ptr_req_ing 를 그냥 반환하면,
+					// 상위 함수에서 ptr_req_cur 에 ptr_req_ing를 넣어 ptr_req_cur 가 reset 된다.
+					bool b_old_cur_is_complete(false);
+					for (auto item : *ptr_v_req_rsp) {
+						if (item.first->is_self()) {
+							continue;
+						}
+
+						if (item.first.get() == ptr_req_cur.get()) {
+							// 전에 실행 중이던 req는 complete 되어서 reference decrease 되고, 
+							// 아래에서 server 로 전송.
+							b_old_cur_is_complete = true;
+						}
+
+						type_v_buffer v_rsp;
+						item.second->get_packet_by_json_format(v_rsp);
+						cserver::get_instance().send_data_to_client_by_ip4(v_rsp, item.second->get_session_number());
+					}//end for
+
+					if (!b_old_cur_is_complete) {
+						// 기존 실행 중인 req는 complete 이 아니므로, return 해서 계속 실행하게하기 위해
+						// ptr_req_cur 을 ptr_req_ing 에 설정에 return.
+						ptr_req_ing = ptr_req_cur; 
+					}
+					if (!ptr_req_ing) {
+						// 만약 계속 실행해야하는 req 가 없으면, read q 에서 complete 되지 않은 req를 찾아서
+						// 행해야하는 req로 설정.
+						auto v_ptr_req = m_fun.get_front_of_read_queue();
+						if (!v_ptr_req.empty()) {
+							ptr_req_ing = v_ptr_req[0];
+						}
+
+						for (auto item : v_ptr_req) {
+							m_p_log->log_fmt(L"[I][_EXE] !ING- (%u, %ls)\n",
+								item->get_session_number(), item->get_action_by_string().c_str()
+							);
+							m_p_log->trace(L"[I][_EXE] !ING- (%u, %ls)\n",
+								item->get_session_number(), item->get_action_by_string().c_str()
+							);
+						}// end for 
 					}
 					else {
-						// complete 된 것이 존재 하면, 서버로 응답을 보내는데 .......
-						// 아직까지 ptr_req_ing 는 null 인 상태.
-						for (auto item : *ptr_v_req_rsp) {
-							if (item.first.get() == ptr_req_cur.get()) {
-								// 전에 실행 중이던 req는 complete 되어서 reference decrease 되고, 
-								// 아래에서 server 로 전송.
-								ptr_req_cur.reset(); 
-							}
-							else if (item.first.get() == ptr_req_new.get()) {
-								// 새로운 req 처리 완료.
-								// get_all_complete_response() 의 return vector item 순서상.
-								// 전에 실행 중이던 ptr_req_cur 가 complete 되면 , 이 곳에 오기 전에
-								// 위 코드에서 항상 ptr_req_cur.reset() 됨.
-								// 이 곳 처리 후, ptr_req_cur.reset() 는 실행되지 않음.
-								ptr_req_ing = ptr_req_cur; // 계속 실행 할 req를 설정.
-							}
-
-							if (item.first->is_self()) {
-								continue;
-							}
-
-							type_v_buffer v_rsp;
-							item.second->get_packet_by_json_format(v_rsp);
-							cserver::get_instance().send_data_to_client_by_ip4(v_rsp, item.second->get_session_number());
-						}//end for
-
-						if (!ptr_req_ing) {
-							// 만약 계속 실행해야하는 req 가 없으면, read q 에서 complete 되지 않은 req를 찾아서
-							// 행해야하는 req로 설정.
-							auto v_ptr_req = m_fun.get_front_of_read_queue();
-							if (!v_ptr_req.empty()) {
-								ptr_req_ing = v_ptr_req[0];
-							}
-
-							for (auto item : v_ptr_req) {
-								m_p_log->log_fmt(L"[I][_EXE] !ING- (%u, %ls)\n",
-									item->get_session_number(), item->get_action_by_string().c_str()
-								);
-								m_p_log->trace(L"[I][_EXE] !ING- (%u, %ls)\n",
-									item->get_session_number(), item->get_action_by_string().c_str()
-								);
-							}// end for 
-						}
-						else {
-							// 디버깅을 위한 코드
-							auto v_ptr_req = m_fun.get_front_of_read_queue();
-							for (auto item : v_ptr_req) {
-								m_p_log->log_fmt(L"[I][_EXE] ING - (%u, %ls)\n",
-									item->get_session_number(), item->get_action_by_string().c_str()
-								);
-								m_p_log->trace(L"[I][_EXE] ING - (%u, %ls)\n",
-									item->get_session_number(), item->get_action_by_string().c_str()
-								);
-							}// end for 
-						}
+						// 디버깅을 위한 코드
+						auto v_ptr_req = m_fun.get_front_of_read_queue();
+						for (auto item : v_ptr_req) {
+							m_p_log->log_fmt(L"[I][_EXE] ING - (%u, %ls)\n",
+								item->get_session_number(), item->get_action_by_string().c_str()
+							);
+							m_p_log->trace(L"[I][_EXE] ING - (%u, %ls)\n",
+								item->get_session_number(), item->get_action_by_string().c_str()
+							);
+						}// end for 
 					}
 				}
 				else {

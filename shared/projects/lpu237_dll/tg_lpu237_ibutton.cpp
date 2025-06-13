@@ -270,10 +270,11 @@ unsigned long _CALLTYPE_ LPU237Lock_close(HANDLE hDev)
 			_mp::clog::get_instance().log_fmt(L" : RET : %ls : INVALID_HANDLE_VALUE\n", __WFUNCTION__);
 			continue;
 		}
-
+		/*
 		if (!ptr_device->cmd_leave_opos()) {
 			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : cmd_leave_opos\n", __WFUNCTION__);
 		}
+		*/
 		if (!ptr_device->cmd_enter_config()) {//for redetecting decoder.
 			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : cmd_enter_config\n", __WFUNCTION__);
 		}
@@ -311,10 +312,12 @@ unsigned long _CALLTYPE_ LPU237Lock_enable(HANDLE hDev)
 			_mp::clog::get_instance().log_fmt(L" : RET : %ls : INVALID_HANDLE_VALUE\n", __WFUNCTION__);
 			continue;
 		}
+		/*
 		if (!ptr_device->cmd_enter_opos()) {
 			_mp::clog::get_instance().log_fmt(L" : RET : %ls : cmd_enter_opos\n", __WFUNCTION__);
 			continue;
 		}
+		*/
 		dwResult = ccb_client::const_dll_result_success;
 		_mp::clog::get_instance().log_fmt(L" : RET : %ls : success\n", __WFUNCTION__);
 	} while (0);
@@ -340,10 +343,12 @@ unsigned long _CALLTYPE_ LPU237Lock_disable(HANDLE hDev)
 			_mp::clog::get_instance().log_fmt(L" : RET : %ls : INVALID_HANDLE_VALUE\n", __WFUNCTION__);
 			continue;
 		}
+		/*
 		if (!ptr_device->cmd_leave_opos()) {
 			_mp::clog::get_instance().log_fmt(L" : RET : %ls : cmd_leave_opos\n", __WFUNCTION__);
 			continue;
 		}
+		*/
 		dwResult = ccb_client::const_dll_result_success;
 		_mp::clog::get_instance().log_fmt(L" : RET : %ls : success\n", __WFUNCTION__);
 	} while (0);
@@ -465,7 +470,7 @@ unsigned long _CALLTYPE_ LPU237Lock_get_data(unsigned long dwBufferIndex, unsign
 		}
 		ptr_result->get_result(dw_client_result);
 		if (sKey) {
-			// µ¥ÀÌÅÍ¸¦ ³Ñ±â¹Ç·Î ÀúÀåµÈ µ¥ÀÌÅÍ »èÁ¦.
+			// ë°ì´í„°ë¥¼ ë„˜ê¸°ë¯€ë¡œ ì €ìž¥ëœ ë°ì´í„° ì‚­ì œ.
 			ptr_manager_of_device_of_client->remove_async_result_for_manager(n_result_index);
 		}
 

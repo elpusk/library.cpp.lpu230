@@ -27,7 +27,7 @@ namespace _mp
 	{
 	}
 
-	cio_packet::type_ptr ckernel_ctl::_execute(cio_packet::type_ptr& ptr_req_new, cio_packet::type_ptr& ptr_req_cur)
+	cio_packet::type_ptr ckernel_ctl::_execute(cio_packet::type_ptr& ptr_req_new, const cio_packet::type_ptr& ptr_req_cur)
 	{
 		cio_packet::type_ptr ptr_return;
 		cio_packet response;

@@ -22,6 +22,7 @@
 #if defined(_WIN32) && defined(_DEBUG)
 #undef __THIS_FILE_ONLY__
 //#define __THIS_FILE_ONLY__
+#define __THIS_FILE_ONLY_STATE__
 
 #include <atltrace.h>
 #endif
@@ -134,15 +135,14 @@ namespace _mp {
 			}//end for
 
 			//////////////////////////////
-
 			if (!v_s_info.empty()) {
 				// 상태 표시.
 				for (auto item : v_s_info) {
 					m_p_ctl_fun_log->log_fmt(L"%ls", item.c_str());
 					m_p_ctl_fun_log->trace(L"%ls", item.c_str());
 
-#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-					ATLTRACE(L"%ls", item.c_str());
+#if defined(_WIN32) && defined(_DEBUG) && (defined(__THIS_FILE_ONLY__) || defined(__THIS_FILE_ONLY_STATE__))
+					ATLTRACE(L"~~~~~ %ls", item.c_str());
 #endif
 				}
 
@@ -227,9 +227,6 @@ namespace _mp {
 			if (it == std::end(m_map_ptr_q_ptr_cur_req_read)) {
 				ptr_q = std::make_shared<cdev_ctl_fn::_cq_mgmt::_cq>(n_session);
 				m_map_ptr_q_ptr_cur_req_read[n_session] = ptr_q;
-#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-				ATLTRACE(L"~~~~~ [%09u] Create cur req read Q.\n", n_session);
-#endif
 			}
 			else {
 				ptr_q = it->second;
@@ -239,13 +236,13 @@ namespace _mp {
 				// start_read 를 발생시키는 read request ptr 를 m_ptr_cur_req_read 에 저장.
 				std::tie(m_ptr_cur_req_read, std::ignore, std::ignore, std::ignore) = ptr_q->push_back(ptr_request);
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-				ATLTRACE(L"~~~~~ [%09u] First push cur req(%ls) read Q.\n", n_session, ptr_request->get_action_by_string().c_str());
+				ATLTRACE(L"~~~~~ [%u] First push cur req(%ls) read Q.\n", n_session, ptr_request->get_action_by_string().c_str());
 #endif
 			}
 			else {
 				ptr_q->push_back(ptr_request);
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-				ATLTRACE(L"~~~~~ [%09u] Push cur req(%ls) read Q.\n", n_session, ptr_request->get_action_by_string().c_str());
+				ATLTRACE(L"~~~~~ [%u] Push cur req(%ls) read Q.\n", n_session, ptr_request->get_action_by_string().c_str());
 #endif
 			}
 			return b_first;
@@ -333,7 +330,7 @@ namespace _mp {
 							if (ptr_req->is_recover_reserved()) {
 								ptr_req->set_recover_reserve(false);// recover flag 삭제.
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-								ATLTRACE(L"-- RESET recover flag %09u.\n", ptr_req->get_session_number());
+								ATLTRACE(L"~~~~~ [%u:%u] RESET recover flag.\n", ptr_req->get_session_number(), ptr_req->get_uid());
 #endif
 								v_req_uid_need_more_reading.push_back(ptr_req->get_uid());
 								continue;// recover flag 있는 것은 response 를 설정하지 않음.
@@ -342,20 +339,20 @@ namespace _mp {
 
 						if (!ptr_evt) {
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-							ATLTRACE(L"-- ERROR ptr_evt is nullptr %09u.\n", ptr_req->get_session_number());
+							ATLTRACE(L"~~~~~ [%u:%u] ERROR ptr_evt is nullptr %u.\n", ptr_req->get_session_number(), ptr_req->get_uid());
 #endif
 							continue;
 						}
 						if (!cbase_ctl_fn::_set_response(*ptr_rsp, qi, *ptr_req)) {
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-							ATLTRACE(L"-- ERROR fail set rsp %09u.\n", ptr_req->get_session_number());
+							ATLTRACE(L"~~~~~ [%u:%u] ERROR fail set rsp %u.\n", ptr_req->get_session_number(), ptr_req->get_uid());
 #endif
 							continue;
 						}
 						v_result.push_back(r);
 
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-						ATLTRACE(L"~~~~~ [%09u] Set response of  req read Q.\n", ptr_req->get_session_number());
+						ATLTRACE(L"~~~~~ [%u:%u] Set response of  req read Q.\n", ptr_req->get_session_number(), ptr_req->get_uid());
 #endif
 						ptr_evt->set(n_evt);
 					}//end for
@@ -369,17 +366,17 @@ namespace _mp {
 					std::tie(ptr_req, ptr_evt, n_evt, ptr_rsp) = r;
 					if (!ptr_evt) {
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-						ATLTRACE(L"-- ERROR ptr_evt is nullptr %09u.\n", ptr_req->get_session_number());
+						ATLTRACE(L"~~~~~ [%u:%u] ERROR ptr_evt is nullptr %09u.\n", ptr_req->get_session_number(), ptr_req->get_uid());
 #endif
 						continue;
 					}
-					if (std::get<0>(r)->get_session_number() != qi.get_session_number()) {
+					if (ptr_req->get_session_number() != qi.get_session_number()) {
 						v_req_uid_need_more_reading.push_back(ptr_req->get_uid());
 						continue;
 					}
-					if (!cbase_ctl_fn::_set_response(*std::get<3>(r), qi, *std::get<0>(r))) {
+					if (!cbase_ctl_fn::_set_response(*ptr_rsp, qi, *ptr_req)) {
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-						ATLTRACE(L"~~~~~ [%09u] Set response of  req read Q.\n", ptr_req->get_session_number());
+						ATLTRACE(L"~~~~~ [%u:%u] Set response of  req read Q.\n", ptr_req->get_session_number(), ptr_req->get_uid());
 #endif
 						continue;
 					}
@@ -402,6 +399,7 @@ namespace _mp {
 
 			for (auto item : m_map_ptr_q_ptr_cur_req_read) {
 				if (item.first == n_session_number) {
+					// n_session_number 를 제외하고 복구 설정.
 					continue;
 				}
 				_cq_mgmt::_cq::type_ptr ptr_q = item.second;
@@ -412,7 +410,7 @@ namespace _mp {
 				ptr_req->set_recover_reserve(true);
 				++n_cnt;
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-				ATLTRACE(L"-- [%09u] SET recover flag %09u.\n", n_session_number, ptr_req->get_session_number());
+				ATLTRACE(L"~~~~~ [%u:%u] SET recover flag.\n", ptr_req->get_session_number(), ptr_req->get_uid() );
 #endif
 			}//end for
 			return n_cnt;
@@ -665,32 +663,32 @@ namespace _mp {
 					std::tuple<cqitem_dev::type_result, type_v_buffer, std::wstring> rqi = qi.get_result_all();
 					if (std::get<0>(rqi) != cqitem_dev::result_success) {
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-						ATLTRACE(L">>>>>>> [%ls] result !=cqitem_dev::result_success.\n", __WFUNCTION__);
+						ATLTRACE(L">>>>> [%ls] result !=cqitem_dev::result_success.\n", __WFUNCTION__);
 #endif
 						continue;
 					}
 					if (std::get<1>(rqi).size() < 3) {
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-						ATLTRACE(L">>>>>>> [%ls] rx-size < 3.\n", __WFUNCTION__);
+						ATLTRACE(L">>>>> [%ls] rx-size < 3.\n", __WFUNCTION__);
 #endif
 						continue;
 					}
 					std::array<char, 3> ar_c_len{ std::get<1>(rqi)[0], std::get<1>(rqi)[1], std::get<1>(rqi)[2] };
 					if (ar_c_len[0] >= 0) {
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-						ATLTRACE(L">>>>>>> [%ls] ar_c_len[0] >= 0.\n", __WFUNCTION__);
+						ATLTRACE(L">>>>> [%ls] ar_c_len[0] >= 0.\n", __WFUNCTION__);
 #endif
 						continue;
 					}
 					if (ar_c_len[1] >= 0) {
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-						ATLTRACE(L">>>>>>> [%ls] ar_c_len[1] >= 0.\n", __WFUNCTION__);
+						ATLTRACE(L">>>>> [%ls] ar_c_len[1] >= 0.\n", __WFUNCTION__);
 #endif
 						continue;
 					}
 					if (ar_c_len[2] >= 0) {
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-						ATLTRACE(L">>>>>>> [%ls] ar_c_len[2] >= 0.\n", __WFUNCTION__);
+						ATLTRACE(L">>>>> [%ls] ar_c_len[2] >= 0.\n", __WFUNCTION__);
 #endif
 						continue;
 					}
@@ -700,7 +698,7 @@ namespace _mp {
 						// himalia 에서 추가된 암호화 응답 구조를 갖는 것으로 확인되어,
 						// 무시하지 말고 계속 처리.
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-						ATLTRACE(L">>>>>>> [%ls] rx.is_rx_msr_extension = true .\n", __WFUNCTION__);
+						ATLTRACE(L">>>>> [%ls] rx.is_rx_msr_extension = true .\n", __WFUNCTION__);
 #endif
 						continue; 
 					}
@@ -713,7 +711,7 @@ namespace _mp {
 				if (b_pass_this_response) {
 					b_complete = false;
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-					ATLTRACE(L">>>>>>> [%ls] ignore. more processing .\n", __WFUNCTION__);
+					ATLTRACE(L">>>>> [%ls] ignore. more processing .\n", __WFUNCTION__);
 #endif
 					continue;//more processing
 				}
@@ -724,16 +722,16 @@ namespace _mp {
 				if (v_tuple.empty()) {
 					b_complete = false;
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-					ATLTRACE(L">>>>>>> [%ls] more processing .\n", __WFUNCTION__);
+					ATLTRACE(L">>>>> [%ls] more processing .\n", __WFUNCTION__);
 #endif
 					continue;//more processing
 				}
 
-				p_obj->transit_state_for_only_all_async_by_rx_event(v_tuple); // 상태를 변화
+				p_obj->_transit_state_for_only_all_async_by_rx_event(v_tuple); // 상태를 변화
 
 				//////////////////////
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-				ATLTRACE(L">>>>>>> [%ls] normal complete with state change(exclusive).\n", __WFUNCTION__);
+				ATLTRACE(L">>>>> [%ls] normal complete with state change(exclusive).\n", __WFUNCTION__);
 #endif
 
 			} while (false);
@@ -761,32 +759,32 @@ namespace _mp {
 					std::tuple<cqitem_dev::type_result, type_v_buffer, std::wstring> rqi = qi.get_result_all();
 					if (std::get<0>(rqi) != cqitem_dev::result_success) {
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-						ATLTRACE(L">>>>>>> [%ls] result !=cqitem_dev::result_success.\n", __WFUNCTION__);
+						ATLTRACE(L">>>>> [%ls] result !=cqitem_dev::result_success.\n", __WFUNCTION__);
 #endif
 						continue;
 					}
 					if (std::get<1>(rqi).size() < 3) {
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-						ATLTRACE(L">>>>>>> [%ls] rx-size < 3.\n", __WFUNCTION__);
+						ATLTRACE(L">>>>> [%ls] rx-size < 3.\n", __WFUNCTION__);
 #endif
 						continue;
 					}
 					std::array<char, 3> ar_c_len{ std::get<1>(rqi)[0], std::get<1>(rqi)[1], std::get<1>(rqi)[2] };
 					if (ar_c_len[0] >= 0) {
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-						ATLTRACE(L">>>>>>> [%ls] ar_c_len[0] >= 0.\n", __WFUNCTION__);
+						ATLTRACE(L">>>>> [%ls] ar_c_len[0] >= 0.\n", __WFUNCTION__);
 #endif
 						continue;
 					}
 					if (ar_c_len[1] >= 0) {
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-						ATLTRACE(L">>>>>>> [%ls] ar_c_len[1] >= 0.\n", __WFUNCTION__);
+						ATLTRACE(L">>>>> [%ls] ar_c_len[1] >= 0.\n", __WFUNCTION__);
 #endif
 						continue;
 					}
 					if (ar_c_len[2] >= 0) {
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-						ATLTRACE(L">>>>>>> [%ls] ar_c_len[2] >= 0.\n", __WFUNCTION__);
+						ATLTRACE(L">>>>> [%ls] ar_c_len[2] >= 0.\n", __WFUNCTION__);
 #endif
 						continue;
 					}
@@ -796,7 +794,7 @@ namespace _mp {
 						// himalia 에서 추가된 암호화 응답 구조를 갖는 것으로 확인되어,
 						// 무시하지 말고 계속 처리.
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-						ATLTRACE(L">>>>>>> [%ls] rx.is_rx_msr_extension = true .\n", __WFUNCTION__);
+						ATLTRACE(L">>>>> [%ls] rx.is_rx_msr_extension = true .\n", __WFUNCTION__);
 #endif
 						continue;
 					}
@@ -809,7 +807,7 @@ namespace _mp {
 				if (b_pass_this_response) {
 					b_complete = false;
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-					ATLTRACE(L">>>>>>> [%ls] ignore. more processing .\n", __WFUNCTION__);
+					ATLTRACE(L">>>>> [%ls] ignore. more processing .\n", __WFUNCTION__);
 #endif
 					continue;//more processing
 				}
@@ -820,18 +818,18 @@ namespace _mp {
 				if (v_tuple.empty()) {
 					b_complete = false;
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-					ATLTRACE(L">>>>>>> [%ls] more processing .\n", __WFUNCTION__);
+					ATLTRACE(L">>>>> [%ls] more processing .\n", __WFUNCTION__);
 #endif
 					continue;//more processing
 				}
 
-				p_obj->transit_state_for_only_all_async_by_rx_event(v_tuple); // 상태를 변화
+				p_obj->_transit_state_for_only_all_async_by_rx_event(v_tuple); // 상태를 변화
 
 				//////////////////////
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-				ATLTRACE(L">>>>>>> [%ls] normal complete with state change(shared).\n", __WFUNCTION__);
+				ATLTRACE(L">>>>> [%ls] normal complete with state change(shared).\n", __WFUNCTION__);
 				for (auto item : v_req_uid_need_more_reading) {
-					ATLTRACE(L">>>>>>> more reading uid - %u.\n", item);
+					ATLTRACE(L">>>>> more reading uid - %u.\n", item);
 				}
 #endif
 			} while (false);
@@ -860,7 +858,7 @@ namespace _mp {
 				std::tie(ptr_req, ptr_evt, n_evt_index, ptr_rsp) = p_obj->m_mgmt_q.qm_sync_pop_front(false);
 				if (!ptr_req) {
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-					ATLTRACE(L">>>>>>> [%ls] qm_sync_pop_front.false.\n", __WFUNCTION__);
+					ATLTRACE(L">>>>> [%ls] qm_sync_pop_front.false.\n", __WFUNCTION__);
 #endif
 					continue;// 요청한 session 의 응답이 아니면, 무시.
 				}
@@ -869,19 +867,19 @@ namespace _mp {
 					//현재 요청은 아직 결과를 몰라서 큐에서 삭제하면 안됌.
 					b_complete = false;
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-					ATLTRACE(L">>>>>>> [%ls] _set_response.false.\n", __WFUNCTION__);
+					ATLTRACE(L">>>>> [%ls] _set_response.false.\n", __WFUNCTION__);
 #endif
 					continue;//more processing
 				}
 				//
 				if (ptr_evt) {
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-					ATLTRACE(L">>>>>>> [%ls] set.before\n", __WFUNCTION__);
+					ATLTRACE(L">>>>> [%ls] set.before\n", __WFUNCTION__);
 #endif
 					ptr_evt->set(n_evt_index); //동기식 응답 기다리는 event 기다림 해제.
 
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-					ATLTRACE(L">>>>>>> [%ls] set.after\n", __WFUNCTION__);
+					ATLTRACE(L">>>>> [%ls] set.after\n", __WFUNCTION__);
 #endif
 				}
 
@@ -1045,7 +1043,7 @@ namespace _mp {
 
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
 			if (b_exist_sel) {
-				ATLTRACE(L"####### %u, %ls (sel state, sel state, combi state ) = (exist, %ls, %ls).\n",
+				ATLTRACE(L"~~~~~ %u, %ls (sel state, sel state, combi state ) = (exist, %ls, %ls).\n",
 					ptr_req_new->get_session_number(),
 					ptr_req_new->get_action_by_string().c_str(),
 					cbase_ctl_fn::_cstate::get_string_from_state(st_cur).c_str(),
@@ -1053,7 +1051,7 @@ namespace _mp {
 				);
 			}
 			else {
-				ATLTRACE(L"####### %u, %ls (sel state, sel state, combi state ) = (none, %ls, %ls).\n",
+				ATLTRACE(L"~~~~~ %u, %ls (sel state, sel state, combi state ) = (none, %ls, %ls).\n",
 					ptr_req_new->get_session_number(),
 					ptr_req_new->get_action_by_string().c_str(),
 					cbase_ctl_fn::_cstate::get_string_from_state(st_cur).c_str(),
@@ -1061,13 +1059,13 @@ namespace _mp {
 				);
 			}
 			if (b_exist_another) {
-				ATLTRACE(L"####### (another state, another state, sel_another state ) = (exist, %ls, %ls).\n",
+				ATLTRACE(L"~~~~~ (another state, another state, sel_another state ) = (exist, %ls, %ls).\n",
 					cbase_ctl_fn::_cstate::get_string_from_state(st_another).c_str(),
 					cbase_ctl_fn::_cstate::get_string_from_sel_another_state(st_sel_another).c_str()
 				);
 			}
 			else {
-				ATLTRACE(L"####### (another state, another state, sel_another state ) = (none, %ls, %ls).\n",
+				ATLTRACE(L"~~~~~ (another state, another state, sel_another state ) = (none, %ls, %ls).\n",
 					cbase_ctl_fn::_cstate::get_string_from_state(st_another).c_str(),
 					cbase_ctl_fn::_cstate::get_string_from_sel_another_state(st_sel_another).c_str()
 				);
@@ -1217,7 +1215,7 @@ namespace _mp {
 					result.after_processing_set_rsp_with_succss_complete(std::wstring(), m_s_dev_path);
 
 					// 상태변경
-					transit_state_by_processing_result(result);
+					_transit_state_by_processing_result(result);
 					break;
 				case cbase_ctl_fn::_cstate::ev_sync:
 					ptr_rsp = _start_and_complete_by_sync_req(m_s_dev_path, result.get_req());
@@ -1232,7 +1230,7 @@ namespace _mp {
 					result.after_processing_set_rsp_with_succss_complete(ptr_rsp, m_s_dev_path);
 
 					// 상태변경
-					transit_state_by_processing_result(result);
+					_transit_state_by_processing_result(result);
 					break;
 				case cbase_ctl_fn::_cstate::ev_asy:
 					if (!_start_by_async_req(m_s_dev_path, result.get_req())) {
@@ -1246,7 +1244,7 @@ namespace _mp {
 					result.after_starting_process_set_rsp_with_succss_ing(m_s_dev_path);
 
 					// 상태변경
-					transit_state_by_processing_result(result);//<<
+					_transit_state_by_processing_result(result);//<<
 					break;
 				case cbase_ctl_fn::_cstate::ev_rx:
 					// 무시되는 event
@@ -1281,7 +1279,7 @@ namespace _mp {
 					result.after_processing_set_rsp_with_succss_complete(std::wstring(), m_s_dev_path);
 
 					// 상태변경
-					transit_state_by_processing_result(result);
+					_transit_state_by_processing_result(result);
 					break;
 				case cbase_ctl_fn::_cstate::ev_sync:
 					// 새로운 request 를 내리면, another 는 하위단에서 자동 cancel 이 발생하므로 시키므로
@@ -1299,25 +1297,25 @@ namespace _mp {
 					result.after_processing_set_rsp_with_succss_complete(ptr_rsp, m_s_dev_path);
 
 					// 상태변경
-					transit_state_by_processing_result(result);
+					_transit_state_by_processing_result(result);
 					break;
 				case cbase_ctl_fn::_cstate::ev_asy:
 					// 새로운 request 를 내리면, another 는 하위단에서 자동 cancel 이 발생하므로 시키므로
 					// 내리기 전에 , 실행 중인 another request에 복구 설정 해야함.
+					//>>m_mgmt_q.qm_read_set_request_front_to_recover_of_another_session(result.get_session_number());
 
-#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-					ATLTRACE(L" +++++ in idl push req(%u : %ls).\n",
-						result.get_req()->get_session_number(),
-						result.get_req()->get_action_by_string().c_str()
-					);
-#endif
-					// another session 이 이미 asyn 이므로, asy queue 에 현재 session 추가만 하면. OK.
-					m_mgmt_q.qm_read_push_back(result.get_req());
+					if (!_start_by_async_req(m_s_dev_path, result.get_req())) {
+						result.after_processing_set_rsp_with_error_complete(cio_packet::error_reason_device_operation, m_s_dev_path);
+
+						m_p_ctl_fun_log->log_fmt(L"[E] - %ls | open counter = %u : session = %u.\n", __WFUNCTION__, m_map_ptr_state_cur.size(), result.get_session_number());
+						m_p_ctl_fun_log->trace(L"[E] - %ls | open counter = %u : session = %u.\n", __WFUNCTION__, m_map_ptr_state_cur.size(), result.get_session_number());
+						continue;
+					}
 
 					result.after_starting_process_set_rsp_with_succss_ing(m_s_dev_path);
 
 					// 상태변경
-					transit_state_by_processing_result(result);//<<
+					_transit_state_by_processing_result(result);//<<
 					break;
 				case cbase_ctl_fn::_cstate::ev_rx:
 					// 무시되는 event
@@ -1370,7 +1368,7 @@ namespace _mp {
 					result.after_processing_set_rsp_with_succss_complete(std::wstring(), m_s_dev_path);
 
 					// 상태변경과 result 를 success 로 설정.
-					transit_state_by_processing_result(result);
+					_transit_state_by_processing_result(result);
 					break;
 				case cbase_ctl_fn::_cstate::ev_sync:
 					// 새로운 request 를 내리면, another 는 하위단에서 자동 cancel 이 발생하므로 시키므로
@@ -1388,12 +1386,12 @@ namespace _mp {
 					result.after_processing_set_rsp_with_succss_complete(ptr_rsp, m_s_dev_path);
 
 					// 상태변경
-					transit_state_by_processing_result(result);
+					_transit_state_by_processing_result(result);
 					break;
 				case cbase_ctl_fn::_cstate::ev_asy:
 					// 새로운 request 를 내리면, another 는 하위단에서 자동 cancel 이 발생하므로 시키므로
 					// 내리기 전에 , 실행 중인 another request에 복구 설정 해야함.
-					m_mgmt_q.qm_read_set_request_front_to_recover_of_another_session(result.get_session_number());
+					//>>m_mgmt_q.qm_read_set_request_front_to_recover_of_another_session(result.get_session_number());
 
 					if (!_start_by_async_req(m_s_dev_path, result.get_req())) {
 						result.after_processing_set_rsp_with_error_complete(cio_packet::error_reason_device_operation, m_s_dev_path);
@@ -1406,7 +1404,7 @@ namespace _mp {
 					result.after_starting_process_set_rsp_with_succss_ing(m_s_dev_path);
 
 					// 상태변경
-					transit_state_by_processing_result(result);//<<
+					_transit_state_by_processing_result(result);//<<
 					break;
 				case cbase_ctl_fn::_cstate::ev_rx:
 					// 무시되는 event
@@ -1447,8 +1445,8 @@ namespace _mp {
 
 				result.after_processing_set_rsp_with_succss_complete(std::wstring(), s_dev_path);
 
-				//이 경우 에러 일겨우 상태변경은 없으므로, transit_state_by_processing_result() 를 호출 할 필요 없음. 
-				transit_state_by_processing_result(result, b_user_shared_mode);
+				//이 경우 에러 일겨우 상태변경은 없으므로, _transit_state_by_processing_result() 를 호출 할 필요 없음. 
+				_transit_state_by_processing_result(result, b_user_shared_mode);
 
 				b_result = true;
 			} while (false);
@@ -1553,7 +1551,7 @@ namespace _mp {
 					result.after_processing_set_rsp_with_succss_complete(std::wstring(), m_s_dev_path);
 
 					// 상태변경
-					transit_state_by_processing_result(result);
+					_transit_state_by_processing_result(result);
 					break;
 				case cbase_ctl_fn::_cstate::ev_sync:
 					ptr_rsp = _start_and_complete_by_sync_req(m_s_dev_path, result.get_req());
@@ -1568,7 +1566,7 @@ namespace _mp {
 					result.after_processing_set_rsp_with_succss_complete(ptr_rsp,m_s_dev_path);
 
 					// 상태변경
-					transit_state_by_processing_result(result);
+					_transit_state_by_processing_result(result);
 					break;
 				case cbase_ctl_fn::_cstate::ev_asy:
 					if (!_start_by_async_req(m_s_dev_path, result.get_req())) {
@@ -1582,7 +1580,7 @@ namespace _mp {
 					result.after_starting_process_set_rsp_with_succss_ing(m_s_dev_path);
 
 					// 상태변경
-					transit_state_by_processing_result(result);
+					_transit_state_by_processing_result(result);
 					break;
 				case cbase_ctl_fn::_cstate::ev_rx:
 					break;
@@ -1620,7 +1618,7 @@ namespace _mp {
 					result.after_processing_set_rsp_with_succss_complete(std::wstring(), m_s_dev_path);
 
 					// 상태변경과 result 를 success 로 설정.
-					transit_state_by_processing_result(result);
+					_transit_state_by_processing_result(result);
 					break;
 				case cbase_ctl_fn::_cstate::ev_sync:
 					// syc 명령을 실행하면 하단에서 현재 실행 중인 async 를 취소해서 결과가 callback 에서 설정됨.
@@ -1636,7 +1634,7 @@ namespace _mp {
 					result.after_processing_set_rsp_with_succss_complete(ptr_rsp, m_s_dev_path);
 
 					// 상태변경
-					transit_state_by_processing_result(result);
+					_transit_state_by_processing_result(result);
 					break;
 				case cbase_ctl_fn::_cstate::ev_asy:
 					// asyc 명령을 실행하면 하단에서 현재 실행 중인 async 를 취소해서 결과가 callback 에서 설정됨.
@@ -1651,7 +1649,7 @@ namespace _mp {
 					result.after_starting_process_set_rsp_with_succss_ing(m_s_dev_path);
 
 					// 상태변경
-					transit_state_by_processing_result(result);
+					_transit_state_by_processing_result(result);
 					break;
 				case cbase_ctl_fn::_cstate::ev_rx:
 					break;
@@ -1661,7 +1659,7 @@ namespace _mp {
 			} while (false);
 		}
 
-		void cdev_ctl_fn::transit_state_for_only_all_async_by_rx_event(	const cdev_ctl_fn::type_v_tuple_full& v_tuple_full	)
+		void cdev_ctl_fn::_transit_state_for_only_all_async_by_rx_event(	const cdev_ctl_fn::type_v_tuple_full& v_tuple_full	)
 		{
 			cbase_ctl_fn::_cstate::type_result_evt result_state(false, cbase_ctl_fn::_cstate::st_not, cbase_ctl_fn::_cstate::st_not);
 
@@ -1724,12 +1722,15 @@ namespace _mp {
 
 				}//end for
 
+#if defined(_WIN32) && defined(_DEBUG) && (defined(__THIS_FILE_ONLY__) || defined(__THIS_FILE_ONLY_STATE__))
+				ATLTRACE(L"~~~~~ state info(%ls).\n", __WFUNCTION__);
+#endif
 				_logging_if_state_is_changed();
 
 			} while (false);
 		}
 
-		void cdev_ctl_fn::transit_state_by_processing_result
+		void cdev_ctl_fn::_transit_state_by_processing_result
 		(
 			cbase_ctl_fn::cresult &result,
 			bool b_user_shared_mode_on_open_request /*=false*/
@@ -1790,6 +1791,9 @@ namespace _mp {
 			}
 			std::tie(m_st_combi, std::ignore) = result.get_combination_state();
 
+#if defined(_WIN32) && defined(_DEBUG) && (defined(__THIS_FILE_ONLY__) || defined(__THIS_FILE_ONLY_STATE__))
+			ATLTRACE(L"~~~~~ state info(%ls).\n", __WFUNCTION__);
+#endif
 			_logging_if_state_is_changed();
 		}
 
@@ -1937,7 +1941,7 @@ namespace _mp {
 				case cio_packet::act_dev_read:
 					if (m_mgmt_q.qm_read_push_back(ptr_req)) {
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-						ATLTRACE(L" +++++ 1'st push req(%u : %ls).\n",
+						ATLTRACE(L"~~~~~ 1'st push req(%u : %ls).\n",
 							ptr_req->get_session_number(),
 							ptr_req->get_action_by_string().c_str()
 						);
@@ -1951,10 +1955,17 @@ namespace _mp {
 					}
 					else {
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-						ATLTRACE(L" +++++ 2'nd... push req(%ls).\n",
+						ATLTRACE(L"~~~~~ 2'nd... push req(%ls).\n",
 							ptr_req->get_action_by_string().c_str()
 						);
 #endif
+						if (m_b_cur_shared_mode) {
+							wptr_dev.lock()->start_read(ptr_req->get_uid(), cdev_ctl_fn::_cb_dev_read_on_shared, this, n_session);
+						}
+						else {
+							wptr_dev.lock()->start_read(ptr_req->get_uid(), cdev_ctl_fn::_cb_dev_read_on_exclusive, this, n_session);
+						}
+
 					}
 
 					break;

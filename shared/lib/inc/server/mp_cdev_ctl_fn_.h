@@ -15,7 +15,6 @@
 #include <mp_cwait.h>
 #include <mp_cio_packet.h>
 #include <server/mp_cbase_ctl_fn_.h>
-#include <hid/mp_clibhid_dev.h>
 
 namespace _mp {
 
@@ -383,6 +382,7 @@ namespace _mp {
 		*/
 		std::vector<cio_packet::type_ptr> get_front_of_read_queue();
 
+	private:
 		/**
 		* @brief the job of this functions.
 		* 
@@ -397,7 +397,7 @@ namespace _mp {
 		* @param [in] v_tuple_full - vector of tuple : 0 - request ptr, 1-event ptr, 2 - event index ,3 - response ptr
 		*
 		*/
-		void transit_state_for_only_all_async_by_rx_event(const cdev_ctl_fn::type_v_tuple_full & v_tuple_full);
+		void _transit_state_for_only_all_async_by_rx_event(const cdev_ctl_fn::type_v_tuple_full & v_tuple_full);
 
 		/**
 		* @brief the job of this functions.
@@ -416,9 +416,8 @@ namespace _mp {
 		*
 		*	this paramer is used only in open request.
 		*/
-		void transit_state_by_processing_result(cbase_ctl_fn::cresult& result, bool b_user_shared_mode_on_open_request = false);
+		void _transit_state_by_processing_result(cbase_ctl_fn::cresult& result, bool b_user_shared_mode_on_open_request = false);
 
-	private:
 		/**
 		* @brief process transaction state by the given event.
 		*
@@ -698,7 +697,7 @@ namespace _mp {
 		);
 
 		/**
-		* @brief if a state is changed in transit_state_by_processing_result(),
+		* @brief if a state is changed in _transit_state_by_processing_result(),
 		* 
 		*	logging and trace state information. this function will be used for debugging.
 		* 

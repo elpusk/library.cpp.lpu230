@@ -286,7 +286,7 @@ namespace _mp{
             m_p_user_for_cb = nullptr;
             m_result = cqitem_dev::result_not_yet;
             m_s_info.clear();
-            m_n_session_number = 0;
+            m_n_session_number = _MP_TOOLS_INVALID_SESSION_NUMBER;
 
             m_n_uid = 0;
         }

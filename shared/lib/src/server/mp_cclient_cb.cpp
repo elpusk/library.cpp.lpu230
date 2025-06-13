@@ -104,7 +104,7 @@ namespace _mp {
 	}
 
 
-	cclient_cb_qitem::type_ptr cclient_cb::_execute(cclient_cb_qitem::type_ptr& ptr_req_new, cclient_cb_qitem::type_ptr& ptr_req_cur)
+	cclient_cb_qitem::type_ptr cclient_cb::_execute(cclient_cb_qitem::type_ptr& ptr_req_new, const cclient_cb_qitem::type_ptr& ptr_req_cur)
 	{
 		switch (ptr_req_new->get_type_index()) {
 		case cclient_cb_qitem::index_resolve:

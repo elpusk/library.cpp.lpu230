@@ -79,7 +79,7 @@ namespace _mp {
 		*
 		*	else -> not complete( need more running by _continue() ).
 		*/
-		virtual cio_packet::type_ptr _execute(cio_packet::type_ptr& ptr_req_new, cio_packet::type_ptr& ptr_req_cur)
+		virtual cio_packet::type_ptr _execute(cio_packet::type_ptr& ptr_req_new, const cio_packet::type_ptr& ptr_req_cur)
 		{
 			return cio_packet::type_ptr();
 		}

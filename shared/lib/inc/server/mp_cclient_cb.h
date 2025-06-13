@@ -212,7 +212,7 @@ namespace _mp {
 		*
 		*	else -> not complete( need more running by _continue() ).
 		*/
-		virtual cclient_cb_qitem::type_ptr _execute(cclient_cb_qitem::type_ptr& ptr_req_new, cclient_cb_qitem::type_ptr& ptr_req_cur);
+		virtual cclient_cb_qitem::type_ptr _execute(cclient_cb_qitem::type_ptr& ptr_req_new, const cclient_cb_qitem::type_ptr& ptr_req_cur);
 
 		/**
 		* executed by worker thread. when the return of _execute() is allocated(not complete),and none new request

@@ -9,6 +9,7 @@
 #ifdef _DEBUG
 //#undef __THIS_FILE_ONLY__
 #define __THIS_FILE_ONLY__
+//#define __THIS_FILE_ONLY_Q__
 #include <atltrace.h>
 #endif
 #endif
@@ -122,61 +123,32 @@ namespace _mp {
         return v;
     }
 
-
-    void clibhid_dev::start_write(const std::vector<unsigned char>& v_tx, cqitem_dev::type_cb cb, void* p_user_for_cb, unsigned long n_session_number/*=0*/)
-    {
-        cqitem_dev::type_ptr ptr(new cqitem_dev(0,v_tx,false,cb,p_user_for_cb, n_session_number));
-
-#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-        if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
-            ATLTRACE(L" =======(%ls) push req(%ls).\n",
-                _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str(),
-                ptr->get_request_type_by_string().c_str()
-            );
-        }
-#endif
-
-        m_q_ptr.push(ptr);
-    }
-
     void clibhid_dev::start_write(size_t n_req_uid,const std::vector<unsigned char>& v_tx, cqitem_dev::type_cb_for_packet cb_for_packet, void* p_user_for_cb, unsigned long n_session_number/*=0*/)
     {
         cqitem_dev::type_ptr ptr(new cqitem_dev(n_req_uid,v_tx, false, cb_for_packet, p_user_for_cb, n_session_number));
 
-#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+#if defined(_WIN32) && defined(_DEBUG) && (defined(__THIS_FILE_ONLY__) || defined(__THIS_FILE_ONLY_Q__))
         if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
-            ATLTRACE(L" =======(%ls) push req(%ls).\n",
+            ATLTRACE(L" =======(%ls)[%u:%u] push req(%ls) -> clibhid_dev.\n",
                 _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str(),
+                ptr->get_session_number(), ptr->get_uid(),
                 ptr->get_request_type_by_string().c_str()
             );
         }
 #endif
 
-        m_q_ptr.push(ptr);
-    }
-
-
-    void clibhid_dev::start_read(cqitem_dev::type_cb cb, void* p_user_for_cb, unsigned long n_session_number/*=0*/)
-    {
-        cqitem_dev::type_ptr ptr(new cqitem_dev(0,_mp::type_v_buffer(0), true, cb, p_user_for_cb, n_session_number));
-#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-        if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
-            ATLTRACE(L" =======(%ls) push req(%ls).\n",
-                _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str(),
-                ptr->get_request_type_by_string().c_str()
-            );
-        }
-#endif
         m_q_ptr.push(ptr);
     }
 
     void clibhid_dev::start_read(size_t n_req_uid, cqitem_dev::type_cb_for_packet cb_for_packet, void* p_user_for_cb, unsigned long n_session_number/*=0*/)
     {
         cqitem_dev::type_ptr ptr(new cqitem_dev(n_req_uid,_mp::type_v_buffer(0), true, cb_for_packet, p_user_for_cb, n_session_number));
-#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+
+#if defined(_WIN32) && defined(_DEBUG) && (defined(__THIS_FILE_ONLY__) || defined(__THIS_FILE_ONLY_Q__))
         if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
-            ATLTRACE(L" =======(%ls) push req(%ls).\n",
+            ATLTRACE(L" =======(%ls)[%u:%u] push req(%ls) -> clibhid_dev.\n",
                 _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str(),
+                ptr->get_session_number(), ptr->get_uid(),
                 ptr->get_request_type_by_string().c_str()
             );
         }
@@ -184,26 +156,13 @@ namespace _mp {
         m_q_ptr.push(ptr);
     }
 
-    void clibhid_dev::start_write_read(const std::vector<unsigned char>& v_tx, cqitem_dev::type_cb cb, void* p_user_for_cb, unsigned long n_session_number/*=0*/)
-    {
-        cqitem_dev::type_ptr ptr_tx(new cqitem_dev(0,v_tx, true, cb, p_user_for_cb, n_session_number));
-#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-        if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
-            ATLTRACE(L" =======(%ls) push req(%ls).\n",
-                _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str(),
-                ptr_tx->get_request_type_by_string().c_str()
-            );
-        }
-#endif
-        m_q_ptr.push(ptr_tx);
-    }
-
     void clibhid_dev::start_write_read(size_t n_req_uid, const std::vector<unsigned char>& v_tx, cqitem_dev::type_cb_for_packet cb_for_packet, void* p_user_for_cb, unsigned long n_session_number/*=0*/)
     {
         cqitem_dev::type_ptr ptr_tx(new cqitem_dev(n_req_uid,v_tx, true, cb_for_packet, p_user_for_cb, n_session_number));
-#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+
+#if defined(_WIN32) && defined(_DEBUG) && (defined(__THIS_FILE_ONLY__) || defined(__THIS_FILE_ONLY_Q__))
         if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
-            ATLTRACE(L" =======(%ls)%u:%u: push req(%ls).\n",
+            ATLTRACE(L" =======(%ls)[%u:%u] push req(%ls) -> clibhid_dev.\n",
                 _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str(),
                 ptr_tx->get_session_number(), ptr_tx->get_uid(),
                 ptr_tx->get_request_type_by_string().c_str()
@@ -213,28 +172,14 @@ namespace _mp {
         m_q_ptr.push(ptr_tx);
     }
 
-    void clibhid_dev::start_cancel(cqitem_dev::type_cb cb, void* p_user_for_cb, unsigned long n_session_number/*=0*/)
-    {
-        //cancel -> tx is none, no need rx!
-        cqitem_dev::type_ptr ptr(new cqitem_dev(0,_mp::type_v_buffer(0), false, cb, p_user_for_cb, n_session_number));
-#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-        if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
-            ATLTRACE(L" =======(%ls) push req(%ls).\n",
-                _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str(),
-                ptr->get_request_type_by_string().c_str()
-            );
-        }
-#endif
-        m_q_ptr.push(ptr);
-    }
-
     void clibhid_dev::start_cancel(size_t n_req_uid, cqitem_dev::type_cb_for_packet cb_for_packet, void* p_user_for_cb, unsigned long n_session_number/*=0*/)
     {
         //cancel -> tx is none, no need rx!
         cqitem_dev::type_ptr ptr(new cqitem_dev(n_req_uid,_mp::type_v_buffer(0), false, cb_for_packet, p_user_for_cb, n_session_number));
-#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+
+#if defined(_WIN32) && defined(_DEBUG) && (defined(__THIS_FILE_ONLY__) || defined(__THIS_FILE_ONLY_Q__))
         if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
-            ATLTRACE(L" =======(%ls)%u:%u: push req(%ls).\n",
+            ATLTRACE(L" =======(%ls)[%u:%u] push req(%ls) -> clibhid_dev.\n",
                 _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str(),
                 ptr->get_session_number(), ptr->get_uid(),
                 ptr->get_request_type_by_string().c_str()
@@ -597,15 +542,9 @@ namespace _mp {
         return b_result;
     }
 
-    /**
-    * receving data
-    * @return 
-    *   first : processing result( true - none error ), 
-    *   second : processing complete(true), need more processing(false. in this case. first must be true)
-    *   third : rx data from device.
-    */
     std::tuple<bool, bool, _mp::type_v_buffer> clibhid_dev::_process_only_rx(cqitem_dev::type_ptr& ptr_req)
     {
+        // ptr_req->get_request_type() == cqitem_dev::req_tx_rx 일때는 _process_only_rx_for_txrx() 를 사용하라!
         bool b_complete(true);
         bool b_result(false);
         _mp::type_v_buffer v_rx(0);
@@ -633,21 +572,6 @@ namespace _mp {
             }
 
             //RX OK.
-            if (ptr_req->get_request_type() == cqitem_dev::req_tx_rx) {
-                if (v_rx[0] != 'R') {//lpu237 specific protocol
-                    // very important code - fix miss-matching txrx protocol. 
-                    // 펨웨어에서, msr 이나 ibutton 데이터를 보내려고, usb buffer 에 데이타를 쓰고 있는 때,
-                    // tx 가 전송되면, api 는 tx 에 대한 응답으로 msr 이나 ibutton 데이터를 받을수 있다.
-                    // 이러한 경우 프로토콜 미스로 문제가 생기므로, 이 msr 이나 ibutton 은 무시되어야 한다. 무조건 !
-                    b_complete = false;
-                    v_rx.resize(0);
-                    //
-                    clog::get_instance().trace(L"T[W] - %ls - the missed response is passed.\n", __WFUNCTION__);
-                    clog::get_instance().log_fmt(L"[W] - %ls - the missed response is passed.\n", __WFUNCTION__);
-                    //
-                    continue; //and need re-read.
-                }
-            }
 
         } while (false);
         return std::make_tuple(b_result, b_complete, v_rx);
@@ -672,10 +596,73 @@ namespace _mp {
             }
             //
 
-            std::tie(b_result, b_complete, v_rx) = _process_only_rx(ptr_req);
+            std::tie(b_result,v_rx) = _process_only_rx_for_txrx(ptr_req);
 
         } while (false);
         return std::make_tuple(b_result, b_complete,v_rx);
+    }
+
+    std::tuple<bool, _mp::type_v_buffer> clibhid_dev::_process_only_rx_for_txrx(cqitem_dev::type_ptr& ptr_req)
+    {
+        bool b_result(false);
+        _mp::type_v_buffer v_rx(0);
+        bool b_wait(false);
+        int n_try_cnt = clibhid_dev::_const_dev_rx_retry_counter_in_txrx_req;
+
+        do {
+            if (b_wait) {
+                if (n_try_cnt <= 0) {
+                    b_result = false;
+                    b_wait = false;
+                    clog::get_instance().trace(L"T[E] - %ls - over retry read.\n", __WFUNCTION__);
+                    clog::get_instance().log_fmt(L"[E] - %ls - over retry read.\n", __WFUNCTION__);
+                    continue;// 읽기 최대 시도 회수 지남.
+                }
+
+                --n_try_cnt;
+                // 다시 읽기 시도를 위해 시간 지연을 줌.
+                std::this_thread::sleep_for(std::chrono::milliseconds(clibhid_dev::_const_dev_io_check_interval_mmsec)); 
+            }
+
+            b_wait = false;
+            bool b_expected_replugin = false;
+            //
+            std::tie(b_result, b_expected_replugin) = _read_using_thread(v_rx);
+            if (!b_result) {//ERROR RX
+                clog::get_instance().trace(L"T[E] - %ls - _read_using_thread().\n", __WFUNCTION__);
+                clog::get_instance().log_fmt(L"[E] - %ls - _read_using_thread().\n", __WFUNCTION__);
+
+                if (b_expected_replugin) {
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+                    ATLTRACE(L" =******= DECTECT plugout.\n");
+#endif
+                    m_b_detect_replugin = true;//need this device instance removed
+                }
+                continue;
+            }
+
+            if (v_rx.size() == 0) {
+                b_wait = true; // 에러는 아닌데 받은게 없어서 좀더 기다림.
+                continue;
+            }
+
+            //RX OK.
+            if (v_rx[0] != 'R') {//lpu237 specific protocol // ptr_req->get_request_type() == cqitem_dev::req_tx_rx 일때만 적용.
+                // very important code - fix miss-matching txrx protocol. 
+                // 펨웨어에서, msr 이나 ibutton 데이터를 보내려고, usb buffer 에 데이타를 쓰고 있는 때,
+                // tx 가 전송되면, api 는 tx 에 대한 응답으로 msr 이나 ibutton 데이터를 받을수 있다.
+                // 이러한 경우 프로토콜 미스로 문제가 생기므로, 이 msr 이나 ibutton 은 무시되어야 한다. 무조건 !
+                b_wait = true; // 다시 읽기 시도.
+                v_rx.resize(0);
+                //
+                clog::get_instance().trace(L"T[W] - %ls - the missed response is passed.\n", __WFUNCTION__);
+                clog::get_instance().log_fmt(L"[W] - %ls - the missed response is passed.\n", __WFUNCTION__);
+                //
+                continue; //and need re-read.
+            }
+
+        } while (b_wait);
+        return std::make_tuple(b_result, v_rx);
     }
 
     /**
@@ -685,12 +672,12 @@ namespace _mp {
     void clibhid_dev::_worker_rx()
     {
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-        ATLTRACE(L"start clibhid_dev::_worker_rx(0x%08x).\n", m_n_dev);
+        ATLTRACE(L" =======start clibhid_dev::_worker_rx(0x%08x).\n", m_n_dev);
 #endif
         size_t n_report = m_dev_info.get_size_in_report();
         if (n_report <= 0) {
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-            ATLTRACE(L"Exit[E] clibhid_dev::_worker_rx(0x%08x).\n", m_n_dev);
+            ATLTRACE(L" =======Exit[E] clibhid_dev::_worker_rx(0x%08x).\n", m_n_dev);
 #endif
             return;
         }
@@ -751,14 +738,14 @@ namespace _mp {
         //_mp::clog::get_instance().log_fmt(L"[I] exit : %ls : id = %ls.\n", __WFUNCTION__, s_id.c_str()); ,, dead lock
 
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-        ATLTRACE(L"Exit clibhid_dev::_worker_rx(0x%08x-%s).\n", m_n_dev, _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str());
+        ATLTRACE(L" =======Exit clibhid_dev::_worker_rx(0x%08x-%s).\n", m_n_dev, _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str());
 #endif
     }
 
     void clibhid_dev::_worker()
     {
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-        ATLTRACE(L"start clibhid_dev::_worker(0x%08x-%s).\n", m_n_dev, _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str());
+        ATLTRACE(L" =======start clibhid_dev::_worker(0x%08x-%s).\n", m_n_dev, _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str());
 #endif
         std::deque< cqitem_dev::type_ptr > dq_ptr_cur_old;
         //cqitem_dev::type_ptr ptr_cur_old; ///////
@@ -812,7 +799,7 @@ namespace _mp {
                                 }
                             }
 #endif
-                            continue;
+                            continue; // go ptr_cur.callback, ptr_new.callback
                         }
                         // pumping
                         std::tie(b_read_ok, b_expected_replugin) = _pump();//pumpping.
@@ -826,7 +813,7 @@ namespace _mp {
                             }
                         }
 #endif
-                        continue;
+                        continue;// go ptr_cur.callback, ptr_new.callback
                     }
 
                     // 현재 작업 중인 것 있으면,
@@ -849,7 +836,19 @@ namespace _mp {
                             }
                         }
 #endif
-                        continue;
+                        continue;// go ptr_cur.callback, ptr_new.callback
+                    }
+
+                    if (ptr_cur) {
+                        // 처리하던 것이 있으면,
+                        if (ptr_cur->get_request_type() == cqitem_dev::req_only_rx && ptr_new->get_request_type() == cqitem_dev::req_only_rx) {
+                            // 현재 처리 중인 것과 새로 받은 것이 모두 rx_only 의 경우,
+                            // 새로운 것은 기존 것과 같이 처리 되므로, 무시하고, 해당 app 사용이 종료 될때 처리를 위해
+                            // 저장만 함.
+                            dq_ptr_cur_old.push_back(ptr_new);
+                            ptr_new.reset();
+                            continue;
+                        }
                     }
 
                     // 새로운 명령을 처리.
@@ -911,7 +910,7 @@ namespace _mp {
                             }
                         }
 #endif
-                        continue;
+                        continue;// go ptr_cur.callback, ptr_new.callback
                     }
                     if (b_complete) {
                         // ptr_new 가 동기명령인 경우는 여기에.
@@ -931,7 +930,7 @@ namespace _mp {
 #endif
                         continue; // 새로운 명령은 처리됨.
                     }
-
+/*
                     if (ptr_cur) {
                         // 새로운 명령 처리가 더 필요하므로 기존 명령이 cancel 된 것을,
                         // callback 해서 알려 준다. 
@@ -952,8 +951,8 @@ namespace _mp {
                         }
 #endif
                     }
-
-                    // ptr_new 가 비동기명령 또는 동기식이나 응답 수신전인 경우 여기에.
+*/
+                    // ptr_new 가 비동기명령 시, 응답 수신전인 경우 여기에.
                     // 새로운 명령 처리가 더 필요하므로, 현재 명령으로 설정.
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
                     if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
@@ -1005,7 +1004,7 @@ namespace _mp {
                         }
                     }
 #endif
-                    continue;
+                    continue;// go ptr_cur.callback, ptr_new.callback
                 }
 
                 if (b_read_ok) {
@@ -1111,37 +1110,33 @@ namespace _mp {
                     ptr_cur->reset_result();
                     continue;// 계속 reading
                 }
-
+                
                 if (!v_need_next_reading.empty()) {
-                    //TODO. v_need_next_reading 에 있는 값으로 ptr_cur 값을 설정해야 하는데, dq_ptr_cur_old 는 비어 있고,
-                    // 할 수 있는 방법이 없다.
+                    ptr_cur.reset(); // 완료되어서 메모리에서 삭제.
+                    if (dq_ptr_cur_old.empty()) {
+                        continue;
+                    }
+
+                    ptr_cur = dq_ptr_cur_old.front();
+                    dq_ptr_cur_old.pop_front();
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+                    if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
+                        if (m_n_debug_line != (__LINE__ + 1)) {
+                            m_n_debug_line = __LINE__;
+                            ATLTRACE(L" =======(%ls) continue old cur req(%ls:%u:%u) -> cur\n",
+                                _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str(),
+                                ptr_cur->get_request_type_by_string().c_str(),
+                                ptr_cur->get_session_number(),
+                                ptr_cur->get_uid()
+                            );
+                        }
+                    }
+#endif
                     continue;
                 }
-
-                if (dq_ptr_cur_old.empty()) {
-                    ptr_cur.reset(); // 완료되어서 메모리에서 삭제.
-                    continue;// 지연된 reading 없음.
-                }
                 
-                ptr_cur = dq_ptr_cur_old.front();// 현재 req 를 제거, 또는 다음 reading req 를 설정.
-                dq_ptr_cur_old.pop_front();
-
-                ptr_cur->reset_result();
-
-#if defined(_WIN32) && defined(_DEBUG)
-                if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
-                    if (m_n_debug_line != (__LINE__ + 1)) {
-                        m_n_debug_line = __LINE__;
-                        ATLTRACE(L" =======(%ls) continue old cur req(%ls:%u:%u) -> cur\n",
-                            _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str(),
-                            ptr_cur->get_request_type_by_string().c_str(),
-                            ptr_cur->get_session_number(),
-                            ptr_cur->get_uid()
-                        );
-                    }
-                }
-#endif
-
+                dq_ptr_cur_old.clear();
+                ptr_cur.reset(); // 완료되어서 메모리에서 삭제.
             } while (false);
 
             if (ptr_new) {
@@ -1182,7 +1177,7 @@ namespace _mp {
         //_mp::clog::get_instance().log_fmt(L"[I] exit : %ls : id = %ls.\n", __WFUNCTION__, s_id.c_str());<<dead lock
 
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-        ATLTRACE(L"Exit clibhid_dev::_worker(0x%08x-%ls).\n", m_n_dev, _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str());
+        ATLTRACE(L" =======Exit clibhid_dev::_worker(0x%08x-%ls).\n", m_n_dev, _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str());
 #endif
     }
 

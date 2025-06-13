@@ -76,7 +76,7 @@ namespace _mp {
 		*
 		*	else -> not complete( need more running by _continue() ). 
 		*/
-		virtual std::shared_ptr<T> _execute(std::shared_ptr<T>& ptr_req_new, std::shared_ptr<T>& ptr_req_cur) = 0;
+		virtual std::shared_ptr<T> _execute(std::shared_ptr<T>& ptr_req_new, const std::shared_ptr<T>& ptr_req_cur) = 0;
 
 		/**
 		* @brief executed by worker thread. when the return of _execute() is the allocated ptr(not complete),and none new request

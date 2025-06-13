@@ -31,6 +31,9 @@ namespace _mp {
 
     protected:
         enum {
+            _const_dev_rx_retry_counter_in_txrx_req = 1000 // 3000 msec
+        };
+        enum {
             _const_dev_io_check_interval_mmsec = 3//50
         };
         enum {
@@ -72,13 +75,12 @@ namespace _mp {
         * the fist byte must be report ID. start write operation.
         * If there's an ongoing read request, cancel it and notify the previous request's callback with the response.
         * 
+        * @param n_req_uid - request uid (option for debugging, if no need, use zero)
         * @param v_tx - tx data
         * @param cb - callback function
         * @param p_user_for_cb - user parameter of cb.
         * @param n_session_number - session number, if not used it, use Zero.
         */
-        void start_write(const std::vector<unsigned char>& v_tx, cqitem_dev::type_cb cb, void* p_user_for_cb, unsigned long n_session_number=0);
-
         void start_write(size_t n_req_uid, const std::vector<unsigned char>& v_tx, cqitem_dev::type_cb_for_packet cb_for_packet, void* p_user_for_cb, unsigned long n_session_number = 0);
 
         /**
@@ -89,12 +91,11 @@ namespace _mp {
         *  start read operation.
         * If there's an ongoing read request, cancel it and notify the previous request's callback with the response.
         * 
+        * @param n_req_uid - request uid (option for debugging, if no need, use zero)
         * @param cb - callback function
         * @param p_user_for_cb - user parameter of cb.
         * @param n_session_number - session number, if not used it, use Zero.
         */
-        void start_read(cqitem_dev::type_cb cb, void* p_user_for_cb, unsigned long n_session_number = 0);
-
         void start_read(size_t n_req_uid, cqitem_dev::type_cb_for_packet cb_for_packet, void* p_user_for_cb, unsigned long n_session_number = 0);
 
         /**
@@ -102,25 +103,23 @@ namespace _mp {
         * the fist byte must be report ID. start write operation.
         * If there's an ongoing read request, cancel it and notify the previous request's callback with the response.
         * 
+        * @param n_req_uid - request uid (option for debugging, if no need, use zero)
         * @param v_tx - tx data
         * @param cb - callback function
         * @param p_user_for_cb - user parameter of cb.
         * @param n_session_number - session number, if not used it, use Zero.
         */
-        void start_write_read(const std::vector<unsigned char>& v_tx, cqitem_dev::type_cb cb, void* p_user_for_cb, unsigned long n_session_number = 0);
-
         void start_write_read(size_t n_req_uid, const std::vector<unsigned char>& v_tx, cqitem_dev::type_cb_for_packet cb_for_packet, void* p_user_for_cb, unsigned long n_session_number = 0);
 
         /**
         * @brief Staring cancel operation.
         * If there's an ongoing read request, cancel it and notify the previous request's callback with the response.
         * 
+        * @param n_req_uid - request uid (option for debugging, if no need, use zero)
         * @param cb - callback function
         * @param p_user_for_cb - user parameter of cb.
         * @param n_session_number - session number, if not used it, use Zero.
         */
-        void start_cancel(cqitem_dev::type_cb cb, void* p_user_for_cb, unsigned long n_session_number = 0);
-
         void start_cancel(size_t n_req_uid, cqitem_dev::type_cb_for_packet cb_for_packet, void* p_user_for_cb, unsigned long n_session_number = 0);
 
         /**
@@ -189,6 +188,14 @@ namespace _mp {
         *   third : rx data from device.
         */
         std::tuple<bool, bool, _mp::type_v_buffer> _process_tx_rx(cqitem_dev::type_ptr& ptr_req);
+
+        /**
+        * @brief receving data in tx-rx pair request
+        * @return
+        *   first : processing result( true - none error ),
+        *   second : rx data from device.
+        */
+        std::tuple<bool, _mp::type_v_buffer> _process_only_rx_for_txrx(cqitem_dev::type_ptr& ptr_req);
 
     protected:
         /**
