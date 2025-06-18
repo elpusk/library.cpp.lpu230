@@ -468,10 +468,12 @@ namespace _mp {
 	//=======================================//=======================================
 	//=======================================//=======================================
 	////cbase_ctl_fn::cresult  member
+	/*
 	cbase_ctl_fn::cresult::cresult()
 	{
 		reset();
 	}
+	*/
 
 	cbase_ctl_fn::cresult::cresult(const cbase_ctl_fn::cresult& src)
 	{

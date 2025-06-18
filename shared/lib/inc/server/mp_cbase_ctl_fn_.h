@@ -183,7 +183,7 @@ namespace _mp {
 			* 
 			*	ptr_req and ptr_rsp is "not" allocated in this function.
 			*/
-			cresult();
+			//cresult();
 
 			cresult(const cresult& src);
 
@@ -438,6 +438,9 @@ namespace _mp {
 			cio_packet::type_ptr m_ptr_rsp; // response packet
 
 			std::wstring m_s_dev_path; // the opened device path in open req.
+
+		private: // don't these functions
+			cresult();
 		};
 
 	public:
