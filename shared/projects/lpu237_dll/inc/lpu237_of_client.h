@@ -17,7 +17,7 @@ public:
 
 private:
 	enum : unsigned long {
-		_const_default_mmsec_timeout_of_response = 1000
+		_const_default_mmsec_timeout_of_response = 3000
 	};
 public:
 	lpu237_of_client();

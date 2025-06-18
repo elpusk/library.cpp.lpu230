@@ -339,6 +339,7 @@ namespace _mp {
 
 	public:
 
+		std::wstring get_dev_path() const;
 
 		/**
 		* @brief process request. transaction state with the given event.

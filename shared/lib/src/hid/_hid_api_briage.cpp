@@ -591,8 +591,9 @@ int _hid_api_briage::api_write(int n_primitive_map_index, const unsigned char* d
     int n_written = hid_write(p_dev, data, length);
 
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-    ATLTRACE(L" !!!!! api_write(n_primitive_map_index:%d,length:%u)->written:%d.\n", n_primitive_map_index, length, n_written);
     if (n_written > 0) {
+        ATLTRACE(L" !!!!! api_write(n_primitive_map_index:%d,length:%u)->written:%d.\n", n_primitive_map_index, length, n_written);
+    
         std::wstringstream woss;
         for (int i = 0; i < n_written; i++) {
             woss << std::hex << data[i];
@@ -624,6 +625,20 @@ int _hid_api_briage::api_read(int n_primitive_map_index, unsigned char* data, si
         _mp::clog::get_instance().log_fmt(L"[E] %ls : n_result = %d.\n", __WFUNCTION__, n_result);
     }
     
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+    if (n_result > 0) {
+        ATLTRACE(L" !!!!! api_read(n_primitive_map_index:%d,length:%u,n_report:%u)->read:%d.\n", n_primitive_map_index, length, n_report, n_result);
+    
+        std::wstringstream woss;
+        for (int i = 0; i < n_result; i++) {
+            woss << std::hex << data[i];
+            woss << L'.';
+        }//end for
+
+        ATLTRACE(L" !!!!! %ls.\n", woss.str().c_str());
+    }
+#endif
+
 #if defined(_DEBUG) && defined(__VIRTUAL_IBUTTON_DATA__)
     else {
         do {

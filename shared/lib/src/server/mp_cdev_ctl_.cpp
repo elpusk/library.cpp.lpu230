@@ -17,8 +17,8 @@
 #if defined(_WIN32) && defined(_DEBUG)
 
 #undef __THIS_FILE_ONLY__
-//#define __THIS_FILE_ONLY__
-#define __THIS_FILE_ONLY_Q__
+#define __THIS_FILE_ONLY__
+//#define __THIS_FILE_ONLY_Q__
 
 #include <atltrace.h>
 #endif
@@ -103,7 +103,7 @@ namespace _mp {
 
 			do {
 				if (ptr_req_new->is_response()) {
-					ptr_result_error = std::make_shared<cbase_ctl_fn::cresult>(*ptr_req_new);
+					ptr_result_error = std::make_shared<cbase_ctl_fn::cresult>(*ptr_req_new, m_fun.get_dev_path());
 					ptr_result_error->after_processing_set_rsp_with_error_complete(cio_packet::error_reason_request_type);
 					continue;
 				}
@@ -117,10 +117,16 @@ namespace _mp {
 						m_p_log->log_fmt(L"[E] - %ls | overflow rx data(binary type) : %u(limit : %u).\n", __WFUNCTION__, n_data, cws_server::const_default_max_rx_size_bytes);
 						m_p_log->trace(L"[E] - %ls | overflow rx data(binary type) : %u(limit : %u).\n", __WFUNCTION__, n_data, cws_server::const_default_max_rx_size_bytes);
 					}
-					ptr_result_error = std::make_shared<cbase_ctl_fn::cresult>(*ptr_req_new);
+					ptr_result_error = std::make_shared<cbase_ctl_fn::cresult>(*ptr_req_new, m_fun.get_dev_path());
 					ptr_result_error->after_processing_set_rsp_with_error_complete(cio_packet::error_reason_overflow_buffer);
 					continue;
 				}
+
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+				if (ptr_req_new->get_action() == cio_packet::act_dev_close) {
+					ATLTRACE(L" ^_^! debug breaking.\n");
+				}
+#endif
 
 				switch (ptr_req_new->get_action())
 				{
@@ -142,7 +148,7 @@ namespace _mp {
 					// 처리가 끝난 경우.
 					ptr_response = ptr_result->get_rsp();
 					if (!ptr_response) {
-						ptr_result_error = std::make_shared<cbase_ctl_fn::cresult>(*ptr_req_new);
+						ptr_result_error = std::make_shared<cbase_ctl_fn::cresult>(*ptr_req_new, m_fun.get_dev_path());
 						ptr_result_error->after_processing_set_rsp_with_error_complete(cio_packet::error_reason_device_misformat);
 						continue;
 					}
@@ -150,7 +156,7 @@ namespace _mp {
 				case cio_packet::act_dev_sub_bootloader:
 				case cio_packet::act_dev_independent_bootloader:
 				default:// 현재는 지원하지 않으므로 그냥 에러 처리.
-					ptr_result_error = std::make_shared<cbase_ctl_fn::cresult>(*ptr_req_new);
+					ptr_result_error = std::make_shared<cbase_ctl_fn::cresult>(*ptr_req_new, m_fun.get_dev_path());
 					ptr_result_error->after_processing_set_rsp_with_error_complete(cio_packet::error_reason_action_code);
 					continue;
 				}//end switch

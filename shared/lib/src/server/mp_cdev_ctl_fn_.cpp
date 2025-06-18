@@ -990,6 +990,11 @@ namespace _mp {
 			return v_ptr_req;
 		}
 
+		std::wstring cdev_ctl_fn::get_dev_path() const
+		{
+			return m_s_dev_path;
+		}
+
 		cbase_ctl_fn::cresult::type_ptr cdev_ctl_fn::process_event
 		(
 			const cio_packet::type_ptr& ptr_req_new,
@@ -1072,7 +1077,7 @@ namespace _mp {
 			}
 #endif
 
-			cbase_ctl_fn::cresult::type_ptr ptr_result_new = std::make_shared<cbase_ctl_fn::cresult>(ptr_req_new); //contructure, only increase reference request, isn't create response.
+			cbase_ctl_fn::cresult::type_ptr ptr_result_new = std::make_shared<cbase_ctl_fn::cresult>(ptr_req_new, m_s_dev_path); //contructure, only increase reference request, isn't create response.
 
 			do {// 새로운 req 실행 전, 현재 실행 중인, req 가 있는 경우가 주의 대상.
 				switch (st_sel_another)
@@ -1465,7 +1470,7 @@ namespace _mp {
 			// result.b_process_complete 이 true 면, result.ptr_rsp 에 결과가 설정되어야 함.
 
 			//contructure, only increase reference request, isn't create response.
-			cbase_ctl_fn::cresult::type_ptr ptr_result_new = std::make_shared<cbase_ctl_fn::cresult>(ptr_req_new);
+			cbase_ctl_fn::cresult::type_ptr ptr_result_new = std::make_shared<cbase_ctl_fn::cresult>(ptr_req_new, m_s_dev_path);
 			cbase_ctl_fn::_cstate::type_state st_cur(cbase_ctl_fn::_cstate::st_not);
 
 			std::tie(std::ignore, st_cur, std::ignore) = _get_state_cur_(ptr_result_new->get_session_number());

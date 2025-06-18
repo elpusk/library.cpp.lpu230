@@ -338,6 +338,7 @@ bool lpu237_of_client::_cmd_get( cprotocol_lpu237::type_cmd c_cmd)
         }
         if (!m_protocol.set_rx_transaction(v_rx)) {
             _mp::clog::get_instance().log_fmt_in_debug_mode(L" : DEB : %ls : error : set_rx_transaction().\n", __WFUNCTION__);
+            _mp::clog::get_instance().log_data_in_debug_mode(v_rx, L"v_rx = ", L"\n");
             continue;
         }
         if (!m_protocol.set_from_rx()) {

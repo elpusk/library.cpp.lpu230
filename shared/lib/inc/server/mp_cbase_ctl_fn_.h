@@ -193,13 +193,13 @@ namespace _mp {
 			* @brief constructor. 
 			*	only deep copy request packet and isn't create response.
 			*/
-			cresult(const cio_packet& request);
+			cresult(const cio_packet& request, const std::wstring & s_dev_path);
 
 			/**
 			* @brief constructor.
 			*	only increases ptr_request reference counter and isn't create response.
 			*/
-			cresult(const cio_packet::type_ptr& ptr_request);
+			cresult(const cio_packet::type_ptr& ptr_request, const std::wstring& s_dev_path);
 
 			/**
 			* @brief reset state & result.

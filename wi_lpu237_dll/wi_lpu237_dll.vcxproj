@@ -182,6 +182,7 @@
     <ClInclude Include="..\shared\3thpart\inc\GemCoreScrHelper.h" />
     <ClInclude Include="..\shared\common\inc\capi_client.h" />
     <ClInclude Include="..\shared\common\inc\cdef.h" />
+    <ClInclude Include="..\shared\common\inc\cfun_lpu237.h" />
     <ClInclude Include="..\shared\common\inc\ckey_map.h" />
     <ClInclude Include="..\shared\common\inc\cprotocol_lpu237.h" />
     <ClInclude Include="..\shared\common\inc\i_device_of_client.h" />

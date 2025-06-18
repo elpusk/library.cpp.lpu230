@@ -308,10 +308,12 @@ namespace _mp
 						continue;
 					m_queue_write.push_back(v_data);
 
+					b_result = true;
+
 					if (m_queue_write.size() > 1)
 						continue;
 					_write(m_queue_write.front());
-					b_result = true;
+					
 				} while (false);
 				return b_result;
 			}

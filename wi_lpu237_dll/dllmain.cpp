@@ -48,7 +48,7 @@ void _process_attach(HINSTANCE hInstance)
 
     //setup tracing system
     _mp::clog& log(_mp::clog::get_instance());
-    log.enable_trace(s_pipe_name_of_trace, false); //enable trace by client mode
+    log.enable_trace(s_pipe_name_of_trace, false); //disable trace. dll cannot be enabled trace.
 
     //setup logging system
     log.config(s_log_folder_except_backslash, 3);

@@ -478,15 +478,17 @@ namespace _mp {
 		*this = src;
 	}
 
-	cbase_ctl_fn::cresult::cresult(const cio_packet& request)
+	cbase_ctl_fn::cresult::cresult(const cio_packet& request, const std::wstring& s_dev_path)
 	{
 		reset();
+		m_s_dev_path = s_dev_path;
 		m_ptr_req = std::make_shared<cio_packet>(request);
 	}
 
-	cbase_ctl_fn::cresult::cresult(const cio_packet::type_ptr& ptr_request)
+	cbase_ctl_fn::cresult::cresult(const cio_packet::type_ptr& ptr_request, const std::wstring& s_dev_path)
 	{
 		reset();
+		m_s_dev_path = s_dev_path;
 		m_ptr_req = ptr_request;
 	}
 
