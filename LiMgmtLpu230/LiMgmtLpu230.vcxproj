@@ -148,6 +148,14 @@
     <ClInclude Include="..\shared\3thpart\inc\hidapi.h" />
     <ClInclude Include="..\shared\3thpart\src\linux\hidapi_libusb.h" />
     <ClInclude Include="..\shared\3thpart\src\linux\hidapi_thread_pthread.h" />
+    <ClInclude Include="..\shared\common\inc\ckey_map.h" />
+    <ClInclude Include="..\shared\common\inc\cprotocol_lpu237.h" />
+    <ClInclude Include="..\shared\common\inc\lpu230\compiler.h" />
+    <ClInclude Include="..\shared\common\inc\lpu230\config\cfg_msrlib.h" />
+    <ClInclude Include="..\shared\common\inc\lpu230\info_msr.h" />
+    <ClInclude Include="..\shared\common\inc\lpu230\info_sys.h" />
+    <ClInclude Include="..\shared\common\inc\lpu230\info_sys_cnst.h" />
+    <ClInclude Include="..\shared\common\inc\lpu230\KBConst.h" />
     <ClInclude Include="..\shared\lib\inc\cdll_service.h" />
     <ClInclude Include="..\shared\lib\inc\cert\mp_ccertificate_.h" />
     <ClInclude Include="..\shared\lib\inc\cert\mp_ccoffee_hlp_cert_.h" />
@@ -170,10 +178,12 @@
     <ClInclude Include="..\shared\lib\inc\mp_coperation.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cstring.h" />
     <ClInclude Include="..\shared\lib\inc\mp_csystem_.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_cversion.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cwait.h" />
     <ClInclude Include="..\shared\lib\inc\mp_elpusk.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cqitem_dev.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cqueue.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_icprotocol.h" />
     <ClInclude Include="..\shared\lib\inc\mp_type.h" />
     <ClInclude Include="..\shared\lib\inc\mp_vcpacket.h" />
     <ClInclude Include="..\shared\lib\inc\mp_vcworker.h" />

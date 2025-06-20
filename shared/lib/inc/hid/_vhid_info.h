@@ -234,7 +234,7 @@ public:
 		return n_map_index_primitive + _vhid_info::_get_additional_value_of_compositive_map_index(type);
 	}
 public:
-	_vhid_info() : m_b_none_blocking(false)
+	_vhid_info() : m_b_none_blocking(false), m_c_option(0), m_n_option(0)
 	{
 	}
 
@@ -260,6 +260,14 @@ public:
 	*/
 	virtual std::tuple<bool, int, bool> ajust_open_cnt(_mp::type_bm_dev type, bool b_increase) = 0;
 
+	/**
+	* @brief check this device is lpu237 or not
+	* 
+	* @return true - lpu237 device. false - another device
+	* 
+	*/
+	virtual bool is_lpu237_device() = 0;
+
 public:
 	void set_none_blocking(bool b_none_blocking)
 	{
@@ -269,6 +277,26 @@ public:
 	bool get_none_blocking() const
 	{
 		return m_b_none_blocking;
+	}
+
+	void set_option_char(char c_data)
+	{
+		m_c_option = c_data;
+	}
+
+	char get_option_char() const
+	{
+		return m_c_option;
+	}
+
+	void set_option_int(int n_data)
+	{
+		m_n_option = n_data;
+	}
+
+	int get_option_int() const
+	{
+		return m_n_option;
 	}
 
 protected:
@@ -339,4 +367,11 @@ protected:
 
 protected:
 	bool m_b_none_blocking;
+
+	// char type option data
+	char m_c_option;
+
+	// int type option data
+	char m_n_option;
+
 };

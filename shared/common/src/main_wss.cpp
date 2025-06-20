@@ -57,7 +57,7 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 		log.enable_trace(s_pipe_name_of_trace, true); //enable trace by server mode
 
 		//setup logging system
-		log.config(s_log_folder_except_backslash, 6);
+		log.config(s_log_folder_except_backslash, 6,std::wstring(L"elpusk-hid-d"));
 		log.remove_log_files_older_then_now_day(3);
 		log.enable(true);
 #ifdef _DEBUG

@@ -7,6 +7,7 @@
 #include <mp_type.h>
 #include <mp_elpusk.h>
 #include <hid/_vhid_info.h>
+#include <cprotocol_lpu237.h>
 
 
 /**
@@ -133,7 +134,7 @@ public:
 				continue;
 			}
 			if (v_rx[0] != 0 || v_rx[1] != 0 || v_rx[2] != 0) {
-				continue;// ibutton µ¥ÀÌÅÍ´Â 1,2,3 track ÀÇ ±æÀÌ¸¦ ³ªÅ¸³»´Â °ªÀÌ ¸ğµÎ 0 ÀÓ.
+				continue;// ibutton ë°ì´í„°ëŠ” 1,2,3 track ì˜ ê¸¸ì´ë¥¼ ë‚˜íƒ€ë‚´ëŠ” ê°’ì´ ëª¨ë‘ 0 ì„.
 			}
 			//
 			b_result = true;
@@ -285,6 +286,11 @@ public:
 			}//end for 
 		}
 		return std::make_tuple(b_result, n_cnt, b_all_closed);
+	}
+
+	virtual bool is_lpu237_device()
+	{
+		return true;
 	}
 private:
 	/**

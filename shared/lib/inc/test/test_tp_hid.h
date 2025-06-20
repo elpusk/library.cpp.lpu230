@@ -139,7 +139,7 @@ namespace _test{
 			/**
 			* setup log
 			*/
-			_mp::clog::get_instance().config(s_root_folder_except_backslash, 6);
+			_mp::clog::get_instance().config(s_root_folder_except_backslash, 6, std::wstring(L"test_tp_hid"));
 			_mp::clog::get_instance().remove_log_files_older_then_now_day(7);
 			_mp::clog::get_instance().enable(true);
 			_mp::clog::get_instance().Trace(L"TEST OK.");
@@ -440,9 +440,9 @@ namespace _test{
 		int test_start_logging()
 		{
 #ifdef _WIN32
-			_mp::clog::get_instance().config(L"C:\\ProgramData\\Elpusk\\00000006\\elpusk-hid-d\\log", 6);
+			_mp::clog::get_instance().config(L"C:\\ProgramData\\Elpusk\\00000006\\elpusk-hid-d\\log", 6, std::wstring(L"test_tp_hid"));
 #else
-			_mp::clog::get_instance().config(L"/home/tester/fordebug/var/log/elpusk/00000006/elpusk-hid-d", 6);
+			_mp::clog::get_instance().config(L"/home/tester/fordebug/var/log/elpusk/00000006/elpusk-hid-d", 6, std::wstring(L"test_tp_hid"));
 #endif
 			_mp::clog::get_instance().remove_log_files_older_then_now_day(7);
 			_mp::clog::get_instance().enable(true);

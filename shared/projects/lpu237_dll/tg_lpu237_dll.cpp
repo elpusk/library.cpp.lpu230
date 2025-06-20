@@ -775,7 +775,7 @@ unsigned long _CALLTYPE_ LPU237_dll_on()
 	log.enable_trace(s_pipe_name_of_trace, false); //enable trace by client mode
 
 	//setup logging system
-	log.config(s_log_folder_except_backslash, 3);
+	log.config(s_log_folder_except_backslash, 6, std::wstring(L"tg_lpu237_dll"));
 	log.remove_log_files_older_then_now_day(3);
 	log.enable(true);
 	log.log_fmt(L"[I] START tg_lpu237_dll so or dll.\n");

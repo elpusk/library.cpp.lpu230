@@ -196,6 +196,7 @@ HANDLE _CALLTYPE_ LPU237Lock_open(const wchar_t* sDevPath)
 		}
 
 		/////////////////////////// <<<<<
+		/*
 		if (!ptr_new_device->cmd_enter_config()) {
 			_mp::clog::get_instance().log_fmt(L" : RET : %ls : error : cmd_enter_config.\n", __WFUNCTION__);
 			continue;
@@ -207,6 +208,7 @@ HANDLE _CALLTYPE_ LPU237Lock_open(const wchar_t* sDevPath)
 			continue;
 		}
 		_mp::clog::get_instance().log_fmt_in_debug_mode(L" : DEB : %ls : success : cmd_leave_config.\n", __WFUNCTION__);
+		*/
 		////////////////////////// >>>>>
 
 		if (!ptr_new_device->cmd_get_id()) {
@@ -275,13 +277,14 @@ unsigned long _CALLTYPE_ LPU237Lock_close(HANDLE hDev)
 			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : cmd_leave_opos\n", __WFUNCTION__);
 		}
 		*/
+		/*
 		if (!ptr_device->cmd_enter_config()) {//for redetecting decoder.
 			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : cmd_enter_config\n", __WFUNCTION__);
 		}
 		if (!ptr_device->cmd_leave_config()) {//for redetecting decoder.
 			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : cmd_leave_config\n", __WFUNCTION__);
 		}
-
+		*/
 		if (!ptr_manager_of_device_of_client->remove_device(n_device_index)) {
 			_mp::clog::get_instance().log_fmt(L" : RET : %ls : remove_device\n", __WFUNCTION__);
 			continue;
@@ -505,7 +508,7 @@ unsigned long _CALLTYPE_ LPU237Lock_dll_on()
 	log.enable_trace(s_pipe_name_of_trace, false); //enable trace by client mode
 
 	//setup logging system
-	log.config(s_log_folder_except_backslash, 3);
+	log.config(s_log_folder_except_backslash, 6, std::wstring(L"tg_lpu237_ibutton"));
 	log.remove_log_files_older_then_now_day(3);
 	log.enable(true);
 	log.log_fmt(L"[I] START tg_lpu237_ibutton so or dll.\n");

@@ -20,8 +20,8 @@
 #include <hid/_vhid_info_lpu237.h>
 
 #if defined(_WIN32) && defined(_DEBUG)
-#undef __THIS_FILE_ONLY__
-//#define __THIS_FILE_ONLY__
+//#undef __THIS_FILE_ONLY__
+#define __THIS_FILE_ONLY__
 #define __THIS_FILE_ONLY_STATE__
 
 #include <atltrace.h>
@@ -1687,6 +1687,14 @@ namespace _mp {
 					//
 					unsigned long n_session = ptr_req->get_session_number();
 					cbase_ctl_fn::_cstate::type_map_ptr_state::iterator it_sel = m_map_ptr_state_cur.find(n_session);
+					if (it_sel == std::end(m_map_ptr_state_cur)) {
+						// complete 된 것이라고 session 을 받았는데, 그 session 이 state map 에 없는 경우!
+						// 뭔가 이상.
+						m_p_ctl_fun_log->log_fmt(L"[E] - %ls | session(%u) isn't in state map.\n", __WFUNCTION__, n_session);
+						m_p_ctl_fun_log->trace(L"[E] - %ls | session(%u) isn't in state map.\n", __WFUNCTION__, n_session);
+
+						continue;
+					}
 
 					if (ptr_req->get_action() == cio_packet::act_dev_open) {
 						continue;
@@ -1741,65 +1749,81 @@ namespace _mp {
 			bool b_user_shared_mode_on_open_request /*=false*/
 		)
 		{
-			std::lock_guard<std::mutex> lock(m_mutex_for_state);
+			do {
+				std::lock_guard<std::mutex> lock(m_mutex_for_state);
 
-			cbase_ctl_fn::_cstate::type_result_evt result_state(false,cbase_ctl_fn::_cstate::st_not, cbase_ctl_fn::_cstate::st_not);
+				cbase_ctl_fn::_cstate::type_result_evt result_state(false, cbase_ctl_fn::_cstate::st_not, cbase_ctl_fn::_cstate::st_not);
 
-			//
-			unsigned long n_session = result.get_session_number();
-			cbase_ctl_fn::_cstate::type_map_ptr_state::iterator it_sel = m_map_ptr_state_cur.find(n_session);
-
-			if (result.get_cur_event() == cbase_ctl_fn::_cstate::ev_open) {
-				// 이 함수는 request 가 성공 일때만  호출되므로, session 이 map 에 없는 경우는 open request 일때 밖에 없음.
-				if (m_map_ptr_state_cur.empty()) {
-					// open 된 적 없을 때의 open 명령이므로 shared 또는 exclusive mode 변경.
-					_reset_(b_user_shared_mode_on_open_request);
-				}
-
-				if (it_sel == std::end(m_map_ptr_state_cur)) {
-					// open request 이므로 세션에 대한 state 를 map 에 생성.
-					std::tie(it_sel, std::ignore) = m_map_ptr_state_cur.emplace(n_session, std::make_shared<cbase_ctl_fn::_cstate>());
-				}
-				result_state = it_sel->second->set(result.get_cur_event());
-			}
-			else if (result.get_cur_event() == cbase_ctl_fn::_cstate::ev_close) {
-				result_state = it_sel->second->set(result.get_cur_event());
-
-				m_map_ptr_state_cur.erase(it_sel); //remove session
 				//
-				if (m_map_ptr_state_cur.empty()) {
-					_reset_(false);// set default mode(exclusive mode)
-					m_s_dev_path.clear();
-				}
-			}
-			else {
-				result_state = it_sel->second->set(result.get_cur_event());
-			}
+				unsigned long n_session = result.get_session_number();
+				cbase_ctl_fn::_cstate::type_map_ptr_state::iterator it_sel = m_map_ptr_state_cur.find(n_session);
 
-			result.set_selected_session_state(result_state);
+				if (result.get_cur_event() == cbase_ctl_fn::_cstate::ev_open) {
+					// 이 함수는 request 가 성공 일때만  호출되므로, session 이 map 에 없는 경우는 open request 일때 밖에 없음.
+					if (m_map_ptr_state_cur.empty()) {
+						// open 된 적 없을 때의 open 명령이므로 shared 또는 exclusive mode 변경.
+						_reset_(b_user_shared_mode_on_open_request);
+					}
 
-			if (!m_b_cur_shared_mode) {
-				// exclusive mode 에서는 session 이 하나 이므로 combination state 와 session state 가 항상 같다.
-				result.set_combination_state(std::get<1>(result_state), std::get<2>(result_state));
-				// the end of exclusive mode
-			}
-			else {
-				// shared mode 
-				// generate combinatin state.
-				auto exist_st = _get_state_another_(n_session);
-				if (exist_st.first) {
-					result.set_combination_state(exist_st.second, m_st_combi);
+					if (it_sel == std::end(m_map_ptr_state_cur)) {
+						// open request 이므로 세션에 대한 state 를 map 에 생성.
+						std::tie(it_sel, std::ignore) = m_map_ptr_state_cur.emplace(n_session, std::make_shared<cbase_ctl_fn::_cstate>());
+					}
+					result_state = it_sel->second->set(result.get_cur_event());
 				}
-				else {// session 이 selected session 만 있음.
-					result.set_combination_state(std::get<1>(result_state), m_st_combi);
+				else if (result.get_cur_event() == cbase_ctl_fn::_cstate::ev_close) {
+					if (it_sel == std::end(m_map_ptr_state_cur)) {
+						m_p_ctl_fun_log->log_fmt(L"[E] - %ls | session(%u) isn't in state map.\n", __WFUNCTION__, n_session);
+						m_p_ctl_fun_log->trace(L"[E] - %ls | session(%u) isn't in state map.\n", __WFUNCTION__, n_session);
+						continue;// error
+					}
+					result_state = it_sel->second->set(result.get_cur_event());
+
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+					ATLTRACE(L"~~~~~ removed state(%u).\n",	it_sel->first);
+#endif
+					m_map_ptr_state_cur.erase(it_sel); //remove session
+					//
+					if (m_map_ptr_state_cur.empty()) {
+						_reset_(false);// set default mode(exclusive mode)
+						m_s_dev_path.clear();
+					}
 				}
-			}
-			std::tie(m_st_combi, std::ignore) = result.get_combination_state();
+				else {
+					if (it_sel == std::end(m_map_ptr_state_cur)) {
+						m_p_ctl_fun_log->log_fmt(L"[E] - %ls | session(%u) isn't in state map.\n", __WFUNCTION__, n_session);
+						m_p_ctl_fun_log->trace(L"[E] - %ls | session(%u) isn't in state map.\n", __WFUNCTION__, n_session);
+						continue;// error
+					}
+					result_state = it_sel->second->set(result.get_cur_event());
+				}
+
+				result.set_selected_session_state(result_state);
+
+				if (!m_b_cur_shared_mode) {
+					// exclusive mode 에서는 session 이 하나 이므로 combination state 와 session state 가 항상 같다.
+					result.set_combination_state(std::get<1>(result_state), std::get<2>(result_state));
+					// the end of exclusive mode
+				}
+				else {
+					// shared mode 
+					// generate combinatin state.
+					auto exist_st = _get_state_another_(n_session);
+					if (exist_st.first) {
+						result.set_combination_state(exist_st.second, m_st_combi);
+					}
+					else {// session 이 selected session 만 있음.
+						result.set_combination_state(std::get<1>(result_state), m_st_combi);
+					}
+				}
+				std::tie(m_st_combi, std::ignore) = result.get_combination_state();
 
 #if defined(_WIN32) && defined(_DEBUG) && (defined(__THIS_FILE_ONLY__) || defined(__THIS_FILE_ONLY_STATE__))
-			ATLTRACE(L"~~~~~ state info(%ls).\n", __WFUNCTION__);
+				ATLTRACE(L"~~~~~ state info(%ls).\n", __WFUNCTION__);
 #endif
-			_logging_if_state_is_changed();
+				_logging_if_state_is_changed();
+			} while (false);
+
 		}
 
 		cio_packet::type_ptr cdev_ctl_fn::_start_and_complete_by_sync_req

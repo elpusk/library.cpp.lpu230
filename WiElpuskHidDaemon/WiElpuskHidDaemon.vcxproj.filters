@@ -49,6 +49,9 @@
     <Filter Include="common\xml">
       <UniqueIdentifier>{e3edd3bc-c820-4b7e-8292-2556ff8ccd06}</UniqueIdentifier>
     </Filter>
+    <Filter Include="common\lpu230">
+      <UniqueIdentifier>{b6744503-b15a-458b-aece-15dc0b77475b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\shared\projects\ElpuskHidDaemon\elpusk_hid_daemon.cpp">
@@ -262,6 +265,24 @@
     </ClInclude>
     <ClInclude Include="..\shared\lib\inc\mp_cio_packet.h">
       <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cversion.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_icprotocol.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\ckey_map.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\lpu230\KBConst.h">
+      <Filter>common\lpu230</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\lpu230\info_sys.h">
+      <Filter>common\lpu230</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\lpu230\info_sys_cnst.h">
+      <Filter>common\lpu230</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

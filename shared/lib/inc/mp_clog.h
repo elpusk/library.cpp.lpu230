@@ -145,7 +145,12 @@ namespace _mp
 				}
 				++n_cont;
 				std::wostringstream ss_out;
-				ss_out << std::setfill(L'0') << std::setw(sizeof(n_cont) * 2) << std::hex << n_cont << L" " << s_fmt;
+#ifdef _WIN32
+				DWORD pid = GetCurrentProcessId();
+#else
+				pid_t pid = getpid();
+#endif
+				ss_out << std::setfill(L'0') << std::setw(sizeof(n_cont) * 2) << std::hex << n_cont << L"[PID:" << pid << L"] " << s_fmt;
 				std::wstring s = ss_out.str();
 				const wchar_t* ps_fmt = s.c_str();
 
@@ -209,10 +214,10 @@ namespace _mp
 		* configuration logging system
 		* Don't creates log() function.
 		*/
-		bool config(const std::wstring & s_in_folder_path , size_t n_employee_id )
+		bool config(const std::wstring & s_in_folder_path , size_t n_employee_id, const std::wstring& s_in_prefix_log_file)
 		{
 			std::lock_guard<std::mutex>	lock(m_mutex_log);
-			return _config(s_in_folder_path, n_employee_id);
+			return _config(s_in_folder_path, n_employee_id, s_in_prefix_log_file);
 		}
 
 		void enable(bool b_enable = true)
@@ -237,6 +242,12 @@ namespace _mp
 			return m_b_enable;
 		}
 
+		void enable_pid(bool b_enable = true)
+		{
+			std::lock_guard<std::mutex>	lock(m_mutex_log);
+			m_b_enable_pid = b_enable;
+		}
+
 		void enable_time(bool b_enable = true)
 		{
 			std::lock_guard<std::mutex>	lock(m_mutex_log);
@@ -248,28 +259,28 @@ namespace _mp
 			m_b_enable_systick = b_enable;
 		}
 
-		void log_and_set_format(bool b_enable_time, bool b_enable_systick, const std::wstring& s_message)
+		void log_and_set_format(bool b_enable_time, bool b_enable_systick, bool b_enable_pid, const std::wstring& s_message)
 		{
 			std::lock_guard<std::mutex>	lock(m_mutex_log);
-			_log_and_set_format(b_enable_time, b_enable_systick, s_message);
+			_log_and_set_format(b_enable_time, b_enable_systick, b_enable_pid, s_message);
 		}
-		void log_and_set_format(bool b_enable_time, bool b_enable_systick, const std::string& s_message)
+		void log_and_set_format(bool b_enable_time, bool b_enable_systick, bool b_enable_pid, const std::string& s_message)
 		{
 			std::lock_guard<std::mutex>	lock(m_mutex_log);
 			std::wstring sw_message = cstring::get_unicode_from_mcsc(s_message);
-			_log_and_set_format(b_enable_time, b_enable_systick, sw_message);
+			_log_and_set_format(b_enable_time, b_enable_systick, b_enable_pid, sw_message);
 		}
 
-		void log(bool b_enable_time, bool b_enable_systick, const std::wstring & s_message)
+		void log(bool b_enable_time, bool b_enable_systick, bool b_enable_pid, const std::wstring & s_message)
 		{
 			std::lock_guard<std::mutex>	lock(m_mutex_log);
-			_log(b_enable_time, b_enable_systick, s_message);
+			_log(b_enable_time, b_enable_systick, b_enable_pid, s_message);
 		}
-		void log(bool b_enable_time, bool b_enable_systick, const std::string& s_message)
+		void log(bool b_enable_time, bool b_enable_systick, bool b_enable_pid, const std::string& s_message)
 		{
 			std::lock_guard<std::mutex>	lock(m_mutex_log);
 			std::wstring sw_message = cstring::get_unicode_from_mcsc(s_message);
-			_log(b_enable_time, b_enable_systick, sw_message);
+			_log(b_enable_time, b_enable_systick, b_enable_pid, sw_message);
 		}
 
 		void log_string(const wchar_t* s_msg)
@@ -322,7 +333,7 @@ namespace _mp
 						continue;
 #endif
 					//
-					_write_file(std::wstring(&(*ptr_v_ws_buffer)[0]), m_b_enable_time, m_b_enable_systick);
+					_write_file(std::wstring(&(*ptr_v_ws_buffer)[0]), m_b_enable_time, m_b_enable_systick, m_b_enable_pid);
 
 				} while (false);
 
@@ -365,7 +376,7 @@ namespace _mp
 #endif
 					//
 					std::wstring sw_message = cstring::get_unicode_from_mcsc(std::string(&(*ptr_v_s_buffer)[0]));
-					_write_file(sw_message, m_b_enable_time, m_b_enable_systick);
+					_write_file(sw_message, m_b_enable_time, m_b_enable_systick, m_b_enable_pid);
 
 				} while (false);
 
@@ -406,7 +417,7 @@ namespace _mp
 						continue;
 #endif
 					//
-					_write_file(std::wstring(&(*ptr_v_ws_buffer)[0]), m_b_enable_time, m_b_enable_systick);
+					_write_file(std::wstring(&(*ptr_v_ws_buffer)[0]), m_b_enable_time, m_b_enable_systick, m_b_enable_pid);
 
 				} while (false);
 
@@ -451,7 +462,7 @@ namespace _mp
 #endif
 					//
 					std::wstring sw_message = cstring::get_unicode_from_mcsc(std::string(&(*ptr_v_s_buffer)[0]));
-					_write_file(sw_message, m_b_enable_time, m_b_enable_systick);
+					_write_file(sw_message, m_b_enable_time, m_b_enable_systick, m_b_enable_pid);
 
 				} while (false);
 
@@ -629,7 +640,8 @@ namespace _mp
 		}
 
 	private:
-		clog() : m_b_ini(false), m_n_employee_id(6), m_b_enable(false), m_b_enable_time(true), m_b_enable_systick(true),
+		clog() : m_b_ini(false), m_n_employee_id(6), 
+			m_b_enable(false), m_b_enable_time(true), m_b_enable_systick(true), m_b_enable_pid(true),
 			m_b_trace(false)
 		{
 		}
@@ -639,9 +651,10 @@ namespace _mp
 		* 
 		* @parameter s_in_folder_abs_path_without_backslash - abs path of log file folder.<br>
 		* @parameter n_employee_id - using id , if you don't know, set to zero.
+		* @parameter s_in_prefix_log_file - the prefix of log file name
 		* @return if folder dosen't exsit, error
 		*/
-		bool _config(const std::wstring& s_in_folder_abs_path_without_backslash, size_t n_employee_id)
+		bool _config(const std::wstring& s_in_folder_abs_path_without_backslash, size_t n_employee_id, const std::wstring& s_in_prefix_log_file)
 		{
 			bool b_result(false);
 			do {
@@ -654,7 +667,7 @@ namespace _mp
 				m_b_ini = false;
 				std::wstring s_folder_path(s_in_folder_abs_path_without_backslash);
 				std::wstring s_file_path;
-				s_file_path = _get_log_file_abs_path(s_folder_path);
+				s_file_path = _get_log_file_abs_path(s_folder_path, s_in_prefix_log_file);
 
 				if (s_folder_path.empty())
 					continue;
@@ -668,7 +681,7 @@ namespace _mp
 			return b_result;
 		}
 
-		std::wstring _get_log_file_abs_path(const std::wstring & s_in_folder_path_without_backslash )
+		std::wstring _get_log_file_abs_path(const std::wstring & s_in_folder_path_without_backslash, const std::wstring& s_in_prefix_log_file)
 		{
 			std::wstring s_full_abs_path;
 
@@ -681,14 +694,55 @@ namespace _mp
 				struct tm dt = { 0, };
 				t = time(NULL);
 				localtime_s(&dt, &t);
+				DWORD dwStTick = ::GetTickCount();
 				//
-				cstring::format(s_full_abs_path, L"%ls\\%02d%02d%02d%02d%02d.txt", s_in_folder_path_without_backslash.c_str(), dt.tm_mon + 1, dt.tm_mday, dt.tm_hour, dt.tm_min, dt.tm_sec);
+				if (s_in_prefix_log_file.empty()) {
+					cstring::format(
+						s_full_abs_path,
+						L"%ls\\%02d%02d%02d%02d%02d-%09u.txt",
+						s_in_folder_path_without_backslash.c_str(),
+						dt.tm_mon + 1, dt.tm_mday, dt.tm_hour, dt.tm_min, dt.tm_sec,
+						dwStTick
+					);
+				}
+				else {
+					cstring::format(
+						s_full_abs_path,
+						L"%ls\\%ls-%02d%02d%02d%02d%02d-%09u.txt",
+						s_in_folder_path_without_backslash.c_str(),
+						s_in_prefix_log_file.c_str(),
+						dt.tm_mon + 1, dt.tm_mday, dt.tm_hour, dt.tm_min, dt.tm_sec,
+						dwStTick
+					);
+				}
 #else
 				struct tm* p_dt = NULL;
 				p_dt = std::localtime(&t);
+
+				struct timeval tv;
+				gettimeofday(&tv, nullptr);
+				unsigned long ms = tv.tv_sec * 1000 + tv.tv_usec / 1000;
 				//
 				if (p_dt) {
-					cstring::format(s_full_abs_path, L"%ls/%02d%02d%02d%02d%02d.txt", s_in_folder_path_without_backslash.c_str(), p_dt->tm_mon + 1, p_dt->tm_mday, p_dt->tm_hour, p_dt->tm_min, p_dt->tm_sec);
+					if (s_in_prefix_log_file.empty()) {
+						cstring::format(
+							s_full_abs_path,
+							L"%ls/%02d%02d%02d%02d%02d-%09u.txt",
+							s_in_folder_path_without_backslash.c_str(),
+							p_dt->tm_mon + 1, p_dt->tm_mday, p_dt->tm_hour, p_dt->tm_min, p_dt->tm_sec,
+							ms
+						);
+					}
+					else {
+						cstring::format(
+							s_full_abs_path,
+							L"%ls/%ls-%02d%02d%02d%02d%02d-%09u.txt",
+							s_in_folder_path_without_backslash.c_str(),
+							s_in_prefix_log_file.c_str(),
+							p_dt->tm_mon + 1, p_dt->tm_mday, p_dt->tm_hour, p_dt->tm_min, p_dt->tm_sec,
+							ms
+						);
+					}
 				}
 #endif
 
@@ -696,7 +750,7 @@ namespace _mp
 			return s_full_abs_path;
 		}
 
-		void _log_and_set_format(bool b_enable_time, bool b_enable_systick, const std::wstring& s_message)
+		void _log_and_set_format(bool b_enable_time, bool b_enable_systick, bool b_enable_pid, const std::wstring& s_message)
 		{
 			do {
 				if (!m_b_enable)
@@ -706,11 +760,12 @@ namespace _mp
 				//
 				m_b_enable_time = b_enable_time;
 				m_b_enable_systick = b_enable_systick;
-				_write_file(s_message, b_enable_time, b_enable_systick);
+				m_b_enable_pid = b_enable_pid;
+				_write_file(s_message, b_enable_time, b_enable_systick, b_enable_pid);
 			} while (false);
 		}
 
-		void _log(bool b_enable_time, bool b_enable_systick, const std::wstring& s_message)
+		void _log(bool b_enable_time, bool b_enable_systick, bool b_enable_pid, const std::wstring& s_message)
 		{
 			do {
 				if (!m_b_enable)
@@ -718,7 +773,7 @@ namespace _mp
 				if (m_s_log_file_path.empty())
 					continue;
 				//
-				_write_file(s_message, b_enable_time, b_enable_systick);
+				_write_file(s_message, b_enable_time, b_enable_systick, b_enable_pid);
 			} while (false);
 		}
 
@@ -808,7 +863,7 @@ namespace _mp
 			} while (false);
 		}
 
-		void _write_file(const std::wstring& s_message, bool b_enable_time = true, bool b_enable_systick = true) 
+		void _write_file(const std::wstring& s_message, bool b_enable_time = true, bool b_enable_systick = true, bool b_enable_pid = true)
 		{
 			FILE* p_stream = nullptr;
 
@@ -849,10 +904,22 @@ namespace _mp
 #endif
 				}
 
-				fwprintf(p_stream, L"%ls", s_message.c_str());
+				if (b_enable_pid) {
+#ifdef _WIN32
+					DWORD pid = GetCurrentProcessId();
+					fwprintf(p_stream, L"[%09u] ", pid);
+#else
+					pid_t pid = getpid();
+					fwprintf(p_stream, L"[%09d] ", pid);
+#endif
+				}
 
-				std::fflush(p_stream);
-				std::fclose(p_stream);
+				if (p_stream) {
+					fwprintf(p_stream, L"%ls", s_message.c_str());
+
+					std::fflush(p_stream);
+					std::fclose(p_stream);
+				}
 			} while (false);
 		}
 	
@@ -919,6 +986,7 @@ namespace _mp
 		bool m_b_enable;
 		bool m_b_enable_time;
 		bool m_b_enable_systick;
+		bool m_b_enable_pid;
 
 	private://don't call these methods
 		clog(const clog &);

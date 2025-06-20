@@ -50,7 +50,7 @@ void _process_attach(HINSTANCE hInstance)
     log.enable_trace(s_pipe_name_of_trace, false);  //disable trace. dll cannot be enabled trace.
 
     //setup logging system
-    log.config(s_log_folder_except_backslash, 3);
+    log.config(s_log_folder_except_backslash, 6, std::wstring(L"tg_lpu237_ibutton"));
     log.remove_log_files_older_then_now_day(3);
     log.enable(true);
     log.log_fmt(L"[I] START tg_lpu237_ibutton so or dll.\n");

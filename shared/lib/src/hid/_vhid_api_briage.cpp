@@ -319,6 +319,9 @@ int _vhid_api_briage::api_write(int n_map_index, const unsigned char* data, size
             continue;
         }
 
+        if (next == _hid_api_briage::next_io_read && it->second.first->is_lpu237_device()) {
+            //TODO....
+        }
         b_run = true;
     } while (false);
 

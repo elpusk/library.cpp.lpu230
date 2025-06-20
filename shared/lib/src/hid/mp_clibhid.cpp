@@ -59,8 +59,6 @@ namespace _mp{
             m_set_usb_filter.emplace(_elpusk::const_usb_vid, _elpusk::const_usb_pid_hidbl, _elpusk::const_usb_inf_hidbl);
 
             //
-            // original code
-            // m_ptr_hid_api_briage = std::make_shared<_hid_api_briage>();//create single instance of hidapi library
             // for supporting, virtual device. code is create child of _hid_api_briage class.
 			m_ptr_hid_api_briage = std::make_shared<_vhid_api_briage>();//create single instance of virtual hidapi library
 

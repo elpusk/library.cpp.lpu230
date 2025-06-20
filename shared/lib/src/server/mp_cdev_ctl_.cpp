@@ -170,6 +170,9 @@ namespace _mp {
 					// 에러를 전송
 					ptr_result_error->get_rx(v_rsp);
 					cserver::get_instance().send_data_to_client_by_ip4(v_rsp, ptr_req_new->get_session_number());
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+					ATLTRACE(L"[I][_EXE] SendToServer [%ls:%u:%u].\n", ptr_result_error->get_req()->get_action_by_string().c_str(),ptr_req_new->get_session_number(), ptr_req_new->get_uid());
+#endif
 				}
 				if (ptr_req_cur) {
 					// 어떤 실행 중에 새로운 것이 온 상태면, 새로운 것 실행 전에 에러 이므로
@@ -207,6 +210,9 @@ namespace _mp {
 						type_v_buffer v_rsp;
 						item.second->get_packet_by_json_format(v_rsp);
 						cserver::get_instance().send_data_to_client_by_ip4(v_rsp, item.second->get_session_number());
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+						ATLTRACE(L"[I][_EXE] SendToServer [%ls:%u:%u]..\n", item.first->get_action_by_string().c_str(), item.second->get_session_number(), item.second->get_uid());
+#endif
 					}//end for
 
 					if (!b_old_cur_is_complete) {
@@ -322,6 +328,9 @@ namespace _mp {
 					type_v_buffer v_rsp;
 					item.second->get_packet_by_json_format(v_rsp);
 					cserver::get_instance().send_data_to_client_by_ip4(v_rsp, item.second->get_session_number());
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+					ATLTRACE(L"[I][_CON] SendToServer [%ls:%u:%u]..\n", item.first->get_action_by_string().c_str(), item.second->get_session_number(), item.second->get_uid());
+#endif
 				}//end for
 				
 			} while (false);

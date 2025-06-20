@@ -26,7 +26,7 @@ namespace _mp {
 	{
     protected:
         enum {
-            _const_worker_sleep_interval_mmsec = 30
+            _const_worker_sleep_interval_mmsec = 3
         };
 
 	public:
