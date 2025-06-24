@@ -389,6 +389,26 @@ namespace _mp {
 			return v_result;
 		}
 
+		void cdev_ctl_fn::_cq_mgmt::qm_read_set_response_to_canceled(unsigned long n_session_number)
+		{
+			do {
+				std::lock_guard<std::mutex> lock(m_mutex);
+
+				_cq_mgmt::_type_map_ptr_q::iterator it = m_map_ptr_q_ptr_cur_req_read.find(n_session_number);
+				if (it == std::end(m_map_ptr_q_ptr_cur_req_read)) {
+					continue;
+				}
+
+				_cq_mgmt::_cq::type_ptr ptr_q = it->second;
+				if (!ptr_q) {
+					continue;
+				}
+
+				ptr_q->set_to_all(cqitem_dev::result_cancel, false);
+
+			} while (false);
+		}
+
 		size_t cdev_ctl_fn::_cq_mgmt::qm_read_set_request_front_to_recover_of_another_session(unsigned long n_session_number)
 		{
 			size_t n_cnt(0);
@@ -641,6 +661,31 @@ namespace _mp {
 			m_q.clear();
 		}
 
+		void cdev_ctl_fn::_cq_mgmt::_cq::set_to_all(cqitem_dev::type_result result, bool b_must_be_recover_flag)
+		{
+			cwait::type_ptr ptr_evt;
+			cio_packet::type_ptr ptr_req, ptr_rsp;
+			int n_evt(-1);
+
+			for (auto item : m_q) {
+				std::tie(ptr_req, ptr_evt, n_evt, ptr_rsp) = item;
+				if (ptr_req) {
+					ptr_req->set_recover_reserve(b_must_be_recover_flag);
+
+					cbase_ctl_fn::_set_response_result_only(*ptr_rsp, result, L"", *ptr_req);
+					if (ptr_evt) {
+						ptr_evt->set(n_evt);
+					}
+
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+					ATLTRACE(L"####### canceled([%u:%u], %ls)..\n"
+						, ptr_req->get_session_number(), ptr_req->get_uid()
+						, ptr_req->get_action_by_string().c_str()
+					);
+#endif
+				}
+			}//end for
+		}
 		//=======================================//=======================================
 		//=======================================//=======================================
 		//_cstatus_mgmt member
@@ -914,6 +959,7 @@ namespace _mp {
 		(
 			const cdev_ctl_fn::type_pair_ptr_req_ptr_rsp& pair_ptr_req_ptr_rsp_additional 
 			/*= std::make_pair(cio_packet::type_ptr(),cio_packet::type_ptr())*/
+			, bool b_add_to_last /*= true*/
 		)
 		{
 			cdev_ctl_fn::type_ptr_v_pair_ptr_req_ptr_rsp ptr_v_req_rsp;
@@ -967,7 +1013,12 @@ namespace _mp {
 				if (!ptr_v_req_rsp) {
 					ptr_v_req_rsp = std::make_shared<std::vector<std::pair<cio_packet::type_ptr, cio_packet::type_ptr>>>();
 				}
-				ptr_v_req_rsp->emplace_back(pair_ptr_req_ptr_rsp_additional);
+				if (b_add_to_last) {
+					ptr_v_req_rsp->emplace_back(pair_ptr_req_ptr_rsp_additional);
+				}
+				else {
+					ptr_v_req_rsp->emplace(ptr_v_req_rsp->begin(),pair_ptr_req_ptr_rsp_additional);
+				}
 
 			} while (false);
 
@@ -1369,6 +1420,20 @@ namespace _mp {
 					result.after_processing_set_rsp_with_error_complete(cio_packet::error_reason_device_open);
 					break;
 				case cbase_ctl_fn::_cstate::ev_close:
+					
+					// 이 경우 , 해당 session 의 async req가 있을때, 하위 lib 로 명령이 전달되어서, 자동 cancel 이 되어야하나
+					// close 는 하위 lib 로 전달되지 않아 async req 를 수동으로 cancel 해야한다.
+					//m_mgmt_q.qm_read_set_response_to_canceled(result.get_session_number());
+
+					// 하위단에서 read 대기 중인 것도 수동으로 cancel
+					if (!_start_and_complete_by_cancel_self_req(result.get_dev_path(), result.get_req())) {
+						result.after_processing_set_rsp_with_error_complete(cio_packet::error_reason_device_operation, m_s_dev_path);
+
+						m_p_ctl_fun_log->log_fmt(L"[E] - %ls | open counter = %u : session = %u.\n", __WFUNCTION__, m_map_ptr_state_cur.size(), result.get_session_number());
+						m_p_ctl_fun_log->trace(L"[E] - %ls | open counter = %u : session = %u.\n", __WFUNCTION__, m_map_ptr_state_cur.size(), result.get_session_number());
+						continue;
+					}
+
 					//another session 이 asy 상태이므로, 해당 session 의 키와 값만 map 에서 삭제 하면됨.
 					result.after_processing_set_rsp_with_succss_complete(std::wstring(), m_s_dev_path);
 

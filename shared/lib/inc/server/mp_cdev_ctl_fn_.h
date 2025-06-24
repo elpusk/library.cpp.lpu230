@@ -117,6 +117,16 @@ namespace _mp {
 				* @brief remove all pushed item and recover-item
 				*/
 				void clear();
+
+				/**
+				* @brief set value to all item of queue.
+				* 
+				* @param result - device processing result.
+				* 
+				* @param b_must_be_recover_flag - recover flag.
+				*/
+				void set_to_all(cqitem_dev::type_result result, bool b_must_be_recover_flag);
+
 			private:
 				unsigned long m_n_session_number; //only set on the constrcture
 
@@ -207,7 +217,13 @@ namespace _mp {
 				std::vector<size_t>& v_req_uid_need_more_reading
 			);
 
-			
+			/**
+			* @brief On read-queue, set the response of the given session requests to cancel.
+			*
+			* @parameter n_session_number - target session
+			*/
+			void qm_read_set_response_to_canceled(unsigned long n_session_number);
+
 			/**
 			* @brief from read-queue. set the current request of all session to recover.
 			* @param n_session_number - the session number of read-q.
@@ -361,20 +377,27 @@ namespace _mp {
 		* 
 		* @param pair_ptr_req_ptr_rsp_additional[in] : If the element is not already in the returned vector, add it to the end of the vector.
 		* 
+		* @param b_add_to_last[in] : 
+		* 
+		*	true - If pair_ptr_req_ptr_rsp_additional is add, it will be added on the last of queue.
+		* 
+		*	false - If pair_ptr_req_ptr_rsp_additional is add, it will be added on the first of queue.
+		* 
 		* @return std::shared_ptr<std::vector<cio_packet::type_ptr>> - the vector ptr of pair( req ptr,rsp ptr ).
 		*
 		*	The order of vector is the order in which it is sent.
 		* 
 		*	If the returned vector is allocated, it have to a item.( size() must be greater then 0)
 		* 
-		*	If the sync item is exsited on vector, it is posited on the last position.( asyn-s-first, sync-last)
+		*	If the sync item is exsited on vector, it is posited as b_add_to_last.
 		* 
 		*	Requests that are not pushed, such as open and close, are not included in the return vector except the given parameter.
 		*/
 		cdev_ctl_fn::type_ptr_v_pair_ptr_req_ptr_rsp get_all_complete_response
 		(
 			const cdev_ctl_fn::type_pair_ptr_req_ptr_rsp & pair_ptr_req_ptr_rsp_additional
-			= std::make_pair(cio_packet::type_ptr(), cio_packet::type_ptr())
+			= std::make_pair(cio_packet::type_ptr(), cio_packet::type_ptr()),
+			bool b_add_to_last = true
 		);
 
 		/**

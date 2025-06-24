@@ -171,7 +171,10 @@ namespace _mp {
 					ptr_result_error->get_rx(v_rsp);
 					cserver::get_instance().send_data_to_client_by_ip4(v_rsp, ptr_req_new->get_session_number());
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-					ATLTRACE(L"[I][_EXE] SendToServer [%ls:%u:%u].\n", ptr_result_error->get_req()->get_action_by_string().c_str(),ptr_req_new->get_session_number(), ptr_req_new->get_uid());
+					ATLTRACE(L"[I][_EXE] SendToServer([%u:%u], %ls).\n"
+						,ptr_req_new->get_session_number(), ptr_req_new->get_uid()
+						, ptr_result_error->get_req()->get_action_by_string().c_str()
+					);
 #endif
 				}
 				if (ptr_req_cur) {
@@ -189,7 +192,7 @@ namespace _mp {
 					// open close complete 경우, q 에 포함되지 않아, 
 					// get_all_complete_response() 에 ptr_response 가 포함되지 않는 경우, 포함하도록
 					// get_all_complete_response() 의 인자로 ptr_req_new, ptr_response pair 를 준다.
-					ptr_v_req_rsp = m_fun.get_all_complete_response(std::make_pair(ptr_req_new, ptr_response));//complete 된 모든 req, rsp pair 를 얻기
+					ptr_v_req_rsp = m_fun.get_all_complete_response(std::make_pair(ptr_req_new, ptr_response),true);//complete 된 모든 req, rsp pair 를 얻기
 					
 					assert(ptr_v_req_rsp); // ptr_response 에 값이 있으므로 것 ptr_v_req_rsp 에 값이 없을 수 없다.
 					// complete 된 것, 서버로 응답을 보내는데 .......
@@ -211,7 +214,10 @@ namespace _mp {
 						item.second->get_packet_by_json_format(v_rsp);
 						cserver::get_instance().send_data_to_client_by_ip4(v_rsp, item.second->get_session_number());
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-						ATLTRACE(L"[I][_EXE] SendToServer [%ls:%u:%u]..\n", item.first->get_action_by_string().c_str(), item.second->get_session_number(), item.second->get_uid());
+						ATLTRACE(L"[I][_EXE] SendToServer([%u:%u], %ls)..\n"
+							, item.first->get_session_number(), item.first->get_uid()
+							, item.first->get_action_by_string().c_str()
+						);
 #endif
 					}//end for
 
@@ -329,7 +335,10 @@ namespace _mp {
 					item.second->get_packet_by_json_format(v_rsp);
 					cserver::get_instance().send_data_to_client_by_ip4(v_rsp, item.second->get_session_number());
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-					ATLTRACE(L"[I][_CON] SendToServer [%ls:%u:%u]..\n", item.first->get_action_by_string().c_str(), item.second->get_session_number(), item.second->get_uid());
+					ATLTRACE(L"[I][_CON] SendToServer([%u:%u], %ls)..\n"
+						, item.first->get_session_number(), item.first->get_uid()
+						, item.first->get_action_by_string().c_str()
+					);
 #endif
 				}//end for
 				

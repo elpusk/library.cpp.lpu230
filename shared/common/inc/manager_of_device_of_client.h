@@ -3,6 +3,7 @@
 #include <map>
 #include <mutex>
 
+#include <mp_type.h>
 #include <mp_clog.h>
 #include <i_device_of_client.h>
 
@@ -53,7 +54,7 @@ public:
 		return m_n_client_index;
 	}
 
-	bool connect(const _mp::cclient_cb::type_cb_callbacks & cbs)
+	bool connect(const _mp::cclient_cb::type_cb_callbacks & cbs, long n_msec_wait_time)
 	{
 		bool b_result(false);
 
@@ -71,7 +72,7 @@ public:
 			bool b_tls(true);
 
 			//if (!capi_client::get_instance().start_after_set_callback(m_n_client_index)) {
-			if (!capi_client::get_instance().start_after_set_callback_sync(m_n_client_index, b_tls,3000)) {
+			if (!capi_client::get_instance().start_after_set_callback_sync(m_n_client_index, b_tls, n_msec_wait_time)) {
 				continue;
 			}
 

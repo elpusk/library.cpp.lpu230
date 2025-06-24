@@ -88,6 +88,14 @@ namespace _mp{
 
 #endif // !_WIN32
 
+#define CONST_DEFAULT_WEBSOCKET_HANDSHAKE_TIMEOUT_MSEC 7000
+#define CONST_DEFAULT_WEBSOCKET_IDLE_TIMEOUT_MSEC 500
+#define CONST_DEFAULT_WEBSOCKET_CONNECT_TIMEOUT_MSEC (CONST_DEFAULT_WEBSOCKET_HANDSHAKE_TIMEOUT_MSEC+3000)
+#define CONST_DEFAULT_TCPSOCKET_TIMEOUT_MSEC    5000
+#define CONST_DEFAULT_TCPSOCKET_CONNECT_TIMEOUT_MSEC    500
+
+#define CONST_MAX_OPEN_COUNT_ON_SHARED_MODE     20  //// max open counter value in shared mode.
+
     typedef std::vector<unsigned char> type_v_buffer;
     typedef std::shared_ptr< std::vector<unsigned char> > type_ptr_v_buffer;
     typedef	std::vector<unsigned long>			type_v_ul_buffer;

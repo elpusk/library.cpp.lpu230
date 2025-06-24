@@ -14,11 +14,6 @@ namespace _mp {
 		typedef	std::shared_ptr< cbase_ctl_fn >	type_ptr;
 
 	protected:
-		enum : int {
-			_const_max_n_cnt_open = 255 // max open counter value in shared mode.
-		};
-
-	protected:
 		class _cstate {
 		public:
 			typedef	std::shared_ptr<_cstate> type_ptr;
@@ -507,10 +502,6 @@ namespace _mp {
 		* @param result - result code.
 		* @param s_result - result description string.
 		* @param in_request - the request of this processing.
-		* @return
-		*	true - response setting complete with success or error
-		*
-		*	false - response cannot be set.(not yet processing complete)
 		*/
 		static void _set_response_result_only(cio_packet& out_response, cqitem_dev::type_result result, const std::wstring& s_result, cio_packet& in_request);
 

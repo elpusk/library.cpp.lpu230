@@ -695,24 +695,26 @@ namespace _mp
 				t = time(NULL);
 				localtime_s(&dt, &t);
 				DWORD dwStTick = ::GetTickCount();
+				DWORD dw_pid = GetCurrentProcessId();
+
 				//
 				if (s_in_prefix_log_file.empty()) {
 					cstring::format(
 						s_full_abs_path,
-						L"%ls\\%02d%02d%02d%02d%02d-%09u.txt",
+						L"%ls\\%02d%02d%02d%02d%02d-%09u-pid%09u.txt",
 						s_in_folder_path_without_backslash.c_str(),
 						dt.tm_mon + 1, dt.tm_mday, dt.tm_hour, dt.tm_min, dt.tm_sec,
-						dwStTick
+						dwStTick, dw_pid
 					);
 				}
 				else {
 					cstring::format(
 						s_full_abs_path,
-						L"%ls\\%ls-%02d%02d%02d%02d%02d-%09u.txt",
+						L"%ls\\%ls-%02d%02d%02d%02d%02d-%09u-pid%09u.txt",
 						s_in_folder_path_without_backslash.c_str(),
 						s_in_prefix_log_file.c_str(),
 						dt.tm_mon + 1, dt.tm_mday, dt.tm_hour, dt.tm_min, dt.tm_sec,
-						dwStTick
+						dwStTick, dw_pid
 					);
 				}
 #else
@@ -722,25 +724,28 @@ namespace _mp
 				struct timeval tv;
 				gettimeofday(&tv, nullptr);
 				unsigned long ms = tv.tv_sec * 1000 + tv.tv_usec / 1000;
+
+				pid_t pid = getpid();
+
 				//
 				if (p_dt) {
 					if (s_in_prefix_log_file.empty()) {
 						cstring::format(
 							s_full_abs_path,
-							L"%ls/%02d%02d%02d%02d%02d-%09u.txt",
+							L"%ls/%02d%02d%02d%02d%02d-%09u-pid%09d.txt",
 							s_in_folder_path_without_backslash.c_str(),
 							p_dt->tm_mon + 1, p_dt->tm_mday, p_dt->tm_hour, p_dt->tm_min, p_dt->tm_sec,
-							ms
+							ms, pid
 						);
 					}
 					else {
 						cstring::format(
 							s_full_abs_path,
-							L"%ls/%ls-%02d%02d%02d%02d%02d-%09u.txt",
+							L"%ls/%ls-%02d%02d%02d%02d%02d-%09u-pid%09d.txt",
 							s_in_folder_path_without_backslash.c_str(),
 							s_in_prefix_log_file.c_str(),
 							p_dt->tm_mon + 1, p_dt->tm_mday, p_dt->tm_hour, p_dt->tm_min, p_dt->tm_sec,
-							ms
+							ms, pid
 						);
 					}
 				}

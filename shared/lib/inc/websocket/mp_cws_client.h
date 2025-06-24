@@ -11,6 +11,7 @@
 #include <websocket/mp_ws_tools.h>
 #include <openssl/ssl.h>
 
+#include <mp_type.h>
 #include <mp_clog.h>
 
 #ifdef _WIN32
@@ -366,7 +367,7 @@ namespace _mp
 				std::lock_guard<std::mutex> lock(m_mutex_session);
 				if (m_b_ssl) {
 					// Set the timeout for the operation
-					boost::beast::get_lowest_layer(*m_ptr_wss).expires_after(std::chrono::milliseconds(30));
+					boost::beast::get_lowest_layer(*m_ptr_wss).expires_after(std::chrono::milliseconds(CONST_DEFAULT_TCPSOCKET_CONNECT_TIMEOUT_MSEC));
 
 					// Make the connection on the IP address we get from a lookup
 					boost::beast::get_lowest_layer(*m_ptr_wss).async_connect
@@ -376,7 +377,7 @@ namespace _mp
 				}
 				else {
 					// Set the timeout for the operation
-					boost::beast::get_lowest_layer(*m_ptr_ws).expires_after(std::chrono::milliseconds(30));
+					boost::beast::get_lowest_layer(*m_ptr_ws).expires_after(std::chrono::milliseconds(CONST_DEFAULT_TCPSOCKET_CONNECT_TIMEOUT_MSEC));
 
 					// Make the connection on the IP address we get from a lookup
 					boost::beast::get_lowest_layer(*m_ptr_ws).async_connect
@@ -390,7 +391,7 @@ namespace _mp
 			{
 				std::lock_guard<std::mutex> lock(m_mutex_session);
 				// Set a timeout on the operation
-				boost::beast::get_lowest_layer(*m_ptr_wss).expires_after(std::chrono::seconds(30));
+				boost::beast::get_lowest_layer(*m_ptr_wss).expires_after(std::chrono::milliseconds(CONST_DEFAULT_WEBSOCKET_HANDSHAKE_TIMEOUT_MSEC));
 
 				// Perform the websocket handshake
 				m_ptr_wss->next_layer().async_handshake(boost::asio::ssl::stream_base::client,
@@ -407,7 +408,7 @@ namespace _mp
 
 					// Set suggested timeout settings for the websocket
 					boost::beast::websocket::stream_base::timeout to_server{};
-					to_server.handshake_timeout = std::chrono::seconds(30);
+					to_server.handshake_timeout = std::chrono::seconds(7);
 					to_server.idle_timeout = boost::beast::websocket::stream_base::none();
 					to_server.keep_alive_pings = false;
 					m_ptr_wss->set_option(to_server);
@@ -619,8 +620,8 @@ namespace _mp
 
 					ptr_session->m_buffer_rx.consume(ptr_session->m_buffer_rx.size());// Clear the buffer
 					if (ec) {
-						clog::get_instance().log_fmt(L"[E] - %ls : consume().\n", __WFUNCTION__);
-						clog::get_instance().trace(L"[E] - %ls : consume().\n", __WFUNCTION__);
+						clog::get_instance().log_fmt(L"[E] - %ls : consume() : %ls.\n", __WFUNCTION__, _mp::cstring::get_unicode_english_error_message(ec).c_str());
+						clog::get_instance().trace(L"[E] - %ls : consume() : %ls.\n", __WFUNCTION__, _mp::cstring::get_unicode_english_error_message(ec).c_str());
 						ptr_session->do_close();
 					}
 					else {

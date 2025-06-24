@@ -219,7 +219,7 @@ namespace _mp {
 		}
 
 		if (n_open_cnt > 0) {
-			if (n_open_cnt >= cbase_ctl_fn::_const_max_n_cnt_open) {
+			if (n_open_cnt >= CONST_MAX_OPEN_COUNT_ON_SHARED_MODE) {
 				return false;
 			}
 			n_index += 0x01;

@@ -11,6 +11,7 @@
 
 #include <websocket/mp_ws_tools.h>
 
+#include <mp_type.h>
 #include <mp_cfile.h>
 #include <mp_clog.h>
 
@@ -32,9 +33,6 @@ namespace _mp
 		typedef	cws_server::type_callback_read	type_callback_write;
 
 		enum {
-			const_default_expires_after_sec = 5,
-			const_default_handshake_timeout_msec = 1000,
-			const_default_idle_timeout_msec = 500,
 			const_default_max_rx_size_bytes = (1048576 + 1024)
 		};
 		enum {
@@ -1011,8 +1009,9 @@ namespace _mp
 					boost::beast::get_lowest_layer(*m_ptr_wss).expires_never();
 
 					boost::beast::websocket::stream_base::timeout to_server{};
-					to_server.handshake_timeout = std::chrono::milliseconds(cws_server::const_default_handshake_timeout_msec); //std::chrono::seconds(500);
-					to_server.idle_timeout = std::chrono::milliseconds(cws_server::const_default_idle_timeout_msec);
+					to_server.handshake_timeout = std::chrono::milliseconds(CONST_DEFAULT_WEBSOCKET_HANDSHAKE_TIMEOUT_MSEC);
+					//to_server.idle_timeout = std::chrono::milliseconds(CONST_DEFAULT_WEBSOCKET_IDLE_TIMEOUT_MSEC);
+					to_server.idle_timeout = boost::beast::websocket::stream_base::none();
 					to_server.keep_alive_pings = true;
 					m_ptr_wss->set_option(to_server);
 
@@ -1140,7 +1139,7 @@ namespace _mp
 				clog::get_instance().log_fmt(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
 				clog::get_instance().trace(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
 				if (m_b_ssl) {
-					boost::beast::get_lowest_layer(*m_ptr_wss).expires_after(std::chrono::seconds(cws_server::const_default_expires_after_sec));
+					boost::beast::get_lowest_layer(*m_ptr_wss).expires_after(std::chrono::milliseconds(CONST_DEFAULT_TCPSOCKET_TIMEOUT_MSEC));
 
 					// Perform the SSL handshake
 					clog::get_instance().log_fmt(L"[I] - %ls : %u : async_handshake()\n", __WFUNCTION__, m_n_session);
@@ -1154,8 +1153,9 @@ namespace _mp
 					// Set suggested timeout settings for the websocket
 					//m_ws.set_option(boost::beast::websocket::stream_base::timeout::suggested(boost::beast::role_type::server));
 					boost::beast::websocket::stream_base::timeout to_server{};
-					to_server.handshake_timeout = std::chrono::milliseconds(cws_server::const_default_handshake_timeout_msec); //std::chrono::seconds(500);
-					to_server.idle_timeout = std::chrono::milliseconds(cws_server::const_default_idle_timeout_msec);
+					to_server.handshake_timeout = std::chrono::milliseconds(CONST_DEFAULT_WEBSOCKET_HANDSHAKE_TIMEOUT_MSEC); //std::chrono::seconds(500);
+					//to_server.idle_timeout = std::chrono::milliseconds(CONST_DEFAULT_WEBSOCKET_IDLE_TIMEOUT_MSEC);
+					to_server.idle_timeout = boost::beast::websocket::stream_base::none();
 					to_server.keep_alive_pings = true;
 					m_ptr_ws->set_option(to_server);
 
