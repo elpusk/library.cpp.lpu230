@@ -52,6 +52,9 @@
     <Filter Include="common\lpu230">
       <UniqueIdentifier>{b6744503-b15a-458b-aece-15dc0b77475b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="common\json">
+      <UniqueIdentifier>{185b8841-ae88-4e76-82ef-2ec8bf0015ff}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\shared\projects\ElpuskHidDaemon\elpusk_hid_daemon.cpp">
@@ -284,6 +287,9 @@
     <ClInclude Include="..\shared\common\inc\lpu230\info_sys_cnst.h">
       <Filter>common\lpu230</Filter>
     </ClInclude>
+    <ClInclude Include="..\shared\projects\ElpuskHidDaemon\inc\cfile_coffee_manager_ini.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Xml Include="..\shared\projects\ElpuskHidDaemon\elpusk-hid-d.xml">
@@ -295,5 +301,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram.cd" />
+    <None Include="..\shared\projects\ElpuskHidDaemon\elpusk-hid-d.json">
+      <Filter>common\json</Filter>
+    </None>
   </ItemGroup>
 </Project>

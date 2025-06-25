@@ -129,6 +129,12 @@
     <Filter Include="common\lpu230\config">
       <UniqueIdentifier>{87f73110-c503-4185-9517-67223b42cc61}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{eac3f155-c110-4ecb-9e50-d1a04278b9ea}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common\json">
+      <UniqueIdentifier>{d4954291-faa9-461d-af7f-9d2c74e7030f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\3thpart\src\linux\hidapi_libusb.h">
@@ -311,10 +317,16 @@
     <ClInclude Include="..\shared\common\inc\lpu230\config\cfg_msrlib.h">
       <Filter>common\lpu230\config</Filter>
     </ClInclude>
+    <ClInclude Include="..\shared\projects\ElpuskHidDaemon\inc\cfile_coffee_manager_ini.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="elpusk-hid-d.service">
       <Filter>setting\/etc/systemd/system</Filter>
+    </None>
+    <None Include="..\shared\projects\ElpuskHidDaemon\elpusk-hid-d.json">
+      <Filter>common\json</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

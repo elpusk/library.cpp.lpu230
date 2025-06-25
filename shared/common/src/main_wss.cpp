@@ -10,6 +10,8 @@
 #include <websocket/mp_cws_server.h>
 #include <server/mp_cserver_.h>
 
+#include <cfile_coffee_manager_ini.h>
+
 
 static _mp::cnamed_pipe::type_ptr gptr_ctl_pipe;
 static std::atomic_bool gb_run_main_loop(true);
@@ -34,6 +36,8 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 	std::wstring s_root_folder_except_backslash = cdef_const::get_root_folder_except_backslash();
 	std::wstring s_pid_file_full_path = cdef_const::get_pid_file_full_path();
 
+	std::wstring s_ini_file_full_path_of_coffee_mgmt(_mp::ccoffee_path::get_path_of_coffee_mgmt_ini_file());
+
 	do {
 		if (!_mp::csystem::daemonize_on_linux(s_pid_file_full_path, std::wstring(), _signal_handler)) {
 			n_result = cdef_const::exit_error_daemonize;
@@ -52,14 +56,19 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 		//setup controller
 		gptr_ctl_pipe = std::make_shared<_mp::cnamed_pipe>(_mp::_coffee::CONST_S_COFFEE_MGMT_CTL_PIPE_NAME, true);
 
+		// load coffee manager ini file
+		cfile_coffee_manager_ini& ini(cfile_coffee_manager_ini::get_instance());
+		ini.load_definition_file();
+
+
 		//setup tracing system
 		_mp::clog& log(_mp::clog::get_instance());
-		log.enable_trace(s_pipe_name_of_trace, true); //enable trace by server mode
+		log.enable_trace(s_pipe_name_of_trace, ini.get_log_enable()); //enable trace by server mode
 
 		//setup logging system
 		log.config(s_log_folder_except_backslash, 6,std::wstring(L"elpusk-hid-d"));
 		log.remove_log_files_older_then_now_day(3);
-		log.enable(true);
+		log.enable(ini.get_log_enable());
 #ifdef _DEBUG
 		log.log_fmt(L"[I] START LOGGING ON DEBUG.\n");
 		log.trace(L"[I] - START TRACING ON DEBUG.\n");
@@ -81,8 +90,8 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 #endif
 
 		bool b_debug = true;
-		bool b_tls = true;
-		unsigned short w_port = _mp::_ws_tools::WEBSOCKET_SECURITY_SERVER_PORT_COFFEE_MANAGER;
+		bool b_tls = ini.get_tls_enable();
+		unsigned short w_port = (unsigned short)ini.get_server_port();
 		int n_thread_for_server(1);
 
 		_mp::cserver::get_instance(&_mp::clog::get_instance()).set_port(w_port)
