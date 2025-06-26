@@ -70,10 +70,22 @@ namespace _mp{
 					if (!m_s_server_private_key_file.empty())
 						s_key_file = _mp::cstring::get_mcsc_from_unicode(m_s_server_private_key_file);
 					//
-					m_ptr_server_for_ip4 = std::make_shared<_mp::cws_server>(ip4_address, m_w_port, n_thread_for_server, s_cert_file, s_key_file, s_root_folder_except_backslash);
+					m_ptr_server_for_ip4 = std::make_shared<_mp::cws_server>
+						(
+							ip4_address, m_w_port, n_thread_for_server, s_cert_file, s_key_file, s_root_folder_except_backslash,
+							m_ll_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client,
+							m_ll_msec_timeout_ws_server_wait_for_idle,
+							m_ll_msec_timeout_ws_server_wait_for_ssl_handshake_complete
+						);
 				}
 				else
-					m_ptr_server_for_ip4 = std::make_shared<_mp::cws_server>(ip4_address, m_w_port, n_thread_for_server, s_root_folder_except_backslash);
+					m_ptr_server_for_ip4 = std::make_shared<_mp::cws_server>
+					(
+						ip4_address, m_w_port, n_thread_for_server, s_root_folder_except_backslash,
+						m_ll_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client,
+						m_ll_msec_timeout_ws_server_wait_for_idle,
+						m_ll_msec_timeout_ws_server_wait_for_ssl_handshake_complete
+					);
 				//
 				if (!m_ptr_server_for_ip4->is_ini()) {
 					m_p_log->log_fmt(L"[E] - %ls - create server : fail.\n", __WFUNCTION__);
@@ -156,6 +168,22 @@ namespace _mp{
 		cserver& cserver::set_port(unsigned short w_port)
 		{
 			m_w_port = w_port;
+			return *this;
+		}
+
+		cserver& cserver::set_timeout_websocket_upgrade_req(long long ll_timeout)
+		{
+			m_ll_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client = ll_timeout;
+			return *this;
+		}
+		cserver& cserver::set_timeout_idle(long long ll_timeout)
+		{
+			m_ll_msec_timeout_ws_server_wait_for_idle = ll_timeout;
+			return *this;
+		}
+		cserver& cserver::set_timeout_ssl_handshake_complete(long long ll_timeout)
+		{
+			m_ll_msec_timeout_ws_server_wait_for_ssl_handshake_complete = ll_timeout;
 			return *this;
 		}
 
@@ -550,7 +578,13 @@ namespace _mp{
 			} while (false);
 		}
 
-		cserver::cserver() : m_w_port(_ws_tools::WEBSOCKET_SERVER_PORT_COFFEE_MANAGER), m_b_ssl(true), m_p_log(nullptr)
+		cserver::cserver() : 
+			m_w_port(_ws_tools::WEBSOCKET_SERVER_PORT_COFFEE_MANAGER)
+			, m_b_ssl(true)
+			, m_p_log(nullptr)
+			, m_ll_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client(CONST_DEFAULT_WS_SERVER_WAIIT_TIMEOUT_FOR_WEBSOCKET_UPGRADE_REQ_OF_CLIENT_MSEC)
+			, m_ll_msec_timeout_ws_server_wait_for_idle(CONST_DEFAULT_WS_SERVER_WAIIT_TIMEOUT_FOR_IDLE_MSEC)
+			, m_ll_msec_timeout_ws_server_wait_for_ssl_handshake_complete(CONST_DEFAULT_WS_SERVER_WAIIT_TIMEOUT_FOR_SSL_HANSHAKE_COMPLETE_MSEC)
 		{
 			//set default callback
 			_mp::cws_server::ccallback cb;

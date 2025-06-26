@@ -192,10 +192,14 @@ namespace _mp
 			}
 
 			explicit csession(
-				boost::asio::ip::tcp::socket& socket, 
-				cws_server& parent_server, 
-				unsigned long n_session, 
-				const std::wstring& s_root_folder_except_backslash)
+				boost::asio::ip::tcp::socket& socket 
+				, cws_server& parent_server
+				, unsigned long n_session
+				, const std::wstring& s_root_folder_except_backslash
+				, long long ll_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client
+				, long long ll_msec_timeout_ws_server_wait_for_idle
+				, long long ll_msec_timeout_ws_server_wait_for_ssl_handshake_complete
+			)
 				:
 				m_n_session(n_session)
 				, m_s_root_folder_except_backslash(s_root_folder_except_backslash)
@@ -203,6 +207,9 @@ namespace _mp
 				, m_b_setup(false)
 				, m_b_dont_use_this_this_will_be_removed(false)
 				, m_b_read_mode(false)
+				, m_ll_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client(ll_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client)
+				, m_ll_msec_timeout_ws_server_wait_for_idle(ll_msec_timeout_ws_server_wait_for_idle)
+				, m_ll_msec_timeout_ws_server_wait_for_ssl_handshake_complete(ll_msec_timeout_ws_server_wait_for_ssl_handshake_complete)
 			{
 				clog::get_instance().log_fmt(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
 				clog::get_instance().trace(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
@@ -1009,9 +1016,17 @@ namespace _mp
 					boost::beast::get_lowest_layer(*m_ptr_wss).expires_never();
 
 					boost::beast::websocket::stream_base::timeout to_server{};
-					to_server.handshake_timeout = std::chrono::milliseconds(CONST_DEFAULT_WEBSOCKET_HANDSHAKE_TIMEOUT_MSEC);
-					//to_server.idle_timeout = std::chrono::milliseconds(CONST_DEFAULT_WEBSOCKET_IDLE_TIMEOUT_MSEC);
-					to_server.idle_timeout = boost::beast::websocket::stream_base::none();
+					if(m_ll_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client<0)
+						to_server.handshake_timeout = boost::beast::websocket::stream_base::none();
+					else
+						to_server.handshake_timeout = std::chrono::milliseconds(m_ll_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client);
+					//
+					if(m_ll_msec_timeout_ws_server_wait_for_idle<0){
+						to_server.idle_timeout = boost::beast::websocket::stream_base::none();
+					}
+					else {
+						to_server.idle_timeout = std::chrono::milliseconds(m_ll_msec_timeout_ws_server_wait_for_idle);
+					}
 					to_server.keep_alive_pings = true;
 					m_ptr_wss->set_option(to_server);
 
@@ -1139,7 +1154,10 @@ namespace _mp
 				clog::get_instance().log_fmt(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
 				clog::get_instance().trace(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
 				if (m_b_ssl) {
-					boost::beast::get_lowest_layer(*m_ptr_wss).expires_after(std::chrono::milliseconds(CONST_DEFAULT_TCPSOCKET_TIMEOUT_MSEC));
+					if(m_ll_msec_timeout_ws_server_wait_for_ssl_handshake_complete < 0)
+						boost::beast::get_lowest_layer(*m_ptr_wss).expires_never();
+					else
+						boost::beast::get_lowest_layer(*m_ptr_wss).expires_after(std::chrono::milliseconds(m_ll_msec_timeout_ws_server_wait_for_ssl_handshake_complete));
 
 					// Perform the SSL handshake
 					clog::get_instance().log_fmt(L"[I] - %ls : %u : async_handshake()\n", __WFUNCTION__, m_n_session);
@@ -1153,9 +1171,17 @@ namespace _mp
 					// Set suggested timeout settings for the websocket
 					//m_ws.set_option(boost::beast::websocket::stream_base::timeout::suggested(boost::beast::role_type::server));
 					boost::beast::websocket::stream_base::timeout to_server{};
-					to_server.handshake_timeout = std::chrono::milliseconds(CONST_DEFAULT_WEBSOCKET_HANDSHAKE_TIMEOUT_MSEC); //std::chrono::seconds(500);
-					//to_server.idle_timeout = std::chrono::milliseconds(CONST_DEFAULT_WEBSOCKET_IDLE_TIMEOUT_MSEC);
-					to_server.idle_timeout = boost::beast::websocket::stream_base::none();
+					if (m_ll_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client < 0)
+						to_server.handshake_timeout = boost::beast::websocket::stream_base::none();
+					else
+						to_server.handshake_timeout = std::chrono::milliseconds(m_ll_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client);
+					//
+					if (m_ll_msec_timeout_ws_server_wait_for_idle < 0) {
+						to_server.idle_timeout = boost::beast::websocket::stream_base::none();
+					}
+					else {
+						to_server.idle_timeout = std::chrono::milliseconds(m_ll_msec_timeout_ws_server_wait_for_idle);
+					}
 					to_server.keep_alive_pings = true;
 					m_ptr_ws->set_option(to_server);
 
@@ -1198,6 +1224,18 @@ namespace _mp
 
 			const unsigned long m_n_session;//session number
 			bool m_b_ssl;
+
+			/////////////////////////////////////////////////////////////////////////////////////
+			//timeout for websocket server
+			// 
+			//Timeout after the server receives the ssl handshake request and calls async_accept(), and the client responds with a WebSocket Upgrade request.
+			long long m_ll_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client;
+
+			//The maximum time that a WebSocket connection can last without sending or receiving any data
+			long long m_ll_msec_timeout_ws_server_wait_for_idle;
+
+			//SSL handshake complete timeout
+			long long m_ll_msec_timeout_ws_server_wait_for_ssl_handshake_complete;
 
 			std::mutex m_mutex_session_files;
 			std::wstring m_s_root_folder_except_backslash;
@@ -1243,8 +1281,26 @@ namespace _mp
 
 					// create server
 					std::wstring s_root_folder_except_backslash(L".");
-					ptr_server_for_ip6 = std::make_shared<_mp::cws_server>(ip6_address, w_port, n_threads, s_root_folder_except_backslash);
-					ptr_server_for_ip4 = std::make_shared<_mp::cws_server>(ip4_address, w_port, n_threads, s_root_folder_except_backslash);
+					ptr_server_for_ip6 = std::make_shared<_mp::cws_server>
+						(
+							ip6_address
+							, w_port
+							, n_threads
+							, s_root_folder_except_backslash
+							, CONST_DEFAULT_WS_SERVER_WAIIT_TIMEOUT_FOR_WEBSOCKET_UPGRADE_REQ_OF_CLIENT_MSEC
+							, CONST_DEFAULT_WS_SERVER_WAIIT_TIMEOUT_FOR_IDLE_MSEC
+							, CONST_DEFAULT_WS_SERVER_WAIIT_TIMEOUT_FOR_SSL_HANSHAKE_COMPLETE_MSEC
+						);
+					ptr_server_for_ip4 = std::make_shared<_mp::cws_server>
+						(
+							ip4_address
+							, w_port
+							, n_threads
+							, s_root_folder_except_backslash
+							, CONST_DEFAULT_WS_SERVER_WAIIT_TIMEOUT_FOR_WEBSOCKET_UPGRADE_REQ_OF_CLIENT_MSEC
+							, CONST_DEFAULT_WS_SERVER_WAIIT_TIMEOUT_FOR_IDLE_MSEC
+							, CONST_DEFAULT_WS_SERVER_WAIIT_TIMEOUT_FOR_SSL_HANSHAKE_COMPLETE_MSEC
+						);
 
 					ptr_server_for_ip6->set_callback(callack).start();
 					ptr_server_for_ip4->set_callback(callack).start();
@@ -1318,11 +1374,22 @@ namespace _mp
 	public:
 
 		//for ws server
-		explicit cws_server(const boost::asio::ip::address& addr, unsigned short w_port, int n_concurrency_hint_of_io_context, const std::wstring& s_root_folder_except_backslash)
+		explicit cws_server(
+			const boost::asio::ip::address& addr
+			, unsigned short w_port
+			, int n_concurrency_hint_of_io_context
+			, const std::wstring& s_root_folder_except_backslash
+			, long long ll_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client
+			, long long ll_msec_timeout_ws_server_wait_for_idle
+			, long ll_msec_timeout_ws_server_wait_for_ssl_handshake_complete
+		)
 			: m_b_need_free_x509(false)
 			, m_b_need_free_evp_pkey(false)
 			, m_b_ssl(false)
 			, m_s_root_folder_except_backslash(s_root_folder_except_backslash)
+			, m_ll_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client(ll_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client)
+			, m_ll_msec_timeout_ws_server_wait_for_idle(ll_msec_timeout_ws_server_wait_for_idle)
+			, m_ll_msec_timeout_ws_server_wait_for_ssl_handshake_complete(ll_msec_timeout_ws_server_wait_for_ssl_handshake_complete)
 		{//ws constructor
 
 			m_ptr_ioc = std::make_shared<boost::asio::io_context>(n_concurrency_hint_of_io_context);
@@ -1392,15 +1459,24 @@ namespace _mp
 		}
 
 		//for wss server
-		explicit cws_server(const boost::asio::ip::address& addr, unsigned short w_port, int n_concurrency_hint_of_io_context
+		explicit cws_server(
+			const boost::asio::ip::address& addr
+			, unsigned short w_port
+			, int n_concurrency_hint_of_io_context
 			, const std::string& s_server_cert_file
 			, const std::string& s_server_private_key_file
 			, const std::wstring& s_root_folder_except_backslash
+			, long long ll_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client
+			, long long ll_msec_timeout_ws_server_wait_for_idle
+			, long ll_msec_timeout_ws_server_wait_for_ssl_handshake_complete
 		)
 			: m_b_need_free_x509(false)
 			, m_b_need_free_evp_pkey(false)
 			, m_b_ssl(true)
 			, m_s_root_folder_except_backslash(s_root_folder_except_backslash)
+			, m_ll_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client(ll_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client)
+			, m_ll_msec_timeout_ws_server_wait_for_idle(ll_msec_timeout_ws_server_wait_for_idle)
+			, m_ll_msec_timeout_ws_server_wait_for_ssl_handshake_complete(ll_msec_timeout_ws_server_wait_for_ssl_handshake_complete)
 		{
 			m_ptr_ioc = std::make_shared<boost::asio::io_context>(n_concurrency_hint_of_io_context);
 			m_ptr_endpoint = std::make_shared<boost::asio::ip::tcp::endpoint>(addr, w_port);
@@ -1669,7 +1745,10 @@ namespace _mp
 					socket,
 					*this,
 					m_n_next_session,
-					m_s_root_folder_except_backslash
+					m_s_root_folder_except_backslash,
+					m_ll_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client,
+					m_ll_msec_timeout_ws_server_wait_for_idle,
+					m_ll_msec_timeout_ws_server_wait_for_ssl_handshake_complete
 				)->shared_from_this()
 			);
 			if (!result.second) {
@@ -1869,6 +1948,18 @@ namespace _mp
 			return n_session;
 		}
 	private:
+		/////////////////////////////////////////////////////////////////////////////////////
+		//timeout for websocket server
+		// 
+		//Timeout after the server receives the ssl handshake request and calls async_accept(), and the client responds with a WebSocket Upgrade request.
+		long long m_ll_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client;
+
+		//The maximum time that a WebSocket connection can last without sending or receiving any data
+		long long m_ll_msec_timeout_ws_server_wait_for_idle;
+
+		//SSL handshake complete timeout
+		long long m_ll_msec_timeout_ws_server_wait_for_ssl_handshake_complete;
+
 		bool m_b_need_free_x509;
 		bool m_b_need_free_evp_pkey;
 
@@ -1897,6 +1988,9 @@ namespace _mp
 
 		std::wstring m_s_root_folder_except_backslash;
 	private://don't call these method
+		cws_server();
+		cws_server(const cws_server&);
+		cws_server& operator=(const cws_server&);
 	};//the end class
 
 }//the end of _mp

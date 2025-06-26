@@ -237,6 +237,13 @@ namespace _mp
 				m_resolver(boost::asio::make_strand(ioc))
 				, m_w_port(0)
 				, m_parent_client(parent_client)
+				, m_ll_msec_timeout_ws_client_wait_for_ssl_handshake_complete(CONST_DEFAULT_WS_CLIENT_WAIIT_TIMEOUT_FOR_SSL_HANSHAKE_COMPLETE_MSEC)
+				, m_ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_wss(CONST_DEFAULT_WS_CLIENT_WAIIT_TIMEOUT_FOR_WEBSOCKET_HANSHAKE_COMPLETE_IN_WSS_MSEC)
+				, m_ll_msec_timeout_ws_client_wait_for_idle_in_wss(CONST_DEFAULT_WS_CLIENT_WAIIT_TIMEOUT_FOR_IDLE_IN_WSS_MSEC)
+				, m_ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_ws(CONST_DEFAULT_WS_CLIENT_WAIIT_TIMEOUT_FOR_WEBSOCKET_HANSHAKE_COMPLETE_IN_WS_MSEC)
+				, m_ll_msec_timeout_ws_client_wait_for_idle_in_ws(CONST_DEFAULT_WS_CLIENT_WAIIT_TIMEOUT_FOR_IDLE_IN_WS_MSEC)
+				, m_ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_wss(CONST_DEFAULT_WS_CLIENT_WAIIT_TIMEOUT_FOR_ASYNC_CONNECT_COMPLETE_IN_WSS_MSEC)
+				, m_ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_ws(CONST_DEFAULT_WS_CLIENT_WAIIT_TIMEOUT_FOR_ASYNC_CONNECT_COMPLETE_IN_WS_MSEC)
 			{
 				m_b_ssl = parent_client.is_ssl();
 
@@ -367,7 +374,10 @@ namespace _mp
 				std::lock_guard<std::mutex> lock(m_mutex_session);
 				if (m_b_ssl) {
 					// Set the timeout for the operation
-					boost::beast::get_lowest_layer(*m_ptr_wss).expires_after(std::chrono::milliseconds(CONST_DEFAULT_TCPSOCKET_CONNECT_TIMEOUT_MSEC));
+					if(m_ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_wss<0)
+						boost::beast::get_lowest_layer(*m_ptr_wss).expires_never();
+					else
+						boost::beast::get_lowest_layer(*m_ptr_wss).expires_after(std::chrono::milliseconds(m_ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_wss));
 
 					// Make the connection on the IP address we get from a lookup
 					boost::beast::get_lowest_layer(*m_ptr_wss).async_connect
@@ -377,7 +387,10 @@ namespace _mp
 				}
 				else {
 					// Set the timeout for the operation
-					boost::beast::get_lowest_layer(*m_ptr_ws).expires_after(std::chrono::milliseconds(CONST_DEFAULT_TCPSOCKET_CONNECT_TIMEOUT_MSEC));
+					if(m_ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_ws<0)
+						boost::beast::get_lowest_layer(*m_ptr_ws).expires_never();
+					else
+						boost::beast::get_lowest_layer(*m_ptr_ws).expires_after(std::chrono::milliseconds(m_ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_ws));
 
 					// Make the connection on the IP address we get from a lookup
 					boost::beast::get_lowest_layer(*m_ptr_ws).async_connect
@@ -391,7 +404,10 @@ namespace _mp
 			{
 				std::lock_guard<std::mutex> lock(m_mutex_session);
 				// Set a timeout on the operation
-				boost::beast::get_lowest_layer(*m_ptr_wss).expires_after(std::chrono::milliseconds(CONST_DEFAULT_WEBSOCKET_HANDSHAKE_TIMEOUT_MSEC));
+				if(m_ll_msec_timeout_ws_client_wait_for_ssl_handshake_complete<0)
+					boost::beast::get_lowest_layer(*m_ptr_wss).expires_never();
+				else
+					boost::beast::get_lowest_layer(*m_ptr_wss).expires_after(std::chrono::milliseconds(m_ll_msec_timeout_ws_client_wait_for_ssl_handshake_complete));
 
 				// Perform the websocket handshake
 				m_ptr_wss->next_layer().async_handshake(boost::asio::ssl::stream_base::client,
@@ -408,8 +424,17 @@ namespace _mp
 
 					// Set suggested timeout settings for the websocket
 					boost::beast::websocket::stream_base::timeout to_server{};
-					to_server.handshake_timeout = std::chrono::seconds(7);
-					to_server.idle_timeout = boost::beast::websocket::stream_base::none();
+					if(m_ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_wss<0)
+						to_server.handshake_timeout = boost::beast::websocket::stream_base::none();
+					else
+						to_server.handshake_timeout = std::chrono::milliseconds(m_ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_wss);
+					//
+					if(m_ll_msec_timeout_ws_client_wait_for_idle_in_wss<0){
+						to_server.idle_timeout = boost::beast::websocket::stream_base::none();
+					}
+					else {
+						to_server.idle_timeout = std::chrono::milliseconds(m_ll_msec_timeout_ws_client_wait_for_idle_in_wss);
+					}
 					to_server.keep_alive_pings = false;
 					m_ptr_wss->set_option(to_server);
 
@@ -433,8 +458,17 @@ namespace _mp
 
 					// Set suggested timeout settings for the websocket
 					boost::beast::websocket::stream_base::timeout to_server{};
-					to_server.handshake_timeout = std::chrono::seconds(30);
-					to_server.idle_timeout = boost::beast::websocket::stream_base::none();
+					if(m_ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_ws<0)
+						to_server.handshake_timeout = boost::beast::websocket::stream_base::none();
+					else
+						to_server.handshake_timeout = std::chrono::milliseconds(m_ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_ws);
+					//
+					if(m_ll_msec_timeout_ws_client_wait_for_idle_in_ws<0){
+						to_server.idle_timeout = boost::beast::websocket::stream_base::none();
+					}
+					else {
+						to_server.idle_timeout = std::chrono::milliseconds(m_ll_msec_timeout_ws_client_wait_for_idle_in_ws);
+					}
 					to_server.keep_alive_pings = false;
 					m_ptr_ws->set_option(to_server);
 
@@ -694,6 +728,30 @@ namespace _mp
 			cws_client::ccallback m_callback;
 			cws_client::csession::_type_queue_v_buffer m_queue_write;
 			bool m_b_ssl;
+
+			////////////////////////////////
+			// timeout
+
+			//In client, ssl handshake complete timeout
+			long long m_ll_msec_timeout_ws_client_wait_for_ssl_handshake_complete;
+
+			// In WSS mode of client, websocket handshake complete timeout
+			long long m_ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_wss;
+
+			//The maximum time that a WebSocket connection can last without sending or receiving any data
+			long long m_ll_msec_timeout_ws_client_wait_for_idle_in_wss;
+
+			// In WS mode of client, websocket handshake complete timeout
+			long long m_ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_ws;
+
+			//The maximum time that a WebSocket connection can last without sending or receiving any data
+			long long m_ll_msec_timeout_ws_client_wait_for_idle_in_ws;
+
+			// In WSS mode of client, aync connect complete timeout
+			long long m_ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_wss;
+
+			// In WS mode of client, aync connect complete timeout
+			long long m_ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_ws;
 
 		private://don't call these methods.
 			csession();

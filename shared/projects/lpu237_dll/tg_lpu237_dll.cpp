@@ -791,7 +791,7 @@ unsigned long _CALLTYPE_ LPU237_dll_on()
 			continue;
 		}
 
-		if (!ptr_manager_of_device_of_client->connect(ccb_client::get_callbacks(), CONST_DEFAULT_WEBSOCKET_CONNECT_TIMEOUT_MSEC)) {
+		if (!ptr_manager_of_device_of_client->connect(ccb_client::get_callbacks(), CONST_DEFAULT_WSS_CONNECT_TIMEOUT_IN_API_MSEC)) {
 			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : manager_of_device_of_client<lpu237_of_client>::get_instance().connect().\n", __WFUNCTION__);
 			continue;
 		}

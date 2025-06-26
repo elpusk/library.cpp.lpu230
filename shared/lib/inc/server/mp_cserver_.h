@@ -34,6 +34,10 @@ namespace _mp{
 
 		cserver& set_port(unsigned short w_port);
 
+		cserver& set_timeout_websocket_upgrade_req(long long ll_timeout);
+		cserver& set_timeout_idle(long long ll_timeout);
+		cserver& set_timeout_ssl_handshake_complete(long long ll_timeout);
+
 		bool send_data_to_client_by_ip4_device_plug_out(unsigned long n_session, unsigned short w_device_index, const std::wstring& s_device_path);
 
 		bool broadcast_by_ip4_device_plug_in(const std::wstring& s_device_path);
@@ -82,6 +86,18 @@ namespace _mp{
 		_mp::cws_server::type_ptr m_ptr_server_for_ip4;
 
 		std::vector<std::thread> m_v_thread_server_ip4;
+
+		/////////////////////////////////////////////////////////////////////////////////////
+		//timeout for websocket server
+		// 
+		//Timeout after the server receives the ssl handshake request and calls async_accept(), and the client responds with a WebSocket Upgrade request.
+		long long m_ll_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client;
+
+		//The maximum time that a WebSocket connection can last without sending or receiving any data
+		long long m_ll_msec_timeout_ws_server_wait_for_idle;
+
+		//SSL handshake complete timeout
+		long long m_ll_msec_timeout_ws_server_wait_for_ssl_handshake_complete;
 
 	private:
 		cserver(const cserver&) = delete;

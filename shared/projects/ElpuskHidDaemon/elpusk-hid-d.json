@@ -1,7 +1,11 @@
 {
   "name": "elpusk-hid-d",
-  "version": "1.0",
-  "date": "06252025",
+  "version": "2.0",
+  "date": "06262025",
   "log": "enable",
-  "port": 443
+  "port": 443,
+
+  "msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client" : 7000,
+  "msec_timeout_ws_server_wait_for_idle" : -1,
+  "msec_timeout_ws_server_wait_for_ssl_handshake_complete" : 5000
 }

@@ -58,7 +58,7 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 
 		// load coffee manager ini file
 		cfile_coffee_manager_ini& ini(cfile_coffee_manager_ini::get_instance());
-		ini.load_definition_file();
+		bool b_ini_load = ini.load_definition_file();
 
 
 		//setup tracing system
@@ -71,23 +71,75 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 		log.enable(ini.get_log_enable());
 #ifdef _DEBUG
 		log.log_fmt(L"[I] START LOGGING ON DEBUG.\n");
-		log.trace(L"[I] - START TRACING ON DEBUG.\n");
+		log.trace(L"[I] START TRACING ON DEBUG.\n");
 #else
 		log.log_fmt(L"[I] START LOGGING ON RELEASE.\n");
-		log.trace(L"[I] - START TRACING ON RELEASE.\n");
+		log.trace(L"[I] START TRACING ON RELEASE.\n");
 #endif
 
 		if (!gptr_ctl_pipe) {
 			log.log_fmt(L"[E] %ls | create controller pipe.\n", __WFUNCTION__);
-			log.trace(L"[E] - %ls | create controller pipe.\n", __WFUNCTION__);
+			log.trace(L"[E] %ls | create controller pipe.\n", __WFUNCTION__);
 			n_result = cdef_const::exit_error_create_ctl_pipe;
 			continue;
 		}
 
 #ifndef _WIN32
-		log.log_fmt(L"[I] - sid: %5d, pgid: %5d, pid: %5d, ppid: %5d.\n", (int)getsid(0), (int)getpgid(0), (int)getpid(), (int)getppid());
-		log.trace(L"[I] - sid: %5d, pgid: %5d, pid: %5d, ppid: %5d.\n", (int)getsid(0), (int)getpgid(0), (int)getpid(), (int)getppid());
+		log.log_fmt(L"[I] sid: %5d, pgid: %5d, pid: %5d, ppid: %5d.\n", (int)getsid(0), (int)getpgid(0), (int)getpid(), (int)getppid());
+		log.trace(L"[I] sid: %5d, pgid: %5d, pid: %5d, ppid: %5d.\n", (int)getsid(0), (int)getpgid(0), (int)getpid(), (int)getppid());
 #endif
+		// loading ini
+		if (b_ini_load) {
+			log.log_fmt(L"[=============.\n");
+			log.log_fmt(L"[I] loaded ini file = %ls.\n", ini.get_ini_file_full_path().c_str());
+			log.log_fmt(L"[I] ini value : name = %ls.\n", ini.get_name().c_str());
+			log.log_fmt(L"[I] ini value : version = %ls.\n", ini.get_version().c_str());
+			log.log_fmt(L"[I] ini value : date = %ls.\n", ini.get_date().c_str());
+
+			if (ini.get_log_enable()) {
+				log.log_fmt(L"[I] ini value : log = enable.\n");
+			}
+			else {
+				log.log_fmt(L"[I] ini value : log = disable.\n");
+			}
+
+			if (ini.get_tls_enable()) {
+				log.log_fmt(L"[I] ini value : tls v1.3 = enable.\n" );
+			}
+			else {
+				log.log_fmt(L"[I] ini value : tls v1.3 = disable.\n");
+			}
+			log.log_fmt(L"[I] ini value : server port = %d.\n", ini.get_server_port());
+			log.log_fmt(L"[I] ini value : server wait timeout for websocket upgrade req of client = %lld [mmsec].\n", ini.get_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client());
+			log.log_fmt(L"[I] ini value : server wait timeout for_ dle = %lld.\n", ini.get_msec_timeout_ws_server_wait_for_idle());
+			log.log_fmt(L"[I] ini value : server wait timeout for ssl handshake complete = %lld [mmsec].\n", ini.get_msec_timeout_ws_server_wait_for_ssl_handshake_complete());
+			log.log_fmt(L"[=============.\n");
+			//
+			log.trace(L"[=============.\n");
+			log.trace(L"[I] loaded ini file = %ls.\n", ini.get_ini_file_full_path().c_str());
+			log.trace(L"[I] ini value : name = %ls.\n", ini.get_name().c_str());
+			log.trace(L"[I] ini value : version = %ls.\n", ini.get_version().c_str());
+			log.trace(L"[I] ini value : date = %ls.\n", ini.get_date().c_str());
+
+			if (ini.get_log_enable()) {
+				log.trace(L"[I] ini value : log = enable.\n");
+			}
+			else {
+				log.trace(L"[I] ini value : log = disable.\n");
+			}
+
+			if (ini.get_tls_enable()) {
+				log.trace(L"[I] ini value : tls v1.3 = enable.\n");
+			}
+			else {
+				log.trace(L"[I] ini value : tls v1.3 = disable.\n");
+			}
+			log.trace(L"[I] ini value : server port = %d.\n", ini.get_server_port());
+			log.trace(L"[I] ini value : server wait timeout for websocket upgrade req of client = %lld [mmsec].\n", ini.get_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client());
+			log.trace(L"[I] ini value : server wait timeout for_ dle = %lld.\n", ini.get_msec_timeout_ws_server_wait_for_idle());
+			log.trace(L"[I] ini value : server wait timeout for ssl handshake complete = %lld [mmsec].\n", ini.get_msec_timeout_ws_server_wait_for_ssl_handshake_complete());
+			log.trace(L"[=============.\n");
+		}
 
 		bool b_debug = true;
 		bool b_tls = ini.get_tls_enable();
@@ -97,7 +149,10 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 		_mp::cserver::get_instance(&_mp::clog::get_instance()).set_port(w_port)
 			.set_ssl(b_tls)
 			.set_cert_file(s_server_certificate_file)
-			.set_private_key_file(s_server_private_key_file);
+			.set_private_key_file(s_server_private_key_file)
+			.set_timeout_websocket_upgrade_req(ini.get_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client())
+			.set_timeout_idle(ini.get_msec_timeout_ws_server_wait_for_idle())
+			.set_timeout_ssl_handshake_complete(ini.get_msec_timeout_ws_server_wait_for_ssl_handshake_complete());
 
 		if (!_mp::cserver::get_instance().start(n_thread_for_server, s_root_folder_except_backslash)) {
 			log.log_fmt(L"[E] %ls | cserver::get_instance().start().\n", __WFUNCTION__);

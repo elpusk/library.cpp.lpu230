@@ -31,7 +31,7 @@ namespace _mp{
 
 		static std::wstring get_path_of_coffee_mgmt_ini_file()
 		{
-			static std::wstring s = _mp::_coffee::CONST_S_COFFEE_MGMT_INI_DIR_EXCEPT_BACKSLASH;
+			std::wstring s = _mp::_coffee::CONST_S_COFFEE_MGMT_INI_DIR_EXCEPT_BACKSLASH;
 #ifdef _WIN32
 			s += L"\\elpusk-hid-d.json";
 #else

@@ -63,6 +63,17 @@ public:
 				continue;
 			}
 
+			m_s_ini_file_full_path = ws_path_ini;
+			m_b_exist_name = false;
+			m_b_exist_version = false;
+			m_b_exist_date = false;
+			m_b_exist_log_enable = false;
+			m_b_exist_tls_enable = false;
+			m_b_exist_server_port = false;
+			m_b_exist_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client = false;
+			m_b_exist_msec_timeout_ws_server_wait_for_idle = false;
+			m_b_exist_msec_timeout_ws_server_wait_for_ssl_handshake_complete = false;
+
 			// get JSON data
 			boost::json::object obj = jv.as_object();
 
@@ -93,7 +104,7 @@ public:
 				}
 			}
 			//
-			m_s_version = L"06252025";
+			m_s_date = L"06252025";
 
 			if (obj.contains("date")) {
 				std::string s_version = obj["date"].as_string().c_str();
@@ -143,15 +154,40 @@ public:
 			//
 			m_n_server_port = 443;
 
-			int n_port = obj.contains("port") && obj["port"].is_int64() ? obj["age"].as_int64() : -1;
+			int n_port = obj.contains("port") && obj["port"].is_int64() ? obj["port"].as_int64() : -1;
 			if (n_port > 0) {
 				m_n_server_port = n_port;
 				m_b_exist_server_port = true;
 			}
-
+			//
+			int n_timeout = 0;
+			//
+			n_timeout = obj.contains("msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client") && obj["msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client"].is_int64() ? obj["msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client"].as_int64() : -1;
+			if (n_timeout > 0) {
+				m_ll_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client = n_timeout;
+				m_b_exist_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client = true;
+			}
+			//
+			n_timeout = obj.contains("msec_timeout_ws_server_wait_for_idle") && obj["msec_timeout_ws_server_wait_for_idle"].is_int64() ? obj["msec_timeout_ws_server_wait_for_idle"].as_int64() : -1;
+			if (n_timeout > 0) {
+				m_ll_msec_timeout_ws_server_wait_for_idle = n_timeout;
+				m_b_exist_msec_timeout_ws_server_wait_for_idle = true;
+			}
+			//
+			n_timeout = obj.contains("msec_timeout_ws_server_wait_for_ssl_handshake_complete") && obj["msec_timeout_ws_server_wait_for_ssl_handshake_complete"].is_int64() ? obj["msec_timeout_ws_server_wait_for_ssl_handshake_complete"].as_int64() : -1;
+			if (n_timeout > 0) {
+				m_ll_msec_timeout_ws_server_wait_for_ssl_handshake_complete = n_timeout;
+				m_b_exist_msec_timeout_ws_server_wait_for_ssl_handshake_complete = true;
+			}
 			b_result = true;
 		} while (false);
 		return b_result;
+	}
+
+	//get ini file full path
+	std::wstring get_ini_file_full_path() const
+	{
+		return m_s_ini_file_full_path;
 	}
 
 	bool get_name(std::wstring& s_name) const
@@ -220,6 +256,37 @@ public:
 		return m_n_server_port;
 	}
 
+	long long get_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client() const
+	{
+		return m_ll_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client;
+	}
+	bool get_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client(long long& ll_msec) const
+	{
+		ll_msec = m_ll_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client;
+		return m_b_exist_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client;
+	}
+	//
+	long long get_msec_timeout_ws_server_wait_for_idle() const
+	{
+		return m_ll_msec_timeout_ws_server_wait_for_idle;
+	}
+	bool get_msec_timeout_ws_server_wait_for_idle(long long& ll_msec) const
+	{
+		ll_msec = m_ll_msec_timeout_ws_server_wait_for_idle;
+		return m_b_exist_msec_timeout_ws_server_wait_for_idle;
+	}
+	//
+	long long get_msec_timeout_ws_server_wait_for_ssl_handshake_complete() const
+	{
+		return m_ll_msec_timeout_ws_server_wait_for_ssl_handshake_complete;
+	}
+	//
+	bool get_msec_timeout_ws_server_wait_for_ssl_handshake_complete(long long& ll_msec) const
+	{
+		ll_msec = m_ll_msec_timeout_ws_server_wait_for_ssl_handshake_complete;
+		return m_b_exist_msec_timeout_ws_server_wait_for_ssl_handshake_complete;
+	}
+
 private:
 	cfile_coffee_manager_ini()
 	{
@@ -236,8 +303,19 @@ private:
 		m_b_exist_log_enable = false;
 		m_b_exist_tls_enable = false;
 		m_b_exist_server_port = false;
+		//
+		m_ll_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client = CONST_DEFAULT_WS_SERVER_WAIIT_TIMEOUT_FOR_WEBSOCKET_UPGRADE_REQ_OF_CLIENT_MSEC;
+		m_b_exist_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client = false;
+
+		m_ll_msec_timeout_ws_server_wait_for_idle = CONST_DEFAULT_WS_SERVER_WAIIT_TIMEOUT_FOR_IDLE_MSEC;
+		m_b_exist_msec_timeout_ws_server_wait_for_idle = false;
+
+		m_ll_msec_timeout_ws_server_wait_for_ssl_handshake_complete = CONST_DEFAULT_WS_SERVER_WAIIT_TIMEOUT_FOR_SSL_HANSHAKE_COMPLETE_MSEC;
+		m_b_exist_msec_timeout_ws_server_wait_for_ssl_handshake_complete = false;
 	}
 private:
+	std::wstring m_s_ini_file_full_path;
+
 	std::wstring m_s_name;
 	std::wstring m_s_version;
 	std::wstring m_s_date;
@@ -251,6 +329,21 @@ private:
 	bool m_b_exist_log_enable;
 	bool m_b_exist_tls_enable;
 	bool m_b_exist_server_port;
+
+	/////////////////////////////////////////////////////////////////////////////////////
+	//timeout for websocket server
+	// 
+	//Timeout after the server receives the ssl handshake request and calls async_accept(), and the client responds with a WebSocket Upgrade request.
+	long long m_ll_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client;
+	bool m_b_exist_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client;
+
+	//The maximum time that a WebSocket connection can last without sending or receiving any data
+	long long m_ll_msec_timeout_ws_server_wait_for_idle;
+	bool m_b_exist_msec_timeout_ws_server_wait_for_idle;
+
+	//SSL handshake complete timeout
+	long long m_ll_msec_timeout_ws_server_wait_for_ssl_handshake_complete;
+	bool m_b_exist_msec_timeout_ws_server_wait_for_ssl_handshake_complete;
 
 private:
 	cfile_coffee_manager_ini(const cfile_coffee_manager_ini&) = delete;
