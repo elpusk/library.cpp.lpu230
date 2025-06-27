@@ -103,7 +103,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(SolutionDir)shared\3thpart\inc;$(SolutionDir)shared/projects/lpu237_dll/inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)shared\3thpart\inc;$(SolutionDir)shared/projects/lpu237_dll/inc;$(SolutionDir)shared/projects/lpu237_ibutton/inc</AdditionalIncludeDirectories>
       <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
@@ -124,7 +124,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(SolutionDir)shared\3thpart\inc;$(SolutionDir)shared/projects/lpu237_dll/inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)shared\3thpart\inc;$(SolutionDir)shared/projects/lpu237_dll/inc;$(SolutionDir)shared/projects/lpu237_ibutton/inc</AdditionalIncludeDirectories>
       <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
@@ -145,7 +145,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(SolutionDir)shared\3thpart\inc;$(SolutionDir)shared/projects/lpu237_dll/inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)shared\3thpart\inc;$(SolutionDir)shared/projects/lpu237_dll/inc;$(SolutionDir)shared/projects/lpu237_ibutton/inc</AdditionalIncludeDirectories>
       <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
@@ -166,7 +166,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(SolutionDir)shared\3thpart\inc;$(SolutionDir)shared/projects/lpu237_dll/inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)shared\3thpart\inc;$(SolutionDir)shared/projects/lpu237_dll/inc;$(SolutionDir)shared/projects/lpu237_ibutton/inc</AdditionalIncludeDirectories>
       <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
@@ -215,7 +215,7 @@
     <ClInclude Include="..\shared\lib\inc\websocket\mp_ws_tools.h" />
     <ClInclude Include="..\shared\projects\lpu237_dll\inc\ccb_client.h" />
     <ClInclude Include="..\shared\projects\lpu237_dll\inc\lpu237_of_client.h" />
-    <ClInclude Include="..\shared\projects\lpu237_dll\inc\tg_lpu237_ibutton.h" />
+    <ClInclude Include="..\shared\projects\lpu237_ibutton\inc\tg_lpu237_ibutton.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="resource.h" />
@@ -227,7 +227,7 @@
     <ClCompile Include="..\shared\lib\src\server\mp_cclient.cpp" />
     <ClCompile Include="..\shared\lib\src\server\mp_cclient_cb.cpp" />
     <ClCompile Include="..\shared\projects\lpu237_dll\lpu237_of_client.cpp" />
-    <ClCompile Include="..\shared\projects\lpu237_dll\tg_lpu237_ibutton.cpp" />
+    <ClCompile Include="..\shared\projects\lpu237_ibutton\tg_lpu237_ibutton.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -240,6 +240,7 @@
     <ResourceCompile Include="wi_lpu237_ibutton.rc" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\shared\projects\lpu237_ibutton\tg_lpu237_ibutton.ini" />
     <None Include="tg_lpu237_ibutton.def" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

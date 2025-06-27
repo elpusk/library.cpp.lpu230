@@ -251,6 +251,7 @@
     <ResourceCompile Include="wi_lpu237_dll.rc" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\shared\projects\lpu237_dll\tg_lpu237_dll.ini" />
     <None Include="tg_lpu237_dll.def" />
   </ItemGroup>
   <ItemGroup>

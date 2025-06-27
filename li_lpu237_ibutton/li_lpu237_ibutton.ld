@@ -1,0 +1,23 @@
+# li_lpu237_ibutton.ld
+{
+    global:
+		LPU237Lock_get_list;
+		LPU237Lock_get_list_w;
+		LPU237Lock_get_list_a;
+		LPU237Lock_open;
+		LPU237Lock_open_w;
+		LPU237Lock_open_a;
+		LPU237Lock_close;
+		LPU237Lock_enable;
+		LPU237Lock_disable;
+		LPU237Lock_cancel_wait_key;
+		LPU237Lock_wait_key_with_callback;
+		LPU237Lock_get_data;
+		LPU237Lock_dll_on;
+		LPU237Lock_dll_off;
+		LPU237Lock_get_id;
+		_so_init;
+		_so_fini;
+    local:
+        *;
+};

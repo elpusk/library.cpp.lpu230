@@ -41,6 +41,18 @@
 - for native client application, dynamic linked library.
 - supports lpu237 msr functionality.
 
+## li_lpu237_ibutton
+- for Debian 12.(x64)
+- executable file name : libtg_lpu237_ibutton.so
+- for native client application, shared object.
+- supports lpu237 ibutton functionality.
+
+## wi_lpu237_ibutton
+- for windows 11.(x64, x86)
+- executable file name : tg_lpu237_ibutton.dll
+- for native client application, dynamic linked library.
+- supports lpu237 ibutton functionality.
+
 ## tp_li_lpu237
 - for Debian 12.(x64)
 - executable file name : tp_li_lpu237.out

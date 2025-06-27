@@ -40,6 +40,9 @@
     <Filter Include="common\xml">
       <UniqueIdentifier>{22cf9857-f7fa-49bf-9d10-6129b37a80c6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="common\ini">
+      <UniqueIdentifier>{d93c2e27-a661-4e38-a04a-57b660021c0a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -233,6 +236,9 @@
   <ItemGroup>
     <None Include="tg_lpu237_dll.def">
       <Filter>Source Files</Filter>
+    </None>
+    <None Include="..\shared\projects\lpu237_dll\tg_lpu237_dll.ini">
+      <Filter>common\ini</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
