@@ -232,18 +232,29 @@ namespace _mp
 				return *this;
 			}
 			// Resolver and socket require an io_context
-			explicit csession(boost::asio::io_context& ioc, cws_client& parent_client)
+			explicit csession
+			(
+				boost::asio::io_context& ioc
+				, cws_client& parent_client
+				, long long ll_msec_timeout_ws_client_wait_for_ssl_handshake_complete
+				, long long ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_wss
+				, long long ll_msec_timeout_ws_client_wait_for_idle_in_wss
+				, long long ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_ws
+				, long long ll_msec_timeout_ws_client_wait_for_idle_in_ws
+				, long long ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_wss
+				, long long ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_ws
+			)
 				: 
 				m_resolver(boost::asio::make_strand(ioc))
 				, m_w_port(0)
 				, m_parent_client(parent_client)
-				, m_ll_msec_timeout_ws_client_wait_for_ssl_handshake_complete(CONST_DEFAULT_WS_CLIENT_WAIIT_TIMEOUT_FOR_SSL_HANSHAKE_COMPLETE_MSEC)
-				, m_ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_wss(CONST_DEFAULT_WS_CLIENT_WAIIT_TIMEOUT_FOR_WEBSOCKET_HANSHAKE_COMPLETE_IN_WSS_MSEC)
-				, m_ll_msec_timeout_ws_client_wait_for_idle_in_wss(CONST_DEFAULT_WS_CLIENT_WAIIT_TIMEOUT_FOR_IDLE_IN_WSS_MSEC)
-				, m_ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_ws(CONST_DEFAULT_WS_CLIENT_WAIIT_TIMEOUT_FOR_WEBSOCKET_HANSHAKE_COMPLETE_IN_WS_MSEC)
-				, m_ll_msec_timeout_ws_client_wait_for_idle_in_ws(CONST_DEFAULT_WS_CLIENT_WAIIT_TIMEOUT_FOR_IDLE_IN_WS_MSEC)
-				, m_ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_wss(CONST_DEFAULT_WS_CLIENT_WAIIT_TIMEOUT_FOR_ASYNC_CONNECT_COMPLETE_IN_WSS_MSEC)
-				, m_ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_ws(CONST_DEFAULT_WS_CLIENT_WAIIT_TIMEOUT_FOR_ASYNC_CONNECT_COMPLETE_IN_WS_MSEC)
+				, m_ll_msec_timeout_ws_client_wait_for_ssl_handshake_complete(ll_msec_timeout_ws_client_wait_for_ssl_handshake_complete)
+				, m_ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_wss(ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_wss)
+				, m_ll_msec_timeout_ws_client_wait_for_idle_in_wss(ll_msec_timeout_ws_client_wait_for_idle_in_wss)
+				, m_ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_ws(ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_ws)
+				, m_ll_msec_timeout_ws_client_wait_for_idle_in_ws(ll_msec_timeout_ws_client_wait_for_idle_in_ws)
+				, m_ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_wss(ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_wss)
+				, m_ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_ws(ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_ws)
 			{
 				m_b_ssl = parent_client.is_ssl();
 
@@ -763,26 +774,61 @@ namespace _mp
 	private:
 		typedef		std::map<unsigned long, cws_client::csession::type_ptr_session>	_type_map_index_ptr_session;
 	public:
-		explicit cws_client(const std::string & s_domain, unsigned short w_port) :
-			m_ptr_ioc(std::make_shared<boost::asio::io_context>()),
-			//m_ssl_ctx(boost::asio::ssl::context(boost::asio::ssl::context::tlsv12_client))
-			m_ssl_ctx(boost::asio::ssl::context(boost::asio::ssl::context::tlsv12))
+		explicit cws_client
+		(
+			const std::string & s_domain
+			, unsigned short w_port
+			, long long ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_ws
+			, long long ll_msec_timeout_ws_client_wait_for_idle_in_ws
+			, long long ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_ws
+		) :
+			m_ptr_ioc(std::make_shared<boost::asio::io_context>())
+			,m_ssl_ctx(boost::asio::ssl::context(boost::asio::ssl::context::tlsv13))
 			,m_s_domain(s_domain), m_w_port(w_port), m_run(false), m_b_ssl(false)
 		{
-			m_ptr_session = std::make_shared<cws_client::csession>(*m_ptr_ioc, *this);
+			m_ptr_session = std::make_shared<cws_client::csession>
+			(
+				*m_ptr_ioc
+				, *this
+				, CONST_DEFAULT_WS_CLIENT_WAIIT_TIMEOUT_FOR_SSL_HANSHAKE_COMPLETE_MSEC
+				, CONST_DEFAULT_WS_CLIENT_WAIIT_TIMEOUT_FOR_WEBSOCKET_HANSHAKE_COMPLETE_IN_WSS_MSEC
+				, CONST_DEFAULT_WS_CLIENT_WAIIT_TIMEOUT_FOR_IDLE_IN_WSS_MSEC
+				, ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_ws
+				, ll_msec_timeout_ws_client_wait_for_idle_in_ws
+				, CONST_DEFAULT_WS_CLIENT_WAIIT_TIMEOUT_FOR_ASYNC_CONNECT_COMPLETE_IN_WSS_MSEC
+				, ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_ws
+			);
 			if(m_ptr_session)
 				m_b_ini = true;
 		}
 
-		explicit cws_client(const std::string& s_domain, unsigned short w_port
+		explicit cws_client
+		(
+			const std::string& s_domain
+			, unsigned short w_port
 			, const std::string& s_root_cert_file
-		) : m_ptr_ioc(std::make_shared<boost::asio::io_context>()),
-			//m_ssl_ctx(boost::asio::ssl::context(boost::asio::ssl::context::tlsv12_client))
+			, long long ll_msec_timeout_ws_client_wait_for_ssl_handshake_complete
+			, long long ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_wss
+			, long long ll_msec_timeout_ws_client_wait_for_idle_in_wss
+			, long long ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_wss
+		) : 
+			m_ptr_ioc(std::make_shared<boost::asio::io_context>()),
 			m_ssl_ctx(boost::asio::ssl::context(boost::asio::ssl::context::tlsv13))
 			,m_s_domain(s_domain), m_w_port(w_port), m_run(false), m_b_ssl(true)
 		{
 			do {
-				m_ptr_session = std::make_shared<cws_client::csession>(*m_ptr_ioc, *this);
+				m_ptr_session = std::make_shared<cws_client::csession>
+					(
+						*m_ptr_ioc
+						, *this
+						, ll_msec_timeout_ws_client_wait_for_ssl_handshake_complete
+						, ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_wss
+						, ll_msec_timeout_ws_client_wait_for_idle_in_wss
+						, CONST_DEFAULT_WS_CLIENT_WAIIT_TIMEOUT_FOR_WEBSOCKET_HANSHAKE_COMPLETE_IN_WS_MSEC
+						, CONST_DEFAULT_WS_CLIENT_WAIIT_TIMEOUT_FOR_IDLE_IN_WS_MSEC
+						, ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_wss
+						, CONST_DEFAULT_WS_CLIENT_WAIIT_TIMEOUT_FOR_ASYNC_CONNECT_COMPLETE_IN_WS_MSEC
+					);
 				if (!m_ptr_session)
 					continue;
 				if (!_load_root_certificate(m_ssl_ctx, s_root_cert_file))

@@ -21,6 +21,7 @@
 #include <ccb_client.h>
 #include <lpu237_of_client.h>
 #include <cdef.h>
+#include <cdll_ini.h>
 
 #include "GemCoreScrHelper.h"
 #include "cash_msdata.h"
@@ -766,9 +767,13 @@ unsigned long _CALLTYPE_ LPU237_get_data(unsigned long dwBufferIndex, unsigned l
 
 unsigned long _CALLTYPE_ LPU237_dll_on()
 {
+	cdll_ini& cini(cdll_ini::get_instance());
+
 #ifndef _WIN32
 	std::wstring s_log_folder_except_backslash = cdef::get_log_folder_except_backslash();
 	std::wstring s_pipe_name_of_trace(_mp::_coffee::CONST_S_COFFEE_MGMT_TRACE_PIPE_NAME);
+
+	cini.load_definition_file(_mp::ccoffee_path::get_path_of_coffee_lpu237_dll_ini_file());
 
 	//setup tracing system
 	_mp::clog& log(_mp::clog::get_instance());
@@ -777,7 +782,7 @@ unsigned long _CALLTYPE_ LPU237_dll_on()
 	//setup logging system
 	log.config(s_log_folder_except_backslash, 6, std::wstring(L"tg_lpu237_dll"));
 	log.remove_log_files_older_then_now_day(3);
-	log.enable(true);
+	log.enable(cini.is_log_enable());
 	log.log_fmt(L"[I] START tg_lpu237_dll so or dll.\n");
 	log.trace(L"[I] - START tg_lpu237_dll so or dll.\n");
 #endif
@@ -791,7 +796,14 @@ unsigned long _CALLTYPE_ LPU237_dll_on()
 			continue;
 		}
 
-		if (!ptr_manager_of_device_of_client->connect(ccb_client::get_callbacks(), CONST_DEFAULT_WSS_CONNECT_TIMEOUT_IN_API_MSEC)) {
+		if (!ptr_manager_of_device_of_client->connect(
+			ccb_client::get_callbacks()
+			, CONST_DEFAULT_WSS_CONNECT_TIMEOUT_IN_API_MSEC
+			, cini.get_msec_timeout_ws_client_wait_for_ssl_handshake_complete()
+			, cini.get_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_wss()
+			, cini.get_msec_timeout_ws_client_wait_for_idle_in_wss()
+			, cini.get_msec_timeout_ws_client_wait_for_async_connect_complete_in_wss()
+		)) {
 			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : manager_of_device_of_client<lpu237_of_client>::get_instance().connect().\n", __WFUNCTION__);
 			continue;
 		}

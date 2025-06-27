@@ -156,6 +156,12 @@
     <ClInclude Include="..\shared\projects\lpu237_ibutton\inc\tg_lpu237_ibutton.h">
       <Filter>inc</Filter>
     </ClInclude>
+    <ClInclude Include="..\shared\common\inc\cdll_ini.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_coffee_path.h">
+      <Filter>lib</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">

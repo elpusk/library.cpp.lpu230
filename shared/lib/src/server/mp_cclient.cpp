@@ -30,13 +30,21 @@ namespace _mp {
 		return b_result;
 	}
 
-	cclient::cclient()
-		: m_status((int)cclient::status_not_connected)
+	cclient::cclient(unsigned long n_client_index)
+		: m_n_client_index(n_client_index)
+		,m_status((int)cclient::status_not_connected)
 		, m_b_ssl(true)
 		, m_w_port(_ws_tools::WEBSOCKET_SECURITY_SERVER_PORT_COFFEE_MANAGER )
 		, m_n_session_from_server(_MP_TOOLS_INVALID_SESSION_NUMBER)
 		, m_b_need_set_session_from_server(true)
 		, m_ptr_cb(std::make_shared<cclient_cb>())
+		, m_ll_msec_timeout_ws_client_wait_for_ssl_handshake_complete(CONST_DEFAULT_WS_CLIENT_WAIIT_TIMEOUT_FOR_SSL_HANSHAKE_COMPLETE_MSEC)
+		, m_ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_wss(CONST_DEFAULT_WS_CLIENT_WAIIT_TIMEOUT_FOR_WEBSOCKET_HANSHAKE_COMPLETE_IN_WSS_MSEC)
+		, m_ll_msec_timeout_ws_client_wait_for_idle_in_wss(CONST_DEFAULT_WS_CLIENT_WAIIT_TIMEOUT_FOR_IDLE_IN_WSS_MSEC)
+		, m_ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_ws(CONST_DEFAULT_WS_CLIENT_WAIIT_TIMEOUT_FOR_WEBSOCKET_HANSHAKE_COMPLETE_IN_WS_MSEC)
+		, m_ll_msec_timeout_ws_client_wait_for_idle_in_ws(CONST_DEFAULT_WS_CLIENT_WAIIT_TIMEOUT_FOR_IDLE_IN_WS_MSEC)
+		, m_ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_wss(CONST_DEFAULT_WS_CLIENT_WAIIT_TIMEOUT_FOR_ASYNC_CONNECT_COMPLETE_IN_WSS_MSEC)
+		, m_ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_ws(CONST_DEFAULT_WS_CLIENT_WAIIT_TIMEOUT_FOR_ASYNC_CONNECT_COMPLETE_IN_WS_MSEC)
 	{
 	}
 
@@ -110,10 +118,28 @@ namespace _mp {
 				s_root_cert_file = cstring::get_mcsc_from_unicode(m_s_root_cert_file);
 			}
 
-			if(m_b_ssl)
-				m_ptr_client = std::make_shared<cws_client>(std::string("127.0.0.1"), w_port, s_root_cert_file);//load root-ca from system ca-storage
-			else
-				m_ptr_client = std::make_shared<cws_client>(std::string("127.0.0.1"), w_port);
+			if (m_b_ssl) {
+				m_ptr_client = std::make_shared<cws_client>
+					(
+						std::string("127.0.0.1")
+						, w_port
+						, s_root_cert_file
+						, m_ll_msec_timeout_ws_client_wait_for_ssl_handshake_complete
+						, m_ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_wss
+						, m_ll_msec_timeout_ws_client_wait_for_idle_in_wss
+						, m_ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_wss
+					);//load root-ca from system ca-storage
+			}
+			else {
+				m_ptr_client = std::make_shared<cws_client>
+					(
+						std::string("127.0.0.1")
+						, w_port
+						, m_ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_ws
+						, m_ll_msec_timeout_ws_client_wait_for_idle_in_ws
+						, m_ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_ws
+					);
+			}
 			//
 			if (!m_ptr_client)
 				continue;

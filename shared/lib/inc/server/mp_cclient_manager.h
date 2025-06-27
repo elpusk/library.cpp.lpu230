@@ -30,6 +30,42 @@ namespace _mp {
 				});
 		}
 
+		cclient_manager& set_timeout_ws_client_wait_for_ssl_handshake_complete(long long ll_msec_timeout)
+		{
+			m_ll_msec_timeout_ws_client_wait_for_ssl_handshake_complete = ll_msec_timeout;
+			return *this;
+		}
+		cclient_manager& set_timeout_ws_client_wait_for_websocket_handshake_complete_in_wss(long long ll_msec_timeout)
+		{
+			m_ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_wss = ll_msec_timeout;
+			return *this;
+		}
+		cclient_manager& set_timeout_ws_client_wait_for_idle_in_wss(long long ll_msec_timeout)
+		{
+			m_ll_msec_timeout_ws_client_wait_for_idle_in_wss = ll_msec_timeout;
+			return *this;
+		}
+		cclient_manager& set_timeout_ws_client_wait_for_websocket_handshake_complete_in_ws(long long ll_msec_timeout)
+		{
+			m_ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_ws = ll_msec_timeout;
+			return *this;
+		}
+		cclient_manager& set_timeout_ws_client_wait_for_idle_in_ws(long long ll_msec_timeout)
+		{
+			m_ll_msec_timeout_ws_client_wait_for_idle_in_ws = ll_msec_timeout;
+			return *this;
+		}
+		cclient_manager& set_timeout_ws_client_wait_for_async_connect_complete_in_wss(long long ll_msec_timeout)
+		{
+			m_ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_wss = ll_msec_timeout;
+			return *this;
+		}
+		cclient_manager& set_timeout_ws_client_wait_for_async_connect_complete_in_ws(long long ll_msec_timeout)
+		{
+			m_ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_ws = ll_msec_timeout;
+			return *this;
+		}
+
 		cclient* get_client(unsigned long n_index)
 		{
 			std::lock_guard<std::mutex> lock(m_mutex_member);
@@ -53,7 +89,15 @@ namespace _mp {
 				_type_map_index_uptr_cclient::iterator it = m_map_index_uptr_cclient.find(m_n_index);
 				if (it != std::end(m_map_index_uptr_cclient))
 					continue;
-				m_map_index_uptr_cclient[m_n_index] = cclient::type_uptr(new cclient());
+				m_map_index_uptr_cclient[m_n_index] = cclient::type_uptr(new cclient(m_n_index));
+				m_map_index_uptr_cclient[m_n_index]->set_timeout_ws_client_wait_for_ssl_handshake_complete(m_ll_msec_timeout_ws_client_wait_for_ssl_handshake_complete)
+					.set_timeout_ws_client_wait_for_websocket_handshake_complete_in_wss(m_ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_wss)
+					.set_timeout_ws_client_wait_for_idle_in_wss(m_ll_msec_timeout_ws_client_wait_for_idle_in_wss)
+					.set_timeout_ws_client_wait_for_websocket_handshake_complete_in_ws(m_ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_ws)
+					.set_timeout_ws_client_wait_for_idle_in_ws(m_ll_msec_timeout_ws_client_wait_for_idle_in_ws)
+					.set_timeout_ws_client_wait_for_async_connect_complete_in_wss(m_ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_wss)
+					.set_timeout_ws_client_wait_for_async_connect_complete_in_ws(m_ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_ws);
+
 				n_index = m_n_index;
 				++m_n_index;
 			} while (false);
@@ -74,7 +118,15 @@ namespace _mp {
 			} while (false);
 		}
 	private:
-		cclient_manager() : m_n_index(cclient_manager::undefined_index)
+		cclient_manager() :
+			m_n_index(cclient_manager::undefined_index)
+			, m_ll_msec_timeout_ws_client_wait_for_ssl_handshake_complete(CONST_DEFAULT_WS_CLIENT_WAIIT_TIMEOUT_FOR_SSL_HANSHAKE_COMPLETE_MSEC)
+			, m_ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_wss(CONST_DEFAULT_WS_CLIENT_WAIIT_TIMEOUT_FOR_WEBSOCKET_HANSHAKE_COMPLETE_IN_WSS_MSEC)
+			, m_ll_msec_timeout_ws_client_wait_for_idle_in_wss(CONST_DEFAULT_WS_CLIENT_WAIIT_TIMEOUT_FOR_IDLE_IN_WSS_MSEC)
+			, m_ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_ws(CONST_DEFAULT_WS_CLIENT_WAIIT_TIMEOUT_FOR_WEBSOCKET_HANSHAKE_COMPLETE_IN_WS_MSEC)
+			, m_ll_msec_timeout_ws_client_wait_for_idle_in_ws(CONST_DEFAULT_WS_CLIENT_WAIIT_TIMEOUT_FOR_IDLE_IN_WS_MSEC)
+			, m_ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_wss(CONST_DEFAULT_WS_CLIENT_WAIIT_TIMEOUT_FOR_ASYNC_CONNECT_COMPLETE_IN_WSS_MSEC)
+			, m_ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_ws(CONST_DEFAULT_WS_CLIENT_WAIIT_TIMEOUT_FOR_ASYNC_CONNECT_COMPLETE_IN_WS_MSEC)
 		{
 		}
 
@@ -82,6 +134,16 @@ namespace _mp {
 		std::mutex m_mutex_member;
 		_type_map_index_uptr_cclient m_map_index_uptr_cclient;
 		unsigned long m_n_index;
+
+		//timeout for client
+		long long m_ll_msec_timeout_ws_client_wait_for_ssl_handshake_complete;
+		long long m_ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_wss;
+		long long m_ll_msec_timeout_ws_client_wait_for_idle_in_wss;
+		long long m_ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_ws;
+		long long m_ll_msec_timeout_ws_client_wait_for_idle_in_ws;
+		long long m_ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_wss;
+		long long m_ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_ws;
+
 
 	private:
 		//don't call these methods

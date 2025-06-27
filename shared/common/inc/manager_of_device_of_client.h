@@ -54,14 +54,29 @@ public:
 		return m_n_client_index;
 	}
 
-	bool connect(const _mp::cclient_cb::type_cb_callbacks & cbs, long n_msec_wait_time)
+	bool connect
+	(
+		const _mp::cclient_cb::type_cb_callbacks & cbs
+		, long n_msec_wait_time
+		, long long ll_msec_timeout_ws_client_wait_for_ssl_handshake_complete
+		, long long ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_wss
+		, long long ll_msec_timeout_ws_client_wait_for_idle_in_wss
+		, long long ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_wss
+
+	)
 	{
 		bool b_result(false);
 
 		do {
 			std::lock_guard<std::mutex> lock(m_mutex_for_dev_manager);
 
-			unsigned long n_client_index = capi_client::get_instance().create_before_set_callback();
+			unsigned long n_client_index = capi_client::get_instance().create_before_set_callback
+			(
+				ll_msec_timeout_ws_client_wait_for_ssl_handshake_complete
+				, ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_wss
+				, ll_msec_timeout_ws_client_wait_for_idle_in_wss
+				, ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_wss
+			);
 			if (n_client_index == _mp::cclient::UNDEFINED_INDEX) {
 				continue;
 			}

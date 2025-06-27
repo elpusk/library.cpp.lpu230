@@ -40,5 +40,27 @@ namespace _mp{
 			return s;
 		}
 
+		static std::wstring get_path_of_coffee_lpu237_dll_ini_file()
+		{
+			std::wstring s = _mp::_coffee::CONST_S_COFFEE_MSR_INI_DIR_EXCEPT_BACKSLASH;
+#ifdef _WIN32
+			s += L"\\tg_lpu237_dll.ini";
+#else
+			s += L"/tg_lpu237_dll.ini";
+#endif //_WIN32
+			return s;
+		}
+
+		static std::wstring get_path_of_coffee_lpu237_ibutton_ini_file()
+		{
+			std::wstring s = _mp::_coffee::CONST_S_COFFEE_IBUTTON_INI_DIR_EXCEPT_BACKSLASH;
+#ifdef _WIN32
+			s += L"\\tg_lpu237_ibutton.ini";
+#else
+			s += L"/tg_lpu237_ibutton.ini";
+#endif //_WIN32
+			return s;
+		}
+
     };
 }

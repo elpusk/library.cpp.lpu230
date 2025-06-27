@@ -49,7 +49,7 @@ namespace _mp {
 		}
 
 		~cclient();
-		cclient();
+		cclient(unsigned long n_client_index);
 
 		cclient::type_status get_status() const
 		{
@@ -166,6 +166,42 @@ namespace _mp {
 
 		bool send_data_to_server_by_ip4(const type_v_buffer& vData);
 
+		cclient& set_timeout_ws_client_wait_for_ssl_handshake_complete(long long ll_msec_timeout)
+		{
+			m_ll_msec_timeout_ws_client_wait_for_ssl_handshake_complete = ll_msec_timeout;
+			return *this;
+		}
+		cclient& set_timeout_ws_client_wait_for_websocket_handshake_complete_in_wss(long long ll_msec_timeout)
+		{
+			m_ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_wss = ll_msec_timeout;
+			return *this;
+		}
+		cclient& set_timeout_ws_client_wait_for_idle_in_wss(long long ll_msec_timeout)
+		{
+			m_ll_msec_timeout_ws_client_wait_for_idle_in_wss = ll_msec_timeout;
+			return *this;
+		}
+		cclient& set_timeout_ws_client_wait_for_websocket_handshake_complete_in_ws(long long ll_msec_timeout)
+		{
+			m_ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_ws = ll_msec_timeout;
+			return *this;
+		}
+		cclient& set_timeout_ws_client_wait_for_idle_in_ws(long long ll_msec_timeout)
+		{
+			m_ll_msec_timeout_ws_client_wait_for_idle_in_ws = ll_msec_timeout;
+			return *this;
+		}
+		cclient& set_timeout_ws_client_wait_for_async_connect_complete_in_wss(long long ll_msec_timeout)
+		{
+			m_ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_wss = ll_msec_timeout;
+			return *this;
+		}
+		cclient& set_timeout_ws_client_wait_for_async_connect_complete_in_ws(long long ll_msec_timeout)
+		{
+			m_ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_ws = ll_msec_timeout;
+			return *this;
+		}
+
 	private:
 		void _stop();
 	
@@ -230,8 +266,20 @@ namespace _mp {
 
 		cclient_cb::type_ptr m_ptr_cb;
 
+		const unsigned long m_n_client_index; // for debugging purpose only, this is not used in the code.
+
+		//timeout for client
+		long long m_ll_msec_timeout_ws_client_wait_for_ssl_handshake_complete;
+		long long m_ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_wss;
+		long long m_ll_msec_timeout_ws_client_wait_for_idle_in_wss;
+		long long m_ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_ws;
+		long long m_ll_msec_timeout_ws_client_wait_for_idle_in_ws;
+		long long m_ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_wss;
+		long long m_ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_ws;
+
 	private:
 		//don't call these methods
+		cclient() = delete;
 		cclient(const cclient&) = delete;
 		cclient & operator= (const cclient&) = delete;
 

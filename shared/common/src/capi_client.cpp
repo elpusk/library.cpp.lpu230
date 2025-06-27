@@ -62,9 +62,22 @@ void capi_client::set_last_action_and_result(unsigned long n_device_index, const
 	m_map_device_index_pair_action_result[n_device_index] = std::make_pair(last_action, dw_last_result);
 }
 
-unsigned long capi_client::create_before_set_callback()
+unsigned long capi_client::create_before_set_callback
+(
+	long long ll_msec_timeout_ws_client_wait_for_ssl_handshake_complete
+	, long long ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_wss
+	, long long ll_msec_timeout_ws_client_wait_for_idle_in_wss
+	, long long ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_wss
+)
 {
 	unsigned long n_index(_mp::cclient::UNDEFINED_INDEX);
+
+	_mp::cclient_manager::get_instance()
+		.set_timeout_ws_client_wait_for_ssl_handshake_complete(ll_msec_timeout_ws_client_wait_for_ssl_handshake_complete)
+		.set_timeout_ws_client_wait_for_websocket_handshake_complete_in_wss(ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_wss)
+		.set_timeout_ws_client_wait_for_idle_in_wss(ll_msec_timeout_ws_client_wait_for_idle_in_wss)
+		.set_timeout_ws_client_wait_for_async_connect_complete_in_wss(ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_wss);
+	//
 	n_index = _mp::cclient_manager::get_instance().create_client();
 
 	if (n_index == _mp::cclient::UNDEFINED_INDEX) {

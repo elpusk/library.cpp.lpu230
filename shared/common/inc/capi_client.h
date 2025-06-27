@@ -146,7 +146,13 @@ public:
 	capi_client::type_action get_last_action(unsigned long n_device_index) const;
 	void set_last_action_and_result(unsigned long n_device_index, const capi_client::type_action last_action, const unsigned long dw_last_result);
 
-	unsigned long create_before_set_callback();
+	unsigned long create_before_set_callback
+	(
+		long long ll_msec_timeout_ws_client_wait_for_ssl_handshake_complete
+		, long long ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_wss
+		, long long ll_msec_timeout_ws_client_wait_for_idle_in_wss
+		, long long ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_wss
+	);
 	bool destory_after_stop(unsigned long n_client_index);
 
 	bool start_after_set_callback(unsigned long n_client_index, bool b_tls);
