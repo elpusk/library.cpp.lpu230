@@ -7,6 +7,14 @@
 #include <mp_clog.h>
 #include <i_device_of_client.h>
 
+#ifdef _WIN32
+#ifdef _DEBUG
+//#undef __THIS_FILE_ONLY__
+#define __THIS_FILE_ONLY__
+#include <atltrace.h>
+#endif
+#endif
+
 template <typename _T_SUB_DEVICE_OF_CLIENT>
 class manager_of_device_of_client
 {
@@ -157,23 +165,42 @@ public:
 
 		do {
 			std::lock_guard<std::mutex> lock(m_mutex_for_dev_manager);
-			if (m_n_client_index == _mp::cclient::UNDEFINED_INDEX)
+			if (m_n_client_index == _mp::cclient::UNDEFINED_INDEX) {
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+				ATLTRACE(L" @@@@@ %ls()-m_n_client_index == _mp::cclient::UNDEFINED_INDEX.\n", __WFUNCTION__);
+#endif
 				continue;
+			}
 
 			n_result_index = _create_async_result_for_manager();
-			if (n_result_index < 0)
+			if (n_result_index < 0) {
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+				ATLTRACE(L" @@@@@ %ls()-n_result_index < 0.\n", __WFUNCTION__);
+#endif
 				continue;
+			}
 
 			if (!capi_client::get_instance().get_device_list_multi(m_n_client_index, list_s_filter)) {
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+				ATLTRACE(L" @@@@@ %ls()-get_device_list_multi() fail.\n", __WFUNCTION__);
+#endif
 				continue;
 			}
 			_mp::casync_parameter_result::type_ptr_ct_async_parameter_result& ptr_async_parameter_result = get_async_parameter_result_for_manager(n_result_index);
-			if (!ptr_async_parameter_result->waits())
+			if (!ptr_async_parameter_result->waits()) {
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+				ATLTRACE(L" @@@@@ %ls()-waits() fail.\n", __WFUNCTION__);
+#endif
 				continue;
+			}
 
 			_mp::type_set_wstring set_s_path;
-			if (!ptr_async_parameter_result->get_result(set_s_path))
+			if (!ptr_async_parameter_result->get_result(set_s_path)) {
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+				ATLTRACE(L" @@@@@ %ls()-get_result() fail\n", __WFUNCTION__);
+#endif
 				continue;
+			}
 			//
 			for (auto s : set_s_path) {
 				list_device.push_back(s);

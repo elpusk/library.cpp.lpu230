@@ -11,6 +11,7 @@
 
 #include <mp_coffee_path.h>
 #include <mp_cstring.h>
+#include <mp_clog.h>
 
 class cdll_ini
 {
@@ -28,7 +29,7 @@ public:
 		bool b_result(false);
 
 		do {
-			if (!s_file_ini.empty()) {
+			if (s_file_ini.empty()) {
 				continue;
 			}
 			std::string s_path_ini = _mp::cstring::get_mcsc_from_unicode(s_file_ini);
@@ -103,6 +104,31 @@ public:
 		} while (false);
 		return b_result;
 
+	}
+
+	void logging_load_info(_mp::clog& log) const
+	{
+		log.log_fmt(L"[=============.\n");
+		log.log_fmt(L"[I] loaded ini file = %ls.\n", m_s_ini_file_full_path.c_str());
+
+		if (m_b_log_enable) {
+			log.log_fmt(L"[I] ini value : log = enable.\n");
+		}
+		else {
+			log.log_fmt(L"[I] ini value : log = disable.\n");
+		}
+
+		log.log_fmt(L"[I] ini value : io mode = %d.\n", m_n_io_mode);
+		log.log_fmt(L"[I] ini value : msec timeout ws client wait for connect api = %lld.\n", m_l_msec_timeout_ws_client_wait_for_connect_api);
+		log.log_fmt(L"[I] ini value : msec timeout ws client wait for async connect complete in wss = %lld.\n", m_ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_wss);
+		log.log_fmt(L"[I] ini value : msec timeout ws client wait for ssl handshake complete = %lld.\n", m_ll_msec_timeout_ws_client_wait_for_ssl_handshake_complete);
+		log.log_fmt(L"[I] ini value : msec timeout ws client wait for websocket handshake complete in wss = %lld.\n", m_ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_wss);
+		log.log_fmt(L"[I] ini value : msec timeout ws client wait for idle in wss = %lld.\n", m_ll_msec_timeout_ws_client_wait_for_idle_in_wss);
+
+		log.log_fmt(L"[I] ini value : msec timeout ws client wait for async connect complete in ws = %lld.\n", m_ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_ws);
+		log.log_fmt(L"[I] ini value : msec timeout ws client wait for websocket handshake complete in ws = %lld.\n", m_ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_ws);
+		log.log_fmt(L"[I] ini value : msec timeout ws client wait for idle in ws = %lld.\n", m_ll_msec_timeout_ws_client_wait_for_idle_in_ws);
+		log.log_fmt(L"[=============.\n");
 	}
 
 	bool is_log_enable() const

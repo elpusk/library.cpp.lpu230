@@ -141,7 +141,6 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 			log.trace(L"[=============.\n");
 		}
 
-		bool b_debug = true;
 		bool b_tls = ini.get_tls_enable();
 		unsigned short w_port = (unsigned short)ini.get_server_port();
 		int n_thread_for_server(1);

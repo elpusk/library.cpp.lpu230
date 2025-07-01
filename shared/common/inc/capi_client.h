@@ -89,15 +89,18 @@ private:
 	}
 
 	//local callback for sync type function
-	static void __stdcall _before_handshake_cb(unsigned long n_result, void* p_user)
-	{
-		//dummy cb
-		//capi_client::_get_promise_dword_rx_for_sync()->set_value(n_result);
-	}
-	static void __stdcall _handshake_cb(unsigned long n_result, void* p_user)
-	{
-		capi_client::_get_promise_dword_rx_for_sync()->set_value(n_result);
-	}
+	static void __stdcall _dummy_for_resolve_cb(unsigned long n_result, void* p_user);
+
+	//local callback for sync type function
+	static void __stdcall _dummy_for_connect_cb(unsigned long n_result, void* p_user);
+
+	//local callback for sync type function
+	static void __stdcall _dummy_for_handshake_ssl_cb(unsigned long n_result, void* p_user);
+
+	//local callback for sync type function
+	static void __stdcall _handshake_cb(unsigned long n_result, void* p_user);
+
+
 	static void __stdcall _read_cb(char c_act_code, unsigned long n_result, unsigned long n_device_index, unsigned char c_in_id, void* p_user, unsigned long n_rx, const unsigned char* s_rx)
 	{
 		unsigned long dw_result(n_result);

@@ -2,6 +2,14 @@
 #include <capi_client.h>
 #include <mp_cconvert.h>
 
+#ifdef _WIN32
+#ifdef _DEBUG
+//#undef __THIS_FILE_ONLY__
+#define __THIS_FILE_ONLY__
+#include <atltrace.h>
+#endif
+#endif
+
 
 void capi_client::unload()
 {
@@ -128,15 +136,51 @@ bool capi_client::start_after_set_callback(unsigned long n_client_index, bool b_
 	if (n_result == _mp::cclient::RESULT_SUCCESS)	return true;
 	else	return false;
 }
+
+
+//local callback for sync type function
+void __stdcall capi_client::_dummy_for_resolve_cb(unsigned long n_result, void* p_user)
+{
+	//dummy cb
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+	ATLTRACE(L" @@@@@ %ls().\n", __WFUNCTION__	);
+#endif
+}
+//local callback for sync type function
+void __stdcall capi_client::_dummy_for_connect_cb(unsigned long n_result, void* p_user)
+{
+	//dummy cb
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+	ATLTRACE(L" @@@@@ %ls().\n", __WFUNCTION__);
+#endif
+}
+//local callback for sync type function
+void __stdcall capi_client::_dummy_for_handshake_ssl_cb(unsigned long n_result, void* p_user)
+{
+	//dummy cb
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+	ATLTRACE(L" @@@@@ %ls().\n", __WFUNCTION__);
+#endif
+}
+
+//local callback for sync type function
+void __stdcall capi_client::_handshake_cb(unsigned long n_result, void* p_user)
+{
+	capi_client::_get_promise_dword_rx_for_sync()->set_value(n_result);
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+	ATLTRACE(L" @@@@@ %ls().\n", __WFUNCTION__);
+#endif
+}
+
 bool capi_client::start_after_set_callback_sync(unsigned long n_client_index, bool b_tls, long n_msec_wait_time /*= -1*/)
 {
 	unsigned long n_result(_mp::cclient::RESULT_SUCCESS);
 	std::lock_guard<std::mutex> lock(m_mutex_for_sync);
 
 	_sync_before(n_client_index, 0, 0, 0);
-	_set_callback_resolve(n_client_index, capi_client::_before_handshake_cb, nullptr);//set dummy
-	_set_callback_connect(n_client_index, capi_client::_before_handshake_cb, nullptr);//set dummy
-	_set_callback_handshake_ssl(n_client_index, capi_client::_before_handshake_cb, nullptr);//set dummy
+	_set_callback_resolve(n_client_index, capi_client::_dummy_for_resolve_cb, nullptr);//set dummy
+	_set_callback_connect(n_client_index, capi_client::_dummy_for_connect_cb, nullptr);//set dummy
+	_set_callback_handshake_ssl(n_client_index, capi_client::_dummy_for_handshake_ssl_cb, nullptr);//set dummy
 	_set_callback_handshake(n_client_index, capi_client::_handshake_cb, nullptr);
 
 	do {
@@ -152,10 +196,16 @@ bool capi_client::start_after_set_callback_sync(unsigned long n_client_index, bo
 					std::chrono::milliseconds span(n_msec_wait_time);
 					if (future_read.wait_for(span) == std::future_status::timeout) {
 						n_result = _mp::cclient::RESULT_ERROR;
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+						ATLTRACE(L" @@@@@ %ls().std::future_status::timeout.\n", __WFUNCTION__);
+#endif
 						continue;
 					}
 				}
 				n_result = future_read.get();//wait connected
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+				ATLTRACE(L" @@@@@ %ls().result.%u.\n", __WFUNCTION__, n_result);
+#endif
 			} while (false);
 			});
 
