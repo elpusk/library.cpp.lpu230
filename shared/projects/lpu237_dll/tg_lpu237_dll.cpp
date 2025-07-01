@@ -798,7 +798,7 @@ unsigned long _CALLTYPE_ LPU237_dll_on()
 
 		if (!ptr_manager_of_device_of_client->connect(
 			ccb_client::get_callbacks()
-			, CONST_DEFAULT_WSS_CONNECT_TIMEOUT_IN_API_MSEC
+			, cini.get_msec_timeout_ws_client_wait_for_connect_api()
 			, cini.get_msec_timeout_ws_client_wait_for_ssl_handshake_complete()
 			, cini.get_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_wss()
 			, cini.get_msec_timeout_ws_client_wait_for_idle_in_wss()

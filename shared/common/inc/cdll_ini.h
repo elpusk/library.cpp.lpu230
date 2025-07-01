@@ -40,13 +40,14 @@ public:
 
 				int n_log_enable = pt.get<int>("LogSetting.logenable", -1);
 				int n_io_mode = pt.get<int>("control.io", -1);
-				long long ll_msec_timeout_ws_client_wait_for_ssl_handshake_complete = pt.get<long long>("timeout.msec_timeout_ws_client_wait_for_ssl_handshake_complete", -2);
-				long long ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_wss = pt.get<long long>("timeout.msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_wss", -2);
-				long long ll_msec_timeout_ws_client_wait_for_idle_in_wss = pt.get<long long>("timeout.msec_timeout_ws_client_wait_for_idle_in_wss", -2);
-				long long ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_ws = pt.get<long long>("timeout.msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_ws", -2);
-				long long ll_msec_timeout_ws_client_wait_for_idle_in_ws = pt.get<long long>("timeout.msec_timeout_ws_client_wait_for_idle_in_ws", -2);
-				long long ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_wss = pt.get<long long>("timeout.msec_timeout_ws_client_wait_for_async_connect_complete_in_wss", -2);
-				long long ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_ws = pt.get<long long>("timeout.msec_timeout_ws_client_wait_for_async_connect_complete_in_ws", -2);
+				long l_msec_timeout_ws_client_wait_for_connect_api = pt.get<long>("websocket.msec_timeout_ws_client_wait_for_connect_api", -2);
+				long long ll_msec_timeout_ws_client_wait_for_ssl_handshake_complete = pt.get<long long>("websocket.msec_timeout_ws_client_wait_for_ssl_handshake_complete", -2);
+				long long ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_wss = pt.get<long long>("websocket.msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_wss", -2);
+				long long ll_msec_timeout_ws_client_wait_for_idle_in_wss = pt.get<long long>("websocket.msec_timeout_ws_client_wait_for_idle_in_wss", -2);
+				long long ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_ws = pt.get<long long>("websocket.msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_ws", -2);
+				long long ll_msec_timeout_ws_client_wait_for_idle_in_ws = pt.get<long long>("websocket.msec_timeout_ws_client_wait_for_idle_in_ws", -2);
+				long long ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_wss = pt.get<long long>("websocket.msec_timeout_ws_client_wait_for_async_connect_complete_in_wss", -2);
+				long long ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_ws = pt.get<long long>("websocket.msec_timeout_ws_client_wait_for_async_connect_complete_in_ws", -2);
 
 				m_s_ini_file_full_path = s_file_ini;
 
@@ -60,6 +61,10 @@ public:
 				}
 				if (n_io_mode >= 0 && n_io_mode <= 2) {
 					m_n_io_mode = n_io_mode;
+				}
+
+				if( l_msec_timeout_ws_client_wait_for_connect_api != -2) {
+					m_l_msec_timeout_ws_client_wait_for_connect_api = l_msec_timeout_ws_client_wait_for_connect_api;
 				}
 				if (ll_msec_timeout_ws_client_wait_for_ssl_handshake_complete != -2) {
 					m_ll_msec_timeout_ws_client_wait_for_ssl_handshake_complete = ll_msec_timeout_ws_client_wait_for_ssl_handshake_complete;
@@ -109,6 +114,10 @@ public:
 		return m_n_io_mode;
 	}
 
+	long get_msec_timeout_ws_client_wait_for_connect_api() const
+	{
+		return m_l_msec_timeout_ws_client_wait_for_connect_api;
+	}
 	long long get_msec_timeout_ws_client_wait_for_ssl_handshake_complete() const
 	{
 		return m_ll_msec_timeout_ws_client_wait_for_ssl_handshake_complete;
@@ -140,6 +149,7 @@ public:
 
 private:
 	cdll_ini():m_b_log_enable(false),m_n_io_mode(0)
+		, m_l_msec_timeout_ws_client_wait_for_connect_api(CONST_DEFAULT_WSS_CONNECT_TIMEOUT_IN_API_MSEC)
 		, m_ll_msec_timeout_ws_client_wait_for_ssl_handshake_complete(CONST_DEFAULT_WS_CLIENT_WAIIT_TIMEOUT_FOR_SSL_HANSHAKE_COMPLETE_MSEC)
 		, m_ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_wss(CONST_DEFAULT_WS_CLIENT_WAIIT_TIMEOUT_FOR_WEBSOCKET_HANSHAKE_COMPLETE_IN_WSS_MSEC)
 		, m_ll_msec_timeout_ws_client_wait_for_idle_in_wss(CONST_DEFAULT_WS_CLIENT_WAIIT_TIMEOUT_FOR_IDLE_IN_WSS_MSEC)
@@ -155,6 +165,7 @@ private:
 	bool m_b_log_enable;
 	int m_n_io_mode;
 
+	long m_l_msec_timeout_ws_client_wait_for_connect_api;
 	long long m_ll_msec_timeout_ws_client_wait_for_ssl_handshake_complete;
 	long long m_ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_wss;
 	long long m_ll_msec_timeout_ws_client_wait_for_idle_in_wss;
