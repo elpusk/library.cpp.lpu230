@@ -43,12 +43,15 @@ public:
 				int n_io_mode = pt.get<int>("control.io", -1);
 				long l_msec_timeout_ws_client_wait_for_connect_api = pt.get<long>("websocket.msec_timeout_ws_client_wait_for_connect_api", -2);
 				long long ll_msec_timeout_ws_client_wait_for_ssl_handshake_complete = pt.get<long long>("websocket.msec_timeout_ws_client_wait_for_ssl_handshake_complete", -2);
+				long long ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_wss = pt.get<long long>("websocket.msec_timeout_ws_client_wait_for_async_connect_complete_in_wss", -2);
 				long long ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_wss = pt.get<long long>("websocket.msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_wss", -2);
 				long long ll_msec_timeout_ws_client_wait_for_idle_in_wss = pt.get<long long>("websocket.msec_timeout_ws_client_wait_for_idle_in_wss", -2);
+				//
 				long long ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_ws = pt.get<long long>("websocket.msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_ws", -2);
 				long long ll_msec_timeout_ws_client_wait_for_idle_in_ws = pt.get<long long>("websocket.msec_timeout_ws_client_wait_for_idle_in_ws", -2);
-				long long ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_wss = pt.get<long long>("websocket.msec_timeout_ws_client_wait_for_async_connect_complete_in_wss", -2);
 				long long ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_ws = pt.get<long long>("websocket.msec_timeout_ws_client_wait_for_async_connect_complete_in_ws", -2);
+
+				m_b_load_ini_file = true;
 
 				m_s_ini_file_full_path = s_file_ini;
 
@@ -67,6 +70,9 @@ public:
 				if( l_msec_timeout_ws_client_wait_for_connect_api != -2) {
 					m_l_msec_timeout_ws_client_wait_for_connect_api = l_msec_timeout_ws_client_wait_for_connect_api;
 				}
+				if (ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_wss != -2) {
+					m_ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_wss = ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_wss;
+				}
 				if (ll_msec_timeout_ws_client_wait_for_ssl_handshake_complete != -2) {
 					m_ll_msec_timeout_ws_client_wait_for_ssl_handshake_complete = ll_msec_timeout_ws_client_wait_for_ssl_handshake_complete;
 				}
@@ -76,14 +82,12 @@ public:
 				if (ll_msec_timeout_ws_client_wait_for_idle_in_wss != -2) {
 					m_ll_msec_timeout_ws_client_wait_for_idle_in_wss = ll_msec_timeout_ws_client_wait_for_idle_in_wss;
 				}
+				//
 				if (ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_ws != -2) {
 					m_ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_ws = ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_ws;
 				}
 				if (ll_msec_timeout_ws_client_wait_for_idle_in_ws != -2) {
 					m_ll_msec_timeout_ws_client_wait_for_idle_in_ws = ll_msec_timeout_ws_client_wait_for_idle_in_ws;
-				}
-				if (ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_wss != -2) {
-					m_ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_wss = ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_wss;
 				}
 				if (ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_ws != -2) {
 					m_ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_ws = ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_ws;
@@ -91,10 +95,12 @@ public:
             }
             catch (const boost::property_tree::ini_parser_error& e) {
                 //std::cerr << "INI parsing: " << e.what() << std::endl;
+				m_b_load_ini_file = false;
 				continue;
             }
             catch (const std::exception& e) {
                 //std::cerr << "error: " << e.what() << std::endl;
+				m_b_load_ini_file = false;
 				continue;
             }
 			//
@@ -109,7 +115,13 @@ public:
 	void logging_load_info(_mp::clog& log) const
 	{
 		log.log_fmt(L"[=============.\n");
-		log.log_fmt(L"[I] loaded ini file = %ls.\n", m_s_ini_file_full_path.c_str());
+
+		if (m_b_load_ini_file) {
+			log.log_fmt(L"[I] loaded ini file = %ls.\n", m_s_ini_file_full_path.c_str());
+		}
+		else {
+			log.log_fmt(L"[I] default setting.\n");
+		}
 
 		if (m_b_log_enable) {
 			log.log_fmt(L"[I] ini value : log = enable.\n");
@@ -174,7 +186,7 @@ public:
 	}
 
 private:
-	cdll_ini():m_b_log_enable(false),m_n_io_mode(0)
+	cdll_ini():m_b_load_ini_file(false), m_b_log_enable(false),m_n_io_mode(0)
 		, m_l_msec_timeout_ws_client_wait_for_connect_api(CONST_DEFAULT_WSS_CONNECT_TIMEOUT_IN_API_MSEC)
 		, m_ll_msec_timeout_ws_client_wait_for_ssl_handshake_complete(CONST_DEFAULT_WS_CLIENT_WAIIT_TIMEOUT_FOR_SSL_HANSHAKE_COMPLETE_MSEC)
 		, m_ll_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_wss(CONST_DEFAULT_WS_CLIENT_WAIIT_TIMEOUT_FOR_WEBSOCKET_HANSHAKE_COMPLETE_IN_WSS_MSEC)
@@ -188,6 +200,7 @@ private:
 private:
 	std::wstring m_s_ini_file_full_path;
 
+	bool m_b_load_ini_file;
 	bool m_b_log_enable;
 	int m_n_io_mode;
 

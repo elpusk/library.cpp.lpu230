@@ -49,7 +49,7 @@ void _process_attach(HINSTANCE hInstance)
     std::wstring s_pipe_name_of_trace(_mp::_coffee::CONST_S_COFFEE_MGMT_TRACE_PIPE_NAME);
 
     cdll_ini& cini(cdll_ini::get_instance());
-    bool b_ini = cini.load_definition_file(_mp::ccoffee_path::get_path_of_coffee_lpu237_dll_ini_file());
+    bool b_ini = cini.load_definition_file(_mp::ccoffee_path::get_path_of_coffee_lpu237_ibutton_ini_file());
 
     //setup tracing system
     _mp::clog& log(_mp::clog::get_instance());

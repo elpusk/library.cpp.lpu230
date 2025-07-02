@@ -139,7 +139,6 @@ namespace _mp{
 
             while (lib.m_b_run_th_pluginout) {
                 do {
-                    
                     std::lock_guard<std::mutex> lock(lib.m_mutex);
                     if (lib._update_dev_set()) {
                         //device list is changed
@@ -231,25 +230,25 @@ namespace _mp{
 
             struct hid_device_info* p_devs = NULL;
 
-            do {
-                /**
-                * don't use the hid_enumerate() of hidapi. it will occur packet-losting. 
-                */
-                if (!m_ptr_hid_api_briage) {
-                    return st;
-                }
-                auto set_dev = m_ptr_hid_api_briage->hid_enumerate();
+            /**
+            * don't use the hid_enumerate() of hidapi. it will occur packet-losting. 
+            */
+            if (!m_ptr_hid_api_briage) {
+                return st;
+            }
 
-                for (auto item : set_dev) {
-                    st.emplace(
-                        std::get<0>(item).c_str(),
-                        std::get<1>(item),
-                        std::get<2>(item),
-                        std::get<3>(item),
-                        std::get<4>(item)
-                    );
-                }//end for
-            } while (false);
+            std::set< std::tuple<std::string, unsigned short, unsigned short, int, std::string> > set_dev;
+            set_dev = m_ptr_hid_api_briage->hid_enumerate();
+
+            for (auto item : set_dev) {
+                st.emplace(
+                    std::get<0>(item).c_str(),
+                    std::get<1>(item),
+                    std::get<2>(item),
+                    std::get<3>(item),
+                    std::get<4>(item)
+                );
+            }//end for
 
             // checks the device critial error 
             clibhid_dev_info::type_set st_must_be_removed;

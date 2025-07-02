@@ -419,7 +419,7 @@ std::set< std::tuple<std::string, unsigned short, unsigned short, int,std::strin
 {
     std::set< std::tuple<std::string, unsigned short, unsigned short, int, std::string> > st;
 
-    struct hid_device_info* p_devs = NULL;
+    struct hid_device_info *p_devs = NULL, *p_devs_org = NULL;
 
     do {
         std::lock_guard<std::mutex> lock(_hid_api_briage::get_mutex_for_hidapi());
@@ -429,7 +429,7 @@ std::set< std::tuple<std::string, unsigned short, unsigned short, int,std::strin
         /**
         * don't use the hid_enumerate() of hidapi. it will occur packer-losting.
         */
-        p_devs = _hid_enumerate(m_ptr_usb_lib->get_context(), 0x0, 0x0);
+        p_devs_org = p_devs = _hid_enumerate(m_ptr_usb_lib->get_context(), 0x0, 0x0);
 
         while (p_devs) {
             st.emplace(
@@ -441,7 +441,7 @@ std::set< std::tuple<std::string, unsigned short, unsigned short, int,std::strin
             );
             p_devs = p_devs->next;
         }
-        _hid_free_enumeration(p_devs);
+        _hid_free_enumeration(p_devs_org);
     } while (false);
 
 	return st;
