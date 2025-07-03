@@ -166,38 +166,43 @@ public:
 		do {
 			std::lock_guard<std::mutex> lock(m_mutex_for_dev_manager);
 			if (m_n_client_index == _mp::cclient::UNDEFINED_INDEX) {
-#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__) && defined(_YSS_ENABLE_STDOUT_FOR_DEBUG_)
 				ATLTRACE(L" @@@@@ %ls()-m_n_client_index == _mp::cclient::UNDEFINED_INDEX.\n", __WFUNCTION__);
+				std::cout << " @@@@@ m_n_client_index == _mp::cclient::UNDEFINED_INDEX.\n";
 #endif
 				continue;
 			}
 
 			n_result_index = _create_async_result_for_manager();
 			if (n_result_index < 0) {
-#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__) && defined(_YSS_ENABLE_STDOUT_FOR_DEBUG_)
 				ATLTRACE(L" @@@@@ %ls()-n_result_index < 0.\n", __WFUNCTION__);
+				std::cout << " @@@@@ n_result_index < 0.\n";
 #endif
 				continue;
 			}
 
 			if (!capi_client::get_instance().get_device_list_multi(m_n_client_index, list_s_filter)) {
-#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__) && defined(_YSS_ENABLE_STDOUT_FOR_DEBUG_)
 				ATLTRACE(L" @@@@@ %ls()-get_device_list_multi() fail.\n", __WFUNCTION__);
+				std::cout << " @@@@@ get_device_list_multi() fail.\n";
 #endif
 				continue;
 			}
 			_mp::casync_parameter_result::type_ptr_ct_async_parameter_result& ptr_async_parameter_result = get_async_parameter_result_for_manager(n_result_index);
 			if (!ptr_async_parameter_result->waits()) {
-#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__) && defined(_YSS_ENABLE_STDOUT_FOR_DEBUG_)
 				ATLTRACE(L" @@@@@ %ls()-waits() fail.\n", __WFUNCTION__);
+				std::cout << " @@@@@ waits() fail.\n";
 #endif
 				continue;
 			}
 
 			_mp::type_set_wstring set_s_path;
 			if (!ptr_async_parameter_result->get_result(set_s_path)) {
-#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__) && defined(_YSS_ENABLE_STDOUT_FOR_DEBUG_)
 				ATLTRACE(L" @@@@@ %ls()-get_result() fail\n", __WFUNCTION__);
+				std::cout << " @@@@@ get_result() fail\n";
 #endif
 				continue;
 			}

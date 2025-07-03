@@ -262,6 +262,10 @@ namespace _mp {
 					 
 					// 디버깅을 위한 코드
 					auto v_ptr_req = m_fun.get_front_of_read_queue();
+
+					m_p_log->log_fmt(L"[I][_EXE] ING*- read_queue.size() = %u.\n", v_ptr_req.size());
+					m_p_log->trace(L"[I][_EXE] ING*- read_queue.size() = %u.\n", v_ptr_req.size());
+
 					for (auto item : v_ptr_req) {
 						m_p_log->log_fmt(L"[I][_EXE] ING*- (%u, %ls)\n",
 							item->get_session_number(), item->get_action_by_string().c_str()

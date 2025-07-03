@@ -509,8 +509,9 @@ namespace _mp
 					}
 					ptr_session->m_callback.run_resolve(*ptr_session, ec, results);
 					if (ec) {
-						clog::get_instance().log_fmt(L"[E] - %ls : 0x%p.\n", __WFUNCTION__, ptr_session.get());
-						clog::get_instance().trace(L"[E] - %ls : 0x%p.\n", __WFUNCTION__, ptr_session.get());
+						std::wstring _s_error_msg(_mp::cstring::get_unicode_from_mcsc(ec.message()));
+						clog::get_instance().log_fmt(L"[E] - %ls : 0x%p : %ls(%d).\n", __WFUNCTION__, ptr_session.get(), _s_error_msg.c_str(), ec.value());
+						clog::get_instance().trace(L"[E] - %ls : 0x%p : %ls(%d).\n", __WFUNCTION__, ptr_session.get(), _s_error_msg.c_str(), ec.value());
 						continue;
 					}
 
@@ -532,8 +533,9 @@ namespace _mp
 					}
 					ptr_session->m_callback.run_ssl_handshake(*ptr_session, ec);
 					if (ec) {
-						clog::get_instance().log_fmt(L"[E] - %ls : 0x%p.\n", __WFUNCTION__, ptr_session.get());
-						clog::get_instance().trace(L"[E] - %ls : 0x%p.\n", __WFUNCTION__, ptr_session.get());
+						std::wstring _s_error_msg(_mp::cstring::get_unicode_from_mcsc(ec.message()));
+						clog::get_instance().log_fmt(L"[E] - %ls : 0x%p : %ls(%d).\n", __WFUNCTION__, ptr_session.get(), _s_error_msg.c_str(),ec.value());
+						clog::get_instance().trace(L"[E] - %ls : 0x%p : %ls(%d).\n", __WFUNCTION__, ptr_session.get(), _s_error_msg.c_str(), ec.value());
 						continue;
 					}
 
@@ -555,8 +557,9 @@ namespace _mp
 					}
 					ptr_session->m_callback.run_connect(*ptr_session, ec, type);
 					if (ec) {
-						clog::get_instance().log_fmt(L"[E] - %ls : 0x%p.\n", __WFUNCTION__, ptr_session.get());
-						clog::get_instance().trace(L"[E] - %ls : 0x%p.\n", __WFUNCTION__, ptr_session.get());
+						std::wstring _s_error_msg(_mp::cstring::get_unicode_from_mcsc(ec.message()));
+						clog::get_instance().log_fmt(L"[E] - %ls : 0x%p : %ls(%d).\n", __WFUNCTION__, ptr_session.get(), _s_error_msg.c_str(), ec.value());
+						clog::get_instance().trace(L"[E] - %ls : 0x%p : %ls(%d).\n", __WFUNCTION__, ptr_session.get(), _s_error_msg.c_str(), ec.value());
 						continue;
 					}
 
@@ -583,8 +586,9 @@ namespace _mp
 					}
 					ptr_session->m_callback.run_handshake(*ptr_session, ec);
 					if (ec) {
-						clog::get_instance().log_fmt(L"[E] - %ls : 0x%p.\n", __WFUNCTION__, ptr_session.get());
-						clog::get_instance().trace(L"[E] - %ls : 0x%p.\n", __WFUNCTION__, ptr_session.get());
+						std::wstring _s_error_msg(_mp::cstring::get_unicode_from_mcsc(ec.message()));
+						clog::get_instance().log_fmt(L"[E] - %ls : 0x%p : %ls(%d).\n", __WFUNCTION__, ptr_session.get(), _s_error_msg.c_str(), ec.value());
+						clog::get_instance().trace(L"[E] - %ls : 0x%p : %ls(%d).\n", __WFUNCTION__, ptr_session.get(), _s_error_msg.c_str(), ec.value());
 						continue;
 					}
 					clog::get_instance().log_fmt(L"[I] - %ls : 0x%p.\n", __WFUNCTION__, ptr_session.get());
@@ -615,8 +619,9 @@ namespace _mp
 					ptr_session->m_callback.run_write(*ptr_session, ec, v_data);
 
 					if (ec) {
-						clog::get_instance().log_fmt(L"[E] - %ls : 0x%p.\n", __WFUNCTION__, ptr_session.get());
-						clog::get_instance().trace(L"[E] - %ls : 0x%p.\n", __WFUNCTION__, ptr_session.get());
+						std::wstring _s_error_msg(_mp::cstring::get_unicode_from_mcsc(ec.message()));
+						clog::get_instance().log_fmt(L"[E] - %ls : 0x%p : %ls(%d).\n", __WFUNCTION__, ptr_session.get(), _s_error_msg.c_str(), ec.value());
+						clog::get_instance().trace(L"[E] - %ls : 0x%p : %ls(%d).\n", __WFUNCTION__, ptr_session.get(), _s_error_msg.c_str(), ec.value());
 						continue;
 					}
 					clog::get_instance().log_fmt(L"[I] - %ls : 0x%p.\n", __WFUNCTION__, ptr_session.get());
@@ -652,8 +657,9 @@ namespace _mp
 
 					ptr_session->m_callback.run_read(*ptr_session, ec, v_data);
 					if (ec) {
-						clog::get_instance().log_fmt(L"[E] - %ls : 0x%p.\n", __WFUNCTION__, ptr_session.get());
-						clog::get_instance().trace(L"[E] - %ls : 0x%p.\n", __WFUNCTION__, ptr_session.get());
+						std::wstring _s_error_msg(_mp::cstring::get_unicode_from_mcsc(ec.message()));
+						clog::get_instance().log_fmt(L"[E] - %ls : 0x%p : %ls(%d).\n", __WFUNCTION__, ptr_session.get(), _s_error_msg.c_str(), ec.value());
+						clog::get_instance().trace(L"[E] - %ls : 0x%p : %ls(%d).\n", __WFUNCTION__, ptr_session.get(), _s_error_msg.c_str(), ec.value());
 					}
 					else {
 						clog::get_instance().log_fmt(L"[I] - %ls : 0x%p.\n", __WFUNCTION__, ptr_session.get());
@@ -686,8 +692,9 @@ namespace _mp
 					}
 					ptr_session->m_callback.run_close(*ptr_session, ec);
 					if (ec) {
-						clog::get_instance().log_fmt(L"[E] - %ls : 0x%p.\n", __WFUNCTION__, ptr_session.get());
-						clog::get_instance().trace(L"[E] - %ls : 0x%p.\n", __WFUNCTION__, ptr_session.get());
+						std::wstring _s_error_msg(_mp::cstring::get_unicode_from_mcsc(ec.message()));
+						clog::get_instance().log_fmt(L"[E] - %ls : 0x%p : %ls(%d).\n", __WFUNCTION__, ptr_session.get(), _s_error_msg.c_str(), ec.value());
+						clog::get_instance().trace(L"[E] - %ls : 0x%p : %ls(%d).\n", __WFUNCTION__, ptr_session.get(), _s_error_msg.c_str(), ec.value());
 					}
 					else {
 						clog::get_instance().log_fmt(L"[I] - %ls : 0x%p.\n", __WFUNCTION__, ptr_session.get());
