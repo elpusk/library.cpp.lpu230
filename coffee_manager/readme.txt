@@ -1,0 +1,1 @@
+this folder contains which  the resource is shared with coffee manager v1.x.

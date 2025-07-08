@@ -17,6 +17,7 @@
 #include <signal.h>
 #include <fcntl.h>
 #include <cstdio>  
+#include <limits.h>
 #endif
 
 #include <mp_csystem_.h>
@@ -249,6 +250,31 @@ namespace _mp {
 		return b_result;
 	}
 
+std::wstring csystem::get_cur_exe_abs_path() 
+{
+    std::wstring path;
+
+#ifdef _WIN32
+    // Windows
+    wchar_t buffer[MAX_PATH];
+    DWORD length = GetModuleFileNameW(NULL, buffer, MAX_PATH);
+    if (length > 0) {
+        path = std::wstring(buffer, length);
+    }
+#else
+    // Linux
+    char buffer[PATH_MAX];
+    ssize_t length = readlink("/proc/self/exe", buffer, sizeof(buffer) - 1);
+    if (length != -1) {
+        buffer[length] = '\0';
+        // Convert char* to wchar_t* (assuming UTF-8 encoding)
+        std::string str(buffer);
+        path = std::wstring(str.begin(), str.end());
+    }
+#endif
+
+    return path;
+}	
 	csystem::~csystem()
 	{
 	}

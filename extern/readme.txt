@@ -1,0 +1,1 @@
+this folder contains which components is excluded from this solution.

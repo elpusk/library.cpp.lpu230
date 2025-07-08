@@ -32,7 +32,7 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 	std::wstring s_server_certificate_file = cdef_const::get_certificate_file();
 	std::wstring s_server_private_key_file = cdef_const::get_private_key_file();
 
-	std::wstring s_log_folder_except_backslash = cdef_const::get_log_folder_except_backslash();
+	std::wstring s_log_root_folder_except_backslash = _mp::ccoffee_path::get_path_of_coffee_logs_root_folder_except_backslash();
 	std::wstring s_root_folder_except_backslash = cdef_const::get_root_folder_except_backslash();
 	std::wstring s_pid_file_full_path = cdef_const::get_pid_file_full_path();
 
@@ -66,7 +66,7 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 		log.enable_trace(s_pipe_name_of_trace, ini.get_log_enable()); //enable trace by server mode
 
 		//setup logging system
-		log.config(s_log_folder_except_backslash, 6,std::wstring(L"elpusk-hid-d"));
+		log.config(s_log_root_folder_except_backslash, 6, std::wstring(L"coffee_manager"),std::wstring(L"elpusk-hid-d"), std::wstring(L"elpusk-hid-d"));
 		log.remove_log_files_older_then_now_day(3);
 		log.enable(ini.get_log_enable());
 #ifdef _DEBUG

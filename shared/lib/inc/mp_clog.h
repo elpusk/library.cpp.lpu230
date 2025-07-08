@@ -214,10 +214,16 @@ namespace _mp
 		* configuration logging system
 		* Don't creates log() function.
 		*/
-		bool config(const std::wstring & s_in_folder_path , size_t n_employee_id, const std::wstring& s_in_prefix_log_file)
+		bool config(
+			const std::wstring & s_in_folder_path 
+			, size_t n_employee_id
+			, const std::wstring& s_program_name
+			, const std::wstring & s_module_name
+			, const std::wstring& s_in_prefix_log_file
+		)
 		{
 			std::lock_guard<std::mutex>	lock(m_mutex_log);
-			return _config(s_in_folder_path, n_employee_id, s_in_prefix_log_file);
+			return _config(s_in_folder_path, n_employee_id, s_program_name, s_module_name, s_in_prefix_log_file);
 		}
 
 		void enable(bool b_enable = true)
@@ -649,23 +655,53 @@ namespace _mp
 
 		/**
 		* 
-		* @parameter s_in_folder_abs_path_without_backslash - abs path of log file folder.<br>
-		* @parameter n_employee_id - using id , if you don't know, set to zero.
-		* @parameter s_in_prefix_log_file - the prefix of log file name
+		* @param s_in_folder_abs_path_without_backslash - abs path of log file folder.<br>
+		* @param n_employee_id - using id , if you don't know, set to zero.
+		* @param s_program_name - the name of program, except path and extension. this is summation of all modules.
+		* @param s_module_name - the name of module, except path and extension.
+		* @param s_in_prefix_log_file - the prefix of log file name
 		* @return if folder dosen't exsit, error
 		*/
-		bool _config(const std::wstring& s_in_folder_abs_path_without_backslash, size_t n_employee_id, const std::wstring& s_in_prefix_log_file)
+		bool _config(
+			const std::wstring& s_in_folder_abs_path_without_backslash, 
+			size_t n_employee_id, 
+			const std::wstring& s_program_name,
+			const std::wstring& s_module_name,
+			const std::wstring& s_in_prefix_log_file
+		)
 		{
 			bool b_result(false);
 			do {
+				std::wstring s_log_folder_without_backslash;
 				if (s_in_folder_abs_path_without_backslash.empty())
 					continue;
-				if (!cfile::is_exist_folder(s_in_folder_abs_path_without_backslash, false)) {
+
+				s_log_folder_without_backslash = s_in_folder_abs_path_without_backslash;
+
+				if (n_employee_id != (size_t)(-1)) {
+					s_log_folder_without_backslash += L"\\";
+					std::wstring s_em;
+					_mp::cstring::format_c_style(s_em, L"%08u", n_employee_id);
+					s_log_folder_without_backslash += s_em;
+				}
+
+				if(!s_program_name.empty()) {
+					s_log_folder_without_backslash += L"\\";
+					s_log_folder_without_backslash += s_program_name;
+				}
+				if (!s_module_name.empty()) {
+					s_log_folder_without_backslash += L"\\";
+					s_log_folder_without_backslash += s_module_name;
+				}
+				s_log_folder_without_backslash += L"\\log";
+
+				
+				if (!cfile::is_exist_folder(s_log_folder_without_backslash, false)) {
 					continue;
 				}
 				m_s_log_file_path.clear();
 				m_b_ini = false;
-				std::wstring s_folder_path(s_in_folder_abs_path_without_backslash);
+				std::wstring s_folder_path(s_log_folder_without_backslash);
 				std::wstring s_file_path;
 				s_file_path = _get_log_file_abs_path(s_folder_path, s_in_prefix_log_file);
 

@@ -29,20 +29,14 @@ public:
 public:
 	static std::wstring get_certificate_file()
 	{
-		static std::wstring s = _mp::_coffee::CONST_S_CERT_ABS_FULL_PATH;
+		static std::wstring s = _mp::ccoffee_path::get_abs_full_path_of_certificate();
 		return s;
 	}
 	static std::wstring get_private_key_file()
 	{
-		static std::wstring s = _mp::_coffee::CONST_S_PRIVATE_KEY_ABS_FULL_PATH;
+		static std::wstring s = _mp::ccoffee_path::get_abs_full_path_of_private_key();
 		return s;
 	}
-	static std::wstring get_log_folder_except_backslash()
-	{
-		static std::wstring s = _mp::_coffee::CONST_S_LOG_DIR_EXCEPT_BACKSLASH;
-		return s;
-	}
-
 	static std::wstring get_root_folder_except_backslash()
 	{
 		static std::wstring s = _mp::ccoffee_path::get_path_of_virtual_drive_root_except_backslash();

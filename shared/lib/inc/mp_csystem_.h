@@ -13,17 +13,17 @@ namespace _mp {
 	public:
 
 		/**
-		* good in Windows.
-		* none operation in debian12. 
+		* @brief good in Windows. none operation in debian12. 
 		*/
 		static std::shared_ptr<boost::interprocess::file_lock> get_file_lock_for_single_instance(const std::wstring& s_name);
 
 		/**
-		* in this funcation, parent process will be terminated with _exit(0)
-		* @parameter s_cur_dir_abs_with_slash - current directory with slash, abs path. 
+		* @brief in this funcation, parent process will be terminated with _exit(0)
+		* @param s_cur_dir_abs_with_slash - current directory with slash, abs path. 
 		*/
 		static bool daemonize_on_linux(const std::wstring  & s_daemon_pid_file_full_path, const std::wstring& s_cur_dir_abs_with_slash, void(*signal_handler)(int));
 
+		static std::wstring get_cur_exe_abs_path();
 	public:
 		virtual ~csystem();
 
