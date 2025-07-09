@@ -152,5 +152,33 @@ namespace _mp{
 			return s;
 		}
 
+		static std::wstring get_abs_full_path_of_coffee_mgmt()
+		{
+			std::wstring s;
+#if defined(_WIN32) && !defined(_DEBUG)
+			//win release
+			s = _mp::cfile::get_path_ProgramFiles();
+			s += L"\\elpusk\\00000006\\coffee_manager\\bin\\elpusk-hid-d.exe";
+#else
+			s = _mp::_coffee::CONST_S_MGMT_ABS_FULL_PATH; // win debug & linux
+
+#endif //_WIN32
+			return s;
+		}
+
+		static std::wstring get_path_of_coffee_mgmt_folder_except_backslash()
+		{
+			std::wstring s;
+#if defined(_WIN32) && !defined(_DEBUG)
+			//win release
+			s = _mp::cfile::get_path_ProgramFiles();
+			s += L"\\elpusk\\00000006\\coffee_manager\\bin";
+#else
+			s = _mp::_coffee::CONST_S_DIR_MGMT_EXCEPT_BACKSLASH; // win debug & linux
+
+#endif //_WIN32
+			return s;
+		}
+
 	};
 }

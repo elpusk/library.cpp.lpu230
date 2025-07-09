@@ -654,13 +654,13 @@ namespace _mp
 
 
 		/**
-		* 
+		* @brief configuration of log file. if log folder doesn't exist, create it.<br>
 		* @param s_in_folder_abs_path_without_backslash - abs path of log file folder.<br>
 		* @param n_employee_id - using id , if you don't know, set to zero.
 		* @param s_program_name - the name of program, except path and extension. this is summation of all modules.
 		* @param s_module_name - the name of module, except path and extension.
 		* @param s_in_prefix_log_file - the prefix of log file name
-		* @return if folder dosen't exsit, error
+		* @return if folder dosen't exsit, error(failure of create folder).
 		*/
 		bool _config(
 			const std::wstring& s_in_folder_abs_path_without_backslash, 
@@ -695,7 +695,7 @@ namespace _mp
 				}
 				s_log_folder_without_backslash += L"\\log";
 
-				
+				cfile::is_exist_folder(s_log_folder_without_backslash, true);
 				if (!cfile::is_exist_folder(s_log_folder_without_backslash, false)) {
 					continue;
 				}

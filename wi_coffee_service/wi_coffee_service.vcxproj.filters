@@ -60,6 +60,9 @@
     <ClInclude Include="..\shared\lib\inc\mp_cnamed_pipe_.h">
       <Filter>lib</Filter>
     </ClInclude>
+    <ClInclude Include="..\shared\projects\coffee_service\inc\cini_service.h">
+      <Filter>common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="wi_coffee_service.rc">

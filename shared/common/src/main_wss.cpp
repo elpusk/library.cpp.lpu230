@@ -66,8 +66,14 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 		log.enable_trace(s_pipe_name_of_trace, ini.get_log_enable()); //enable trace by server mode
 
 		//setup logging system
-		log.config(s_log_root_folder_except_backslash, 6, std::wstring(L"coffee_manager"),std::wstring(L"elpusk-hid-d"), std::wstring(L"elpusk-hid-d"));
-		log.remove_log_files_older_then_now_day(3);
+		log.config(
+			s_log_root_folder_except_backslash
+			, 6
+			, std::wstring(L"coffee_manager")
+			,std::wstring(L"elpusk-hid-d")
+			, std::wstring(L"elpusk-hid-d")
+		);
+		log.remove_log_files_older_then_now_day(ini.get_log_days_to_keep());
 		log.enable(ini.get_log_enable());
 #ifdef _DEBUG
 		log.log_fmt(L"[I] START LOGGING ON DEBUG.\n");
@@ -76,6 +82,8 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 		log.log_fmt(L"[I] START LOGGING ON RELEASE.\n");
 		log.trace(L"[I] START TRACING ON RELEASE.\n");
 #endif
+		log.log_fmt(L"%ls", ini.get_string().c_str());
+		log.trace(L"%ls", ini.get_string().c_str());
 
 		if (!gptr_ctl_pipe) {
 			log.log_fmt(L"[E] %ls | create controller pipe.\n", __WFUNCTION__);
@@ -88,58 +96,7 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 		log.log_fmt(L"[I] sid: %5d, pgid: %5d, pid: %5d, ppid: %5d.\n", (int)getsid(0), (int)getpgid(0), (int)getpid(), (int)getppid());
 		log.trace(L"[I] sid: %5d, pgid: %5d, pid: %5d, ppid: %5d.\n", (int)getsid(0), (int)getpgid(0), (int)getpid(), (int)getppid());
 #endif
-		// loading ini
-		if (b_ini_load) {
-			log.log_fmt(L"[=============.\n");
-			log.log_fmt(L"[I] loaded ini file = %ls.\n", ini.get_ini_file_full_path().c_str());
-			log.log_fmt(L"[I] ini value : name = %ls.\n", ini.get_name().c_str());
-			log.log_fmt(L"[I] ini value : version = %ls.\n", ini.get_version().c_str());
-			log.log_fmt(L"[I] ini value : date = %ls.\n", ini.get_date().c_str());
 
-			if (ini.get_log_enable()) {
-				log.log_fmt(L"[I] ini value : log = enable.\n");
-			}
-			else {
-				log.log_fmt(L"[I] ini value : log = disable.\n");
-			}
-
-			if (ini.get_tls_enable()) {
-				log.log_fmt(L"[I] ini value : tls v1.3 = enable.\n" );
-			}
-			else {
-				log.log_fmt(L"[I] ini value : tls v1.3 = disable.\n");
-			}
-			log.log_fmt(L"[I] ini value : server port = %d.\n", ini.get_server_port());
-			log.log_fmt(L"[I] ini value : server wait timeout for websocket upgrade req of client = %lld [mmsec].\n", ini.get_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client());
-			log.log_fmt(L"[I] ini value : server wait timeout for_ dle = %lld.\n", ini.get_msec_timeout_ws_server_wait_for_idle());
-			log.log_fmt(L"[I] ini value : server wait timeout for ssl handshake complete = %lld [mmsec].\n", ini.get_msec_timeout_ws_server_wait_for_ssl_handshake_complete());
-			log.log_fmt(L"[=============.\n");
-			//
-			log.trace(L"[=============.\n");
-			log.trace(L"[I] loaded ini file = %ls.\n", ini.get_ini_file_full_path().c_str());
-			log.trace(L"[I] ini value : name = %ls.\n", ini.get_name().c_str());
-			log.trace(L"[I] ini value : version = %ls.\n", ini.get_version().c_str());
-			log.trace(L"[I] ini value : date = %ls.\n", ini.get_date().c_str());
-
-			if (ini.get_log_enable()) {
-				log.trace(L"[I] ini value : log = enable.\n");
-			}
-			else {
-				log.trace(L"[I] ini value : log = disable.\n");
-			}
-
-			if (ini.get_tls_enable()) {
-				log.trace(L"[I] ini value : tls v1.3 = enable.\n");
-			}
-			else {
-				log.trace(L"[I] ini value : tls v1.3 = disable.\n");
-			}
-			log.trace(L"[I] ini value : server port = %d.\n", ini.get_server_port());
-			log.trace(L"[I] ini value : server wait timeout for websocket upgrade req of client = %lld [mmsec].\n", ini.get_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client());
-			log.trace(L"[I] ini value : server wait timeout for_ dle = %lld.\n", ini.get_msec_timeout_ws_server_wait_for_idle());
-			log.trace(L"[I] ini value : server wait timeout for ssl handshake complete = %lld [mmsec].\n", ini.get_msec_timeout_ws_server_wait_for_ssl_handshake_complete());
-			log.trace(L"[=============.\n");
-		}
 
 		bool b_tls = ini.get_tls_enable();
 		unsigned short w_port = (unsigned short)ini.get_server_port();

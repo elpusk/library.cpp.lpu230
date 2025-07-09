@@ -124,14 +124,14 @@ namespace _mp{
 			struct stat info;
 			std::string _path = _mp::cstring::get_mcsc_from_unicode(path);
 
-			// '~'¸¦ È¨ µğ·ºÅä¸® °æ·Î·Î º¯È¯
+			// '~'ë¥¼ í™ˆ ë””ë ‰í† ë¦¬ ê²½ë¡œë¡œ ë³€í™˜
 			if (_path[0] == '~') {
 				std::string home_dir = cfile::_get_home_directory();
 				_path.replace(0, 1, home_dir);
 			}
 
 			if (stat(_path.c_str(), &info) != 0) {
-				// Æú´õ°¡ Á¸ÀçÇÏÁö ¾ÊÀ½
+				// í´ë”ê°€ ì¡´ì¬í•˜ì§€ ì•ŠìŒ
 				if (b_if_not_exist_then_create_folder) {
 					size_t pos = 0;
 					while ((pos = _path.find('/', pos)) != std::string::npos) {
@@ -139,18 +139,18 @@ namespace _mp{
 						if (subdir.empty()) continue;
 						if (stat(subdir.c_str(), &info) != 0) {
 							if (mkdir(subdir.c_str(), 0777) != 0 && errno != EEXIST) {
-								return false; // ÇÏÀ§ Æú´õ »ı¼º ½ÇÆĞ
+								return false; // í•˜ìœ„ í´ë” ìƒì„± ì‹¤íŒ¨
 							}
 						}
 						else if (!(info.st_mode & S_IFDIR)) {
-							return false; // ÀÌ¹Ì Á¸ÀçÇÏ´Â °æ·Î°¡ µğ·ºÅä¸®°¡ ¾Æ´Ô
+							return false; // ì´ë¯¸ ì¡´ì¬í•˜ëŠ” ê²½ë¡œê°€ ë””ë ‰í† ë¦¬ê°€ ì•„ë‹˜
 						}
 					}
 					if (mkdir(_path.c_str(), 0777) == 0) {
-						return true; // Æú´õ »ı¼º ¼º°ø
+						return true; // í´ë” ìƒì„± ì„±ê³µ
 					}
 					else {
-						return errno == EEXIST; // Æú´õ »ı¼º ½ÇÆĞ, ÀÌ¹Ì Á¸ÀçÇÏ´Â °æ¿ì ¼º°øÀ¸·Î °£ÁÖ
+						return errno == EEXIST; // í´ë” ìƒì„± ì‹¤íŒ¨, ì´ë¯¸ ì¡´ì¬í•˜ëŠ” ê²½ìš° ì„±ê³µìœ¼ë¡œ ê°„ì£¼
 					}
 				}
 				else {
@@ -158,10 +158,10 @@ namespace _mp{
 				}
 			}
 			else if (info.st_mode & S_IFDIR) {
-				return true; // Æú´õ°¡ Á¸ÀçÇÔ
+				return true; // í´ë”ê°€ ì¡´ì¬í•¨
 			}
 			else {
-				return false; // path´Â Æú´õ°¡ ¾Æ´Ô
+				return false; // pathëŠ” í´ë”ê°€ ì•„ë‹˜
 			}
 		}
 
@@ -228,31 +228,31 @@ namespace _mp{
 #else // Non-Windows (Assumed POSIX compliant)
 			std::string utf8_path = cstring::get_mcsc_from_unicode(s_in_path);
 
-			// utf8_path_cstrÀÇ »çº»À» »ı¼ºÇÏ¿© dirname°ú basename¿¡¼­ »ç¿ë
+			// utf8_path_cstrì˜ ì‚¬ë³¸ì„ ìƒì„±í•˜ì—¬ dirnameê³¼ basenameì—ì„œ ì‚¬ìš©
 			char* utf8_path_cstr_dir = strdup(utf8_path.c_str());
 			char* utf8_path_cstr_base = strdup(utf8_path.c_str());
 
-			// dirname°ú basenameÀ» »ç¿ëÇÏ¿© °æ·Î¸¦ ºĞ¸®
+			// dirnameê³¼ basenameì„ ì‚¬ìš©í•˜ì—¬ ê²½ë¡œë¥¼ ë¶„ë¦¬
 			char* dir = dirname(utf8_path_cstr_dir);
 			char* base = basename(utf8_path_cstr_base);
 
-			// basename¿¡¼­ ÆÄÀÏ¸í°ú È®ÀåÀÚ¸¦ ºĞ¸®
+			// basenameì—ì„œ íŒŒì¼ëª…ê³¼ í™•ì¥ìë¥¼ ë¶„ë¦¬
 			char* ext = std::strrchr(base, '.');
 			if (ext) {
-				*ext = '\0'; // È®ÀåÀÚ Á¦°Å
-				ext++; // È®ÀåÀÚ ÀÌ¸§À¸·Î ÀÌµ¿
+				*ext = '\0'; // í™•ì¥ì ì œê±°
+				ext++; // í™•ì¥ì ì´ë¦„ìœ¼ë¡œ ì´ë™
 			}
 			else {
-				ext = (char*)""; // ºó ¹®ÀÚ¿­ ¼³Á¤
+				ext = (char*)""; // ë¹ˆ ë¬¸ìì—´ ì„¤ì •
 			}
 
-			// º¯È¯ ÈÄ ¸®ÅÏ
-			s_out_drive = L""; // µå¶óÀÌºê ¹®ÀÚ ¾øÀ½
+			// ë³€í™˜ í›„ ë¦¬í„´
+			s_out_drive = L""; // ë“œë¼ì´ë¸Œ ë¬¸ì ì—†ìŒ
 			s_out_dir = cstring::get_unicode_from_mcsc(dir);
 			s_out_file_name = cstring::get_unicode_from_mcsc(base);
 			s_out_ext = cstring::get_unicode_from_mcsc(ext);
 
-			// ÇÒ´çµÈ ¸Ş¸ğ¸® ÇØÁ¦
+			// í• ë‹¹ëœ ë©”ëª¨ë¦¬ í•´ì œ
 			free(utf8_path_cstr_dir);
 			free(utf8_path_cstr_base);
 
@@ -542,6 +542,15 @@ namespace _mp{
 		{
 			return cfile::_get_known_path(FOLDERID_ProgramData);
 		}
+
+		/**
+		* The returned path does not include a trailing backslash.
+		*/
+		static std::wstring get_path_ProgramFiles()
+		{
+			return cfile::_get_known_path(FOLDERID_ProgramFiles);
+		}
+
 	private:
 		/**
 		* The returned path does not include a trailing backslash. 

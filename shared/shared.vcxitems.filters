@@ -314,6 +314,9 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\mp_cio_packet.h">
       <Filter>lib\inc</Filter>
     </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\mp_coffee_path.h">
+      <Filter>lib\inc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)..\README.md" />

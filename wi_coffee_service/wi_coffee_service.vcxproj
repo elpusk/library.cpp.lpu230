@@ -71,19 +71,19 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);;C:\local\boost_1_80_0;$(SolutionDir)shared/lib/inc</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);;C:\local\boost_1_80_0;$(SolutionDir)shared/lib/inc;$(SolutionDir)shared/projects/coffee_service/inc</IncludePath>
     <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);C:\local\boost_1_80_0\stage\lib</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);;C:\local\boost_1_80_0;$(SolutionDir)shared/lib/inc</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);;C:\local\boost_1_80_0;$(SolutionDir)shared/lib/inc;$(SolutionDir)shared/projects/coffee_service/inc</IncludePath>
     <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);C:\local\boost_1_80_0\stage\lib</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);;C:\local\boost_1_80_0;$(SolutionDir)shared/lib/inc</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);;C:\local\boost_1_80_0;$(SolutionDir)shared/lib/inc;$(SolutionDir)shared/projects/coffee_service/inc</IncludePath>
     <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);C:\local\boost_1_80_0\stage\lib</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);;C:\local\boost_1_80_0;$(SolutionDir)shared/lib/inc</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);;C:\local\boost_1_80_0;$(SolutionDir)shared/lib/inc;$(SolutionDir)shared/projects/coffee_service/inc</IncludePath>
     <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);C:\local\boost_1_80_0\stage\lib</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -152,6 +152,7 @@
     <ClInclude Include="..\shared\lib\inc\mp_cstring.h" />
     <ClInclude Include="..\shared\lib\inc\mp_csystem_.h" />
     <ClInclude Include="..\shared\lib\inc\mp_type.h" />
+    <ClInclude Include="..\shared\projects\coffee_service\inc\cini_service.h" />
     <ClInclude Include="crun_service.h" />
     <ClInclude Include="cwarp.h" />
     <ClInclude Include="resource.h" />

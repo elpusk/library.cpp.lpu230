@@ -10,19 +10,23 @@
 #define BOOST_JSON_HEADER_ONLY
 #include <boost/json/src.hpp>
 
+#ifdef _WIN32
+#include <Windows.h>
+#endif
+
 #include <mp_coffee_path.h>
 #include <mp_cstring.h>
 
-class cfile_coffee_manager_ini
+class cini_service
 {
 public:
-	static cfile_coffee_manager_ini& get_instance()
+	static cini_service& get_instance()
 	{
-		static cfile_coffee_manager_ini obj;
+		static cini_service obj;
 		return obj;
 	}
 
-	virtual ~cfile_coffee_manager_ini()
+	virtual ~cini_service()
 	{
 	}
 
@@ -64,15 +68,17 @@ public:
 			}
 
 			m_s_ini_file_full_path = ws_path_ini;
+
 			m_b_exist_name = false;
 			m_b_exist_version = false;
 			m_b_exist_date = false;
+
 			m_b_exist_log_enable = false;
-			m_b_exist_tls_enable = false;
-			m_b_exist_server_port = false;
-			m_b_exist_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client = false;
-			m_b_exist_msec_timeout_ws_server_wait_for_idle = false;
-			m_b_exist_msec_timeout_ws_server_wait_for_ssl_handshake_complete = false;
+			m_b_exist_log_days_to_keep = false;
+
+			m_b_exist_process_check_interval_sec = false;
+			m_b_exist_command_line = false;
+			m_b_exist_working_directory = false;
 
 			// get JSON data
 			boost::json::object obj = jv.as_object();
@@ -85,7 +91,7 @@ public:
 				m_b_exist_name = true;
 			}
 			else {
-				m_s_name = L"elpusk-hid-d";
+				m_s_name = L"coffee_service";
 			}
 			//
 			m_s_version = L"2.0";
@@ -136,6 +142,14 @@ public:
 					m_s_version = L"06252025";
 				}
 			}
+
+			m_s_description = L"";
+			if (obj.contains("description")) {
+				std::string s_description = obj["description"].as_string().c_str();
+				m_s_description = _mp::cstring::get_unicode_from_mcsc(s_description);
+				m_b_exist_description = true;
+			}
+
 			//
 			m_b_log_enable = true;
 
@@ -151,34 +165,73 @@ public:
 					m_b_exist_log_enable = true;
 				}
 			}
-			//
-			m_n_server_port = 443;
 
-			int n_port = obj.contains("port") && obj["port"].is_int64() ? obj["port"].as_int64() : -1;
-			if (n_port > 0) {
-				m_n_server_port = n_port;
-				m_b_exist_server_port = true;
+			m_ll_log_days_to_keep = 3; // default 3 days
+			if (obj.contains("log_days_to_keep")) {
+				int n_days = obj["log_days_to_keep"].as_int64();
+				if (n_days > 0) {
+					m_ll_log_days_to_keep = (unsigned long long)n_days;
+					m_b_exist_log_days_to_keep = true;
+				}
 			}
 			//
-			int n_timeout = 0;
-			//
-			n_timeout = obj.contains("msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client") && obj["msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client"].is_int64() ? obj["msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client"].as_int64() : -1;
-			if (n_timeout > 0) {
-				m_ll_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client = n_timeout;
-				m_b_exist_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client = true;
+
+			m_n_process_check_interval_sec = _mp::_coffee::CONST_N_MGMT_ALIVE_CHECK_INTERVAL_SEC;
+			if (obj.contains("process_check_interval_sec")) {
+				int n_data = obj["process_check_interval_sec"].as_int64();
+				if (n_data > 0) {
+					m_n_process_check_interval_sec = (UINT)n_data;
+					m_b_exist_process_check_interval_sec = true;
+				}
 			}
-			//
-			n_timeout = obj.contains("msec_timeout_ws_server_wait_for_idle") && obj["msec_timeout_ws_server_wait_for_idle"].is_int64() ? obj["msec_timeout_ws_server_wait_for_idle"].as_int64() : -1;
-			if (n_timeout > 0) {
-				m_ll_msec_timeout_ws_server_wait_for_idle = n_timeout;
-				m_b_exist_msec_timeout_ws_server_wait_for_idle = true;
+
+			std::vector<wchar_t> v_expanded_path(MAX_PATH,0);
+
+			if( obj.contains("command_line")) {
+				std::string s_command_line = obj["command_line"].as_string().c_str();
+				m_s_command_line = _mp::cstring::get_unicode_from_mcsc(s_command_line);
+				m_b_exist_command_line = true;
+				//
+#ifdef _WIN32
+				// expand environment variables in command line
+				UINT n_len = ExpandEnvironmentStringsW(m_s_command_line.c_str(), &v_expanded_path[0], (DWORD)v_expanded_path.size());
+				if(n_len == 0 || n_len > v_expanded_path.size()) {
+					// if the expanded string is too long, use default coffee management path
+					m_s_command_line = _mp::ccoffee_path::get_abs_full_path_of_coffee_mgmt();
+				}
+				else {
+					m_s_command_line = std::wstring(&v_expanded_path[0]);
+				}
+#endif
 			}
-			//
-			n_timeout = obj.contains("msec_timeout_ws_server_wait_for_ssl_handshake_complete") && obj["msec_timeout_ws_server_wait_for_ssl_handshake_complete"].is_int64() ? obj["msec_timeout_ws_server_wait_for_ssl_handshake_complete"].as_int64() : -1;
-			if (n_timeout > 0) {
-				m_ll_msec_timeout_ws_server_wait_for_ssl_handshake_complete = n_timeout;
-				m_b_exist_msec_timeout_ws_server_wait_for_ssl_handshake_complete = true;
+			else {
+				m_s_command_line = _mp::ccoffee_path::get_abs_full_path_of_coffee_mgmt();
 			}
+
+			if( obj.contains("working_directory")) {
+				std::string s_working_directory = obj["working_directory"].as_string().c_str();
+				m_s_working_directory = _mp::cstring::get_unicode_from_mcsc(s_working_directory);
+				m_b_exist_working_directory = true;
+				//
+#ifdef _WIN32
+				v_expanded_path.resize(v_expanded_path.size(), 0);
+				// expand environment variables in command line
+				UINT n_len = ExpandEnvironmentStringsW(m_s_command_line.c_str(), &v_expanded_path[0], (DWORD)v_expanded_path.size());
+				if (n_len == 0 || n_len > v_expanded_path.size()) {
+					// if the expanded string is too long, use default coffee management path
+					m_s_working_directory = _mp::ccoffee_path::get_path_of_coffee_mgmt_folder_except_backslash();
+				}
+				else {
+					m_s_working_directory = std::wstring(&v_expanded_path[0]);
+				}
+#endif
+
+			}
+			else {
+				m_s_working_directory = _mp::ccoffee_path::get_path_of_coffee_mgmt_folder_except_backslash();
+			}
+
+			//
 			b_result = true;
 		} while (false);
 		return b_result;
@@ -254,60 +307,33 @@ public:
 		return m_ll_log_days_to_keep;
 	}
 	
-	
-	bool get_tls_enable(bool& b_enable) const
+	unsigned long long get_process_check_interval_sec() const
 	{
-		b_enable = m_b_tls_enable;
-		return m_b_exist_tls_enable;
+		return (unsigned long long)m_n_process_check_interval_sec;
 	}
-
-	bool get_tls_enable() const
+	bool get_process_check_interval_sec(unsigned long long& n_sec) const
 	{
-		return m_b_tls_enable;
+		n_sec = (unsigned long long)m_n_process_check_interval_sec;
+		return m_b_exist_process_check_interval_sec;
 	}
-
-	bool get_server_port(int& n_port) const
+	std::wstring get_command_line() const
 	{
-		n_port = m_n_server_port;
-		return m_b_exist_server_port;
+		return m_s_command_line;
 	}
-
-	int get_server_port() const
+	bool get_command_line(std::wstring& s_command_line) const
 	{
-		return m_n_server_port;
+		s_command_line = m_s_command_line;
+		return m_b_exist_command_line;
 	}
-
-	long long get_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client() const
+	std::wstring get_working_directory() const
 	{
-		return m_ll_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client;
+		return m_s_working_directory;
 	}
-	bool get_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client(long long& ll_msec) const
+	bool get_working_directory(std::wstring& s_working_directory) const
 	{
-		ll_msec = m_ll_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client;
-		return m_b_exist_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client;
+		s_working_directory = m_s_working_directory;
+		return m_b_exist_working_directory;
 	}
-	//
-	long long get_msec_timeout_ws_server_wait_for_idle() const
-	{
-		return m_ll_msec_timeout_ws_server_wait_for_idle;
-	}
-	bool get_msec_timeout_ws_server_wait_for_idle(long long& ll_msec) const
-	{
-		ll_msec = m_ll_msec_timeout_ws_server_wait_for_idle;
-		return m_b_exist_msec_timeout_ws_server_wait_for_idle;
-	}
-	//
-	long long get_msec_timeout_ws_server_wait_for_ssl_handshake_complete() const
-	{
-		return m_ll_msec_timeout_ws_server_wait_for_ssl_handshake_complete;
-	}
-	//
-	bool get_msec_timeout_ws_server_wait_for_ssl_handshake_complete(long long& ll_msec) const
-	{
-		ll_msec = m_ll_msec_timeout_ws_server_wait_for_ssl_handshake_complete;
-		return m_b_exist_msec_timeout_ws_server_wait_for_ssl_handshake_complete;
-	}
-
 
 	std::wstring get_string() const
 	{
@@ -322,11 +348,9 @@ public:
 					<< L"[:] Date(default): " << m_s_date << L"\n"
 					<< L"[:] Log Enable(default): " << (m_b_log_enable ? L"true" : L"false") << L"\n"
 					<< L"[:] Log Days to Keep(default): " << m_ll_log_days_to_keep << L"\n"
-					<< L"[:] TLS Enable(default): " << (m_b_tls_enable ? L"true" : L"false") << L"\n"
-					<< L"[:] Server Port(default): " << m_n_server_port << L"\n"
-					<< L"[:] WebSocket Upgrade Timeout(default): " << m_ll_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client << L"\n"
-					<< L"[:] Idle Timeout(default): " << m_ll_msec_timeout_ws_server_wait_for_idle << L"\n"
-					<< L"[:] SSL Handshake Complete Timeout(default): " << m_ll_msec_timeout_ws_server_wait_for_ssl_handshake_complete;
+					<< L"[:] Process Check Interval(default): " << m_n_process_check_interval_sec << L" sec\n"
+					<< L"[:] Command Line(default): " << m_s_command_line << L"\n"
+					<< L"[:] Working Directory(default): " << m_s_working_directory << L"\n";
 				ss << L"\n";
 				continue;
 			}
@@ -368,35 +392,23 @@ public:
 			else {
 				ss << L"[:] Log Days to Keep: " << m_ll_log_days_to_keep << L"\n";
 			}
-			if (!m_b_exist_tls_enable) {
-				ss << L"[:] TLS Enable(default): " << (m_b_tls_enable ? L"true" : L"false") << L"\n";
+			if(!m_b_exist_process_check_interval_sec) {
+				ss << L"[:] Process Check Interval(default): " << m_n_process_check_interval_sec << L" sec\n";
 			}
 			else {
-				ss << L"[:] TLS Enable: " << (m_b_tls_enable ? L"true" : L"false") << L"\n";
+				ss << L"[:] Process Check Interval: " << m_n_process_check_interval_sec << L" sec\n";
 			}
-			if (!m_b_exist_server_port) {
-				ss << L"[:] Server Port(default): " << m_n_server_port << L"\n";
-			}
-			else {
-				ss << L"[:] Server Port: " << m_n_server_port << L"\n";
-			}
-			if (!m_b_exist_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client) {
-				ss << L"[:] WebSocket Upgrade Timeout(default): " << m_ll_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client << L"\n";
+			if (!m_b_exist_command_line) {
+				ss << L"[:] Command Line(default): " << m_s_command_line << L"\n";
 			}
 			else {
-				ss << L"[:] WebSocket Upgrade Timeout: " << m_ll_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client << L"\n";
+				ss << L"[:] Command Line: " << m_s_command_line << L"\n";
 			}
-			if (!m_b_exist_msec_timeout_ws_server_wait_for_idle) {
-				ss << L"[:] Idle Timeout(default): " << m_ll_msec_timeout_ws_server_wait_for_idle << L"\n";
-			}
-			else {
-				ss << L"[:] Idle Timeout: " << m_ll_msec_timeout_ws_server_wait_for_idle << L"\n";
-			}
-			if (!m_b_exist_msec_timeout_ws_server_wait_for_ssl_handshake_complete) {
-				ss << L"[:] SSL Handshake Complete Timeout(default): " << m_ll_msec_timeout_ws_server_wait_for_ssl_handshake_complete << L"\n";
+			if (!m_b_exist_working_directory) {
+				ss << L"[:] Working Directory(default): " << m_s_working_directory << L"\n";
 			}
 			else {
-				ss << L"[:] SSL Handshake Complete Timeout: " << m_ll_msec_timeout_ws_server_wait_for_ssl_handshake_complete << L"\n";
+				ss << L"[:] Working Directory: " << m_s_working_directory << L"\n";
 			}
 			
 		} while (false);
@@ -404,7 +416,7 @@ public:
 		return ss.str();
 	}
 private:
-	cfile_coffee_manager_ini()
+	cini_service()
 	{
 		////
 		m_s_name = L"elpusk-hid-d";
@@ -425,20 +437,14 @@ private:
 		m_b_exist_log_days_to_keep = false;
 
 		///
-		m_b_tls_enable = true;
-		m_n_server_port = 443;
-		//
-		m_b_exist_tls_enable = false;
-		m_b_exist_server_port = false;
-		//
-		m_ll_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client = CONST_DEFAULT_WS_SERVER_WAIIT_TIMEOUT_FOR_WEBSOCKET_UPGRADE_REQ_OF_CLIENT_MSEC;
-		m_b_exist_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client = false;
+		m_n_process_check_interval_sec = _mp::_coffee::CONST_N_MGMT_ALIVE_CHECK_INTERVAL_SEC;
+		m_b_exist_process_check_interval_sec = false;
 
-		m_ll_msec_timeout_ws_server_wait_for_idle = CONST_DEFAULT_WS_SERVER_WAIIT_TIMEOUT_FOR_IDLE_MSEC;
-		m_b_exist_msec_timeout_ws_server_wait_for_idle = false;
+		m_s_command_line = _mp::ccoffee_path::get_abs_full_path_of_coffee_mgmt();
+		m_b_exist_command_line = false;
 
-		m_ll_msec_timeout_ws_server_wait_for_ssl_handshake_complete = CONST_DEFAULT_WS_SERVER_WAIIT_TIMEOUT_FOR_SSL_HANSHAKE_COMPLETE_MSEC;
-		m_b_exist_msec_timeout_ws_server_wait_for_ssl_handshake_complete = false;
+		m_s_working_directory = _mp::ccoffee_path::get_path_of_coffee_mgmt_folder_except_backslash();
+		m_b_exist_working_directory = false;
 	}
 private:
 	std::wstring m_s_ini_file_full_path;
@@ -461,29 +467,17 @@ private:
 	bool m_b_exist_log_enable;
 	bool m_b_exist_log_days_to_keep;
 
-	// wensocket server part
-	bool m_b_tls_enable;
-	int m_n_server_port;
+	// process part
+	int m_n_process_check_interval_sec; // how often to check the process status in seconds
+	bool m_b_exist_process_check_interval_sec;
 
-	bool m_b_exist_tls_enable;
-	bool m_b_exist_server_port;
-
-	/////////////////////////////////////////////////////////////////////////////////////
-	//timeout for websocket server
-	// 
-	//Timeout after the server receives the ssl handshake request and calls async_accept(), and the client responds with a WebSocket Upgrade request.
-	long long m_ll_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client;
-	bool m_b_exist_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client;
-
-	//The maximum time that a WebSocket connection can last without sending or receiving any data
-	long long m_ll_msec_timeout_ws_server_wait_for_idle;
-	bool m_b_exist_msec_timeout_ws_server_wait_for_idle;
-
-	//SSL handshake complete timeout
-	long long m_ll_msec_timeout_ws_server_wait_for_ssl_handshake_complete;
-	bool m_b_exist_msec_timeout_ws_server_wait_for_ssl_handshake_complete;
+	std::wstring m_s_command_line; // command line to start the process
+	bool m_b_exist_command_line;
+	
+	std::wstring m_s_working_directory; // working directory for the process
+	bool m_b_exist_working_directory;
 
 private:
-	cfile_coffee_manager_ini(const cfile_coffee_manager_ini&) = delete;
-	cfile_coffee_manager_ini& operator=(const cfile_coffee_manager_ini&) = delete;
+	cini_service(const cini_service&) = delete;
+	cini_service& operator=(const cini_service&) = delete;
 };

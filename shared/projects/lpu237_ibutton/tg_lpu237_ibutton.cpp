@@ -514,15 +514,11 @@ unsigned long _CALLTYPE_ LPU237Lock_dll_on()
 
 	//setup logging system
 	log.config(s_log_root_folder_except_backslash, 6, std::wstring(L"coffee_manager"), std::wstring(L"tg_lpu237_ibutton"), std::wstring(L"tg_lpu237_ibutton"));
-	log.remove_log_files_older_then_now_day(3);
-	log.enable(cini.is_log_enable());
-
-	if(b_ini){
-		cini.logging_load_info(log);
-	}
+	log.remove_log_files_older_then_now_day(cini.get_log_days_to_keep());
+	log.enable(cini.get_log_enable());
 
 	log.log_fmt(L"[I] START tg_lpu237_ibutton so or dll.\n");
-	log.trace(L"[I] - START tg_lpu237_ibutton so or dll.\n");
+	log.log_fmt(L"%ls", cini.get_string().c_str());
 #endif
 	unsigned long dwResult(ccb_client::const_dll_result_error);
 	_mp::clog::get_instance().log_fmt(L" : CAL : %ls.\n", __WFUNCTION__);

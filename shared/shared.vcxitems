@@ -65,6 +65,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\mp_cio_packet.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\mp_cnamed_pipe_.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\mp_coffee.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\mp_coffee_path.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\mp_cstring.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\mp_csystem_.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\mp_cversion.h" />

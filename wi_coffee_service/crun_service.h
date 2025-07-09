@@ -18,6 +18,8 @@
 #include <mp_cstring.h>
 #include <mp_cnamed_pipe_.h>
 
+#include <cini_service.h>
+
 #include "cwarp.h"
 
 #pragma comment(lib, "Userenv.lib")
@@ -437,12 +439,16 @@ private:
 		, m_h_GEvent(NULL)
 		, m_service_status({ 0, })
 	{
-		std::wstring s_log_folder_except_backslash = cdef::get_log_folder_except_backslash();
-		_mp::clog::get_instance().config(L"elpusk",6,L"coffee_service");
-		_mp::clog::get_instance().remove_log_files_older_then_now_day(3);
-		_mp::clog::get_instance().enable();
-
 		_load_ini();
+
+		cini_service& cini(cini_service::get_instance());
+
+		std::wstring s_log_root_folder_except_backslash = _mp::ccoffee_path::get_path_of_coffee_logs_root_folder_except_backslash();
+		_mp::clog::get_instance().config(s_log_root_folder_except_backslash, 6, std::wstring(L"coffee_manager"), std::wstring(L"coffee_service"), std::wstring(L"coffee_service"));
+		_mp::clog::get_instance().remove_log_files_older_then_now_day(cini.get_log_days_to_keep());
+		_mp::clog::get_instance().enable(cini.get_log_enable());
+		
+		_logging_ini();
 	}
 	~crun_service(void)
 	{
@@ -634,135 +640,33 @@ private:
 	{
 		bool b_result(false);
 
+		cini_service& cini(cini_service::get_instance());
+
+		b_result =  cini.load_definition_file(_mp::ccoffee_path::get_path_of_coffee_svr_ini_file());
+
 		do {
 			//load ini .json file
 			std::wstring ws_path_ini(_mp::ccoffee_path::get_path_of_coffee_svr_ini_file());
-			m_s_ini_file_name = ws_path_ini;
+			m_s_ini_file_name = cini.get_ini_file_full_path();
 			//
 			m_s_service_exe_file_name = _mp::csystem::get_cur_exe_abs_path();
 			//
-			// open json file
-			std::ifstream file_json(ws_path_ini);
-			if (!file_json.is_open()) {
-				continue;
-			}
-
-			//load json file
-			std::string json_str((std::istreambuf_iterator<char>(file_json)), std::istreambuf_iterator<char>());
-			file_json.close();
-
-
-			// parse json string
-			boost::system::error_code ec;
-			boost::json::value jv = boost::json::parse(json_str, ec);
-			if (ec) {
-				//std::wcerr << L"Error parsing JSON: " << _mp::cstring::get_unicode_from_mcsc(ec.message()) << std::endl;
-				continue;
-			}
-
-			// get JSON data
-			boost::json::object obj = jv.as_object();
-
+			m_s_service_name = cini.get_name();
+			m_n_check_process_seconds = cini.get_process_check_interval_sec();
+			m_process.s_command_line = cini.get_command_line();
+			m_process.s_working_directory = cini.get_working_directory();
 			//
-			if (obj.contains("name")) {
-				std::string s_name = obj["name"].as_string().c_str();
-				m_s_service_name = _mp::cstring::get_unicode_from_mcsc(s_name);
-			}
-			else {
-				m_s_service_name = L"coffee_service_2nd";
-			}
 			//
-			int n_data = obj.contains("process_check_interval_sec") && obj["process_check_interval_sec"].is_int64() ? obj["process_check_interval_sec"].as_int64() : -1;
-			if (n_data > 0) {
-				m_n_check_process_seconds = (UINT)n_data;
-			}
-			else{
-				m_n_check_process_seconds = 6; // default 6 sec
-			}
+			m_process.n_pause_start = 10; // default 10
+			m_process.n_pause_end = 10; // default 10
 			//
-			if (obj.contains("command_line")) {
-				std::string s_command_line = obj["command_line"].as_string().c_str();
-				m_process.s_command_line = _mp::cstring::get_unicode_from_mcsc(s_command_line);
-			}
-			else {
-				m_process.s_command_line = L"%ProgramFiles%\\elpusk\\00000006\\elpusk-hid-d\\elpusk-hid-d.exe";
-			}
+			m_process.b_user_interface = false; //default
+			m_process.b_restart = false;//default
 			//
-			if (obj.contains("working_directory")) {
-				std::string s_working_directory = obj["working_directory"].as_string().c_str();
-				m_process.s_working_directory = _mp::cstring::get_unicode_from_mcsc(s_working_directory);
-			}
-			else {
-				m_process.s_working_directory = L"%ProgramFiles%\\elpusk\\00000006\\elpusk-hid-d";
-			}
+			m_process.s_user_name.clear();
+			m_process.s_domain.clear();
+			m_process.s_password.clear();
 			//
-			n_data = obj.contains("pause_start") && obj["pause_start"].is_int64() ? obj["pause_start"].as_int64() : -1;
-			if (n_data > 0) {
-				m_process.n_pause_start = (UINT)n_data;
-			}
-			else {
-				m_process.n_pause_start = 10; // default 10
-			}
-			//
-			n_data = obj.contains("pause_end") && obj["pause_end"].is_int64() ? obj["pause_end"].as_int64() : -1;
-			if (n_data > 0) {
-				m_process.n_pause_end = (UINT)n_data;
-			}
-			else {
-				m_process.n_pause_end = 10; // default 10
-			}
-			//
-			bool b_yes(false);
-			if (obj.contains("user_interface")) {
-				std::string s_user_interface = obj["user_interface"].as_string().c_str();
-				std::wstring ws_user_interface = _mp::cstring::get_unicode_from_mcsc(s_user_interface);
-				if (ws_user_interface == L"true" || ws_user_interface == L"1" || ws_user_interface == L"enable") {
-					b_yes = true;
-				}
-				else if (ws_user_interface == L"false" || ws_user_interface == L"0" || ws_user_interface == L"disable") {
-					b_yes = false;
-				}
-			}
-			m_process.b_user_interface = b_yes;
-			//
-			b_yes = false;
-			if (obj.contains("restart")) {
-				std::string s_restart = obj["restart"].as_string().c_str();
-				std::wstring ws_restart = _mp::cstring::get_unicode_from_mcsc(s_restart);
-				if (ws_restart == L"true" || ws_restart == L"1" || ws_restart == L"enable") {
-					b_yes = true;
-				}
-				else if (ws_restart == L"false" || ws_restart == L"0" || ws_restart == L"disable") {
-					b_yes = false;
-				}
-			}
-			m_process.b_restart = b_yes;
-			//
-			if (obj.contains("user_name")) {
-				std::string s_user_name = obj["user_name"].as_string().c_str();
-				m_process.s_user_name = _mp::cstring::get_unicode_from_mcsc(s_user_name);
-			}
-			else {
-				m_process.s_user_name.clear();
-			}
-			//
-			if (obj.contains("domain")) {
-				std::string s_domain = obj["domain"].as_string().c_str();
-				m_process.s_domain = _mp::cstring::get_unicode_from_mcsc(s_domain);
-			}
-			else {
-				m_process.s_domain.clear();
-			}
-			//
-			if (obj.contains("password")) {
-				std::string s_password = obj["password"].as_string().c_str();
-				m_process.s_password = _mp::cstring::get_unicode_from_mcsc(s_password);
-			}
-			else {
-				m_process.s_password.clear();
-			}
-			//
-			_logging_ini();
 			b_result = true;
 		} while (false);
 		return b_result;
