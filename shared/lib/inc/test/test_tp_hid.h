@@ -139,7 +139,7 @@ namespace _test{
 			/**
 			* setup log
 			*/
-			_mp::clog::get_instance().config(s_root_folder_except_backslash, -1,L"", std::wstring(L"test_tp_hid"));
+			_mp::clog::get_instance().config(s_root_folder_except_backslash, -1,L"", std::wstring(L"test_tp_hid"), std::wstring(L"test_tp_hid"));
 			_mp::clog::get_instance().remove_log_files_older_then_now_day(7);
 			_mp::clog::get_instance().enable(true);
 			_mp::clog::get_instance().Trace(L"TEST OK.");

@@ -448,7 +448,7 @@ private:
 		_mp::clog::get_instance().remove_log_files_older_then_now_day(cini.get_log_days_to_keep());
 		_mp::clog::get_instance().enable(cini.get_log_enable());
 		
-		_logging_ini();
+		_mp::clog::get_instance().log_fmt(L"%ls", cini.get_string().c_str());
 	}
 	~crun_service(void)
 	{
@@ -681,31 +681,6 @@ private:
 			, m_process_info.hProcess
 			, m_process_info.hThread
 		);
-	}
-
-	void _logging_ini()
-	{
-		_mp::clog::get_instance().log_fmt(L"[I] %s | service file  = %s.\n", __WFUNCTION__, m_s_service_exe_file_name.c_str());
-		_mp::clog::get_instance().log_fmt(L"[I] %s | process_check_interval_sec = %u.\n", __WFUNCTION__, m_n_check_process_seconds);
-		
-		_mp::clog::get_instance().log_fmt(L"[I] %s | s_command_line = %s.\n", __WFUNCTION__, m_process.s_command_line.c_str());
-		_mp::clog::get_instance().log_fmt(L"[I] %s | s_working_directory = %s.\n", __WFUNCTION__, m_process.s_working_directory.c_str());
-		_mp::clog::get_instance().log_fmt(L"[I] %s | n_pause_start = %u.\n", __WFUNCTION__, m_process.n_pause_start);
-		_mp::clog::get_instance().log_fmt(L"[I] %s | n_pause_end = %u.\n", __WFUNCTION__, m_process.n_pause_end);
-
-		if(m_process.b_user_interface)
-			_mp::clog::get_instance().log_fmt(L"[I] %s | b_user_interface = yes.\n", __WFUNCTION__);
-		else
-			_mp::clog::get_instance().log_fmt(L"[I] %s | b_user_interface = no.\n", __WFUNCTION__);
-
-		if(m_process.b_restart)
-			_mp::clog::get_instance().log_fmt(L"[I] %s | b_restart = yes.\n", __WFUNCTION__);
-		else
-			_mp::clog::get_instance().log_fmt(L"[I] %s | b_restart = no.\n", __WFUNCTION__);
-
-		_mp::clog::get_instance().log_fmt(L"[I] %s | s_user_name = %s.\n", __WFUNCTION__, m_process.s_user_name.c_str());
-		_mp::clog::get_instance().log_fmt(L"[I] %s | s_domain = %s.\n", __WFUNCTION__, m_process.s_domain.c_str());
-		_mp::clog::get_instance().log_fmt(L"[I] %s | s_password = %s.\n", __WFUNCTION__, m_process.s_password.c_str());
 	}
 
 	static bool _is_windows_version_or_greater(WORD wMajorVersion, WORD wMinorVersion, WORD wServicePackMajor)

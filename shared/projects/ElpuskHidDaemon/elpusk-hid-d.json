@@ -4,7 +4,7 @@
   "description": "secure websocket server and device manager",
   "date": "06262025",
 
-  "log": "enable",
+  "log_enable": "true",
   "log_days": 3,
 
   "port": 443,

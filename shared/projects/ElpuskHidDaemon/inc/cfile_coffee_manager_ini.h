@@ -139,8 +139,8 @@ public:
 			//
 			m_b_log_enable = true;
 
-			if (obj.contains("log")) {
-				std::string s_log = obj["log"].as_string().c_str();
+			if (obj.contains("log_enable")) {
+				std::string s_log = obj["log_enable"].as_string().c_str();
 				std::wstring ws_log = _mp::cstring::get_unicode_from_mcsc(s_log);
 				if (ws_log == L"true" || ws_log == L"1" || ws_log == L"enable") {
 					m_b_log_enable = true;
@@ -149,6 +149,18 @@ public:
 				else if (ws_log == L"false" || ws_log == L"0" || ws_log == L"disable") {
 					m_b_log_enable = false;
 					m_b_exist_log_enable = true;
+				}
+			}
+			//
+			m_ll_log_days_to_keep = 3; // default 3 days
+			if (obj.contains("log_days")) {
+				int n_days = obj["log_days"].as_int64();
+				if (n_days > 0) {
+					m_ll_log_days_to_keep = (unsigned long long)n_days;
+					m_b_exist_log_days_to_keep = true;
+				}
+				else {
+					m_ll_log_days_to_keep = 3; //default is 3 days.
 				}
 			}
 			//

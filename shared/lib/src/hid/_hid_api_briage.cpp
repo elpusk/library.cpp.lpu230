@@ -212,10 +212,10 @@ struct hid_device_info* _hid_enumerate(libusb_context* usb_context, unsigned sho
 
     if (root == NULL) {
         if (vendor_id == 0 && product_id == 0) {
-            _mp::clog::get_instance().log_fmt(L"[W] %ls : No HID devices found in the system.\n", __WFUNCTION__);
+            //_mp::clog::get_instance().log_fmt(L"[W] %ls : No HID devices found in the system.\n", __WFUNCTION__);
         }
         else {
-            _mp::clog::get_instance().log_fmt(L"[W] %ls : No HID devices with requested VID/PID found in the system.\n", __WFUNCTION__);
+            //_mp::clog::get_instance().log_fmt(L"[W] %ls : No HID devices with requested VID/PID found in the system.\n", __WFUNCTION__);
         }
     }
 

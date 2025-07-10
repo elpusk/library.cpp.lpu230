@@ -4,7 +4,7 @@
   "description": "Start or stop a elpusk-hid-d",
   "date": "06262025",
 
-  "log": "enable",
+  "log_enable": "true",
   "log_days": 3,
 
   "process_check_interval_sec": 10,

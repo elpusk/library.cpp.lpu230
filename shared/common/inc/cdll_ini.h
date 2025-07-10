@@ -70,8 +70,8 @@ public:
 					m_s_date = L"06262025";
 				}
 
-				//logging section
-				int n_log_enable = pt.get<int>("log.logenable", -1);
+				//log section
+				int n_log_enable = pt.get<int>("log.enable", -1);
 				if (n_log_enable != -1) {
 					m_b_exist_log_enable = true;
 					if (n_log_enable == 1) {
@@ -84,7 +84,7 @@ public:
 				else {
 					m_b_log_enable = true; //default is enable.
 				}
-				long long ll_log_days_to_keep = pt.get<long long>("log.logdayskeep", -1);
+				long long ll_log_days_to_keep = pt.get<long long>("log.days", -1);
 				if (ll_log_days_to_keep != -1) {
 					m_b_exist_log_days_to_keep = true;
 					m_ll_log_days_to_keep = (unsigned long long)ll_log_days_to_keep;
