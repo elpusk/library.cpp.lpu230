@@ -670,6 +670,11 @@ namespace _mp
 			const std::wstring& s_in_prefix_log_file
 		)
 		{
+#ifdef _WIN32
+			std::wstring s_separator(L"\\");
+#else
+			std::wstring s_separator(L"/");
+#endif
 			bool b_result(false);
 			do {
 				std::wstring s_log_folder_without_backslash;
@@ -679,21 +684,23 @@ namespace _mp
 				s_log_folder_without_backslash = s_in_folder_abs_path_without_backslash;
 
 				if (n_employee_id != (size_t)(-1)) {
-					s_log_folder_without_backslash += L"\\";
+					s_log_folder_without_backslash += s_separator;
 					std::wstring s_em;
 					_mp::cstring::format_c_style(s_em, L"%08u", n_employee_id);
 					s_log_folder_without_backslash += s_em;
 				}
 
 				if(!s_program_name.empty()) {
-					s_log_folder_without_backslash += L"\\";
+					s_log_folder_without_backslash += s_separator;
 					s_log_folder_without_backslash += s_program_name;
 				}
 				if (!s_module_name.empty()) {
-					s_log_folder_without_backslash += L"\\";
+					s_log_folder_without_backslash += s_separator;
 					s_log_folder_without_backslash += s_module_name;
 				}
-				s_log_folder_without_backslash += L"\\log";
+				s_log_folder_without_backslash += s_separator;
+				s_log_folder_without_backslash += L"log";
+				
 
 				cfile::is_exist_folder(s_log_folder_without_backslash, true);
 				if (!cfile::is_exist_folder(s_log_folder_without_backslash, false)) {
