@@ -139,7 +139,16 @@
     <LibraryPath>/usr/local/openssl-1.1.1s/lib;C:\local\boost_1_80_0\stage\release\lib;$(LibraryPath);C:\local\libusb\out\lib;C:\local\libusb\out\lib;/usr/local/lib;C:\local\libusb\out\lib;/usr/local/libusb/lib</LibraryPath>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="..\shared\projects\lpu237_ibutton\tg_lpu237_ibutton.ini" />
+    <None Include="..\shared\projects\lpu237_ibutton\tg_lpu237_ibutton.ini">
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</RemoteCopyFile>
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</RemoteCopyFile>
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</RemoteCopyFile>
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</RemoteCopyFile>
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">true</RemoteCopyFile>
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Release|x86'">true</RemoteCopyFile>
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</RemoteCopyFile>
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</RemoteCopyFile>
+    </None>
     <None Include="li_lpu237_ibutton.ld" />
   </ItemGroup>
   <ItemGroup>

@@ -8,6 +8,6 @@
   "log_days": 3,
 
   "process_check_interval_sec": 10,
-  "command_line": "%ProgramFiles%\\elpusk\\00000006\\coffee_manager\\bin\\elpusk-hid-d.exe",
-  "working_directory": "%ProgramFiles%\\elpusk\\00000006\\coffee_manager\\bin"
+  "command_line": "C:\\job\\library.cpp.lpu230\\x64\\Debug\\elpusk-hid-d.exe",
+  "working_directory": "C:\\job\\library.cpp.lpu230\\x64\\Debug"
 }

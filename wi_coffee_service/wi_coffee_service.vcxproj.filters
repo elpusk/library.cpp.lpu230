@@ -22,6 +22,15 @@
     <Filter Include="common\json">
       <UniqueIdentifier>{9ac78208-f23d-4afa-b56c-96433d4b7d9d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="common\deb_json">
+      <UniqueIdentifier>{f6b04d9f-fd8f-4045-8d68-df6ab32a9ab4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\ws">
+      <UniqueIdentifier>{ccfacd25-57de-4ee2-8506-e814334474df}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\svr">
+      <UniqueIdentifier>{b8c354f3-ff97-47c3-8112-0c83ac1dfa9a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
@@ -63,6 +72,27 @@
     <ClInclude Include="..\shared\projects\coffee_service\inc\cini_service.h">
       <Filter>common</Filter>
     </ClInclude>
+    <ClInclude Include="..\shared\common\inc\capi_client.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\websocket\mp_win_nt.h">
+      <Filter>lib\ws</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\server\mp_cclient.h">
+      <Filter>lib\svr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\server\mp_cclient_cb.h">
+      <Filter>lib\svr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\server\mp_cclient_cb_qitem.h">
+      <Filter>lib\svr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\server\mp_cclient_manager.h">
+      <Filter>lib\svr</Filter>
+    </ClInclude>
+    <ClInclude Include="csimple_of_client.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="wi_coffee_service.rc">
@@ -79,10 +109,28 @@
     <ClCompile Include="..\shared\lib\inc\mp_cnamed_pipe_.cpp">
       <Filter>lib</Filter>
     </ClCompile>
+    <ClCompile Include="..\shared\common\src\capi_client.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\lib\src\server\mp_cclient.cpp">
+      <Filter>lib\svr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\lib\src\server\mp_cclient_cb.cpp">
+      <Filter>lib\svr</Filter>
+    </ClCompile>
+    <ClCompile Include="crun_service.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="csimple_of_client.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\shared\projects\coffee_service\coffee_service.json">
       <Filter>common\json</Filter>
+    </None>
+    <None Include="..\shared\projects\coffee_service\deb_json\coffee_service.json">
+      <Filter>common\deb_json</Filter>
     </None>
   </ItemGroup>
 </Project>

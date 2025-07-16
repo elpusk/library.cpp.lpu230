@@ -238,7 +238,16 @@
     <ClInclude Include="..\shared\projects\ElpuskHidDaemon\inc\cfile_coffee_manager_ini.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\shared\projects\ElpuskHidDaemon\elpusk-hid-d.json" />
+    <None Include="..\shared\projects\ElpuskHidDaemon\elpusk-hid-d.json">
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</RemoteCopyFile>
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</RemoteCopyFile>
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</RemoteCopyFile>
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</RemoteCopyFile>
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">true</RemoteCopyFile>
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Release|x86'">true</RemoteCopyFile>
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</RemoteCopyFile>
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</RemoteCopyFile>
+    </None>
     <None Include="elpusk-hid-d.service">
       <RemoteFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">/etc/systemd/system/elpusk-hid-d.service</RemoteFile>
       <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">false</RemoteCopyFile>

@@ -75,22 +75,22 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <ItemGroup>
-    <None Include="build-coffee-manager.sh">
-      <RemoteFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">~/build_deb/build-coffee-manager.sh</RemoteFile>
+    <None Include="build-coffee-manager-2nd.sh">
+      <RemoteFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">~/build_deb/build-coffee-manager-2nd.sh</RemoteFile>
       <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</RemoteCopyFile>
-      <RemoteFile Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">~/build_deb/build-coffee-manager.sh</RemoteFile>
+      <RemoteFile Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">~/build_deb/build-coffee-manager-2nd.sh</RemoteFile>
       <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</RemoteCopyFile>
-      <RemoteFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">~/build_deb/build-coffee-manager.sh</RemoteFile>
+      <RemoteFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">~/build_deb/build-coffee-manager-2nd.sh</RemoteFile>
       <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</RemoteCopyFile>
-      <RemoteFile Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">~/build_deb/build-coffee-manager.sh</RemoteFile>
+      <RemoteFile Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">~/build_deb/build-coffee-manager-2nd.sh</RemoteFile>
       <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</RemoteCopyFile>
-      <RemoteFile Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">~/build_deb/build-coffee-manager.sh</RemoteFile>
+      <RemoteFile Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">~/build_deb/build-coffee-manager-2nd.sh</RemoteFile>
       <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">true</RemoteCopyFile>
-      <RemoteFile Condition="'$(Configuration)|$(Platform)'=='Release|x86'">~/build_deb/build-coffee-manager.sh</RemoteFile>
+      <RemoteFile Condition="'$(Configuration)|$(Platform)'=='Release|x86'">~/build_deb/build-coffee-manager-2nd.sh</RemoteFile>
       <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Release|x86'">true</RemoteCopyFile>
-      <RemoteFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">~/build_deb/build-coffee-manager.sh</RemoteFile>
+      <RemoteFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">~/build_deb/build-coffee-manager-2nd.sh</RemoteFile>
       <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</RemoteCopyFile>
-      <RemoteFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">~/build_deb/build-coffee-manager.sh</RemoteFile>
+      <RemoteFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">~/build_deb/build-coffee-manager-2nd.sh</RemoteFile>
       <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</RemoteCopyFile>
     </None>
   </ItemGroup>

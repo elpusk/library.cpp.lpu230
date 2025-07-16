@@ -202,5 +202,6 @@
     <None Include="..\shared\projects\lpu237_ibutton\tg_lpu237_ibutton.ini">
       <Filter>common\ini</Filter>
     </None>
+    <None Include="li_lpu237_ibutton.ld" />
   </ItemGroup>
 </Project>

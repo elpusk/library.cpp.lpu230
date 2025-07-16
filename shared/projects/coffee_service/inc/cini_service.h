@@ -36,7 +36,7 @@ public:
 		do {
 
 			//load ini .json file
-			std::wstring ws_path_ini(_mp::ccoffee_path::get_path_of_coffee_mgmt_ini_file());
+			std::wstring ws_path_ini(_mp::ccoffee_path::get_path_of_coffee_svr_ini_file());
 			if( !s_file.empty()) {
 				ws_path_ini = s_file;
 			}
@@ -219,7 +219,7 @@ public:
 #ifdef _WIN32
 				v_expanded_path.resize(v_expanded_path.size(), 0);
 				// expand environment variables in command line
-				UINT n_len = ExpandEnvironmentStringsW(m_s_command_line.c_str(), &v_expanded_path[0], (DWORD)v_expanded_path.size());
+				UINT n_len = ExpandEnvironmentStringsW(m_s_working_directory.c_str(), &v_expanded_path[0], (DWORD)v_expanded_path.size());
 				if (n_len == 0 || n_len > v_expanded_path.size()) {
 					// if the expanded string is too long, use default coffee management path
 					m_s_working_directory = _mp::ccoffee_path::get_path_of_coffee_mgmt_folder_except_backslash();
