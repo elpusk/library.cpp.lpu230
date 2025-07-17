@@ -84,6 +84,9 @@ lpu23x device c++ library
 + Win11 : elpusk-hid-d.exe /removeall
 + Debian : elpusk-hid-d /removeall
 
+### terminate security websocket server.
++ Win11 : elpusk-hid-d.exe /bye
++ Debian : elpusk-hid-d /bye
 
 ## Problems
 + fixed after starting wss, the inserted device is reported that  is used.
@@ -101,13 +104,13 @@ lpu23x device c++ library
 
 ## build & install
 ### deb package
-+ In Debian12, copy build-coffee-manager.sh to /home/tester/build_deb/
-+ run as like, sudo sh build-coffee-manager.sh
-+ installation, sudo dpkg -i coffee-manager_x.y-z_amd64.deb
-+ uninstallation, sudo dpkg -r coffee-manager
++ In Debian12, copy build-coffee-manager-2nd.sh to /home/tester/build_deb/
++ run as like, sudo sh build-coffee-manager-2nd.sh
++ installation, sudo dpkg -i coffee-manager-2nd_x.y_amd64.deb
++ uninstallation(pure), sudo dpkg -P coffee-manager-2nd
 
 ### remove forcefully
-sudo dpkg --remove --force-remove-reinstreq coffee-manager
+sudo dpkg --remove --force-remove-reinstreq coffee-manager-2nd
 sudo rm /var/lib/dpkg/info/coffee-manager*
 
 

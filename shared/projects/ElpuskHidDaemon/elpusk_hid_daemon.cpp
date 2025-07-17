@@ -36,6 +36,7 @@
 * this program must be on admin mode. 
 * command line option
 * "/server"(default) - run as security web socket server. the process of this option can be executed only one instance.
+* "/bye" - stop the process of "/server".
 * "/trace" - display trace message of the process of "/server".
 * "/cert" - generates the self signed certificate and register it for using in web-browser.
 * "/removecert" - unregister the self signed certificate and delete it.
@@ -61,6 +62,12 @@ int main(int argc, char* argv[])
 			n_result = main_wss(set_parameters);
 			continue;
 		}
+		if (set_parameters.find(L"/bye") != std::end(set_parameters)) {
+			//stop wss server
+			n_result = main_bye(set_parameters);
+			continue;
+		}
+
 		if (set_parameters.find(L"/trace") != std::end(set_parameters)) {
 			n_result = main_trace(set_parameters);
 			continue;

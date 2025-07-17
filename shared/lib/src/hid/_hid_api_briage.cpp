@@ -2,6 +2,7 @@
 #include <sstream>
 
 #include <mp_cstring.h>
+#include <mp_elpusk.h>
 #include <hid/_hid_api_briage.h>
 #include <hid/_vhid_info.h>
 
@@ -399,6 +400,24 @@ _hid_api_briage::_hid_api_briage() :
 _hid_api_briage::~_hid_api_briage()
 {
     if (m_b_ini) {
+        for( auto item : m_map_lpu237_disable_ibutton) {
+            if (item.second) {
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+                struct hid_device_info* p_hid_dev_inf = hid_get_device_info(item.first);
+                if (p_hid_dev_inf) {
+
+                    ATLTRACE(" ^________^ device auto closed-%s, vendor_id:0x%x, product_id:0x%x, interface_number:%d.\n",
+                        p_hid_dev_inf->path,
+                        p_hid_dev_inf->vendor_id,
+                        p_hid_dev_inf->product_id,
+                        p_hid_dev_inf->interface_number
+                    );
+                }
+#endif
+                _lpu237_ibutton_enable(item.first, true); // enable i-button listening.
+            }
+		}//end for
+
         for (auto item : m_map_hid_dev) {
             item.second.second = false;
             hid_close(item.second.first);
@@ -521,6 +540,35 @@ int _hid_api_briage::api_open_path(const char* path)
         m_map_hid_dev[n_map_index].first = p_dev;
         m_map_hid_dev[n_map_index].second = false;//primitive device always exclusive mode
         m_n_map_index = n_map_index;
+
+        // this is dregon.
+        if (p_dev) {
+            struct hid_device_info* p_hid_dev_inf = hid_get_device_info(p_dev);
+            if (p_hid_dev_inf) {
+
+
+                do {
+                    if (p_hid_dev_inf->vendor_id != _mp::_elpusk::const_usb_vid) {
+                        continue;
+                    }
+                    if (p_hid_dev_inf->product_id != _mp::_elpusk::_lpu237::const_usb_pid && p_hid_dev_inf->product_id != _mp::_elpusk::_lpu238::const_usb_pid) {
+                        continue;
+                    }
+                    // here lpu237 & lpu238 device only
+                    if (_lpu237_ibutton_enable(p_dev, false)) {// disable i-button listening.
+						m_map_lpu237_disable_ibutton[p_dev] = true; // remember disable i-button
+                    }
+                } while (false);
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+                ATLTRACE(" ^________^ device open-%s, vendor_id:0x%x, product_id:0x%x, interface_number:%d.\n",
+                    p_hid_dev_inf->path,
+                    p_hid_dev_inf->vendor_id,
+                    p_hid_dev_inf->product_id,
+                    p_hid_dev_inf->interface_number
+                );
+#endif
+            }
+        }
         return n_map_index;
     }
     else {
@@ -540,8 +588,127 @@ void _hid_api_briage::api_close(int n_primitive_map_index)
     if (m_map_hid_dev.find(n_primitive_map_index) != std::end(m_map_hid_dev)) {
         p_dev = m_map_hid_dev[n_primitive_map_index].first;
         m_map_hid_dev.erase(n_primitive_map_index);
+
+        // this is dregon.
+        if (p_dev) {
+            struct hid_device_info* p_hid_dev_inf = hid_get_device_info(p_dev);
+            if (p_hid_dev_inf) {
+
+                do {
+                    if (p_hid_dev_inf->vendor_id != _mp::_elpusk::const_usb_vid) {
+                        continue;
+                    }
+                    if (p_hid_dev_inf->product_id != _mp::_elpusk::_lpu237::const_usb_pid && p_hid_dev_inf->product_id != _mp::_elpusk::_lpu238::const_usb_pid) {
+                        continue;
+                    }
+                    // here lpu237 & lpu238 device only
+					auto it = m_map_lpu237_disable_ibutton.find(p_dev);
+                    if(it != std::end(m_map_lpu237_disable_ibutton)) {
+                        if (it->second) {
+                            // enable i-button listening.
+                            _lpu237_ibutton_enable(p_dev, true); // enable i-button listening.(recover default )
+                        }
+                        m_map_lpu237_disable_ibutton.erase(it);
+                    }
+                } while (false);
+
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+                ATLTRACE(" ^________^ device closed-%s, vendor_id:0x%x, product_id:0x%x, interface_number:%d.\n",
+                    p_hid_dev_inf->path,
+                    p_hid_dev_inf->vendor_id,
+                    p_hid_dev_inf->product_id,
+					p_hid_dev_inf->interface_number
+                );
+#endif
+            }
+        }
+
         hid_close(p_dev);
     }
+}
+
+bool _hid_api_briage::_lpu237_ibutton_enable(hid_device* p_dev, bool b_enable)
+{
+    bool b_result(false);
+
+    do {
+        if (p_dev == nullptr) {
+            continue;
+        }
+
+        unsigned char c_cmd = b_enable ? 'F' : 'H';
+
+        int n_try = 100;
+		int n_report_out = _mp::_elpusk::_lpu237::const_size_report_out_except_id+1; // 1 is report id
+
+        _mp::type_v_buffer v_tx(n_report_out, 0);
+        int n_written = 0;
+        int n_totoal_w(0);
+
+		v_tx[1] = c_cmd; // request command
+
+        // TX
+        do {
+            n_written = hid_write(p_dev, &v_tx[n_totoal_w], v_tx.size()- n_totoal_w);
+            if (n_written < 0) {
+                // error
+                break;
+            }
+
+            n_totoal_w += n_written;
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            --n_try;
+            if( n_try <= 0) {
+                // error
+                break;
+			}
+        } while (n_totoal_w < n_report_out);
+
+        if (n_totoal_w < n_report_out) {
+			continue; //error
+        }
+
+        // RX . Good - 0xFF
+        n_try = 200;
+#ifdef _WIN32
+        int n_report_in = _mp::_elpusk::_lpu237::const_size_report_in_except_id;
+        int n_rx_start = 0;
+#else
+        int n_report_in = _mp::_elpusk::_lpu237::const_size_report_in_except_id + 1; // 1 is report id
+        int n_rx_start = 1;
+#endif
+
+        _mp::type_v_buffer v_rx(n_report_in, 0);
+        int n_read = 0;
+        int n_totoal_r(0);
+
+        do {
+            n_read = hid_read(p_dev, &v_rx[n_totoal_r], v_rx.size() - n_totoal_r);
+            if (n_read < 0) {
+                // error
+                break;
+            }
+
+			n_totoal_r += n_read;
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            --n_try;
+            if (n_try <= 0) {
+                // error
+                break;
+            }
+        } while (n_totoal_r < n_report_in);
+
+        if (n_totoal_r < n_report_in) {
+            continue; //error
+        }
+
+        if( v_rx[n_rx_start] != 'R' || v_rx[n_rx_start+1] != 0xFF) {
+			continue; // error
+        }
+
+        b_result = true;
+    } while (false);
+    return b_result;
 }
 
 int _hid_api_briage::api_set_nonblocking(int n_primitive_map_index, int nonblock)

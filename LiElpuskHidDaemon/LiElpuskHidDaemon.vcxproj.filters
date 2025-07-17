@@ -73,6 +73,9 @@
     <ClCompile Include="..\shared\lib\src\server\mp_cbase_ctl_fn_.cpp">
       <Filter>lib\svr</Filter>
     </ClCompile>
+    <ClCompile Include="..\shared\common\src\main_bye.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="3thpart">

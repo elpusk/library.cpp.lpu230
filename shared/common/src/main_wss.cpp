@@ -132,10 +132,12 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 				}
 				s_data.clear();
 			}
-
-			std::this_thread::sleep_for(std::chrono::milliseconds(_mp::_coffee::CONST_N_COFFEE_MGMT_SLEEP_INTERVAL_MMSEC));
-
+			else {
+				std::this_thread::sleep_for(std::chrono::milliseconds(_mp::_coffee::CONST_N_COFFEE_MGMT_SLEEP_INTERVAL_MMSEC));
+			}
 		} while (gb_run_main_loop);
+
+		gptr_ctl_pipe.reset();
 
 		_mp::cserver::get_instance().stop();
 		log.log_fmt(L"[I] %ls | cserver::get_instance().stop().\n", __WFUNCTION__);

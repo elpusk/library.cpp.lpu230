@@ -45,6 +45,9 @@ protected:
 	*/
 	typedef	std::pair< hid_device*, bool > _type_pair_hid_dev_lock;
 	typedef std::map<int, _hid_api_briage::_type_pair_hid_dev_lock> _type_map_hid_dev;
+
+private:
+	typedef std::map<hid_device*, bool> _type_map_lpu237_disable_ibutton;
 public:
 
 	static std::mutex& get_mutex_for_hidapi()
@@ -182,6 +185,9 @@ public:
 protected:
 	_hid_api_briage();
 
+private:
+	bool _lpu237_ibutton_enable(hid_device* p_dev,bool b_enable);
+
 protected:
 	std::wstring m_s_class_name;
 	bool m_b_ini;
@@ -193,6 +199,11 @@ protected:
 
 	// -1 or the last generated map index key of m_map_hid_dev
 	int m_n_map_index;
+
+private:
+	// lpu237 & lpu238 device status of i-button disable request processing result.
+	// warning: this is dregon
+	_hid_api_briage::_type_map_lpu237_disable_ibutton m_map_lpu237_disable_ibutton;
 	
 private://don't call these methods.
 	_hid_api_briage(const _hid_api_briage&);

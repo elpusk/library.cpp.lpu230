@@ -173,18 +173,40 @@ namespace _mp {
 		type_v_buffer v_data;
 		bool b_result = this->read(v_data);
 
-		if (b_result) {
+		do {
+			s_data.clear();
+			if(!b_result) {
+				continue;
+			}
+
+			b_result = false;
+
+			if (v_data.empty()) {
+				continue;
+			}
 			if (v_data.size() % sizeof(wchar_t) != 0) {
-				b_result = false;
+				continue;
 			}
-			else {
-				wchar_t c;
-				for (size_t i = 0; i < v_data.size() / sizeof(wchar_t); i++) {
-					memcpy(&c, &v_data[i * sizeof(wchar_t)], sizeof(c));
-					s_data.push_back(c);
-				}//end for
+
+			size_t ns_data = v_data.size() / sizeof(wchar_t);
+			wchar_t* ps_data = reinterpret_cast<wchar_t*>(&v_data[0]);
+
+			if( *ps_data == 0) {
+				//if the first wchar_t is NULL, then it is empty string.
+				continue;
 			}
-		}
+
+			for(size_t i = 0; i < ns_data; i++) {
+				if (ps_data[i] == 0) {
+					//if the wchar_t is NULL, then it is end of string.
+					break; //exit for
+				}
+				s_data.push_back(ps_data[i]);
+			}//end for
+
+			b_result = true;
+
+		} while (false);
 
 		return b_result;
 	}
