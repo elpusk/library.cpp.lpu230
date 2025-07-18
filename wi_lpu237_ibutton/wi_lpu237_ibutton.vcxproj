@@ -217,6 +217,7 @@
     <ClInclude Include="..\shared\lib\inc\websocket\mp_ws_tools.h" />
     <ClInclude Include="..\shared\projects\lpu237_dll\inc\ccb_client.h" />
     <ClInclude Include="..\shared\projects\lpu237_dll\inc\lpu237_of_client.h" />
+    <ClInclude Include="..\shared\projects\lpu237_ibutton\inc\cmap_user_cb.h" />
     <ClInclude Include="..\shared\projects\lpu237_ibutton\inc\tg_lpu237_ibutton.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.h" />
@@ -229,6 +230,7 @@
     <ClCompile Include="..\shared\lib\src\server\mp_cclient.cpp" />
     <ClCompile Include="..\shared\lib\src\server\mp_cclient_cb.cpp" />
     <ClCompile Include="..\shared\projects\lpu237_dll\lpu237_of_client.cpp" />
+    <ClCompile Include="..\shared\projects\lpu237_ibutton\cmap_user_cb.cpp" />
     <ClCompile Include="..\shared\projects\lpu237_ibutton\tg_lpu237_ibutton.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="pch.cpp">

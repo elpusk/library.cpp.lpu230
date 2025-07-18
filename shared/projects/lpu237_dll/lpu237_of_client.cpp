@@ -48,6 +48,18 @@ bool lpu237_of_client::cmd_leave_opos()
     return _cmd_get( cprotocol_lpu237::cmd_leave_opos);
 }
 
+bool lpu237_of_client::cmd_ibutton_enable()
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    return _cmd_get(cprotocol_lpu237::cmd_start_ibutton);
+}
+
+bool lpu237_of_client::cmd_ibutton_disble()
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    return _cmd_get(cprotocol_lpu237::cmd_stop_ibutton);
+}
+
 bool lpu237_of_client::cmd_bypass(const _mp::type_v_buffer& v_tx, _mp::type_v_buffer& v_rx)
 {
     bool b_result(false);
@@ -295,6 +307,12 @@ bool lpu237_of_client::_cmd_get( cprotocol_lpu237::type_cmd c_cmd)
         case cprotocol_lpu237::cmd_leave_opos:
             b_result = m_protocol.generate_leave_opos_mode();
             break;
+		case cprotocol_lpu237::cmd_start_ibutton:
+            b_result = m_protocol.generate_start_ibutton();
+			break;
+        case cprotocol_lpu237::cmd_stop_ibutton:
+			b_result = m_protocol.generate_stop_ibutton();
+			break;
         default:
             break;
         }//end switch

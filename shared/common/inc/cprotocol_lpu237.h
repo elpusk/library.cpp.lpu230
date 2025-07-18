@@ -338,6 +338,9 @@ public:
 		cmd_enter_opos = 'I',	//enter opos mode.
 		cmd_leave_opos = 'J',	//leave opos mode.
 
+		cmd_start_ibutton = 'F',	//start i-button. from callisto v3.24, ganymede v5.23, himalia version 2.4, europa version 1.2
+		cmd_stop_ibutton = 'H',	//stop i-button. from callisto v3.24, ganymede v5.23, himalia version 2.4, europa version 1.2
+
 		cmd_hw_is_standard = 'D',	//current model is standard.
 		cmd_hw_is_only_ibutton = 'W',	//current model support only i-button.
 		cmd_read_uid = 'U',	//read UID
@@ -488,6 +491,8 @@ private:
 		gt_goto_boot,
 		gt_enter_opos,
 		gt_leave_opos,
+		gt_start_ibutton,
+		gt_stop_ibutton,
 		gt_support_mmd1000,
 		gt_bypass_uart,
 		gt_type_ibutton,
@@ -926,6 +931,34 @@ public:
 			clear_transaction();
 		}
 		return b_result;
+	}
+
+	bool generate_start_ibutton()
+	{
+		if (_generate_request(cmd_start_ibutton, 0, 0, NULL)) {
+			m_deque_generated_tx.push_back(gt_start_ibutton);
+			return true;
+		}
+		return false;
+	}
+
+	bool is_success_start_ibutton()
+	{
+		return is_success_rx();
+	}
+
+	bool generate_stop_ibutton()
+	{
+		if (_generate_request(cmd_start_ibutton, 0, 0, NULL)) {
+			m_deque_generated_tx.push_back(gt_stop_ibutton);
+			return true;
+		}
+		return false;
+	}
+
+	bool is_success_stop_ibutton()
+	{
+		return is_success_rx();
 	}
 
 	bool generate_enter_opos_mode()
@@ -1498,6 +1531,12 @@ public:
 				break;
 			case gt_leave_opos:
 				b_result = is_success_leave_opos_mode();
+				break;
+			case gt_start_ibutton:
+				b_result = is_success_start_ibutton();
+				break;
+			case gt_stop_ibutton:
+				b_result = is_success_stop_ibutton();
 				break;
 			case gt_support_mmd1000:
 				b_result = _set_device_support_mmd1000_by_rx();

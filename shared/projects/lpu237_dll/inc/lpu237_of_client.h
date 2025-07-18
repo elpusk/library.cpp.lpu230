@@ -34,6 +34,16 @@ public:
 	bool cmd_leave_opos();
 	bool cmd_bypass(const _mp::type_v_buffer& v_tx, _mp::type_v_buffer& v_rx);
 
+	/**
+	* @brief enable which a iButton data send .
+	*/
+	bool cmd_ibutton_enable();
+
+	/**
+	* @brief disable which a iButton data send .
+	*/
+	bool cmd_ibutton_disble();
+
 	int cmd_async_waits_data()
 	{
 		std::lock_guard<std::mutex> lock(m_mutex);

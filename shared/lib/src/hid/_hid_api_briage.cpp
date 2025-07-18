@@ -414,7 +414,7 @@ _hid_api_briage::~_hid_api_briage()
                     );
                 }
 #endif
-                _lpu237_ibutton_enable(item.first, true); // enable i-button listening.
+                //_lpu237_ibutton_enable(item.first, true); // enable i-button listening.
             }
 		}//end for
 
@@ -555,9 +555,11 @@ int _hid_api_briage::api_open_path(const char* path)
                         continue;
                     }
                     // here lpu237 & lpu238 device only
+                    /*
                     if (_lpu237_ibutton_enable(p_dev, false)) {// disable i-button listening.
 						m_map_lpu237_disable_ibutton[p_dev] = true; // remember disable i-button
                     }
+                    */
                 } while (false);
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
                 ATLTRACE(" ^________^ device open-%s, vendor_id:0x%x, product_id:0x%x, interface_number:%d.\n",
@@ -606,7 +608,7 @@ void _hid_api_briage::api_close(int n_primitive_map_index)
                     if(it != std::end(m_map_lpu237_disable_ibutton)) {
                         if (it->second) {
                             // enable i-button listening.
-                            _lpu237_ibutton_enable(p_dev, true); // enable i-button listening.(recover default )
+                            //_lpu237_ibutton_enable(p_dev, true); // enable i-button listening.(recover default )
                         }
                         m_map_lpu237_disable_ibutton.erase(it);
                     }

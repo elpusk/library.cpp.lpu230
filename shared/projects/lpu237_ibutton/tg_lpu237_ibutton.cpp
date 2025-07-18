@@ -10,6 +10,9 @@
 #include <memory>
 #include <iterator>
 #include <string>
+#include <atomic>
+#include <thread>
+#include <mutex>
 
 #include <mp_clog.h>
 #include <mp_cconvert.h>
@@ -22,6 +25,7 @@
 #include <lpu237_of_client.h>
 #include <cdef.h>
 #include <cdll_ini.h>
+#include <cmap_user_cb.h>
 
 #define	LPU237_VID		0x134b
 #define	LPU237_PID		0x0206
@@ -46,6 +50,11 @@ void _so_fini(void)
 }
 #endif // _WIN32
 
+/////////////////////////////////////////////////////////////////////////
+// global variable
+/////////////////////////////////////////////////////////////////////////
+static std::atomic_bool g_b_enable_ibutton_notify(false);
+static cmap_user_cb g_map_user_cb; //global user callback map
 
 /////////////////////////////////////////////////////////////////////////
 // local class
@@ -53,14 +62,107 @@ void _so_fini(void)
 /////////////////////////////////////////////////////////////////////////
 // local function prototype
 /////////////////////////////////////////////////////////////////////////
+static unsigned long _wait_key_with_callback(HANDLE hDev, long n_cb_item_index, type_key_callback pFun, void* pParameter);
 
-/////////////////////////////////////////////////////////////////////////
-// global variable
-/////////////////////////////////////////////////////////////////////////
+/**
+* @brief thread function for retrying job.
+*/
+static void _job_retry_start_key(
+	long n_item_index
+	, HANDLE h_dev
+	, int n_result_index
+	, _mp::casync_parameter_result::type_callback p_fun
+	, void* p_para
+);
+
+/**
+* @brief Callback function for LPU237Lock_wait_key_with_callback().
+* 
+* the user defined callback function will be called by this function.
+*/
+static void __stdcall _cb_key(void*p_user);
 
 /////////////////////////////////////////////////////////////////////////
 // local function body
 /////////////////////////////////////////////////////////////////////////
+void __stdcall _cb_key(void* p_user)
+{
+	do {
+		long n_item_index = (long)p_user;
+		int n_result_index(-1);
+		HANDLE h_dev(INVALID_HANDLE_VALUE);
+
+		if(n_item_index < 0) {
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : invalid item index %d.\n", __WFUNCTION__, n_item_index);
+			continue;
+		}
+		_mp::casync_parameter_result::type_callback p_fun(nullptr);
+		void* p_para(nullptr);
+		if (!g_map_user_cb.get_callback(n_item_index, false, n_result_index, h_dev, p_fun, p_para)) {
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : get_callback fail for item index %d.\n", __WFUNCTION__, n_item_index);
+			continue;
+		}
+
+		if (g_b_enable_ibutton_notify) {
+			if (!p_fun) {
+				_mp::clog::get_instance().log_fmt(L" : ERR : %ls : callback function is NULL for item index %d.\n", __WFUNCTION__, n_item_index);
+				continue;
+			}
+
+			p_fun(p_para); // callback user function
+			continue;
+		}
+
+		// disable ibutton notify
+		std::thread retry_job(
+			_job_retry_start_key
+			, n_item_index
+			, h_dev
+			, n_result_index
+			, p_fun
+			, p_para
+		);
+
+		retry_job.detach(); // detach thread, so that it can run independently.
+		
+		// If the user callback is not enabled, we have to next chance automatically.
+		_mp::clog::get_instance().log_fmt(L" : INF : %ls : user callback is not enabled, skip callback for item index %d.\n", __WFUNCTION__, n_item_index);
+
+	} while (false);
+}
+
+void _job_retry_start_key(
+	long n_item_index
+	, HANDLE h_dev
+	, int n_result_index
+	, _mp::casync_parameter_result::type_callback p_fun
+	, void* p_para
+)
+{
+	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
+	do {
+		if (!ptr_manager_of_device_of_client) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : none manager_of_device_of_client.\n", __WFUNCTION__);
+			continue; // no manager of device of client
+		}
+		_mp::casync_parameter_result::type_ptr_ct_async_parameter_result& ptr_result = ptr_manager_of_device_of_client->get_async_parameter_result_for_manager_from_all_device(n_result_index);
+		if (!ptr_result) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : INVALID_HANDLE_VALUE\n", __WFUNCTION__);
+			continue;
+		}
+		ptr_manager_of_device_of_client->remove_async_result_for_manager(n_result_index); // current result index is removed.(ignore)
+		
+		// retry job
+		_wait_key_with_callback(
+			h_dev
+			, n_item_index
+			, p_fun
+			, p_para
+		);
+
+
+	} while (false);
+}
 
 /////////////////////////////////////////////////////////////////////////
 // exported function body
@@ -316,12 +418,15 @@ unsigned long _CALLTYPE_ LPU237Lock_enable(HANDLE hDev)
 			_mp::clog::get_instance().log_fmt(L" : RET : %ls : INVALID_HANDLE_VALUE\n", __WFUNCTION__);
 			continue;
 		}
+		
+		g_b_enable_ibutton_notify = true;
 		/*
-		if (!ptr_device->cmd_enter_opos()) {
-			_mp::clog::get_instance().log_fmt(L" : RET : %ls : cmd_enter_opos\n", __WFUNCTION__);
+		if (!ptr_device->cmd_ibutton_enable()) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : cmd_ibutton_enable\n", __WFUNCTION__);
 			continue;
 		}
 		*/
+		
 		dwResult = ccb_client::const_dll_result_success;
 		_mp::clog::get_instance().log_fmt(L" : RET : %ls : success\n", __WFUNCTION__);
 	} while (0);
@@ -347,12 +452,15 @@ unsigned long _CALLTYPE_ LPU237Lock_disable(HANDLE hDev)
 			_mp::clog::get_instance().log_fmt(L" : RET : %ls : INVALID_HANDLE_VALUE\n", __WFUNCTION__);
 			continue;
 		}
+		
+		g_b_enable_ibutton_notify = false;
 		/*
-		if (!ptr_device->cmd_leave_opos()) {
-			_mp::clog::get_instance().log_fmt(L" : RET : %ls : cmd_leave_opos\n", __WFUNCTION__);
+		if (!ptr_device->cmd_ibutton_disble()) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : cmd_ibutton_disble\n", __WFUNCTION__);
 			continue;
 		}
 		*/
+
 		dwResult = ccb_client::const_dll_result_success;
 		_mp::clog::get_instance().log_fmt(L" : RET : %ls : success\n", __WFUNCTION__);
 	} while (0);
@@ -393,6 +501,11 @@ unsigned long _CALLTYPE_ LPU237Lock_cancel_wait_key(HANDLE hDev)
 
 unsigned long _CALLTYPE_ LPU237Lock_wait_key_with_callback(HANDLE hDev, type_key_callback pFun, void* pParameter)
 {
+	return _wait_key_with_callback(hDev, -1, pFun, pParameter);
+}
+
+unsigned long _wait_key_with_callback(HANDLE hDev, long n_cb_item_index, type_key_callback pFun, void* pParameter)
+{
 	unsigned long dw_result(ccb_client::const_dll_result_error);
 	unsigned long n_device_index(PtrToUlong(hDev));
 	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
@@ -418,13 +531,31 @@ unsigned long _CALLTYPE_ LPU237Lock_wait_key_with_callback(HANDLE hDev, type_key
 			continue;
 		}
 
-		int n_result_index = ptr_device->cmd_async_waits_data(pFun, pParameter);
+		long n_item_index(-1);
+		if (n_cb_item_index == -1) {
+			// new case
+			n_item_index = g_map_user_cb.add_callback(-1, hDev, pFun, pParameter);
+			if (n_item_index < 0) {
+				_mp::clog::get_instance().log_fmt(L" : RET : %ls : [critical error]add_callback error.\n", __WFUNCTION__);
+				continue;
+			}
+		}
+		else {
+			//retry case
+			n_item_index = n_cb_item_index;
+			g_map_user_cb.change_callback(n_item_index, -1, hDev, pFun, pParameter);
+		}
+
+		int n_result_index = ptr_device->cmd_async_waits_data(_cb_key, (void*)n_item_index);
 		if (n_result_index < 0) {
+			g_map_user_cb.remove_callback(n_item_index);
 			_mp::clog::get_instance().log_fmt(L" : RET : %ls : cmd_async_waits_ms_card.\n", __WFUNCTION__);
 			continue;
 		}
 
-		dw_result = (unsigned long)n_result_index;
+		g_map_user_cb.change_result_index(n_item_index, n_result_index);
+
+		dw_result = (unsigned long)n_item_index;
 
 		_mp::clog::get_instance().log_fmt(L" : RET : %ls : success - %u.\n", __WFUNCTION__, n_result_index);
 	} while (0);
@@ -442,8 +573,15 @@ unsigned long _CALLTYPE_ LPU237Lock_get_data(unsigned long dwBufferIndex, unsign
 	do {
 		_mp::clog::get_instance().log_fmt(L" : CAL : %ls : %d.\n", __WFUNCTION__, dwBufferIndex);
 
+		long n_item_index = (long)dwBufferIndex;
+		HANDLE hDev(INVALID_HANDLE_VALUE);
+		_mp::casync_parameter_result::type_callback p_fun(nullptr);
+		void* p_para(nullptr);
 
-		n_result_index = (int)dwBufferIndex;
+		if (!g_map_user_cb.get_callback(n_item_index, true, n_result_index, hDev, p_fun, p_para)) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : invalid item index .\n", __WFUNCTION__);
+			continue;
+		}
 
 		if (!ptr_manager_of_device_of_client) {
 			_mp::clog::get_instance().log_fmt(L" : RET : %ls : none manager_of_device_of_client.\n", __WFUNCTION__);
