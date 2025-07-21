@@ -75,36 +75,59 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
-    <IncludePath>$(RemoteRootDir)/li_lpu237_dll/shared/projects/lpu237_dll;C:\local\boost_1_80_0</IncludePath>
+    <IncludePath>$(RemoteRootDir)/li_lpu237_dll/shared/projects/lpu237_dll;$(RemoteRootDir)/li_lpu237_ibutton/shared/projects/lpu237_ibutton;C:\local\boost_1_80_0</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
-    <IncludePath>$(RemoteRootDir)/li_lpu237_dll/shared/projects/lpu237_dll;C:\local\boost_1_80_0</IncludePath>
+    <IncludePath>$(RemoteRootDir)/li_lpu237_dll/shared/projects/lpu237_dll;$(RemoteRootDir)/li_lpu237_ibutton/shared/projects/lpu237_ibutton;C:\local\boost_1_80_0</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
-    <IncludePath>$(RemoteRootDir)/li_lpu237_dll/shared/projects/lpu237_dll;C:\local\boost_1_80_0</IncludePath>
+    <IncludePath>$(RemoteRootDir)/li_lpu237_dll/shared/projects/lpu237_dll;$(RemoteRootDir)/li_lpu237_ibutton/shared/projects/lpu237_ibutton;C:\local\boost_1_80_0</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
-    <IncludePath>$(RemoteRootDir)/li_lpu237_dll/shared/projects/lpu237_dll;C:\local\boost_1_80_0</IncludePath>
+    <IncludePath>$(RemoteRootDir)/li_lpu237_dll/shared/projects/lpu237_dll;$(RemoteRootDir)/li_lpu237_ibutton/shared/projects/lpu237_ibutton;C:\local\boost_1_80_0</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(RemoteRootDir)/li_lpu237_dll/shared/projects/lpu237_dll;C:\local\boost_1_80_0</IncludePath>
+    <IncludePath>$(RemoteRootDir)/li_lpu237_dll/shared/projects/lpu237_dll;$(RemoteRootDir)/li_lpu237_ibutton/shared/projects/lpu237_ibutton;C:\local\boost_1_80_0</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(RemoteRootDir)/li_lpu237_dll/shared/projects/lpu237_dll;C:\local\boost_1_80_0</IncludePath>
+    <IncludePath>$(RemoteRootDir)/li_lpu237_dll/shared/projects/lpu237_dll;$(RemoteRootDir)/li_lpu237_ibutton/shared/projects/lpu237_ibutton;C:\local\boost_1_80_0</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
-    <IncludePath>$(RemoteRootDir)/li_lpu237_dll/shared/projects/lpu237_dll;C:\local\boost_1_80_0</IncludePath>
+    <IncludePath>$(RemoteRootDir)/li_lpu237_dll/shared/projects/lpu237_dll;$(RemoteRootDir)/li_lpu237_ibutton/shared/projects/lpu237_ibutton;C:\local\boost_1_80_0</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
-    <IncludePath>$(RemoteRootDir)/li_lpu237_dll/shared/projects/lpu237_dll;C:\local\boost_1_80_0</IncludePath>
+    <IncludePath>$(RemoteRootDir)/li_lpu237_dll/shared/projects/lpu237_dll;$(RemoteRootDir)/li_lpu237_ibutton/shared/projects/lpu237_ibutton;C:\local\boost_1_80_0</IncludePath>
   </PropertyGroup>
   <ItemGroup>
     <ClCompile Include="..\shared\projects\tp_lpu237_dll\tp_lpu237_dll.cpp" />
+    <ClCompile Include="..\shared\projects\tp_lpu237_dll\tp_lpu237_ibutton.cpp" />
+    <ClCompile Include="..\shared\projects\tp_lpu237_dll\tp_main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\shared\projects\tp_lpu237_dll\clpu237_ibutton.h" />
     <ClInclude Include="..\shared\projects\tp_lpu237_dll\clpu237_msr.h" />
+    <ClInclude Include="..\shared\projects\tp_lpu237_dll\tp_main.h" />
   </ItemGroup>
-  <ItemDefinitionGroup />
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+    <ClCompile>
+      <PreprocessorDefinitions>_DEBUG</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
+    <ClCompile>
+      <PreprocessorDefinitions>_DEBUG</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PreprocessorDefinitions>_DEBUG</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
+    <ClCompile>
+      <PreprocessorDefinitions>_DEBUG</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />
 </Project>

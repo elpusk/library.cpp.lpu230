@@ -80,7 +80,7 @@ extern "C" {
 
 	/*!
 	* function
-	*	equal to LPU237_get_list.
+	*	equal to LPU237Lock_get_list.
 	*  LPU237Lock_get_list' unicode version
 	*
 	*	return
@@ -144,7 +144,7 @@ extern "C" {
 	*	close lpu237 device.
 	*
 	* parameters
-	*	hDev : [in] device handle( return value of LPU237_open() )
+	*	hDev : [in] device handle( return value of LPU237Lock_open() )
 	*
 	* return
 	*	if success, return LPU237LOCK_DLL_RESULT_SUCCESS
@@ -225,7 +225,7 @@ extern "C" {
 	*  	LPU237LOCK_DLL_RESULT_ERROR : error in a magnetic card reading operation.
 	*					may be error between your PC and lpu237 reader.
 	*	LPU237LOCK_DLL_RESULT_CANCEL : A magnetic card reading operation is canceled by
-	*					LPU237Lock_cancel_wait_swipe(), LPU237_wait_key_with_callback() .
+	*					LPU237Lock_cancel_wait_swipe(), LPU237Lock_wait_key_with_callback() .
 	*	the number of i-button data : succession of a i-button reading operation.
 	*
 	*/

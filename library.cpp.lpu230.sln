@@ -27,7 +27,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "li_lpu237_dll", "li_lpu237_
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "server", "server", "{86E4623B-856F-44BA-B086-A0EC3E563E48}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test_msr", "test_msr", "{24EC6C29-6F90-48B0-92E5-72B2EDD1EB70}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test_lpu237", "test_lpu237", "{24EC6C29-6F90-48B0-92E5-72B2EDD1EB70}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tp_wi_lpu237", "tp_wi_lpu237\tp_wi_lpu237.vcxproj", "{C017FBDF-D47E-40B8-8770-1255E00BBFE6}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -54,6 +54,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "service", "service", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wi_coffee_service", "wi_coffee_service\wi_coffee_service.vcxproj", "{4B27DAC8-BDDA-42D9-8C2B-7B5D82B7DF02}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test_ibutton", "test_ibutton", "{3CC62FF9-DDDC-44B3-A5CC-D5D762562A6F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

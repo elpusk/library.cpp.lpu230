@@ -567,6 +567,8 @@ unsigned long _CALLTYPE_ LPU237Lock_get_data(unsigned long dwBufferIndex, unsign
 {
 	unsigned long dw_client_result(ccb_client::const_dll_result_error);
 
+	static std::map<unsigned long, _mp::type_v_buffer> map_cash;
+
 	int n_result_index(-1);
 	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
 
@@ -577,6 +579,20 @@ unsigned long _CALLTYPE_ LPU237Lock_get_data(unsigned long dwBufferIndex, unsign
 		HANDLE hDev(INVALID_HANDLE_VALUE);
 		_mp::casync_parameter_result::type_callback p_fun(nullptr);
 		void* p_para(nullptr);
+
+		auto it = map_cash.find(dwBufferIndex);
+		if(it != map_cash.end()) {
+			// found in cash
+			dw_client_result = (unsigned long)it->second.size();
+
+			if (sKey) {
+				std::copy(it->second.begin(), it->second.end(), sKey);
+				map_cash.erase(it); // remove from cash
+			}
+			
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : from cash - %u.\n", __WFUNCTION__, dw_client_result);
+			continue;
+		}
 
 		if (!g_map_user_cb.get_callback(n_item_index, true, n_result_index, hDev, p_fun, p_para)) {
 			_mp::clog::get_instance().log_fmt(L" : RET : %ls : invalid item index .\n", __WFUNCTION__);
@@ -611,10 +627,8 @@ unsigned long _CALLTYPE_ LPU237Lock_get_data(unsigned long dwBufferIndex, unsign
 			continue;
 		}
 		ptr_result->get_result(dw_client_result);
-		if (sKey) {
-			// 데이터를 넘기므로 저장된 데이터 삭제.
-			ptr_manager_of_device_of_client->remove_async_result_for_manager(n_result_index);
-		}
+		// 데이터를 넘기므로 저장된 데이터 삭제.
+		ptr_manager_of_device_of_client->remove_async_result_for_manager(n_result_index);
 
 		switch (dw_client_result) {
 		case ccb_client::const_dll_result_cancel:
@@ -626,6 +640,10 @@ unsigned long _CALLTYPE_ LPU237Lock_get_data(unsigned long dwBufferIndex, unsign
 		default:
 			if (sKey) {
 				std::copy(v_out_rx.begin() + 3, v_out_rx.begin() + 3 + n_ibutton_key, sKey);
+			}
+			else{
+				// save to cash
+				map_cash[dwBufferIndex] = _mp::type_v_buffer(v_out_rx.begin() + 3, v_out_rx.begin() + 3 + n_ibutton_key);
 			}
 			dw_client_result = n_ibutton_key;
 			_mp::clog::get_instance().log_fmt(L" : RET : %ls : %u\n", __WFUNCTION__, dw_client_result);

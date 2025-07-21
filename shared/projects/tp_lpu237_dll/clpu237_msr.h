@@ -655,7 +655,7 @@ public:
 		return std::make_pair(b_result, ar_result);
 	}
 
-	unsigned long LPU237_dll_on()
+	bool LPU237_dll_on()
 	{
 		bool b_result(false);
 		do {
@@ -674,7 +674,7 @@ public:
 		return b_result;
 	}
 
-	unsigned long LPU237_dll_off()
+	bool LPU237_dll_off()
 	{
 		bool b_result(false);
 		do {

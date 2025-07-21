@@ -20,9 +20,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\shared\projects\tp_lpu237_dll\tp_lpu237_dll.cpp" />
+    <ClCompile Include="..\shared\projects\tp_lpu237_dll\tp_lpu237_ibutton.cpp" />
+    <ClCompile Include="..\shared\projects\tp_lpu237_dll\tp_main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\shared\projects\tp_lpu237_dll\clpu237_ibutton.h" />
     <ClInclude Include="..\shared\projects\tp_lpu237_dll\clpu237_msr.h" />
+    <ClInclude Include="..\shared\projects\tp_lpu237_dll\tp_main.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
@@ -78,19 +82,19 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ExecutablePath>$(VC_ExecutablePath_x86);$(CommonExecutablePath)</ExecutablePath>
-    <IncludePath>$(SolutionDir)shared\projects\lpu237_dll;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <IncludePath>$(SolutionDir)shared\projects\lpu237_dll;$(SolutionDir)shared\projects\lpu237_ibutton;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ExecutablePath>$(VC_ExecutablePath_x86);$(CommonExecutablePath)</ExecutablePath>
-    <IncludePath>$(SolutionDir)shared\projects\lpu237_dll;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <IncludePath>$(SolutionDir)shared\projects\lpu237_dll;$(SolutionDir)shared\projects\lpu237_ibutton;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ExecutablePath>$(VC_ExecutablePath_x64);$(CommonExecutablePath)</ExecutablePath>
-    <IncludePath>$(SolutionDir)shared\projects\lpu237_dll;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <IncludePath>$(SolutionDir)shared\projects\lpu237_dll;$(SolutionDir)shared\projects\lpu237_ibutton;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ExecutablePath>$(VC_ExecutablePath_x64);$(CommonExecutablePath)</ExecutablePath>
-    <IncludePath>$(SolutionDir)shared\projects\lpu237_dll;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <IncludePath>$(SolutionDir)shared\projects\lpu237_dll;$(SolutionDir)shared\projects\lpu237_ibutton;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

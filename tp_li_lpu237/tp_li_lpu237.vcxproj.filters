@@ -12,10 +12,16 @@
     <ClCompile Include="..\shared\projects\tp_lpu237_dll\tp_lpu237_dll.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\shared\projects\tp_lpu237_dll\tp_main.cpp" />
+    <ClCompile Include="..\shared\projects\tp_lpu237_dll\tp_lpu237_ibutton.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\projects\tp_lpu237_dll\clpu237_msr.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\shared\projects\tp_lpu237_dll\clpu237_ibutton.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\projects\tp_lpu237_dll\tp_main.h" />
   </ItemGroup>
 </Project>
