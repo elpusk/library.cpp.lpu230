@@ -127,18 +127,12 @@ namespace _mp {
 				}
 				else {
 					if (set_wstring_data_field.find(L"show") != std::end(set_wstring_data_field)) {
-						//TODO. run display information process
-						/*
-						if (m_h_root_dlg)
-							::PostMessage(m_h_root_dlg, _shared_const::WM_MSG_SHOW, 0, 0);
-							*/
+						//cf v1.0 에서는 mgmt 를 표시하는 것이었으나 지금은 아무 것도 하지 않음.
+						// 과거 호환성을 위해 남겨둠.
 					}
 					else if (set_wstring_data_field.find(L"hide") != std::end(set_wstring_data_field)) {
-						//TODO. kill display information process
-						/*
-						if (m_h_root_dlg)
-							::PostMessage(m_h_root_dlg, _shared_const::WM_MSG_HIDE, 0, 0);
-							*/
+						//cf v1.0 에서는 mgmt 를 감추는 것이었으나 지금은 아무 것도 하지 않음.
+						// 과거 호환성을 위해 남겨둠.
 					}
 					else {
 						b_error = true;

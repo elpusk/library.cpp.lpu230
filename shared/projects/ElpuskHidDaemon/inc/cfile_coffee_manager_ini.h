@@ -431,7 +431,7 @@ private:
 
 		////
 		m_b_log_enable = true;
-		m_ll_log_days_to_keep = 3; // default 7 days to keep log files
+		m_ll_log_days_to_keep = 3; // default 3 days to keep log files
 		//
 		m_b_exist_log_enable = false;
 		m_b_exist_log_days_to_keep = false;

@@ -698,8 +698,10 @@ namespace _mp
 					s_log_folder_without_backslash += s_separator;
 					s_log_folder_without_backslash += s_module_name;
 				}
+#ifdef _WIN32
 				s_log_folder_without_backslash += s_separator;
 				s_log_folder_without_backslash += L"log";
+#endif
 				
 
 				cfile::is_exist_folder(s_log_folder_without_backslash, true);
