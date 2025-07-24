@@ -270,6 +270,7 @@ cat <<EOF > "${DEB_DIR}/DEBIAN/postrm"
 set -e
 
 # 완전 제거 시에만 추가 정리 작업 수행
+# 일반 사용자 계정으로 실행해서 만든 log 파일도 제거.
 if [ "\$1" = "purge" ]; then
     BIN_DIR="/usr/share/elpusk/program/00000006/coffee_manager/bin"
     if [ -x "\$BIN_DIR/elpusk-hid-d" ]; then
@@ -290,6 +291,36 @@ if [ "\$1" = "purge" ]; then
     rmdir --ignore-fail-on-non-empty /usr/share/elpusk/ || true
     rmdir --ignore-fail-on-non-empty /var/log/elpusk/00000006/ || true
     rmdir --ignore-fail-on-non-empty /var/log/elpusk/ || true
+
+    for USER_HOME in /home/*; do
+        if [ -d "\${USER_HOME}" ]; then
+            BASE_DIR="\${USER_HOME}/.elpusk"
+
+            # 로그 파일 삭제 (존재하는 경우)
+            LOG_DIR="\${BASE_DIR}/log/00000006/coffee_manager"
+            echo "find log directory: \${LOG_DIR}/tg_lpu237_dll"
+
+            if [ -d "\${LOG_DIR}/tg_lpu237_dll" ]; then
+                echo "user log directory: \${LOG_DIR}/tg_lpu237_dll"
+                echo "delete log file:"
+                find "\${LOG_DIR}/tg_lpu237_dll" -type f -name "*.txt"
+                find "\${LOG_DIR}/tg_lpu237_dll" -type f -name "*.txt" -exec rm -f {} \;
+            fi
+
+            echo "find log directory: \${LOG_DIR}/tg_lpu237_ibutton"
+            if [ -d "\${LOG_DIR}/tg_lpu237_ibutton" ]; then
+                echo "user log directory: \${LOG_DIR}/tg_lpu237_ibutton"
+                echo "delete log file:"
+                find "\${LOG_DIR}/tg_lpu237_ibutton" -type f -name "*.txt"
+                find "\${LOG_DIR}/tg_lpu237_ibutton" -type f -name "*.txt" -exec rm -f {} \;
+            fi
+
+            # .elpusk 하위 비어 있는 디렉토리 제거 (깊은 곳부터)
+            if [ -d "\${BASE_DIR}" ]; then
+                find "\${BASE_DIR}" -depth -type d -empty -exec rmdir {} \;
+            fi
+        fi
+    done
 fi
 
 exit 0
