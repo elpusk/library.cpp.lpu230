@@ -734,8 +734,9 @@ namespace _mp
 				if (s_in_folder_path_without_backslash.empty())
 					continue;
 				//
-				time_t t;
 #ifdef _WIN32
+				time_t t;
+
 				struct tm dt = { 0, };
 				t = time(NULL);
 				localtime_s(&dt, &t);
@@ -763,6 +764,7 @@ namespace _mp
 					);
 				}
 #else
+				time_t t = time(nullptr);
 				struct tm* p_dt = NULL;
 				p_dt = std::localtime(&t);
 
@@ -924,8 +926,9 @@ namespace _mp
 #else
 				std::string s = cstring::get_mcsc_from_unicode(m_s_log_file_path);
 				p_stream = std::fopen(s.c_str(), "a+");
-				if (!p_stream)
+				if (!p_stream) {
 					continue;
+				}
 #endif
 
 				if (b_enable_time) {

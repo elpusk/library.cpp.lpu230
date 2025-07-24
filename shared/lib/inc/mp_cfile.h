@@ -165,6 +165,25 @@ namespace _mp{
 			}
 		}
 
+		static std::string expand_home_directory_in_linux(const std::string& s_path)
+		{
+			std::string s_expand;
+
+			do {
+				if (s_path.empty()) {
+					continue;
+				}
+
+				s_expand = s_path;
+				if (s_expand[0] == '~') {
+					std::string home_dir = cfile::_get_home_directory();
+					s_expand.replace(0, 1, home_dir);
+				}
+
+			} while (false);
+
+			return s_expand;
+		}
 #endif //_WIN32
 
 #ifdef _WIN32

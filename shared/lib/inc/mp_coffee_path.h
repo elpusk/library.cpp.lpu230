@@ -2,6 +2,10 @@
 
 #include <string>
 
+#ifndef _WIN32
+#include <unistd.h>
+#endif
+
 #include <mp_coffee.h>
 #include <mp_cfile.h>
 
@@ -121,7 +125,15 @@ namespace _mp{
 			s = _mp::cfile::get_path_ProgramData();
 			s += L"\\elpusk";
 #else
-			s = _mp::_coffee::CONST_S_LOGS_ROOT_DIR_EXCEPT_BACKSLASH;
+			if (geteuid() == 0) {
+				// current user is root.
+				s = _mp::_coffee::CONST_S_LOGS_ROOT_DIR_EXCEPT_BACKSLASH;
+			}
+			else {
+				//expand '~' to home directory
+				auto _s = _mp::cstring::get_mcsc_from_unicode(_mp::_coffee::CONST_S_NOT_ROOT_USER_LOGS_ROOT_DIR_EXCEPT_BACKSLASH);
+				s = _mp::cstring::get_unicode_from_mcsc(_mp::cfile::expand_home_directory_in_linux(_s));
+			}
 #endif //_WIN32
 			return s;
 		}

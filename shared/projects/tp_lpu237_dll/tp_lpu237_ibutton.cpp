@@ -123,7 +123,7 @@ int main_lpu237_ibutton(const std::set<std::wstring>& set_parameters)
 #ifdef _DEBUG
 	std::wstring dll_or_so(L"/home/tester/projects/li_lpu237_ibutton/bin/x64/Debug/libtg_lpu237_ibutton.so");
 #else
-	std::wstring dll_or_so(L"/home/tester/projects/li_lpu237_ibutton/bin/x64/Release/libtg_lpu237_ibutton.so");
+	std::wstring dll_or_so(L"/usr/share/elpusk/program/00000006/coffee_manager/so/libtg_lpu237_ibutton.so");
 #endif //_DEBUG
 
 #endif // _WIN32

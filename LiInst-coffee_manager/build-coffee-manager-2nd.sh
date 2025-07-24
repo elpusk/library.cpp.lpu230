@@ -112,6 +112,17 @@ cat <<EOF > "${DEB_DIR}/DEBIAN/postinst"
 #!/bin/bash
 set -e
 
+# 설치된 파일/폴더 소유자와 권한 설정
+chown -R root:root /usr/share/elpusk/program/00000006/coffee_manager
+chown -R root:root /usr/share/elpusk/programdata/00000006/coffee_manager
+chown -R root:root /var/log/elpusk/00000006/coffee_manager
+
+chmod 755 /usr/share/elpusk/program/00000006/coffee_manager/bin/elpusk-hid-d
+chmod 644 /usr/share/elpusk/programdata/00000006/coffee_manager/elpusk-hid-d/elpusk-hid-d.json
+chmod 644 /usr/share/elpusk/programdata/00000006/coffee_manager/tg_lpu237_dll/tg_lpu237_dll.ini
+chmod 644 /usr/share/elpusk/programdata/00000006/coffee_manager/tg_lpu237_ibutton/tg_lpu237_ibutton.ini
+chmod 755 /var/log/elpusk/00000006/coffee_manager -R
+
 # 서비스 심볼릭 링크 업데이트 및 데몬 리로드
 
 # 심볼릭 링크 생성
@@ -297,7 +308,7 @@ EOF
 
 # dpkg-deb로 .deb 패키지 빌드
 echo "deb 패키지 빌드 중..."
-dpkg-deb --build "${DEB_DIR}" "${DEB_PACKAGE_NAME}"
+dpkg-deb --build --root-owner-group "${DEB_DIR}" "${DEB_PACKAGE_NAME}"
 
 # 임시 디렉토리 정리
 echo "임시 디렉토리 정리 중..."
@@ -307,7 +318,7 @@ echo "==================================================="
 echo "패키지 빌드 완료: ${DEB_PACKAGE_NAME}"
 echo "==================================================="
 echo "설치 명령어: sudo dpkg -i ${DEB_PACKAGE_NAME}"
-echo "제거 명령어: sudo dpkg -r ${PACKAGE_NAME}"
+# echo "제거 명령어: sudo dpkg -r ${PACKAGE_NAME}"
 echo "완전 제거 명령어: sudo dpkg -P ${PACKAGE_NAME}"
 echo ""
 echo "!!! 중요: 'libtg_lpu237_dll.so.x.y.z'와 'libtg_lpu237_ibutton.so.x.y.z'의 'x.y.z' 부분을 실제 파일 버전에 맞게 수정해야 합니다."
