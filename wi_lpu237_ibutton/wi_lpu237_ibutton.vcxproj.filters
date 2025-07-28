@@ -165,6 +165,9 @@
     <ClInclude Include="..\shared\projects\lpu237_ibutton\inc\cmap_user_cb.h">
       <Filter>inc</Filter>
     </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_os_type.h">
+      <Filter>lib</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">

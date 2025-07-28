@@ -1,0 +1,9 @@
+LIBRARY tg_rom
+
+	EXPORTS
+		tg_rom_load_header @1
+		tg_rom_get_updatable_item_index @2
+		tg_rom_get_item @3
+		tg_rom_readBinary_of_item @4
+		tg_rom_create_header @5
+		tg_rom_add_item @6

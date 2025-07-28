@@ -293,6 +293,9 @@
     <ClInclude Include="..\shared\projects\ElpuskHidDaemon\inc\cfile_coffee_manager_ini.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_os_type.h">
+      <Filter>lib</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Xml Include="..\shared\projects\ElpuskHidDaemon\elpusk-hid-d.xml">

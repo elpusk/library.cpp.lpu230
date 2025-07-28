@@ -1,5 +1,10 @@
 #pragma once
 
+/**
+* Dont' include user defined header.
+* this header must be rooer of all user header files.
+*/
+
 #include <stdint.h>
 #include <vector>
 #include <string>
@@ -14,6 +19,7 @@
 namespace _mp{
 
 #ifdef _WIN32
+    // windows
 
 #define _WIDEN(x) L ## x
 #define _WIDEN2(x) _WIDEN(x)
@@ -21,6 +27,7 @@ namespace _mp{
 #define __WFUNCTION__	_WIDEN2(__FUNCTION__)
 
 #else
+	// linux
 
     inline std::wstring _mcsc_to_unicode(const std::string& s_mcsc)
     {

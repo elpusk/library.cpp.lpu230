@@ -13,13 +13,6 @@
 
 #include <inc/tg_lpu237_dll.h>
 
-#ifdef _WIN32
-#else
-#include <dlfcn.h>
-typedef	void* HMODULE;
-#endif // _WIN32
-
-
 class clpu237_msr
 {
 public:

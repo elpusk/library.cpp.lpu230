@@ -155,5 +155,8 @@
     <ClInclude Include="..\shared\lib\inc\mp_cio_packet.h">
       <Filter>lib</Filter>
     </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_os_type.h">
+      <Filter>lib</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

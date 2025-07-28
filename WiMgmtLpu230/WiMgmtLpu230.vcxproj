@@ -57,6 +57,7 @@
     <ClInclude Include="..\shared\lib\inc\mp_coperation.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cqitem_dev.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cqueue.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_os_type.h" />
     <ClInclude Include="..\shared\lib\inc\mp_type.h" />
     <ClInclude Include="..\shared\lib\inc\test\test_tp_hid.h" />
     <ClInclude Include="..\shared\lib\inc\_dev\mp_cdev_util.h" />

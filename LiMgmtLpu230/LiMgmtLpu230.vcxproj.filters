@@ -278,5 +278,8 @@
     <ClInclude Include="..\shared\common\inc\lpu230\config\cfg_msrlib.h">
       <Filter>common\lpu230\config</Filter>
     </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_os_type.h">
+      <Filter>lib</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

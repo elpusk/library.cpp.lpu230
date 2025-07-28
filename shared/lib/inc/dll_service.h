@@ -1,12 +1,6 @@
 #pragma once
 
-#ifdef _WIN32
-#define	__CALL_TYPE_DLL_SERVICE__	__stdcall
-
-#else // linux
-#define __CALL_TYPE_DLL_SERVICE__
-
-#endif //_WIN32
+#include <mp_os_type.h>
 /*
 * warning - service dll( this dll ) can't be client of coffee manager server.!!!!!
 * If service dll is client of coffee manager server, the deadlock situation will be occured.
@@ -34,7 +28,7 @@
  *		- 0  : need more processing(pending)
  *		- -1  : error
  */
-typedef	int(__CALL_TYPE_DLL_SERVICE__* type_fun_sd_device_io)(void* p_dev, unsigned long n_tx, const unsigned char* ps_tx, unsigned long* pn_rx, unsigned char* ps_rx);
+typedef	int(_CALLTYPE_* type_fun_sd_device_io)(void* p_dev, unsigned long n_tx, const unsigned char* ps_tx, unsigned long* pn_rx, unsigned char* ps_rx);
 
 /**
  * type_fun_sd_device_cancel : device sync cancel function prototype.
@@ -45,7 +39,7 @@ typedef	int(__CALL_TYPE_DLL_SERVICE__* type_fun_sd_device_io)(void* p_dev, unsig
  *		- 1 : success
  *		- 0 : error
  */
-typedef	int(__CALL_TYPE_DLL_SERVICE__* type_fun_sd_device_cancel)(void* p_dev);
+typedef	int(_CALLTYPE_* type_fun_sd_device_cancel)(void* p_dev);
 
 /**
  * type_cb_execute : callback function prototype.
@@ -58,7 +52,7 @@ typedef	int(__CALL_TYPE_DLL_SERVICE__* type_fun_sd_device_cancel)(void* p_dev);
  *		  = "success" : requst is completed successfaully.
  *		- p_user[in] : user data pointer.
  */
-typedef void(__CALL_TYPE_DLL_SERVICE__* type_cb_sd_execute)(unsigned long n_result, unsigned long n_session, const wchar_t* pss_multistring_response, void* p_user);
+typedef void(_CALLTYPE_* type_cb_sd_execute)(unsigned long n_result, unsigned long n_session, const wchar_t* pss_multistring_response, void* p_user);
 
 /**
  * sd_execute. : start user request. async function
@@ -76,7 +70,7 @@ typedef void(__CALL_TYPE_DLL_SERVICE__* type_cb_sd_execute)(unsigned long n_resu
  * return - 1 : a execution has been started.
  *		  - 0 : execution is failed.
  */
-int __CALL_TYPE_DLL_SERVICE__ sd_execute(
+int _CALLTYPE_ sd_execute(
 	unsigned long n_session
 	, const wchar_t* ps_device_path
 	, const type_fun_sd_device_io p_fun_sd_device_io
@@ -99,7 +93,7 @@ int __CALL_TYPE_DLL_SERVICE__ sd_execute(
  * return - 1 : a execution has been started.
  *		  - 0 : execution is failed.
  */
-int __CALL_TYPE_DLL_SERVICE__ sd_cancel(
+int _CALLTYPE_ sd_cancel(
 	unsigned long n_session
 	, const wchar_t* ps_device_path
 	, const type_fun_sd_device_cancel p_fun_sd_device_cancel
@@ -110,4 +104,4 @@ int __CALL_TYPE_DLL_SERVICE__ sd_cancel(
  * sd_removed. - this function will be called when the session is removed.
  * sd service dll design may destrurct all object of the removed session.
  */
-void __CALL_TYPE_DLL_SERVICE__ sd_removed(unsigned long n_session);
+void _CALLTYPE_ sd_removed(unsigned long n_session);

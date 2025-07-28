@@ -76,6 +76,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\mp_cqueue.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\mp_clog.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\mp_icprotocol.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\mp_os_type.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\mp_type.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\mp_vcpacket.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\mp_vcworker.h" />

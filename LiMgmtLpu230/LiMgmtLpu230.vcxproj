@@ -184,6 +184,7 @@
     <ClInclude Include="..\shared\lib\inc\mp_cqitem_dev.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cqueue.h" />
     <ClInclude Include="..\shared\lib\inc\mp_icprotocol.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_os_type.h" />
     <ClInclude Include="..\shared\lib\inc\mp_type.h" />
     <ClInclude Include="..\shared\lib\inc\mp_vcpacket.h" />
     <ClInclude Include="..\shared\lib\inc\mp_vcworker.h" />

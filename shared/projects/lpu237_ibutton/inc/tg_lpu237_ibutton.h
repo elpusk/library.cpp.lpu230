@@ -4,25 +4,7 @@
 * 2025.03.18  - release version 6.0 : wss client
 */
 
-
-#ifdef _WIN32
-#include <Windows.h>
-#define	_CALLTYPE_	__stdcall
-#else 
-//linux
-#define _PACK_BYTE  __attribute__((packed))
-#define	_CALLTYPE_	__attribute__((__stdcall__))
-
-#define PtrToUlong(_a)      ((unsigned long)(_a))
-#define INVALID_HANDLE_VALUE    ((unsigned long)-1)
-#define FALSE   0
-#define TRUE    1
-
-typedef unsigned long HWND;
-typedef unsigned long UINT;
-typedef unsigned long HANDLE;
-typedef unsigned long BOOL;
-#endif
+#include <mp_os_type.h>
 
 /*!
 *	return value definition.

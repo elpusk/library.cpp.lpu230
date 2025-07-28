@@ -16,13 +16,6 @@
 
 #include <inc/tg_lpu237_ibutton.h>
 
-#ifdef _WIN32
-#else
-#include <dlfcn.h>
-typedef	void* HMODULE;
-#endif // _WIN32
-
-
 class clpu237_ibutton
 {
 public:

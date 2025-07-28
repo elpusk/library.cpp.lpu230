@@ -1,25 +1,19 @@
 #pragma once
 
 #include <mutex>
+#include <iostream>
 
 #include <mp_type.h>
 #include <mp_cconvert.h>
 #include <mp_clog.h>
 #include <dll_service.h>
 
-#ifdef _WIN32
-#include <Windows.h>
-#else
-#include <iostream>
-#include <dlfcn.h>
-#endif
-
 class cdll_service
 {
 private:
-	typedef	int(__CALL_TYPE_DLL_SERVICE__* type_sd_execute)(unsigned long, const wchar_t*, const type_fun_sd_device_io, void*, const wchar_t*, size_t, const type_cb_sd_execute, void*);
-	typedef	int(__CALL_TYPE_DLL_SERVICE__* type_sd_cancel)(unsigned long, const wchar_t*, const type_fun_sd_device_cancel, void*);
-	typedef	void(__CALL_TYPE_DLL_SERVICE__* type_sd_removed)(unsigned long);
+	typedef	int(_CALLTYPE_* type_sd_execute)(unsigned long, const wchar_t*, const type_fun_sd_device_io, void*, const wchar_t*, size_t, const type_cb_sd_execute, void*);
+	typedef	int(_CALLTYPE_* type_sd_cancel)(unsigned long, const wchar_t*, const type_fun_sd_device_cancel, void*);
+	typedef	void(_CALLTYPE_* type_sd_removed)(unsigned long);
 
 private:
 	enum : size_t {
