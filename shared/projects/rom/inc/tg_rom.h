@@ -3,7 +3,8 @@
 #include <cstdint>
 #include <cassert>
 #include <memory>
-#include <string>
+#include <cstring>
+#include <mutex>
 
 #include <mp_os_type.h>
 
@@ -108,18 +109,18 @@ public:
 	virtual ~CRom()
 	{
 		if (IncreaseReferenceCount(false) == 0) {
-			::FreeLibrary(GetDllModule());
+			CRom::_free_lib(GetDllModule());
 		}
 	}
 
 private:
-	typedef	type_result(WINAPI* type_tg_rom_load_header)(const wchar_t*, PROMFILE_HEAD);
-	typedef	int (WINAPI* type_tg_rom_get_updatable_item_index)(const PROMFILE_HEAD, const uint8_t*, uint8_t, uint8_t, uint8_t, uint8_t);
-	typedef	type_result(WINAPI* type_tg_rom_get_item)(const PROMFILE_HEAD, int, PROMFILE_HEAD_ITEAM);
-	typedef	unsigned int (WINAPI* type_tg_rom_readBinary_of_item)(unsigned char* sRead, unsigned int dwRead, unsigned int dwOffset, const CRom::PROMFILE_HEAD_ITEAM pItem, const wchar_t* lpctRomFile);
+	typedef	type_result(_CALLTYPE_* type_tg_rom_load_header)(const wchar_t*, PROMFILE_HEAD);
+	typedef	int (_CALLTYPE_* type_tg_rom_get_updatable_item_index)(const PROMFILE_HEAD, const uint8_t*, uint8_t, uint8_t, uint8_t, uint8_t);
+	typedef	type_result(_CALLTYPE_* type_tg_rom_get_item)(const PROMFILE_HEAD, int, PROMFILE_HEAD_ITEAM);
+	typedef	unsigned int (_CALLTYPE_* type_tg_rom_readBinary_of_item)(unsigned char* sRead, unsigned int dwRead, unsigned int dwOffset, const CRom::PROMFILE_HEAD_ITEAM pItem, const wchar_t* lpctRomFile);
 
-	typedef	type_result(WINAPI* type_tg_rom_create_header)(const wchar_t* lpctRomFile);
-	typedef	type_result(WINAPI* type_tg_rom_add_item)(
+	typedef	type_result(_CALLTYPE_* type_tg_rom_create_header)(const wchar_t* lpctRomFile);
+	typedef	type_result(_CALLTYPE_* type_tg_rom_add_item)(
 		const wchar_t* lpctRomFile,
 		const wchar_t* lpctBinFile,
 		uint8_t cMajor,
@@ -130,23 +131,99 @@ private:
 		uint32_t dwUpdateCondition
 		);
 
-private:
+
+public:
+	static std::string get_mcsc_from_unicode(const std::wstring& s_unicode)
+	{
+		std::string s_mcsc;
+
+		do {
+			if (s_unicode.empty())
+				continue;
+			//
+#ifdef _WIN32
+			size_t size_needed = 0;
+			wcstombs_s(&size_needed, nullptr, 0, s_unicode.c_str(), _TRUNCATE);
+			if (size_needed > 0)
+			{
+				s_mcsc.resize(size_needed);
+				wcstombs_s(&size_needed, &s_mcsc[0], size_needed, s_unicode.c_str(), _TRUNCATE);
+			}
+#else
+			size_t size_needed = std::wcstombs(nullptr, s_unicode.c_str(), 0);
+			if (size_needed != (size_t)-1)
+			{
+				s_mcsc.resize(size_needed);
+				std::wcstombs(&s_mcsc[0], s_unicode.c_str(), size_needed);
+			}
+#endif
+			else
+			{
+				s_mcsc.clear(); //default for error
+			}
+
+		} while (false);
+
+		return s_mcsc;
+	}
 
 private:
 	std::wstring m_sRomFileName;
 	ROMFILE_HEAD m_Header;
 
 
+#ifdef _WIN32
+	static HMODULE _load_lib(const std::wstring& s_lib)
+	{
+		if (s_lib.empty())
+			return NULL;
+		return ::LoadLibrary(s_lib.c_str());
+	}
+	static void _free_lib(HMODULE m)
+	{
+		FreeLibrary(m);
+	}
+
+	static FARPROC WINAPI _load_symbol(HMODULE m, const char* s_fun)
+	{
+		return ::GetProcAddress(m, s_fun);
+	}
+
+#else
+	static HMODULE _load_lib(const std::wstring& s_lib)
+	{
+		if (s_lib.empty())
+			return NULL;
+		//
+		return dlopen(CRom::get_mcsc_from_unicode(s_lib).c_str(), RTLD_LAZY);
+	}
+
+	static void _free_lib(HMODULE m)
+	{
+		dlclose(m);
+	}
+
+	static void* _load_symbol(HMODULE m, const char* s_fun)
+	{
+		return dlsym(m, s_fun);
+	}
+
+#endif // _WIN32
+
 	static unsigned int IncreaseReferenceCount(bool bIncrease = true)
 	{
-		static volatile LONG m_nRefCount = 0;
+		static volatile unsigned int m_nRefCount = 0;
+		static std::mutex m;
+
+		std::lock_guard<std::mutex> lock(m); // Ensure thread safety
 
 		if (bIncrease) {
-			::InterlockedIncrement(&m_nRefCount);
+			++m_nRefCount;
 		}
 		else {
-			if (m_nRefCount > 0)
-				::InterlockedDecrement(&m_nRefCount);
+			if (m_nRefCount > 0) {
+				--m_nRefCount;
+			}
 		}
 
 		return m_nRefCount;
@@ -156,9 +233,8 @@ private:
 	{
 		static HMODULE hMod = NULL;
 
-		if (bFirst) {
-			//LoadPackagedLibrary
-			hMod = ::LoadLibrary(lpctDllFile);
+		if (bFirst && lpctDllFile) {
+			hMod = CRom::_load_lib(std::wstring(lpctDllFile));
 		}
 
 		return hMod;
@@ -171,7 +247,7 @@ private:
 		static type_tg_rom_load_header m_cb_tg_rom_load_header = NULL;
 
 		if (lpctDllFile) {
-			m_cb_tg_rom_load_header = (type_tg_rom_load_header)::GetProcAddress(GetDllModule(lpctDllFile), "tg_rom_load_header");
+			m_cb_tg_rom_load_header = (type_tg_rom_load_header)CRom::_load_symbol(GetDllModule(lpctDllFile), "tg_rom_load_header");
 			if (m_cb_tg_rom_load_header)
 				return result_success;
 			else
@@ -190,7 +266,7 @@ private:
 		static type_tg_rom_get_updatable_item_index m_cb_tg_rom_get_updatable_item_index = NULL;
 
 		if (lpctDllFile) {
-			m_cb_tg_rom_get_updatable_item_index = (type_tg_rom_get_updatable_item_index)::GetProcAddress(GetDllModule(lpctDllFile), "tg_rom_get_updatable_item_index");
+			m_cb_tg_rom_get_updatable_item_index = (type_tg_rom_get_updatable_item_index)CRom::_load_symbol(GetDllModule(lpctDllFile), "tg_rom_get_updatable_item_index");
 			if (m_cb_tg_rom_get_updatable_item_index)
 				return 0;
 			else
@@ -208,7 +284,7 @@ private:
 		static type_tg_rom_get_item m_cb_tg_rom_get_item = NULL;
 
 		if (lpctDllFile) {
-			m_cb_tg_rom_get_item = (type_tg_rom_get_item)::GetProcAddress(GetDllModule(lpctDllFile), "tg_rom_get_item");
+			m_cb_tg_rom_get_item = (type_tg_rom_get_item)CRom::_load_symbol(GetDllModule(lpctDllFile), "tg_rom_get_item");
 			if (m_cb_tg_rom_get_item)
 				return result_success;
 			else
@@ -226,7 +302,7 @@ private:
 		static type_tg_rom_readBinary_of_item m_cb_tg_rom_readBinary_of_item = NULL;
 
 		if (lpctDllFile) {
-			m_cb_tg_rom_readBinary_of_item = (type_tg_rom_readBinary_of_item)::GetProcAddress(GetDllModule(lpctDllFile), "tg_rom_readBinary_of_item");
+			m_cb_tg_rom_readBinary_of_item = (type_tg_rom_readBinary_of_item)CRom::_load_symbol(GetDllModule(lpctDllFile), "tg_rom_readBinary_of_item");
 			if (m_cb_tg_rom_readBinary_of_item)
 				return 1;
 			else
@@ -244,7 +320,7 @@ private:
 		static type_tg_rom_create_header m_cb_tg_rom_create_header = NULL;
 
 		if (lpctDllFile) {
-			m_cb_tg_rom_create_header = (type_tg_rom_create_header)::GetProcAddress(GetDllModule(lpctDllFile), "tg_rom_create_header");
+			m_cb_tg_rom_create_header = (type_tg_rom_create_header)CRom::_load_symbol(GetDllModule(lpctDllFile), "tg_rom_create_header");
 			if (m_cb_tg_rom_create_header)
 				return result_success;
 			else
@@ -272,7 +348,7 @@ private:
 		static type_tg_rom_add_item m_cb_tg_rom_add_item = NULL;
 
 		if (lpctDllFile) {
-			m_cb_tg_rom_add_item = (type_tg_rom_add_item)::GetProcAddress(GetDllModule(lpctDllFile), "tg_rom_add_item");
+			m_cb_tg_rom_add_item = (type_tg_rom_add_item)CRom::_load_symbol(GetDllModule(lpctDllFile), "tg_rom_add_item");
 			if (m_cb_tg_rom_add_item)
 				return result_success;
 			else
@@ -302,7 +378,7 @@ public:
 		if (result != result_success)
 			return result;
 		//
-		::memcpy(pHeader, &m_Header, sizeof(m_Header));
+		memcpy(pHeader, &m_Header, sizeof(m_Header));
 		m_sRomFileName = lpctRomFile;
 		return result;
 	}

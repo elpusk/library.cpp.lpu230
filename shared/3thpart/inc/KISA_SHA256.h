@@ -1,6 +1,6 @@
 /**
 @file KISA_SHA_256.h
-@brief SHA256 ¾ÏÈ£ ¾Ë°í¸®Áò
+@brief SHA256 ì•”í˜¸ ì•Œê³ ë¦¬ì¦˜
 @author Copyright (c) 2013 by KISA
 @remarks http://seed.kisa.or.kr/
 */
@@ -68,31 +68,31 @@ typedef struct{
 } SHA256_INFO;
 
 /**
-@brief ¿¬¼âº¯¼ö¿Í ±æÀÌº¯¼ö¸¦ ÃÊ±âÈ­ÇÏ´Â ÇÔ¼ö
-@param Info : SHA256_Process È£Ãâ ½Ã »ç¿ëµÇ´Â ±¸Á¶Ã¼
+@brief ì—°ì‡„ë³€ìˆ˜ì™€ ê¸¸ì´ë³€ìˆ˜ë¥¼ ì´ˆê¸°í™”í•˜ëŠ” í•¨ìˆ˜
+@param Info : SHA256_Process í˜¸ì¶œ ì‹œ ì‚¬ìš©ë˜ëŠ” êµ¬ì¡°ì²´
 */
 void SHA256_Init( OUT SHA256_INFO *Info );
 
 /**
-@brief ¿¬¼âº¯¼ö¿Í ±æÀÌº¯¼ö¸¦ ÃÊ±âÈ­ÇÏ´Â ÇÔ¼ö
-@param Info : SHA256_Init È£ÃâÇÏ¿© ÃÊ±âÈ­µÈ ±¸Á¶Ã¼(³»ºÎÀûÀ¸·Î »ç¿ëµÈ´Ù.)
-@param pszMessage : »ç¿ëÀÚ ÀÔ·Â Æò¹®
-@param inLen : »ç¿ëÀÚ ÀÔ·Â Æò¹® ±æÀÌ
+@brief ì—°ì‡„ë³€ìˆ˜ì™€ ê¸¸ì´ë³€ìˆ˜ë¥¼ ì´ˆê¸°í™”í•˜ëŠ” í•¨ìˆ˜
+@param Info : SHA256_Init í˜¸ì¶œí•˜ì—¬ ì´ˆê¸°í™”ëœ êµ¬ì¡°ì²´(ë‚´ë¶€ì ìœ¼ë¡œ ì‚¬ìš©ëœë‹¤.)
+@param pszMessage : ì‚¬ìš©ì ì…ë ¥ í‰ë¬¸
+@param inLen : ì‚¬ìš©ì ì…ë ¥ í‰ë¬¸ ê¸¸ì´
 */
 void SHA256_Process( OUT SHA256_INFO *Info, IN const BYTE *pszMessage, IN UINT uDataLen );
 
 /**
-@brief ¸Ş½ÃÁö µ¡ºÙÀÌ±â¿Í ±æÀÌ µ¡ºÙÀÌ±â¸¦ ¼öÇàÇÑ ÈÄ ¸¶Áö¸· ¸Ş½ÃÁö ºí·ÏÀ» °¡Áö°í ¾ĞÃàÇÔ¼ö¸¦ È£ÃâÇÏ´Â ÇÔ¼ö
-@param Info : SHA256_Init È£ÃâÇÏ¿© ÃÊ±âÈ­µÈ ±¸Á¶Ã¼(³»ºÎÀûÀ¸·Î »ç¿ëµÈ´Ù.)
-@param pszDigest : ¾ÏÈ£¹®
+@brief ë©”ì‹œì§€ ë§ë¶™ì´ê¸°ì™€ ê¸¸ì´ ë§ë¶™ì´ê¸°ë¥¼ ìˆ˜í–‰í•œ í›„ ë§ˆì§€ë§‰ ë©”ì‹œì§€ ë¸”ë¡ì„ ê°€ì§€ê³  ì••ì¶•í•¨ìˆ˜ë¥¼ í˜¸ì¶œí•˜ëŠ” í•¨ìˆ˜
+@param Info : SHA256_Init í˜¸ì¶œí•˜ì—¬ ì´ˆê¸°í™”ëœ êµ¬ì¡°ì²´(ë‚´ë¶€ì ìœ¼ë¡œ ì‚¬ìš©ëœë‹¤.)
+@param pszDigest : ì•”í˜¸ë¬¸
 */
 void SHA256_Close( OUT SHA256_INFO *Info, OUT BYTE *pszDigest );
 
 /**
-@brief »ç¿ëÀÚ ÀÔ·Â Æò¹®À» ÇÑ¹ø¿¡ Ã³¸®
-@param pszMessage : »ç¿ëÀÚ ÀÔ·Â Æò¹®
-@param pszDigest : ¾ÏÈ£¹®
-@remarks ³»ºÎÀûÀ¸·Î SHA256_Init, SHA256_Process, SHA256_Close¸¦ È£ÃâÇÑ´Ù.
+@brief ì‚¬ìš©ì ì…ë ¥ í‰ë¬¸ì„ í•œë²ˆì— ì²˜ë¦¬
+@param pszMessage : ì‚¬ìš©ì ì…ë ¥ í‰ë¬¸
+@param pszDigest : ì•”í˜¸ë¬¸
+@remarks ë‚´ë¶€ì ìœ¼ë¡œ SHA256_Init, SHA256_Process, SHA256_Closeë¥¼ í˜¸ì¶œí•œë‹¤.
 */
 void SHA256_Encrpyt( IN const BYTE *pszMessage, IN UINT uPlainTextLen, OUT BYTE *pszDigest );
 

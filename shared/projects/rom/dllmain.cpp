@@ -3,16 +3,19 @@
 #include "inc/dllmain.h"
 
 #include <fstream>
+#include <wchar.h>
 
 #include <KISA_SHA256.h>
 
+#ifndef _WIN32
+#endif // _WIN32
 
 ///////////////////////////////////////////////////////////
 // exported function body.
 //
-
+#ifdef _WIN32
 BOOL APIENTRY DllMain(HMODULE hModule,
-	DWORD  ul_reason_for_call,
+	uint32_t  ul_reason_for_call,
 	LPVOID lpReserved
 )
 {
@@ -26,17 +29,39 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 	}
 	return TRUE;
 }
+#else
+// linux
+//linux only
+static void _so_init(void) __attribute__((constructor));
+static void _so_fini(void) __attribute__((destructor));
+//when calls dlopen().
+void _so_init(void)
+{
+	//printf("Shared library loaded\n");
+	// NOT executed
+}
+
+//when calls dlclose().
+void _so_fini(void)
+{
+	//printf("Shared library unloaded\n");
+	// NOT executed
+}
+
+#endif // _WIN32
 
 //////////////////////////
 // for load rom file.
-CRom::type_result WINAPI tg_rom_load_header(LPCTSTR lpctRomFile, CRom::PROMFILE_HEAD pHeader)
+CRom::type_result _CALLTYPE_ tg_rom_load_header(const wchar_t* lpctRomFile, CRom::PROMFILE_HEAD pHeader)
 {
 	if (lpctRomFile == NULL || pHeader == NULL)
 		return CRom::result_error_invalid_parameter;
 	//
 	std::ifstream Firmware;
 
-	Firmware.open(lpctRomFile, std::ios::binary | std::ios::in);
+	std::string s_rom_file = CRom::get_mcsc_from_unicode(lpctRomFile);
+
+	Firmware.open(s_rom_file.c_str(), std::ios::binary | std::ios::in);
 
 	if (!Firmware)
 		return CRom::result_error_not_found;
@@ -54,7 +79,7 @@ CRom::type_result WINAPI tg_rom_load_header(LPCTSTR lpctRomFile, CRom::PROMFILE_
 	return CRom::result_success;
 }
 
-int WINAPI tg_rom_get_updatable_item_index(const CRom::PROMFILE_HEAD pHeader, const BYTE* sModel, BYTE cMajor, BYTE cMinor, BYTE cBugFix, BYTE cBuild)
+int _CALLTYPE_ tg_rom_get_updatable_item_index(const CRom::PROMFILE_HEAD pHeader, const uint8_t* sModel, uint8_t cMajor, uint8_t cMinor, uint8_t cBugFix, uint8_t cBuild)
 {
 	int nIndex = -1;
 
@@ -65,7 +90,7 @@ int WINAPI tg_rom_get_updatable_item_index(const CRom::PROMFILE_HEAD pHeader, co
 
 	//check Model name
 
-	DWORD i, j = 0;
+	uint32_t i, j = 0;
 	bool bEqualModel = true;
 
 	for (i = 0; i < pHeader->dwItem; i++) {
@@ -90,7 +115,7 @@ int WINAPI tg_rom_get_updatable_item_index(const CRom::PROMFILE_HEAD pHeader, co
 	}//end for
 
 	bool bConditionOK = false;
-	DWORD dwCondition = pHeader->Item[nIndex].dwUpdateCondition;
+	uint32_t dwCondition = pHeader->Item[nIndex].dwUpdateCondition;
 
 	if (nIndex > -1) {
 		// found name is equal.......
@@ -117,8 +142,8 @@ int WINAPI tg_rom_get_updatable_item_index(const CRom::PROMFILE_HEAD pHeader, co
 			}
 		}
 		///
-		BYTE sRomVer[] = { pHeader->Item[nIndex].sVersion[1], pHeader->Item[nIndex].sVersion[2], pHeader->Item[nIndex].sVersion[3] };
-		BYTE sGivenVer[] = { cMinor, cBugFix, cBuild };
+		uint8_t sRomVer[] = { pHeader->Item[nIndex].sVersion[1], pHeader->Item[nIndex].sVersion[2], pHeader->Item[nIndex].sVersion[3] };
+		uint8_t sGivenVer[] = { cMinor, cBugFix, cBuild };
 		int nVer = 0;
 		while (!bConditionOK && nVer < 3) {
 
@@ -144,7 +169,7 @@ int WINAPI tg_rom_get_updatable_item_index(const CRom::PROMFILE_HEAD pHeader, co
 	return nIndex;
 }
 
-CRom::type_result WINAPI tg_rom_get_item(const CRom::PROMFILE_HEAD pHeader, int nIndex, CRom::PROMFILE_HEAD_ITEAM pItem)
+CRom::type_result _CALLTYPE_ tg_rom_get_item(const CRom::PROMFILE_HEAD pHeader, int nIndex, CRom::PROMFILE_HEAD_ITEAM pItem)
 {
 	CRom::type_result result = CRom::result_success;
 
@@ -159,16 +184,18 @@ CRom::type_result WINAPI tg_rom_get_item(const CRom::PROMFILE_HEAD pHeader, int 
 	return result;
 }
 
-unsigned int WINAPI tg_rom_readBinary_of_item(unsigned char* sRead, unsigned int dwRead, unsigned int dwOffset, const CRom::PROMFILE_HEAD_ITEAM pItem, LPCTSTR lpctRomFile)
+unsigned int _CALLTYPE_ tg_rom_readBinary_of_item(unsigned char* sRead, unsigned int dwRead, unsigned int dwOffset, const CRom::PROMFILE_HEAD_ITEAM pItem, const wchar_t* lpctRomFile)
 {
 	unsigned int nRead = 0;
 
 	if (pItem == NULL || lpctRomFile == NULL || sRead == NULL || dwRead == 0)
 		return nRead;
 	//
+	std::string s_rom_file = CRom::get_mcsc_from_unicode(lpctRomFile);
+
 	std::ifstream rom;
 
-	rom.open(lpctRomFile, std::ios::binary | std::ios::in);
+	rom.open(s_rom_file.c_str(), std::ios::binary | std::ios::in);
 	if (!rom)
 		return nRead;
 	//
@@ -186,12 +213,17 @@ unsigned int WINAPI tg_rom_readBinary_of_item(unsigned char* sRead, unsigned int
 
 /////////////////////////////
 // for building rom file.
-CRom::type_result WINAPI tg_rom_create_header(LPCTSTR lpctRomFile)
+CRom::type_result _CALLTYPE_ tg_rom_create_header(const wchar_t* lpctRomFile)
 {
 	CRom::type_result result = CRom::result_success;
+
+	if (lpctRomFile == NULL)
+		return CRom::result_error_invalid_parameter;
+
+	std::string s_rom_file = CRom::get_mcsc_from_unicode(lpctRomFile);
 	std::ofstream romfile;
 
-	romfile.open(lpctRomFile, std::ofstream::binary | std::ios::out | std::ios::trunc);
+	romfile.open(s_rom_file.c_str(), std::ofstream::binary | std::ios::out | std::ios::trunc);
 
 	if (!romfile.is_open())
 		return CRom::result_error_not_open_file;
@@ -201,7 +233,7 @@ CRom::type_result WINAPI tg_rom_create_header(LPCTSTR lpctRomFile)
 
 	CRom::ROMFILE_HEAD header;
 
-	::memset(&header, 0, sizeof(header));
+	memset(&header, 0, sizeof(header));
 
 	header.dwHeaderSize = sizeof(CRom::ROMFILE_HEAD);
 	header.sFormatVersion[0] = 1;
@@ -217,15 +249,15 @@ CRom::type_result WINAPI tg_rom_create_header(LPCTSTR lpctRomFile)
 	return result;
 }
 
-CRom::type_result WINAPI tg_rom_add_item(
-	LPCTSTR lpctRomFile,
-	LPCTSTR lpctBinFile,
-	BYTE cMajor,
-	BYTE cMinor,
-	BYTE cBugFix,
-	BYTE cBuild,
-	BYTE* sModel,
-	DWORD dwUpdateCondition
+CRom::type_result _CALLTYPE_ tg_rom_add_item(
+	const wchar_t* lpctRomFile,
+	const wchar_t* lpctBinFile,
+	uint8_t cMajor,
+	uint8_t cMinor,
+	uint8_t cBugFix,
+	uint8_t cBuild,
+	uint8_t* sModel,
+	uint32_t dwUpdateCondition
 )
 {
 	CRom::type_result result = CRom::result_success;
@@ -233,9 +265,10 @@ CRom::type_result WINAPI tg_rom_add_item(
 	if (lpctRomFile == NULL || lpctBinFile == NULL)
 		return CRom::result_error_invalid_parameter;
 	//
+	std::string s_rom_file = CRom::get_mcsc_from_unicode(lpctRomFile);
 	std::ifstream rRom;
 
-	rRom.open(lpctRomFile, std::ios::binary | std::ios::in);
+	rRom.open(s_rom_file.c_str(), std::ios::binary | std::ios::in);
 
 	if (!rRom)
 		return CRom::result_error_not_found;
@@ -259,10 +292,10 @@ CRom::type_result WINAPI tg_rom_add_item(
 	}
 
 	//here load header OK.
-
+	std::string s_bin_file = CRom::get_mcsc_from_unicode(lpctBinFile);
 	std::ifstream Bin;
 
-	Bin.open(lpctBinFile, std::ios::binary | std::ios::in);
+	Bin.open(s_bin_file.c_str(), std::ios::binary | std::ios::in);
 
 	if (!Bin)
 		return CRom::result_error_not_found;
@@ -280,7 +313,7 @@ CRom::type_result WINAPI tg_rom_add_item(
 	Bin.seekg(0, Bin.beg);
 
 	std::fstream wRom;
-	wRom.open(lpctRomFile, std::ofstream::binary | std::ios::out | std::ios::in);
+	wRom.open(s_rom_file.c_str(), std::ofstream::binary | std::ios::out | std::ios::in);
 	if (!wRom.is_open()) {
 		Bin.close();
 		return CRom::result_error_not_open_file;
@@ -293,7 +326,7 @@ CRom::type_result WINAPI tg_rom_add_item(
 	CRom::ROMFILE_HEAD_ITEAM item;
 
 	::memset(&item, 0, sizeof(item));
-	item.dwSize = static_cast<DWORD>(nLen);
+	item.dwSize = static_cast<uint32_t>(nLen);
 	item.dwOffset = wRom.tellp();
 	item.sVersion[0] = cMajor;
 	item.sVersion[1] = cMinor;
@@ -352,7 +385,7 @@ CRom::type_result WINAPI tg_rom_add_item(
 			}//end ofr
 		}
 
-		SHA256_Process(&sha_info, (const  BYTE*)sBuffer, nBuffer);
+		SHA256_Process(&sha_info, (const  uint8_t*)sBuffer, nBuffer);
 		++i;
 	}//end while
 
