@@ -4,6 +4,9 @@
 ///////////////////////////////////////////////////////////
 // exported function prototype.
 //
+#ifndef _WIN32
+extern "C" {
+#endif
 
 CRom::type_result _CALLTYPE_ tg_rom_load_header(const wchar_t* lpctRomFile, CRom::PROMFILE_HEAD pHeader);
 
@@ -31,3 +34,9 @@ CRom::type_result _CALLTYPE_ tg_rom_add_item(
 	uint8_t* sModel,
 	uint32_t dwUpdateCondition
 );
+
+
+
+#ifndef _WIN32
+}
+#endif

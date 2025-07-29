@@ -152,7 +152,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)\shared\3thpart\inc;~/projects/li_rom/shared/3thpart/inc;%(ClCompile.AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_rom/li_rom/li_rom.ld,-soname,libtg_rom.so.1 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_rom/li_rom/li_rom.ld,-soname,libtg_rom.so.1.2 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <RemotePostBuildEvent>
       <Command>rm $(RemoteOutDir)$(TargetName).so;rm $(RemoteOutDir)$(TargetName).so.1;ln -sf $(RemoteOutDir)$(TargetFileName) $(RemoteOutDir)$(TargetName).so.1;ln -sf $(RemoteOutDir)$(TargetName).so.1 $(RemoteOutDir)$(TargetName).so</Command>
@@ -167,7 +167,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)\shared\3thpart\inc;~/projects/li_rom/shared/3thpart/inc;%(ClCompile.AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_rom/li_rom/li_rom.ld,-soname,libtg_rom.so.1 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_rom/li_rom/li_rom.ld,-soname,libtg_rom.so.1.2 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <RemotePostBuildEvent>
       <Command>rm $(RemoteOutDir)$(TargetName).so;rm $(RemoteOutDir)$(TargetName).so.1;ln -sf $(RemoteOutDir)$(TargetFileName) $(RemoteOutDir)$(TargetName).so.1;ln -sf $(RemoteOutDir)$(TargetName).so.1 $(RemoteOutDir)$(TargetName).so</Command>
@@ -182,7 +182,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)\shared\3thpart\inc;~/projects/li_rom/shared/3thpart/inc;%(ClCompile.AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_rom/li_rom/li_rom.ld,-soname,libtg_rom.so.1 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_rom/li_rom/li_rom.ld,-soname,libtg_rom.so.1.2 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <RemotePostBuildEvent>
       <Command>rm $(RemoteOutDir)$(TargetName).so;rm $(RemoteOutDir)$(TargetName).so.1;ln -sf $(RemoteOutDir)$(TargetFileName) $(RemoteOutDir)$(TargetName).so.1;ln -sf $(RemoteOutDir)$(TargetName).so.1 $(RemoteOutDir)$(TargetName).so</Command>
@@ -197,7 +197,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)\shared\3thpart\inc;~/projects/li_rom/shared/3thpart/inc;%(ClCompile.AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_rom/li_rom/li_rom.ld,-soname,libtg_rom.so.1 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_rom/li_rom/li_rom.ld,-soname,libtg_rom.so.1.2 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <RemotePostBuildEvent>
       <Command>rm $(RemoteOutDir)$(TargetName).so;rm $(RemoteOutDir)$(TargetName).so.1;ln -sf $(RemoteOutDir)$(TargetFileName) $(RemoteOutDir)$(TargetName).so.1;ln -sf $(RemoteOutDir)$(TargetName).so.1 $(RemoteOutDir)$(TargetName).so</Command>
@@ -212,7 +212,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)\shared\3thpart\inc;~/projects/li_rom/shared/3thpart/inc;%(ClCompile.AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_rom/li_rom/li_rom.ld,-soname,libtg_rom.so.1 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_rom/li_rom/li_rom.ld,-soname,libtg_rom.so.1.2 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <RemotePostBuildEvent>
       <Command>rm $(RemoteOutDir)$(TargetName).so;rm $(RemoteOutDir)$(TargetName).so.1;ln -sf $(RemoteOutDir)$(TargetFileName) $(RemoteOutDir)$(TargetName).so.1;ln -sf $(RemoteOutDir)$(TargetName).so.1 $(RemoteOutDir)$(TargetName).so</Command>
@@ -227,7 +227,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)\shared\3thpart\inc;~/projects/li_rom/shared/3thpart/inc;%(ClCompile.AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_rom/li_rom/li_rom.ld,-soname,libtg_rom.so.1 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_rom/li_rom/li_rom.ld,-soname,libtg_rom.so.1.2 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <RemotePostBuildEvent>
       <Command>rm $(RemoteOutDir)$(TargetName).so;rm $(RemoteOutDir)$(TargetName).so.1;ln -sf $(RemoteOutDir)$(TargetFileName) $(RemoteOutDir)$(TargetName).so.1;ln -sf $(RemoteOutDir)$(TargetName).so.1 $(RemoteOutDir)$(TargetName).so</Command>
@@ -242,7 +242,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)\shared\3thpart\inc;~/projects/li_rom/shared/3thpart/inc;%(ClCompile.AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_rom/li_rom/li_rom.ld,-soname,libtg_rom.so.1 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_rom/li_rom/li_rom.ld,-soname,libtg_rom.so.1.2 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <RemotePostBuildEvent>
       <Command>rm $(RemoteOutDir)$(TargetName).so;rm $(RemoteOutDir)$(TargetName).so.1;ln -sf $(RemoteOutDir)$(TargetFileName) $(RemoteOutDir)$(TargetName).so.1;ln -sf $(RemoteOutDir)$(TargetName).so.1 $(RemoteOutDir)$(TargetName).so</Command>
@@ -257,7 +257,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)\shared\3thpart\inc;~/projects/li_rom/shared/3thpart/inc;%(ClCompile.AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_rom/li_rom/li_rom.ld,-soname,libtg_rom.so.1 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_rom/li_rom/li_rom.ld,-soname,libtg_rom.so.1.2 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <RemotePostBuildEvent>
       <Command>rm $(RemoteOutDir)$(TargetName).so;rm $(RemoteOutDir)$(TargetName).so.1;ln -sf $(RemoteOutDir)$(TargetFileName) $(RemoteOutDir)$(TargetName).so.1;ln -sf $(RemoteOutDir)$(TargetName).so.1 $(RemoteOutDir)$(TargetName).so</Command>

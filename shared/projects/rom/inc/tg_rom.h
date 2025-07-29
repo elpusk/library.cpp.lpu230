@@ -78,30 +78,58 @@ public:
 #pragma pack(pop)
 
 public:
-	CRom(const wchar_t* lpctDllFile)
+	CRom(const wchar_t* lpctDllFile) : m_b_ini(false)
 	{
-		if (IncreaseReferenceCount() == 1) {
+		do {
+			if (IncreaseReferenceCount() != 1) {
+				m_b_ini = true;
+				continue;	//already loaded.
+			}
 			HMODULE hMod = CRom::GetDllModule(lpctDllFile, true);	//loadlibrary
-			assert(hMod);
+			if(!hMod) {
+				//assert(false && "Failed to load tg_rom.dll or libtg_rom.so");
+				CRom::_get_last_error_string_ref() = L"GetDllModule() is NULL";
+				continue;
+			}
 
 			type_result result = CRom::load_header(NULL, NULL, lpctDllFile);
-			assert(result == result_success);
+			if (result != result_success) {
+				CRom::_get_last_error_string_ref() = L"Failed to load header from tg_rom.dll or libtg_rom.so";
+				continue;
+			}
 
 			int n = CRom::get_updatable_item_index(NULL, NULL, 0, 0, 0, 0, lpctDllFile);
-			assert(n == 0);
+			if (n != 0) {
+				CRom::_get_last_error_string_ref() = L"Failed to get updatable item index from tg_rom.dll or libtg_rom.so";
+				continue;
+			}
 
 			result = CRom::get_item(NULL, 0, NULL, lpctDllFile);
-			assert(result == result_success);
+			if (result != result_success) {
+				CRom::_get_last_error_string_ref() = L"Failed to get item from tg_rom.dll or libtg_rom.so";
+				continue;
+			}
 
 			n = CRom::readBinary_of_item(NULL, 0, 0, NULL, NULL, lpctDllFile);
-			assert(n != 0);
+			if (n == 0) {
+				CRom::_get_last_error_string_ref() = L"Failed to read binary of item from tg_rom.dll or libtg_rom.so";
+				continue;
+			}
 
 			result = CRom::create_header(NULL, lpctDllFile);
-			assert(result == result_success);
+			if (result != result_success) {
+				CRom::_get_last_error_string_ref() = L"Failed to create header in tg_rom.dll or libtg_rom.so";
+				continue;
+			}
 
 			result = CRom::add_item(NULL, NULL, 0, 0, 0, 0, NULL, 0, lpctDllFile);
-			assert(result == result_success);
-		}
+			if (result != result_success) {
+				CRom::_get_last_error_string_ref() = L"Failed to add item in tg_rom.dll or libtg_rom.so";
+				continue;
+			}
+			m_sDllFileName = std::wstring(lpctDllFile);
+			m_b_ini = true;
+		} while (false);
 
 		memset(&m_Header, 0, sizeof(m_Header));
 	}
@@ -111,6 +139,21 @@ public:
 		if (IncreaseReferenceCount(false) == 0) {
 			CRom::_free_lib(GetDllModule());
 		}
+	}
+
+	bool is_ini() const
+	{
+		return m_b_ini;
+	}
+
+	const std::wstring& get_dll_file_name() const
+	{
+		return m_sDllFileName;
+	}
+
+	const std::wstring& get_last_error() const
+	{
+		return CRom::_get_last_error_string_ref();
 	}
 
 private:
@@ -168,8 +211,16 @@ public:
 	}
 
 private:
+	static std::wstring & _get_last_error_string_ref()
+	{
+		static std::wstring s_last_error;
+		return s_last_error;
+	}
+private:
+	std::wstring m_sDllFileName;	//the dll file name.
 	std::wstring m_sRomFileName;
 	ROMFILE_HEAD m_Header;
+	bool m_b_ini;
 
 
 #ifdef _WIN32
@@ -235,6 +286,9 @@ private:
 
 		if (bFirst && lpctDllFile) {
 			hMod = CRom::_load_lib(std::wstring(lpctDllFile));
+		}
+		else {
+			CRom::_get_last_error_string_ref() = L"dll name is empty.";
 		}
 
 		return hMod;

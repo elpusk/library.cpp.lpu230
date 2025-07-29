@@ -51,7 +51,7 @@ Parameter gPara;
 int main(int argc, char* argv[])
 {
 	std::wcout << L" Welcom \"ROM file builder\" tool.\n";
-	std::wcout << L" 2016.6.10 yss tools\n";
+	std::wcout << L" 2025.7.29 pp tools\n";
 	std::wcout << L" ================================\n";
 
 	// load command line parameters
@@ -64,7 +64,16 @@ int main(int argc, char* argv[])
 	MessageDisplayParameter();
 
 	//load rom helper library
-	CRom rom(L"tg_rom.dll");
+#ifdef _WIN32
+	std::wstring s_dll_name = L"tg_rom.dll";
+#else
+	std::wstring s_dll_name = L"./libtg_rom.so";
+#endif
+	CRom rom(s_dll_name.c_str());
+
+	if (!rom.is_ini()) {
+		std::wcout << L" [ERROR] load lib : << " << s_dll_name << L" : " << rom.get_last_error() << std::endl;
+	}
 	CRom::type_result result;
 	CRom::ROMFILE_HEAD header;
 	bool bDisplayResult = true;
