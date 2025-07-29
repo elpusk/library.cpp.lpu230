@@ -147,14 +147,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="wi_rom_build.cpp" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="..\shared\projects\rom\inc\tg_rom.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="wi_rom_build.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\shared\projects\rom_builder\rom_build.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

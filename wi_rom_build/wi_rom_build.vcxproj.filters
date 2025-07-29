@@ -15,11 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="wi_rom_build.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="..\shared\projects\rom\inc\tg_rom.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -31,5 +26,10 @@
     <ResourceCompile Include="wi_rom_build.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\shared\projects\rom_builder\rom_build.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
