@@ -78,6 +78,7 @@ namespace _mp {
 				case cio_packet::act_mgmt_advance_operation:
 					b_complete = _execute_advance_operation(m_p_log, *ptr_req_new, response, response_for_the_other_session);
 					break;
+					// kernal action is not supported in this version.
 				default:
 					b_complete = true;
 					response = *_generate_error_response(*ptr_req_new, cio_packet::error_reason_action_code);

@@ -358,6 +358,21 @@ namespace _mp {
 		std::wstring get_dev_path() const;
 
 		/**
+		* @brief process request. (act_dev_sub_bootloader).
+		*
+		* @param ptr_req_new[in] - new request ptr ( must be allocated ! )
+		*
+		* @param ptr_req_cur[in] - currnet request ptr
+		*
+		* @return result type - this ptr must be allocated in the body of this function.
+		*/
+		cbase_ctl_fn::cresult::type_ptr process_sub_bootloader
+		(
+			const cio_packet::type_ptr& ptr_req_new,
+			const cio_packet::type_ptr& ptr_req_cur
+		);
+
+		/**
 		* @brief process request. transaction state with the given event.
 		*
 		* @param ptr_req_new[in] - new request ptr ( must be allocated ! )

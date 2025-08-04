@@ -114,8 +114,11 @@ namespace _mp{
 		bool m_b_ini;//true - ini, false - not ini of this manager
         std::mutex m_mutex;
 
-		// key : device path, value : first - device instance, second - device info instance
+		// key : device path(primitive & compositive), value : first - device instance, second - device info instance
         clibhid::type_map_pair_ptrs m_map_pair_ptrs;
+
+        // key : device path(lpu237 primitive only), value : first - device instance, second - device info instance
+        clibhid::type_map_pair_ptrs m_map_pair_ptrs_lpu237;
 
 		std::shared_ptr<std::thread> m_ptr_th_pluginout; //thread for detect plug in/out device.
 		std::atomic<bool> m_b_run_th_pluginout; //true - run, false - stop of pluginout thread.

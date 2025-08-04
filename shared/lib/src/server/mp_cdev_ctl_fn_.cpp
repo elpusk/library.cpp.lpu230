@@ -1046,6 +1046,59 @@ namespace _mp {
 			return m_s_dev_path;
 		}
 
+		cbase_ctl_fn::cresult::type_ptr cdev_ctl_fn::process_sub_bootloader
+		(
+			const cio_packet::type_ptr& ptr_req_new,
+			const cio_packet::type_ptr& ptr_req_cur
+		)
+		{
+			// ptr_req_new 는 항상 nullptr 이 아님.
+			cbase_ctl_fn::cresult::type_ptr ptr_result; // default contructure, not yet ptr response.
+			ptr_result = std::make_shared<cbase_ctl_fn::cresult>(*ptr_req_new, get_dev_path());
+
+			do {
+				if (m_b_cur_shared_mode) {
+					// shared mode 에서는 지원 없음.
+					// primitive type 으로 open 되어 있야함.
+					ptr_result->after_processing_set_rsp_with_error_complete(cio_packet::error_reason_bootload_mismatch_condition);
+					continue;
+				}
+				if (ptr_req_cur) {
+					// 현재 실행 중인 request 가 있는 경우, bootloader 로 전환 할 수 없음.
+					ptr_result->after_processing_set_rsp_with_error_complete(cio_packet::error_reason_bootload_mismatch_condition);
+					continue;
+				}
+				// 1't coffee framework 참고. 호환되어야함.
+				_mp::type_deque_wstring deque_s_data;
+				cio_packet::type_data_field data_field_type(ptr_req_new->get_data_field_type());
+
+				if (data_field_type == cio_packet::data_field_binary) {//may be run bootloader commnad.
+					ptr_result->after_processing_set_rsp_with_error_complete(cio_packet::error_reason_device_misformat);
+					continue;//bootloader request dosen't support binary data.
+				}
+				if (ptr_req_new->get_data_field(deque_s_data) <= 0) {
+					ptr_result->after_processing_set_rsp_with_error_complete(cio_packet::error_reason_device_misformat);
+					continue;
+				}
+				if (deque_s_data[0].compare(L"start") != 0 && deque_s_data[0].compare(L"set")) {
+					ptr_result->after_processing_set_rsp_with_error_complete(cio_packet::error_reason_device_misformat);
+					continue;
+				}
+				if (deque_s_data[0].compare(L"start") == 0) {
+					if (deque_s_data.size() != 1) {
+						ptr_result->after_processing_set_rsp_with_error_complete(cio_packet::error_reason_device_misformat);
+						continue;
+					}
+				}
+
+				// TODO: bootloader start command 에 대한 처리.
+
+				// start bootloader  or ("cf_bl_progress" ,"true") or ("cf_bl_window",true)
+			} while (false);
+
+			return ptr_result;
+		}
+
 		cbase_ctl_fn::cresult::type_ptr cdev_ctl_fn::process_event
 		(
 			const cio_packet::type_ptr& ptr_req_new,

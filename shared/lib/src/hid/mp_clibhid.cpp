@@ -1,6 +1,6 @@
 
 #include <hid/mp_clibhid.h>
-
+#include <mp_elpusk.h>
 
 #ifdef _WIN32
 #ifdef _DEBUG
@@ -77,6 +77,21 @@ namespace _mp{
                     }
                     auto ptr_info = std::make_shared<clibhid_dev_info>(item);
                     m_map_pair_ptrs.emplace(item.get_path_by_string(), std::make_pair(ptr_dev, ptr_info));
+
+                    if (!ptr_info->get_path_by_string().empty()) {
+						continue; // not primitive path.
+                    }
+					
+                    if(ptr_info->get_vendor_id() != _mp::_elpusk::const_usb_vid ) {
+                        continue;
+					}
+                    if (ptr_info->get_product_id() != _mp::_elpusk::_lpu237::const_usb_pid 
+                        && ptr_info->get_product_id() != _mp::_elpusk::_lpu238::const_usb_pid) {
+                        continue;
+                    }
+
+                    // for lpu237 & lpu238 primitive path only
+                    m_map_pair_ptrs_lpu237.emplace(item.get_path_by_string(), std::make_pair(ptr_dev, ptr_info));
                 }//end for
 
                 //
@@ -97,7 +112,9 @@ namespace _mp{
                 }
             }
 
-            // 
+            //
+			m_map_pair_ptrs_lpu237.clear();//remove lpu237 primitive path
+
             for (auto item : m_map_pair_ptrs) {
                 item.second.first.reset();
                 item.second.second.reset();
@@ -261,6 +278,7 @@ namespace _mp{
                 }
                 //critical error .. remove device forcelly
                 if (item.second.second) {
+					m_map_pair_ptrs_lpu237.erase(item.first);
                     st_must_be_removed.insert(*item.second.second);
                 }
             }//end for
@@ -296,6 +314,7 @@ namespace _mp{
 
                 //remove
                 for (auto item : m_set_removed_dev_info) {
+                    m_map_pair_ptrs_lpu237.erase(item.get_path_by_string());
                     m_map_pair_ptrs.erase(item.get_path_by_string());
                 }
 
@@ -310,6 +329,20 @@ namespace _mp{
                     }
                     auto ptr_info = std::make_shared< clibhid_dev_info>(item);
                     m_map_pair_ptrs.emplace(item.get_path_by_string(), std::make_pair(ptr_dev, ptr_info));
+
+                    if (!ptr_info->get_path_by_string().empty()) {
+                        continue; // not primitive path.
+                    }
+                    if (ptr_info->get_vendor_id() != _mp::_elpusk::const_usb_vid) {
+                        continue;
+                    }
+                    if (ptr_info->get_product_id() != _mp::_elpusk::_lpu237::const_usb_pid
+                        && ptr_info->get_product_id() != _mp::_elpusk::_lpu238::const_usb_pid) {
+                        continue;
+                    }
+                    // for lpu237 & lpu238 primitive path only
+                    m_map_pair_ptrs_lpu237.emplace(item.get_path_by_string(), std::make_pair(ptr_dev, ptr_info));
+
                 }//end for
             } while (false);
         }

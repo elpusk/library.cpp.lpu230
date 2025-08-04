@@ -359,7 +359,7 @@ namespace _mp{
 					}
 					else if (boost::filesystem::is_regular_file(current_path))
 					{
-						if (s_filter == L"*.*" || boost::algorithm::iends_with(current_path_str, s_filter))
+						if (s_filter == L"*.*" || s_filter == L"*" || boost::algorithm::iends_with(current_path_str, s_filter))
 						{
 							list_found.push_back(current_path_str);
 						}

@@ -76,6 +76,9 @@
     <ClCompile Include="..\shared\common\src\main_bye.cpp">
       <Filter>common</Filter>
     </ClCompile>
+    <ClCompile Include="..\shared\common\src\cbootloader_lpu237.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="3thpart">
@@ -325,6 +328,9 @@
     </ClInclude>
     <ClInclude Include="..\shared\lib\inc\mp_os_type.h">
       <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\cbootloader_lpu237.h">
+      <Filter>common</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

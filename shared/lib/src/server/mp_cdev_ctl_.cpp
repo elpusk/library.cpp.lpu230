@@ -95,6 +95,7 @@ namespace _mp {
 
 
 			bool b_complete(true);
+			bool b_result(false);
 			cio_packet::type_ptr ptr_req_ing;
 			type_v_buffer v_rsp;
 			cbase_ctl_fn::cresult::type_ptr ptr_result_error, ptr_result;
@@ -154,6 +155,13 @@ namespace _mp {
 					}
 					break;
 				case cio_packet::act_dev_sub_bootloader:
+					ptr_result = m_fun.process_sub_bootloader(ptr_req_new, ptr_req_cur);
+					assert(ptr_result); // process_sub_bootloader() 의 제약 조건.
+
+					//이 action 은 항상 complete 이므로, ptr_result->get_rsp() 가 반드시 있어야 함.
+					std::tie(b_result, std::ignore) = ptr_result->process_get_result();
+					// 여기 계속 코딩.......
+					break;
 				case cio_packet::act_dev_independent_bootloader:
 				default:// 현재는 지원하지 않으므로 그냥 에러 처리.
 					ptr_result_error = std::make_shared<cbase_ctl_fn::cresult>(*ptr_req_new, m_fun.get_dev_path());

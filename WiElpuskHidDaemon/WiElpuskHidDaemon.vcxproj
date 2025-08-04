@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\shared\3thpart\src\win\hid.c" />
+    <ClCompile Include="..\shared\common\src\cbootloader_lpu237.cpp" />
     <ClCompile Include="..\shared\common\src\main_bye.cpp" />
     <ClCompile Include="..\shared\common\src\main_cert.cpp" />
     <ClCompile Include="..\shared\common\src\main_remove_all.cpp" />
@@ -53,6 +54,7 @@
   <ItemGroup>
     <ClInclude Include="..\shared\3thpart\inc\hidapi.h" />
     <ClInclude Include="..\shared\3thpart\src\win\hidapi_winapi.h" />
+    <ClInclude Include="..\shared\common\inc\cbootloader_lpu237.h" />
     <ClInclude Include="..\shared\common\inc\ckey_map.h" />
     <ClInclude Include="..\shared\common\inc\lpu230\info_sys.h" />
     <ClInclude Include="..\shared\common\inc\lpu230\info_sys_cnst.h" />
