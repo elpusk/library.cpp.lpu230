@@ -22,6 +22,13 @@
 class _hid_api_briage
 {
 public:
+	enum {
+		const_default_hid_read_interval_mmsec = 1
+	};
+	enum {
+		const_default_hid_write_interval_mmsec = 1
+	};
+
 	// For construting one transaction, the next request type.
 	typedef	enum : int{
 		// the current transaction is terminated in the current phase(request).

@@ -19,6 +19,7 @@ namespace _mp{
 
         constexpr const wchar_t* CONST_S_COFFEE_MGMT_CTL_REQ = L"GET_OUT_OF_HERE_NOW";
         constexpr const int CONST_N_COFFEE_MGMT_SLEEP_INTERVAL_MMSEC = 5;
+        constexpr const int CONST_N_COFFEE_MGMT_CTL_PIPE_READ_INTERVAL_MMSEC = 100;
 
 		constexpr const int CONST_N_MGMT_ALIVE_CHECK_INTERVAL_SEC = 10; //10 sec
 

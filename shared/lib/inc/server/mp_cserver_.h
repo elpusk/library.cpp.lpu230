@@ -18,7 +18,14 @@ namespace _mp{
 	class cserver
 	{
 	public:
-		static cserver& get_instance(clog* p_log = nullptr);
+		enum {
+			const_default_worker_sleep_interval_mmsec = 3,
+		};
+	public:
+		static cserver& get_instance(
+			long long ll_worker_sleep_interval_mmsec = cserver::const_default_worker_sleep_interval_mmsec
+			,clog* p_log = nullptr
+		);
 
 		virtual ~cserver();
 	public:
@@ -62,7 +69,7 @@ namespace _mp{
 		static void _cb_svr_write(unsigned long n_session, boost::beast::error_code& ec, const _mp::type_v_buffer& v_data, void* p_parameter);
 
 	private:
-		cserver();
+		cserver(long long ll_worker_sleep_interval_mmsec);
 
 		//display code for using easy.
 		void _dp_n(const std::wstring& s_info);
@@ -72,7 +79,7 @@ namespace _mp{
 		void _dp_w(const _mp::type_v_buffer& v_data);
 		void _dp_e(const _mp::type_v_buffer& v_data);
 	private:
-
+		long long m_ll_worker_sleep_interval_mmsec;
 		clog* m_p_log;
 		//for server
 		bool m_b_ssl;

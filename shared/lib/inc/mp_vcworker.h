@@ -47,8 +47,16 @@ namespace _mp {
 				}
 			}
 		}
-		vcworker(clog *p_log) : m_b_run_th_worker(true), m_p_log(p_log)
+
+		vcworker(clog* p_log, long long ll_worker_sleep_interval_mmsec) :
+			m_b_run_th_worker(true)
+			, m_p_log(p_log)
+			, m_ll_worker_sleep_interval_mmsec(ll_worker_sleep_interval_mmsec)
 		{
+			if(m_ll_worker_sleep_interval_mmsec <= 0) {
+				m_ll_worker_sleep_interval_mmsec = vcworker::_const_worker_sleep_interval_mmsec;
+			}
+
 			m_ptr_th_worker = std::shared_ptr<std::thread>(new std::thread(vcworker::_worker, std::ref(*this)));
 		}
 
@@ -93,6 +101,7 @@ namespace _mp {
         {
 			std::shared_ptr<T> ptr_req_cur, ptr_req_new;
 			bool b_completet(true);
+			long long ll_worker_sleep_interval_mmsec(obj.m_ll_worker_sleep_interval_mmsec);
 
 			while (obj.m_b_run_th_worker) {
 				do {
@@ -128,7 +137,7 @@ namespace _mp {
 					}
 
 				}while (false);
-                std::this_thread::sleep_for(std::chrono::milliseconds(vcworker::_const_worker_sleep_interval_mmsec));
+                std::this_thread::sleep_for(std::chrono::milliseconds(ll_worker_sleep_interval_mmsec));
             }//end while
         }
 		//
@@ -138,6 +147,7 @@ namespace _mp {
         vcworker::_type_q m_q;
 
 		clog* m_p_log;
+		long long m_ll_worker_sleep_interval_mmsec;
 
 	private://don't call these methods
 		vcworker();

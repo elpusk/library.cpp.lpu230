@@ -29,11 +29,11 @@ namespace _mp {
 		{
 		}
 
-		cctl_svr& cctl_svr::create_kernel_ctl(clog* p_log, unsigned long n_session)
+		cctl_svr& cctl_svr::create_kernel_ctl(clog* p_log, unsigned long n_session, long long ll_worker_sleep_interval_mmsec)
 		{
 			std::lock_guard<std::mutex> lock(m_mutex_map_session_to_kernel);
 			if (m_map_session_to_ptr_kernel_ctl.find(n_session) == std::end(m_map_session_to_ptr_kernel_ctl)) {
-				m_map_session_to_ptr_kernel_ctl[n_session] = cworker_ctl::type_ptr(new ckernel_ctl(p_log));
+				m_map_session_to_ptr_kernel_ctl[n_session] = cworker_ctl::type_ptr(new ckernel_ctl(p_log, ll_worker_sleep_interval_mmsec));
 			}
 			return *this;
 		}
@@ -49,7 +49,7 @@ namespace _mp {
 
 		cctl_svr& cctl_svr::create_main_ctl_and_set_callack(clog* p_log)
 		{
-			m_ptr_main_ctl = cworker_ctl::type_ptr(new cmain_ctl(p_log));
+			m_ptr_main_ctl = cworker_ctl::type_ptr(new cmain_ctl(p_log, m_ll_worker_sleep_interval_mmsec));
 			
 
 			clibhid::get_instance().set_callback_pluginout(cctl_svr::_cb_dev_pluginout, this);
@@ -117,7 +117,7 @@ namespace _mp {
 					//update m_map_device_index_to_ptr_dev_ctl
 					do {
 						for (auto item : set_inserted) {
-							unsigned short w = p_obj->create_new_dev_ctl(&clog::get_instance(), item);
+							unsigned short w = p_obj->create_new_dev_ctl(&clog::get_instance(), item, p_obj->m_ll_worker_sleep_interval_mmsec);
 							if (w == _MP_TOOLS_INVALID_DEVICE_INDEX) {
 								continue;
 							}
@@ -132,14 +132,14 @@ namespace _mp {
 		}
 
 		// >> m_map_device_index_to_wptr_dev_ctl
-		unsigned short cctl_svr::create_new_dev_ctl(clog* p_log, const clibhid_dev_info &item)
+		unsigned short cctl_svr::create_new_dev_ctl(clog* p_log, const clibhid_dev_info &item, long long ll_worker_sleep_interval_mmsec)
 		{
 			unsigned short w_result(0);
 			do {
 				if (!p_log)
 					continue;
 
-				cworker_ctl::type_ptr ptr_dev_ctl(new cdev_ctl(p_log));
+				cworker_ctl::type_ptr ptr_dev_ctl(new cdev_ctl(p_log, ll_worker_sleep_interval_mmsec));
 				ptr_dev_ctl->set_dev_path(item.get_path_by_wstring());
 				//
 				std::lock_guard<std::mutex> lock(m_mutex_device_map);
@@ -519,8 +519,14 @@ namespace _mp {
 			} while (false);
 			return b_result;
 		}
+		void cctl_svr::set_worker_sleep_interval(long long ll_worker_sleep_interval_mmsec)
+		{
+			m_ll_worker_sleep_interval_mmsec = ll_worker_sleep_interval_mmsec;
+		}
 		//
-		cctl_svr::cctl_svr() : m_w_new_device_index(1)
+		cctl_svr::cctl_svr() : 
+			m_ll_worker_sleep_interval_mmsec(3) // default 3 msec
+			,m_w_new_device_index(1)
 		{
 		}
 

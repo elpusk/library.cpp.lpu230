@@ -5,6 +5,7 @@
 #include <random>
 #include <deque>
 #include <ctime>
+#include <thread>
 
 #include <boost/asio/strand.hpp>
 #include <boost/asio/dispatch.hpp>
@@ -37,6 +38,16 @@ namespace _mp
 		};
 		enum {
 			const_default_max_tx_size_bytes = (1048576 + 1024)//1M + 1K byets
+		};
+
+		enum {
+			const_default_ws_stand_alone_server_ip4_sleep_interval_mmsec = 20
+		};
+		enum {
+			const_default_ws_stand_alone_server_ip6_sleep_interval_mmsec = 20
+		};
+		enum {
+			const_default_ws_server_ip4_sleep_interval_mmsec = 20
 		};
 
 	public:
@@ -1258,7 +1269,13 @@ namespace _mp
 		typedef		std::deque<cws_server::csession::type_ptr_session>	_type_deque_ptr_session;
 
 	public:
-		static bool action_by_ws(bool b_start_server, const cws_server::ccallback& callack, unsigned short w_port = _mp::_ws_tools::WEBSOCKET_SERVER_PORT_COFFEE_MANAGER)
+		static bool action_by_ws(
+			bool b_start_server,
+			const cws_server::ccallback& callack,
+			unsigned short w_port = _mp::_ws_tools::WEBSOCKET_SERVER_PORT_COFFEE_MANAGER,
+			long long ws_server_sleep_interval_mmsec = cws_server::const_default_ws_stand_alone_server_ip4_sleep_interval_mmsec
+
+		)
 		{
 			bool b_result(false);
 			static boost::asio::ip::address ip6_address = _ws_tools::get_local_ip6();
@@ -1322,11 +1339,14 @@ namespace _mp
 					if (!ptr_server_for_ip6->stopped()) {
 						ptr_server_for_ip6->stop();
 						while (!ptr_server_for_ip6->stopped()) {
+							std::this_thread::sleep_for(std::chrono::milliseconds(ws_server_sleep_interval_mmsec));
+/*
 #ifdef _WIN32
 							Sleep(20); 
 #else
 							usleep(20 * 1000);
 #endif
+*/
 						}
 					}
 
@@ -1342,12 +1362,14 @@ namespace _mp
 					if (!ptr_server_for_ip4->stopped()) {
 						ptr_server_for_ip4->stop();
 						while (!ptr_server_for_ip4->stopped()) {
+							std::this_thread::sleep_for(std::chrono::milliseconds(ws_server_sleep_interval_mmsec));
+/*
 #ifdef _WIN32
 							Sleep(20);
 #else
 							usleep(20 * 1000);
 #endif
-
+*/
 						}
 					}
 

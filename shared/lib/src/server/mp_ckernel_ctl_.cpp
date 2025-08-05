@@ -20,7 +20,10 @@
 
 namespace _mp
 {
-	ckernel_ctl::ckernel_ctl(clog* p_log) : cworker_ctl(p_log), cmain_ctl_fn(p_log), m_dev_ctl_fun(p_log)
+	ckernel_ctl::ckernel_ctl(clog* p_log, long long ll_worker_sleep_interval_mmsec) : 
+		cworker_ctl(p_log, ll_worker_sleep_interval_mmsec)
+		, cmain_ctl_fn(p_log)
+		, m_dev_ctl_fun(p_log)
 	{
 	}
 	ckernel_ctl::~ckernel_ctl()

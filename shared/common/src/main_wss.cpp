@@ -38,6 +38,8 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 
 	std::wstring s_ini_file_full_path_of_coffee_mgmt(_mp::ccoffee_path::get_path_of_coffee_mgmt_ini_file());
 
+	long long ll_server_worker_sleep_interval_mmsec = 3;
+
 	do {
 		if (!_mp::csystem::daemonize_on_linux(s_pid_file_full_path, std::wstring(), _signal_handler)) {
 			n_result = cdef_const::exit_error_daemonize;
@@ -102,7 +104,7 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 		unsigned short w_port = (unsigned short)ini.get_server_port();
 		int n_thread_for_server(1);
 
-		_mp::cserver::get_instance(&_mp::clog::get_instance()).set_port(w_port)
+		_mp::cserver::get_instance(ll_server_worker_sleep_interval_mmsec ,&_mp::clog::get_instance()).set_port(w_port)
 			.set_ssl(b_tls)
 			.set_cert_file(s_server_certificate_file)
 			.set_private_key_file(s_server_private_key_file)

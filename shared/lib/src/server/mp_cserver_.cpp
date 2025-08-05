@@ -2,6 +2,8 @@
 #include <websocket/mp_win_nt.h>
 
 #include <memory>
+#include <chrono>
+#include <thread>
 
 #include <mp_coffee_path.h>
 #include <mp_cio_packet.h>
@@ -17,14 +19,19 @@ namespace _mp{
 	 * receive data from client.
 	 * start/stop server
 	 */
-		cserver& cserver::get_instance(clog* p_log /*= nullptr*/)
+		cserver& cserver::get_instance(
+			long long ll_worker_sleep_interval_mmsec /*= cserver::const_default_worker_sleep_interval_mmsec*/
+			,clog* p_log /*= nullptr*/
+		)
 		{
 			static bool b_first = true;
-			static std::shared_ptr<cserver> ptr_obj(new cserver());
+			static std::shared_ptr<cserver> ptr_obj; (new cserver(ll_worker_sleep_interval_mmsec));
 
 			if (b_first) {
 				b_first = false;
+				ptr_obj = std::shared_ptr<cserver>(new cserver(ll_worker_sleep_interval_mmsec));
 				ptr_obj->m_p_log = p_log;
+				cctl_svr::get_instance().set_worker_sleep_interval(ll_worker_sleep_interval_mmsec);
 				cctl_svr::get_instance().create_main_ctl_and_set_callack(p_log);
 			}
 
@@ -56,7 +63,7 @@ namespace _mp{
 					unsigned short w_device_index = 0;
 
 					for (const _mp::clibhid_dev_info& item : st_dev) {
-						cctl_svr::get_instance().create_new_dev_ctl(m_p_log, item);
+						cctl_svr::get_instance().create_new_dev_ctl(m_p_log, item, m_ll_worker_sleep_interval_mmsec);
 					}//end for
 				}
 				
@@ -123,11 +130,14 @@ namespace _mp{
 				if (!m_ptr_server_for_ip4->stopped()) {
 					m_ptr_server_for_ip4->stop();
 					while (!m_ptr_server_for_ip4->stopped()) {
+						std::this_thread::sleep_for(std::chrono::milliseconds(_mp::cws_server::const_default_ws_server_ip4_sleep_interval_mmsec));
+/*
 #ifdef _WIN32
 						Sleep(20);
 #else
 						usleep(20 * 1000);
 #endif
+*/
 					}
 				}
 
@@ -373,7 +383,7 @@ namespace _mp{
 					, nullptr
 				);
 
-				cctl_svr::get_instance().create_kernel_ctl(p_obj->m_p_log, n_session);
+				cctl_svr::get_instance().create_kernel_ctl(p_obj->m_p_log, n_session, p_obj->m_ll_worker_sleep_interval_mmsec);
 
 				if (!cctl_svr::get_instance().push_request_to_worker_ctl(ptr_request_echo, s_error_reason)) {//automatic cancel device
 					p_obj->m_p_log->log_fmt(L"[E] - %ls | _push_request_of_client() of echo[for sending session number].\n", __WFUNCTION__);
@@ -578,8 +588,9 @@ namespace _mp{
 			} while (false);
 		}
 
-		cserver::cserver() : 
-			m_w_port(_ws_tools::WEBSOCKET_SERVER_PORT_COFFEE_MANAGER)
+		cserver::cserver(long long ll_worker_sleep_interval_mmsec) :
+			m_ll_worker_sleep_interval_mmsec(ll_worker_sleep_interval_mmsec)
+			, m_w_port(_ws_tools::WEBSOCKET_SERVER_PORT_COFFEE_MANAGER)
 			, m_b_ssl(true)
 			, m_p_log(nullptr)
 			, m_ll_msec_timeout_ws_server_wait_for_websocket_upgrade_req_of_client(CONST_DEFAULT_WS_SERVER_WAIIT_TIMEOUT_FOR_WEBSOCKET_UPGRADE_REQ_OF_CLIENT_MSEC)

@@ -25,7 +25,7 @@ namespace _mp {
 	public:
 
 		virtual ~cmain_ctl();
-		cmain_ctl(clog* p_log);
+		cmain_ctl(clog* p_log, long long ll_worker_sleep_interval_mmsec);
 
     protected:
 

@@ -27,7 +27,7 @@ namespace _mp {
 		cdev_ctl::~cdev_ctl()
 		{
 		}
-		cdev_ctl::cdev_ctl(clog* p_log) : cworker_ctl(p_log), m_fun(p_log)
+		cdev_ctl::cdev_ctl(clog* p_log, long long ll_worker_sleep_interval_mmsec) : cworker_ctl(p_log, ll_worker_sleep_interval_mmsec), m_fun(p_log)
 		{
 		}
 

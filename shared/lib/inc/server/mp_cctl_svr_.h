@@ -48,7 +48,7 @@ namespace _mp {
 
 		virtual ~cctl_svr();
 
-		cctl_svr& create_kernel_ctl(clog* p_log, unsigned long n_session);
+		cctl_svr& create_kernel_ctl(clog* p_log, unsigned long n_session, long long ll_worker_sleep_interval_mmsec);
 
 		void remove_kernel_ctl(unsigned long n_session);
 
@@ -60,7 +60,7 @@ namespace _mp {
 		* update m_map_device_index_to_ptr_dev_ctl.
 		* @return the created device index, if it is zero, error!
 		*/
-		unsigned short create_new_dev_ctl(clog* p_log, const clibhid_dev_info& item);
+		unsigned short create_new_dev_ctl(clog* p_log, const clibhid_dev_info& item, long long ll_worker_sleep_interval_mmsec);
 
 
 		/**
@@ -121,6 +121,8 @@ namespace _mp {
 
 		bool close_all_device_of_session(unsigned long n_session);
 		//
+		void set_worker_sleep_interval(long long ll_worker_sleep_interval_mmsec);
+
 	private:
 		cctl_svr();
 
@@ -147,6 +149,7 @@ namespace _mp {
 		);
 
 	private:
+		long long m_ll_worker_sleep_interval_mmsec;
 		//for session
 		cctl_svr::_type_map_session_to_name m_map_session_to_name;	//save the name of session
 

@@ -30,7 +30,7 @@ namespace _mp
 
 
 	public:
-		ckernel_ctl(clog* p_log);
+		ckernel_ctl(clog* p_log, long long ll_worker_sleep_interval_mmsec);
 		virtual ~ckernel_ctl();
 
 	protected://

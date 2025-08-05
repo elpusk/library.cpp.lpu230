@@ -57,7 +57,7 @@ int main_trace(const _mp::type_set_wstring& set_parameters)
 					//std::wcout << std::endl;
 				}
 			}
-			std::this_thread::sleep_for(std::chrono::milliseconds(100));
+			std::this_thread::sleep_for(std::chrono::milliseconds(_mp::_coffee::CONST_N_COFFEE_MGMT_CTL_PIPE_READ_INTERVAL_MMSEC));
 		} while (b_run);
 
 		n_result = EXIT_SUCCESS;

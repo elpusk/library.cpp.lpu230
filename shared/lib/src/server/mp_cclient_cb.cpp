@@ -15,7 +15,7 @@ namespace _mp {
 		, m_n_read_result(0)
 		, m_n_read_device_index(0)
 		, m_c_read_in_id(0)
-		, vcworker<cclient_cb_qitem>(nullptr)
+		, vcworker<cclient_cb_qitem>(nullptr, _mp::vcworker<cclient_cb_qitem>::_const_worker_sleep_interval_mmsec)
 	{
 	}
 

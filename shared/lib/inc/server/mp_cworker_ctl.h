@@ -35,7 +35,7 @@ namespace _mp {
 		virtual ~cworker_ctl()
 		{
 		}
-		cworker_ctl(clog *p_log) : vcworker(p_log)
+		cworker_ctl(clog *p_log, long long ll_worker_sleep_interval_mmsec) : vcworker(p_log, ll_worker_sleep_interval_mmsec)
 		{
 			m_w_device_index = _MP_TOOLS_INVALID_DEVICE_INDEX;
 		}

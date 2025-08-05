@@ -658,7 +658,7 @@ bool _hid_api_briage::_lpu237_ibutton_enable(hid_device* p_dev, bool b_enable)
             }
 
             n_totoal_w += n_written;
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            std::this_thread::sleep_for(std::chrono::milliseconds(_hid_api_briage::const_default_hid_write_interval_mmsec));
             --n_try;
             if( n_try <= 0) {
                 // error
@@ -692,7 +692,7 @@ bool _hid_api_briage::_lpu237_ibutton_enable(hid_device* p_dev, bool b_enable)
             }
 
 			n_totoal_r += n_read;
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            std::this_thread::sleep_for(std::chrono::milliseconds(_hid_api_briage::const_default_hid_read_interval_mmsec));
             --n_try;
             if (n_try <= 0) {
                 // error
