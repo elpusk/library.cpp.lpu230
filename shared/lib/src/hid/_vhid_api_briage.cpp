@@ -520,6 +520,12 @@ void _vhid_api_briage::_q_worker::_worker(_vhid_api_briage* p_api_briage)
 
     bool b_pass_result(false);
     _q_container::type_ptr_list ptr_list;
+    long long ll_req_q_check_interval_mmsec = _hid_api_briage::const_default_req_q_check_interval_mmsec_of_child;
+    int n_reload_cnt = 0;
+
+    if( p_api_briage != nullptr) {
+        ll_req_q_check_interval_mmsec = p_api_briage->get_req_q_check_interval_in_child();
+	}
 
     while (m_b_run_worker) {
 
@@ -574,7 +580,19 @@ void _vhid_api_briage::_q_worker::_worker(_vhid_api_briage* p_api_briage)
             }
         } while (false);
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(_vhid_api_briage::_q_worker::_const_worker_interval_mmsec));
+        ++n_reload_cnt;
+        if (n_reload_cnt > (2000/ ll_req_q_check_interval_mmsec)) {
+            n_reload_cnt = 0;
+
+            if (p_api_briage != nullptr) {
+                auto ll = p_api_briage->get_req_q_check_interval_in_child();
+                if (ll_req_q_check_interval_mmsec != ll) {
+                    ll_req_q_check_interval_mmsec = ll;
+                }
+            }
+
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(ll_req_q_check_interval_mmsec));
 
     }//end while
 
@@ -723,6 +741,10 @@ std::pair<bool, _mp::type_v_buffer> _vhid_api_briage::_q_worker::_process(
         ATLTRACE(L"== CLR buffer.\n");
 #endif
 #endif
+		long long ll_check_write_interval_mmsec = _hid_api_briage::const_default_hid_write_interval_mmsec;
+        if (p_api_briage) {
+            ll_check_write_interval_mmsec = p_api_briage->get_hid_write_interval_in_child();
+        }
 
         for (_q_item::type_ptr &ptr_req : *ptr_list) {
 
@@ -746,7 +768,7 @@ std::pair<bool, _mp::type_v_buffer> _vhid_api_briage::_q_worker::_process(
                     break;// continue while
                 }
 
-                std::this_thread::sleep_for(std::chrono::milliseconds(_vhid_api_briage::_q_worker::_const_txrx_pair_tx_interval_mmsec));
+                std::this_thread::sleep_for(std::chrono::milliseconds(ll_check_write_interval_mmsec));
             } while (!b_complete && m_b_run_worker);
 
             if (!m_b_run_worker) {
@@ -924,7 +946,7 @@ bool _vhid_api_briage::_q_worker::_notify_in_single_or_multi_rx_requests(
             }
 #if defined(_WIN32) && defined(_DEBUG)
             ATLTRACE(L"-_- ;; NOTIFY - MSR.\n");
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));//for debug
 #endif
             item = m_q_result_msr.front();
             m_q_result_msr.pop_front();
@@ -947,7 +969,7 @@ bool _vhid_api_briage::_q_worker::_notify_in_single_or_multi_rx_requests(
             }
 #if defined(_WIN32) && defined(_DEBUG)
             ATLTRACE(L"-_- ;; NOTIFY - IBUTTON.\n");
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));//for debug
 #endif
             item = m_q_result_ibutton.front();
             m_q_result_ibutton.pop_front();
@@ -1044,6 +1066,11 @@ int _vhid_api_briage::_q_worker::_rx(_mp::type_v_buffer& v_rx, _hid_api_briage* 
     int n_loop = 0;
     int n_retry = 0;
 
+	long long ll_check_read_interval_mmsec = _hid_api_briage::const_default_hid_read_interval_mmsec;
+    if( p_api_briage != nullptr) {
+        ll_check_read_interval_mmsec = p_api_briage->get_hid_read_interval_in_child();
+	}
+
     do {
         ++n_loop; //for debugging
 
@@ -1061,11 +1088,11 @@ int _vhid_api_briage::_q_worker::_rx(_mp::type_v_buffer& v_rx, _hid_api_briage* 
                 ++n_retry;
                 if (n_retry >= _q_worker::_const_one_packet_of_in_report_retry_counter) {
                     // fail rx over retry. 하나의 in-report 를 구성하는 packet 사이의 간격이 
-                    //_const_one_packet_of_in_report_retry_counter*_const_txrx_pair_rx_interval_mmsec 를 초과.
+                    //_const_one_packet_of_in_report_retry_counter * const_default_hid_read_interval_mmsec 를 초과.
                     n_result = -1;
                     break;
                 }
-                std::this_thread::sleep_for(std::chrono::milliseconds(_vhid_api_briage::_q_worker::_const_txrx_pair_rx_interval_mmsec));
+                std::this_thread::sleep_for(std::chrono::milliseconds(ll_check_read_interval_mmsec));
                 continue;
             }
         }
@@ -1083,7 +1110,7 @@ int _vhid_api_briage::_q_worker::_rx(_mp::type_v_buffer& v_rx, _hid_api_briage* 
         n_offset = n_offset + n_result;
         n_len = n_len - n_result;
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(_vhid_api_briage::_q_worker::_const_txrx_pair_rx_interval_mmsec));
+        std::this_thread::sleep_for(std::chrono::milliseconds(ll_check_read_interval_mmsec));
     } while (m_b_run_worker);
     //
     return n_result;

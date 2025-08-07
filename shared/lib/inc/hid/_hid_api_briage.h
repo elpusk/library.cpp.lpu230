@@ -9,6 +9,7 @@
 #include <utility>
 #include <memory>
 #include <mutex>
+#include <atomic>
 
 #include <hidapi.h>
 
@@ -42,6 +43,12 @@ public:
 		// the next phase is reaing request.
 		next_io_read = -3
 	}type_next_io;
+
+protected:
+	enum {
+		const_default_req_q_check_interval_mmsec_of_child = 1 // for child class, the child will use worker thread.
+	};
+
 public:
 	typedef	std::shared_ptr<_hid_api_briage>	type_ptr;
 
@@ -189,6 +196,15 @@ public:
 	*	Don't free return memory.
 	*/
 	virtual const wchar_t* api_error(int n_primitive_map_index);
+
+	virtual _hid_api_briage& set_req_q_check_interval_in_child(long long n_interval_mmsec);
+	virtual _hid_api_briage& set_hid_write_interval_in_child(long long n_interval_mmsec);
+	virtual _hid_api_briage& set_hid_read_interval_in_child(long long n_interval_mmsec);
+
+	virtual long long get_req_q_check_interval_in_child() const;
+	virtual long long get_hid_write_interval_in_child() const;
+	virtual long long get_hid_read_interval_in_child() const;
+
 protected:
 	_hid_api_briage();
 
@@ -196,6 +212,10 @@ private:
 	bool _lpu237_ibutton_enable(hid_device* p_dev,bool b_enable);
 
 protected:
+	std::atomic_llong m_atll_req_q_check_interval_mmsec;
+	std::atomic_llong m_atll_hid_write_interval_mmsec;
+	std::atomic_llong m_atll_hid_read_interval_mmsec;
+
 	std::wstring m_s_class_name;
 	bool m_b_ini;
 	_mp::clibusb::type_ptr m_ptr_usb_lib;

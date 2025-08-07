@@ -151,7 +151,7 @@ namespace _test{
 			int n_thread_for_server(1);
 
 			do {
-				_mp::cserver::get_instance(&_mp::clog::get_instance()).set_port(w_port)
+				_mp::cserver::get_instance(3,&_mp::clog::get_instance()).set_port(w_port)
 					.set_ssl(b_tls)
 					.set_cert_file(s_certificate_file)
 					.set_private_key_file(s_private_key_file);
@@ -471,7 +471,7 @@ namespace _test{
 			int n_thread_for_server(1);
 
 			do {
-				_mp::cserver::get_instance(&_mp::clog::get_instance()).set_port(w_port)
+				_mp::cserver::get_instance(3,&_mp::clog::get_instance()).set_port(w_port)
 					.set_ssl(b_tls)
 					.set_cert_file(s_certificate_file)
 					.set_private_key_file(s_private_key_file);

@@ -208,15 +208,6 @@ private:
 
 	private:
 		enum {
-			_const_worker_interval_mmsec = 1
-		};
-		enum {
-			_const_txrx_pair_tx_interval_mmsec = 1
-		};
-		enum {
-			_const_txrx_pair_rx_interval_mmsec = 1
-		};
-		enum {
 			_const_one_packet_of_in_report_retry_counter = 300  // times of _q_worker::_const_txrx_pair_rx_interval_mmsec
 		};
 

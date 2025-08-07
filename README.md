@@ -88,6 +88,11 @@ lpu23x device c++ library
 + Win11 : elpusk-hid-d.exe /bye
 + Debian : elpusk-hid-d /bye
 
+### start termainl.
++ control "security websocket server and device manager".
++ Win11 : elpusk-hid-d.exe /terminal
++ Debian : elpusk-hid-d /terminal
+
 ## Problems
 + fixed after starting wss, the inserted device is reported that  is used.
 + In li_lpu237_dll project.

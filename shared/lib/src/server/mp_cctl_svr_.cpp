@@ -522,6 +522,15 @@ namespace _mp {
 		void cctl_svr::set_worker_sleep_interval(long long ll_worker_sleep_interval_mmsec)
 		{
 			m_ll_worker_sleep_interval_mmsec = ll_worker_sleep_interval_mmsec;
+
+			// update all worker sleep interval of dev ctl.
+			std::lock_guard<std::mutex> lock(m_mutex_device_map);
+
+			for (auto item : m_map_device_index_to_ptr_dev_ctl) {
+				if (item.second) {
+					item.second->set_worker_sleep_interval(m_ll_worker_sleep_interval_mmsec);
+				}
+			}//end for
 		}
 		//
 		cctl_svr::cctl_svr() : 

@@ -4,6 +4,7 @@
 #include <map>
 #include <mutex>
 #include <thread>
+#include <atomic>
 
 #include <mp_clog.h>
 #include <websocket/mp_cws_server.h>
@@ -54,6 +55,16 @@ namespace _mp{
 		bool broadcast_by_ip4(unsigned long n_owner_session, const _mp::type_v_buffer& v_data);
 
 		_mp::cws_server::csession::type_ptr_session get_session(unsigned long n_session);
+
+		long long get_worker_sleep_interval() const;
+
+		cserver& set_worker_sleep_interval(long long ll_worker_sleep_interval_mmsec);
+		cserver& set_dev_pluginout_check_interval(long long ll_mmsec);
+
+		cserver& set_dev_tx_by_api_check_interval(long long ll_mmsec);
+		cserver& set_dev_rx_by_api_in_rx_worker_check_interval(long long ll_mmsec);
+		cserver& set_dev_rx_q_check_interval(long long ll_mmsec);
+
 	private:
 		static void _server_worker(const _mp::cws_server::type_ptr ptr_server);
 
@@ -79,7 +90,7 @@ namespace _mp{
 		void _dp_w(const _mp::type_v_buffer& v_data);
 		void _dp_e(const _mp::type_v_buffer& v_data);
 	private:
-		long long m_ll_worker_sleep_interval_mmsec;
+		std::atomic_llong m_atll_worker_sleep_interval_mmsec;
 		clog* m_p_log;
 		//for server
 		bool m_b_ssl;

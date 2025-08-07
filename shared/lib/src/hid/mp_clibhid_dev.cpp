@@ -16,6 +16,8 @@
 
 namespace _mp {
     clibhid_dev::clibhid_dev(const clibhid_dev_info & info, _hid_api_briage* p_hid_api_briage) :
+		m_atll_rx_by_api_in_rx_worker_check_interval_mmsec(clibhid_dev::_const_dev_rx_by_api_in_rx_worker_check_interval_mmsec),
+		m_atll_rx_q_check_interval_mmsec(clibhid_dev::_const_dev_rx_q_check_interval_mmsec),
         m_n_dev(-1),
         m_b_run_th_worker(false),
         m_dev_info(info),
@@ -194,6 +196,33 @@ namespace _mp {
         return m_dev_info.get_type();
     }
 
+    clibhid_dev& clibhid_dev::set_rx_q_check_interval(long long n_interval_mmsec)
+    {
+        if (m_p_hid_api_briage) {
+			m_p_hid_api_briage->set_req_q_check_interval_in_child(n_interval_mmsec);
+        }
+
+		m_atll_rx_q_check_interval_mmsec.store(n_interval_mmsec, std::memory_order_relaxed);
+        return *this;
+    }
+
+    clibhid_dev& clibhid_dev::set_rx_by_api_in_rx_worker_check_interval(long long n_interval_mmsec)
+    {
+        if (m_p_hid_api_briage) {
+			m_p_hid_api_briage->set_hid_read_interval_in_child(n_interval_mmsec);
+        }
+        m_atll_rx_by_api_in_rx_worker_check_interval_mmsec.store(n_interval_mmsec, std::memory_order_relaxed);
+		return *this;
+    }
+
+    clibhid_dev& clibhid_dev::set_tx_by_api_check_interval(long long n_interval_mmsec)
+    {
+        if (m_p_hid_api_briage) {
+            m_p_hid_api_briage->set_hid_write_interval_in_child(n_interval_mmsec);
+        }
+		return *this;
+    }
+
     /**
     * called by _worker()
     */
@@ -346,6 +375,8 @@ namespace _mp {
 
         v_rx.resize(n_report + n_start_offset,0);
 
+		long long ll_rx_q_check_interval_mmsec = m_atll_rx_q_check_interval_mmsec.load(std::memory_order_relaxed);
+
         do {
             b_continue = false;
 
@@ -390,7 +421,7 @@ namespace _mp {
 
                 if (n_rety_for_lost_packet < clibhid_dev::_const_lost_packet_retry_counter) {
                             
-                    std::this_thread::sleep_for(std::chrono::milliseconds(clibhid_dev::_const_dev_rx_check_interval_mmsec));
+                    std::this_thread::sleep_for(std::chrono::milliseconds(ll_rx_q_check_interval_mmsec));
                     b_continue = true;
                     continue;//retry rx
                 }
@@ -427,7 +458,7 @@ namespace _mp {
                 _mp::clog::get_instance().log_fmt_in_debug_mode(L"[D] 5(n_result : n_offset : v_rx.size()) = (%d,%d,%u).\n", n_result, n_offset, v_rx.size());
  
                 //need more 
-                std::this_thread::sleep_for(std::chrono::milliseconds(clibhid_dev::_const_dev_rx_check_interval_mmsec));
+                std::this_thread::sleep_for(std::chrono::milliseconds(ll_rx_q_check_interval_mmsec));
                 n_rety_for_lost_packet = 0;
                 b_continue = true;
                 continue;
@@ -686,6 +717,9 @@ namespace _mp {
 
         _mp::type_v_buffer v_report_in(n_report, 0);
 
+		int n_reload_counter = 0;
+		long long ll_rx_by_api_in_rx_worker_check_interval_mmsec = m_atll_rx_by_api_in_rx_worker_check_interval_mmsec.load(std::memory_order_relaxed);
+
         while (m_b_run_th_worker) {
 
             if (b_need_deep_recover) {
@@ -728,8 +762,17 @@ namespace _mp {
 
             } while (false);
 
+            ++n_reload_counter;
+            if (n_reload_counter > (2000/ ll_rx_by_api_in_rx_worker_check_interval_mmsec)) {
+				n_reload_counter = 0;
+                // check if rx_by_api_in_rx_worker_check_interval_mmsec is changed.
+                auto ll = m_atll_rx_by_api_in_rx_worker_check_interval_mmsec.load(std::memory_order_relaxed);
+                if (ll_rx_by_api_in_rx_worker_check_interval_mmsec != ll) {
+                    ll_rx_by_api_in_rx_worker_check_interval_mmsec = ll;
+                }
+            }
             // for reducing CPU usage rates.
-            std::this_thread::sleep_for(std::chrono::milliseconds(clibhid_dev::_const_dev_rx_check_interval_mmsec));
+            std::this_thread::sleep_for(std::chrono::milliseconds(ll_rx_by_api_in_rx_worker_check_interval_mmsec));
         }//end while
 
         std::wstringstream ss;

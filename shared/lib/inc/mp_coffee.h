@@ -18,8 +18,14 @@ namespace _mp{
         constexpr const wchar_t* CONST_S_COFFEE_MGMT_FILE_LOCK_FOR_SINGLE = L"FILE_LOCK_COFFEE_MGMT_E0A38B4D_DBE7_4F77_A657_45BD8A19B923";
 
         constexpr const wchar_t* CONST_S_COFFEE_MGMT_CTL_REQ = L"GET_OUT_OF_HERE_NOW";
-        constexpr const int CONST_N_COFFEE_MGMT_SLEEP_INTERVAL_MMSEC = 5;
+        constexpr const int CONST_N_COFFEE_MGMT_SLEEP_INTERVAL_MMSEC = 500;
         constexpr const int CONST_N_COFFEE_MGMT_CTL_PIPE_READ_INTERVAL_MMSEC = 100;
+
+        constexpr const wchar_t* CONST_S_COFFEE_MGMT_CTL_EX_REQ_PRE_WOKER_SLEEP_TIME = L"server-woker-sleep-time:";
+        constexpr const wchar_t* CONST_S_COFFEE_MGMT_CTL_EX_REQ_PRE_DEV_PLUG_IN_OUT_SLEEP_TIME = L"dev-plug-in-out-sleep-time:";
+        constexpr const wchar_t* CONST_S_COFFEE_MGMT_CTL_EX_REQ_PRE_DEV_API_TX_LOOP_INTERVAL = L"dev-tx-api-loop-interval-time:";
+        constexpr const wchar_t* CONST_S_COFFEE_MGMT_CTL_EX_REQ_PRE_DEV_API_RX_LOOP_INTERVAL = L"dev-rx-api-loop-interval-time:";
+        constexpr const wchar_t* CONST_S_COFFEE_MGMT_CTL_EX_REQ_PRE_DEV_RX_Q_LOOP_INTERVAL = L"dev-rx-q-loop-interval-time:";
 
 		constexpr const int CONST_N_MGMT_ALIVE_CHECK_INTERVAL_SEC = 10; //10 sec
 

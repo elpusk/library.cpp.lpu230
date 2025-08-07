@@ -379,9 +379,12 @@ void  _hid_free_enumeration(struct hid_device_info* devs)
 * member function bodies
 */
 _hid_api_briage::_hid_api_briage() :
-    m_s_class_name(L"_hid_api_briage"),
-    m_b_ini(false), 
-    m_n_map_index(_vhid_info::const_map_index_invalid)
+    m_atll_req_q_check_interval_mmsec(_hid_api_briage::const_default_req_q_check_interval_mmsec_of_child)
+	, m_atll_hid_write_interval_mmsec(_hid_api_briage::const_default_hid_write_interval_mmsec)
+	, m_atll_hid_read_interval_mmsec(_hid_api_briage::const_default_hid_read_interval_mmsec)
+    , m_s_class_name(L"_hid_api_briage")
+    , m_b_ini(false)
+    , m_n_map_index(_vhid_info::const_map_index_invalid)
 {
     m_ptr_usb_lib = std::make_shared<_mp::clibusb>();
 
@@ -638,6 +641,9 @@ bool _hid_api_briage::_lpu237_ibutton_enable(hid_device* p_dev, bool b_enable)
             continue;
         }
 
+        long long ll_check_tx_interval_mmsec = get_hid_write_interval_in_child();
+        long long ll_check_rx_interval_mmsec = get_hid_read_interval_in_child();
+
         unsigned char c_cmd = b_enable ? 'F' : 'H';
 
         int n_try = 100;
@@ -658,7 +664,7 @@ bool _hid_api_briage::_lpu237_ibutton_enable(hid_device* p_dev, bool b_enable)
             }
 
             n_totoal_w += n_written;
-            std::this_thread::sleep_for(std::chrono::milliseconds(_hid_api_briage::const_default_hid_write_interval_mmsec));
+            std::this_thread::sleep_for(std::chrono::milliseconds(ll_check_tx_interval_mmsec));
             --n_try;
             if( n_try <= 0) {
                 // error
@@ -692,7 +698,7 @@ bool _hid_api_briage::_lpu237_ibutton_enable(hid_device* p_dev, bool b_enable)
             }
 
 			n_totoal_r += n_read;
-            std::this_thread::sleep_for(std::chrono::milliseconds(_hid_api_briage::const_default_hid_read_interval_mmsec));
+            std::this_thread::sleep_for(std::chrono::milliseconds(ll_check_rx_interval_mmsec));
             --n_try;
             if (n_try <= 0) {
                 // error
@@ -880,4 +886,35 @@ const wchar_t* _hid_api_briage::api_error(int n_primitive_map_index)
         p_dev = m_map_hid_dev[n_primitive_map_index].first;
     }
     return hid_error(p_dev);
+}
+
+_hid_api_briage& _hid_api_briage::set_req_q_check_interval_in_child(long long n_interval_mmsec)
+{
+	m_atll_req_q_check_interval_mmsec.store(n_interval_mmsec, std::memory_order_relaxed);
+    return *this;
+}
+
+_hid_api_briage& _hid_api_briage::set_hid_write_interval_in_child(long long n_interval_mmsec)
+{
+	m_atll_hid_write_interval_mmsec.store(n_interval_mmsec, std::memory_order_relaxed);
+	return *this;
+}
+_hid_api_briage& _hid_api_briage::set_hid_read_interval_in_child(long long n_interval_mmsec)
+{
+    m_atll_hid_read_interval_mmsec.store(n_interval_mmsec, std::memory_order_relaxed);
+    return *this;
+}
+
+long long _hid_api_briage::get_req_q_check_interval_in_child() const
+{
+	return m_atll_req_q_check_interval_mmsec.load(std::memory_order_relaxed);
+}
+
+long long _hid_api_briage::get_hid_write_interval_in_child() const
+{
+    return m_atll_hid_write_interval_mmsec.load(std::memory_order_relaxed);
+}
+long long _hid_api_briage::get_hid_read_interval_in_child() const
+{
+    return m_atll_hid_read_interval_mmsec.load(std::memory_order_relaxed);
 }

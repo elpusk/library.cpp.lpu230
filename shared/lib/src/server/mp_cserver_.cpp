@@ -56,6 +56,9 @@ namespace _mp{
 					continue;
 				if (m_ptr_server_for_ip4)
 					continue;
+
+				long long ll_worker_sleep_interval_mmsec = get_worker_sleep_interval();
+
 				//create hid device library instance.
 				clibhid& lib_hid(_mp::clibhid::get_instance());
 				if (lib_hid.is_ini()) {
@@ -63,7 +66,7 @@ namespace _mp{
 					unsigned short w_device_index = 0;
 
 					for (const _mp::clibhid_dev_info& item : st_dev) {
-						cctl_svr::get_instance().create_new_dev_ctl(m_p_log, item, m_ll_worker_sleep_interval_mmsec);
+						cctl_svr::get_instance().create_new_dev_ctl(m_p_log, item, ll_worker_sleep_interval_mmsec);
 					}//end for
 				}
 				
@@ -318,6 +321,47 @@ namespace _mp{
 			return ptr_session;
 		}
 	
+		long long cserver::get_worker_sleep_interval() const
+		{
+			return m_atll_worker_sleep_interval_mmsec.load(std::memory_order_relaxed);
+		}
+
+		cserver& cserver::set_worker_sleep_interval(long long ll_worker_sleep_interval_mmsec)
+		{
+			m_atll_worker_sleep_interval_mmsec.store(ll_worker_sleep_interval_mmsec, std::memory_order_relaxed);
+			cctl_svr::get_instance().set_worker_sleep_interval(ll_worker_sleep_interval_mmsec);
+			return *this;
+		}
+
+		cserver& cserver::set_dev_pluginout_check_interval(long long ll_mmsec)
+		{
+			clibhid& lib_hid(_mp::clibhid::get_instance());
+			lib_hid.set_dev_pluginout_check_interval(ll_mmsec);
+			return *this;
+		}
+
+		cserver& cserver::set_dev_tx_by_api_check_interval(long long ll_mmsec)
+		{
+			clibhid& lib_hid(_mp::clibhid::get_instance());
+			lib_hid.set_dev_tx_by_api_check_interval(ll_mmsec);
+			return *this;
+		}
+
+		cserver& cserver::set_dev_rx_by_api_in_rx_worker_check_interval(long long ll_mmsec)
+		{
+			clibhid& lib_hid(_mp::clibhid::get_instance());
+			lib_hid.set_dev_rx_by_api_in_rx_worker_check_interval(ll_mmsec);
+			return *this;
+
+		}
+
+		cserver& cserver::set_dev_rx_q_check_interval(long long ll_mmsec)
+		{
+			clibhid& lib_hid(_mp::clibhid::get_instance());
+			lib_hid.set_dev_rx_q_check_interval(ll_mmsec);
+			return *this;
+		}
+
 		void cserver::_server_worker(const _mp::cws_server::type_ptr ptr_server)//thread for websocket server.
 		{
 			do {
@@ -383,7 +427,7 @@ namespace _mp{
 					, nullptr
 				);
 
-				cctl_svr::get_instance().create_kernel_ctl(p_obj->m_p_log, n_session, p_obj->m_ll_worker_sleep_interval_mmsec);
+				cctl_svr::get_instance().create_kernel_ctl(p_obj->m_p_log, n_session, p_obj->get_worker_sleep_interval());
 
 				if (!cctl_svr::get_instance().push_request_to_worker_ctl(ptr_request_echo, s_error_reason)) {//automatic cancel device
 					p_obj->m_p_log->log_fmt(L"[E] - %ls | _push_request_of_client() of echo[for sending session number].\n", __WFUNCTION__);
@@ -589,7 +633,7 @@ namespace _mp{
 		}
 
 		cserver::cserver(long long ll_worker_sleep_interval_mmsec) :
-			m_ll_worker_sleep_interval_mmsec(ll_worker_sleep_interval_mmsec)
+			m_atll_worker_sleep_interval_mmsec(ll_worker_sleep_interval_mmsec)
 			, m_w_port(_ws_tools::WEBSOCKET_SERVER_PORT_COFFEE_MANAGER)
 			, m_b_ssl(true)
 			, m_p_log(nullptr)

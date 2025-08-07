@@ -21,6 +21,45 @@ namespace _mp{
             return m_b_ini;
         }
 
+        void clibhid::set_dev_pluginout_check_interval(long long ll_mmsec)
+        {
+            m_atll_dev_pluginout_check_interval_mmsec.store( ll_mmsec, std::memory_order_relaxed);
+        }
+
+        void clibhid::set_dev_tx_by_api_check_interval(long long ll_mmsec)
+        {
+            std::lock_guard<std::mutex> lock(m_mutex);
+
+            for (auto item : m_map_pair_ptrs) {
+                if (item.second.first) {
+                    item.second.first->set_tx_by_api_check_interval(ll_mmsec);
+                }
+            }//
+        }
+
+        void clibhid::set_dev_rx_by_api_in_rx_worker_check_interval(long long ll_mmsec)
+        {
+            std::lock_guard<std::mutex> lock(m_mutex);
+
+            for (auto item : m_map_pair_ptrs) {
+                if (item.second.first) {
+                    item.second.first->set_rx_by_api_in_rx_worker_check_interval(ll_mmsec);
+                }
+            }//
+        }
+
+        void clibhid::set_dev_rx_q_check_interval(long long ll_mmsec)
+        {
+            std::lock_guard<std::mutex> lock(m_mutex);
+			
+            for( auto item : m_map_pair_ptrs) {
+                if (item.second.first) {
+                    item.second.first->set_rx_q_check_interval(ll_mmsec);
+                }
+			}//
+        }
+
+
         void clibhid::set_callback_pluginout(clibhid::type_callback_pluginout cb, void *p_user)
         {
             std::lock_guard<std::mutex> lock(m_mutex);
@@ -50,7 +89,12 @@ namespace _mp{
             return _get_device(sw_path);
         }
 
-        clibhid::clibhid() : m_b_ini(false), m_b_run_th_pluginout(false), m_p_user(NULL), m_cb(nullptr)
+        clibhid::clibhid() : 
+            m_b_ini(false)
+            , m_b_run_th_pluginout(false)
+            , m_p_user(NULL)
+            , m_cb(nullptr)
+			, m_atll_dev_pluginout_check_interval_mmsec(clibhid::_const_default_dev_pluginout_check_interval_mmsec)
         {
             //setup usb filter
 			//default - support lpu237, lpu238, hidbootloader
@@ -153,6 +197,8 @@ namespace _mp{
         void clibhid::_worker_pluginout(clibhid& lib)
         {
             clibhid_dev_info::type_set set_dev;
+			long long ll_check_interval = clibhid::_const_default_dev_pluginout_check_interval_mmsec;
+			int n_reload_cnt = 0;
 
             while (lib.m_b_run_th_pluginout) {
                 do {
@@ -168,7 +214,15 @@ namespace _mp{
                     
                 } while (false);
 
-                std::this_thread::sleep_for(std::chrono::milliseconds(clibhid::_const_dev_pluginout_check_interval_mmsec));
+                ++n_reload_cnt;
+                if (n_reload_cnt > (2000/ ll_check_interval)) {
+                    n_reload_cnt = 0;
+                    auto ll = lib.m_atll_dev_pluginout_check_interval_mmsec.load(std::memory_order_relaxed);
+                    if (ll_check_interval != ll) {
+                        ll_check_interval = ll;
+                    }
+                }
+                std::this_thread::sleep_for(std::chrono::milliseconds(ll_check_interval));
             }//end while
 
             std::wstringstream ss;

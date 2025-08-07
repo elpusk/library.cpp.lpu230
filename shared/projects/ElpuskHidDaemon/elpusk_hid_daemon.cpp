@@ -84,6 +84,10 @@ int main(int argc, char* argv[])
 			n_result = main_remove_all(set_parameters);
 			continue;
 		}
+		if (set_parameters.find(L"/terminal") != std::end(set_parameters)) {
+			n_result = main_terminal(set_parameters);
+			continue;
+		}
 
 
 

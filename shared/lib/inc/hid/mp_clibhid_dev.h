@@ -37,7 +37,10 @@ namespace _mp {
             _const_dev_io_check_interval_mmsec = 3//50
         };
         enum {
-            _const_dev_rx_check_interval_mmsec = 4// min is 1 msec in full speed hid device. but one report needs 4 in-packets.
+            _const_dev_rx_q_check_interval_mmsec = 4// min is 1 msec in full speed hid device. but one report needs 4 in-packets.
+        };
+        enum {
+            _const_dev_rx_by_api_in_rx_worker_check_interval_mmsec = 4// min is 1 msec in full speed hid device. but one report needs 4 in-packets.
         };
         enum {
             _const_dev_rx_recover_interval_usec = 1000
@@ -127,6 +130,29 @@ namespace _mp {
         * @return type_bm_dev_lpu200_msr, type_bm_dev_lpu200_ibutton, type_bm_dev_hid
         */
         type_bm_dev get_type() const;
+
+        /**
+		* @brief set rx queue check interval in msec.
+		* @param n_interval_mmsec - interval in msec. default is clibhid_dev::_const_dev_rx_q_check_interval_mmsec.
+		* @return this reference for chaining.
+        */
+        clibhid_dev& set_rx_q_check_interval(long long n_interval_mmsec);
+
+        /**
+		* @brief set rx by api in rx worker check interval in msec.
+		* @param n_interval_mmsec - interval in msec. default is clibhid_dev::_const_dev_rx_by_api_in_rx_worker_check_interval_mmsec.
+		* @return this reference for chaining.
+        */
+        clibhid_dev& set_rx_by_api_in_rx_worker_check_interval(long long n_interval_mmsec);
+
+        /**
+		* @brief set tx by api check interval in msec.
+		* @param n_interval_mmsec - interval in msec. default is _hid_api_briage::const_default_hid_write_interval_mmsec.
+		* @return this reference for chaining.
+        */
+        clibhid_dev& set_tx_by_api_check_interval(long long n_interval_mmsec);
+
+
     protected:
 
         /**
@@ -215,6 +241,12 @@ namespace _mp {
         void _worker();
 
     protected:
+		// rx queue check interval in msec.( this queue will be pushed by _worker_rx() )
+        std::atomic_llong m_atll_rx_q_check_interval_mmsec;
+
+		// rx by api check interval in msec.( _worker_rx() call api-read with this sleeptime )
+        std::atomic_llong m_atll_rx_by_api_in_rx_worker_check_interval_mmsec;
+
         _hid_api_briage* m_p_hid_api_briage;//virtual hidapi library instance
 
 		int m_n_dev;//valid is zero or positive. map index of primitive or composite map.

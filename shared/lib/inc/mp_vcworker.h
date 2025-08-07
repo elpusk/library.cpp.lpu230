@@ -6,6 +6,7 @@
 #include <mutex>
 #include <thread>
 #include <vector>
+#include <atomic>
 
 #include <mp_type.h>
 #include <mp_cqueue.h>
@@ -51,10 +52,10 @@ namespace _mp {
 		vcworker(clog* p_log, long long ll_worker_sleep_interval_mmsec) :
 			m_b_run_th_worker(true)
 			, m_p_log(p_log)
-			, m_ll_worker_sleep_interval_mmsec(ll_worker_sleep_interval_mmsec)
+			, m_atll_worker_sleep_interval_mmsec(ll_worker_sleep_interval_mmsec)
 		{
-			if(m_ll_worker_sleep_interval_mmsec <= 0) {
-				m_ll_worker_sleep_interval_mmsec = vcworker::_const_worker_sleep_interval_mmsec;
+			if(ll_worker_sleep_interval_mmsec <= 0) {
+				m_atll_worker_sleep_interval_mmsec.store( vcworker::_const_worker_sleep_interval_mmsec, std::memory_order_relaxed);
 			}
 
 			m_ptr_th_worker = std::shared_ptr<std::thread>(new std::thread(vcworker::_worker, std::ref(*this)));
@@ -63,6 +64,11 @@ namespace _mp {
 		void push_back_request(std::shared_ptr<T>& ptr)
 		{
 			m_q.push(ptr);
+		}
+
+		void set_worker_sleep_interval(long long ll_worker_sleep_interval_mmsec)
+		{
+			m_atll_worker_sleep_interval_mmsec.store(ll_worker_sleep_interval_mmsec, std::memory_order_relaxed);
 		}
 
     protected:
@@ -101,7 +107,8 @@ namespace _mp {
         {
 			std::shared_ptr<T> ptr_req_cur, ptr_req_new;
 			bool b_completet(true);
-			long long ll_worker_sleep_interval_mmsec(obj.m_ll_worker_sleep_interval_mmsec);
+			long long ll_worker_sleep_interval_mmsec(obj.m_atll_worker_sleep_interval_mmsec.load(std::memory_order_relaxed));
+			int n_reload_count(0);
 
 			while (obj.m_b_run_th_worker) {
 				do {
@@ -137,6 +144,15 @@ namespace _mp {
 					}
 
 				}while (false);
+
+				++n_reload_count;
+				if (n_reload_count >= (2000/ ll_worker_sleep_interval_mmsec)) {
+					n_reload_count = 0;
+					auto ll = obj.m_atll_worker_sleep_interval_mmsec.load(std::memory_order_relaxed);
+					if (ll_worker_sleep_interval_mmsec != ll) {
+						ll_worker_sleep_interval_mmsec = ll;
+					}
+				}
                 std::this_thread::sleep_for(std::chrono::milliseconds(ll_worker_sleep_interval_mmsec));
             }//end while
         }
@@ -147,7 +163,7 @@ namespace _mp {
         vcworker::_type_q m_q;
 
 		clog* m_p_log;
-		long long m_ll_worker_sleep_interval_mmsec;
+		std::atomic_llong m_atll_worker_sleep_interval_mmsec;
 
 	private://don't call these methods
 		vcworker();

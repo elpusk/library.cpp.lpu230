@@ -40,7 +40,7 @@ namespace _mp{
 
     protected:
         enum {
-            _const_dev_pluginout_check_interval_mmsec = 100
+            _const_default_dev_pluginout_check_interval_mmsec = 100
         };
     public:
         /**
@@ -63,6 +63,12 @@ namespace _mp{
         ~clibhid();
 
         bool is_ini() const;
+
+        void set_dev_pluginout_check_interval(long long ll_mmsec);
+
+        void set_dev_tx_by_api_check_interval(long long ll_mmsec);
+        void set_dev_rx_by_api_in_rx_worker_check_interval(long long ll_mmsec);
+        void set_dev_rx_q_check_interval(long long ll_mmsec);
 
         void set_callback_pluginout(clibhid::type_callback_pluginout cb, void* p_user);
 
@@ -110,6 +116,7 @@ namespace _mp{
 
 		void* m_p_user;// user parameter for callback(m_cb)
 		clibhid::type_callback_pluginout m_cb; // callback function for plugin out.(change of device list)
+        std::atomic_llong m_atll_dev_pluginout_check_interval_mmsec;
 
 		bool m_b_ini;//true - ini, false - not ini of this manager
         std::mutex m_mutex;

@@ -96,3 +96,8 @@ int main_remove_all(const _mp::type_set_wstring& set_parameters);
  * stop server.
  */
 int main_bye(const _mp::type_set_wstring& set_parameters);
+
+/**
+ * run terminal.
+ */
+int main_terminal(const _mp::type_set_wstring& set_parameters);

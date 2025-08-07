@@ -135,6 +135,9 @@
     <ClCompile Include="..\shared\common\src\cbootloader_lpu237.cpp">
       <Filter>common</Filter>
     </ClCompile>
+    <ClCompile Include="..\shared\common\src\main_terminal.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\3thpart\inc\hidapi.h">
