@@ -16,6 +16,10 @@
 #endif
 #endif
 
+#if !defined(_WIN32) && defined(_SET_THREAD_NAME_)
+#include <pthread.h>
+#endif
+
 /**
 * member function bodies
 */
@@ -482,6 +486,10 @@ _vhid_api_briage::_q_worker::_q_worker(int n_primitive_map_index, _vhid_api_bria
 {
     m_b_run_worker = true;
     m_ptr_worker = std::shared_ptr<std::thread>(new std::thread(&_vhid_api_briage::_q_worker::_worker, this, p_api_briage));
+#if !defined(_WIN32) && defined(_SET_THREAD_NAME_)
+    pthread_setname_np(m_ptr_worker->native_handle(), "_q_worker");
+#endif
+
 }
 
 _vhid_api_briage::_q_worker::~_q_worker()

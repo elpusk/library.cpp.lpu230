@@ -1,5 +1,9 @@
 #include <websocket/mp_win_nt.h>
 
+#if !defined(_WIN32) && defined(_SET_THREAD_NAME_)
+#include <pthread.h>
+#endif
+
 #include <cstdio>
 #include <array>
 #include <main.h>
@@ -49,6 +53,10 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 
 	long long ll_server_worker_sleep_interval_mmsec = 3;
 
+#if !defined(_WIN32) && defined(_SET_THREAD_NAME_)
+	pthread_setname_np(pthread_self(), "main_wss");
+#endif
+	
 	do {
 		if (!_mp::csystem::daemonize_on_linux(s_pid_file_full_path, std::wstring(), _signal_handler)) {
 			n_result = cdef_const::exit_error_daemonize;
@@ -143,17 +151,19 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 		}
 		n_result = EXIT_SUCCESS;
 		log.log_fmt(L"[I] %ls | cserver::get_instance().start().\n", __WFUNCTION__);
-		//log.trace(L"[I] - %ls | cserver::get_instance().start().\n", __WFUNCTION__);
+		log.trace(L"[I] - %ls | cserver::get_instance().start().\n", __WFUNCTION__);
 		std::wstring s_data;
 
-		std::array<std::wstring, 5> ss_pre_req_for_opt_time = {
+		std::array<std::wstring, 6> ss_pre_req_for_opt_time = {
 			_mp::_coffee::CONST_S_COFFEE_MGMT_CTL_EX_REQ_PRE_WOKER_SLEEP_TIME,
 			_mp::_coffee::CONST_S_COFFEE_MGMT_CTL_EX_REQ_PRE_DEV_PLUG_IN_OUT_SLEEP_TIME,
 			_mp::_coffee::CONST_S_COFFEE_MGMT_CTL_EX_REQ_PRE_DEV_API_TX_LOOP_INTERVAL,
 			_mp::_coffee::CONST_S_COFFEE_MGMT_CTL_EX_REQ_PRE_DEV_API_RX_LOOP_INTERVAL,
-			_mp::_coffee::CONST_S_COFFEE_MGMT_CTL_EX_REQ_PRE_DEV_RX_Q_LOOP_INTERVAL
+			_mp::_coffee::CONST_S_COFFEE_MGMT_CTL_EX_REQ_PRE_DEV_RX_Q_LOOP_INTERVAL,
+			_mp::_coffee::CONST_S_COFFEE_MGMT_CTL_EX_REQ_PRE_CTL_PIPE_CHECK_INTERVAL
 		};
 
+		long long ll_ctl_pipe_check_interval_mmsec(_mp::_coffee::CONST_N_COFFEE_MGMT_SLEEP_INTERVAL_MMSEC);
 		do {
 			if (gptr_ctl_pipe->read(s_data)) {
 				if (s_data.empty()) {
@@ -211,13 +221,27 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 					s_data.clear();
 					continue;
 				}
-				//
+
+				//rx_q_check_interval must be 1msec(default) - this is tested value.
 				++n_req;
 				std::tie(b_valid, ll_number) = _get_interval_from_ctl_pipe(s_data, ss_pre_req_for_opt_time[n_req]);
 				if (b_valid) {
 					log.log_fmt(L"[I] - %ls | ll_dev_rx_q_loop_interval_mmsec = %lld\n", __WFUNCTION__, ll_number);
 					log.trace(L"[I] - %ls | ll_dev_rx_q_loop_interval_mmsec = %lld\n", __WFUNCTION__, ll_number);
 					wss_svr.set_dev_rx_q_check_interval(ll_number);
+					s_data.clear();
+					continue;
+				}
+				//
+				++n_req;
+				std::tie(b_valid, ll_number) = _get_interval_from_ctl_pipe(s_data, ss_pre_req_for_opt_time[n_req]);
+				if (b_valid) {
+					log.log_fmt(L"[I] - %ls | ll_ctl_pipe_check_interval_mmsec = %lld\n", __WFUNCTION__, ll_number);
+					log.trace(L"[I] - %ls | ll_ctl_pipe_check_interval_mmsec = %lld\n", __WFUNCTION__, ll_number);
+
+					if (ll_number >= 0) {
+						ll_ctl_pipe_check_interval_mmsec = ll_number;
+					}
 					s_data.clear();
 					continue;
 				}
@@ -228,7 +252,7 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 				s_data.clear();
 			}
 			else {
-				std::this_thread::sleep_for(std::chrono::milliseconds(_mp::_coffee::CONST_N_COFFEE_MGMT_SLEEP_INTERVAL_MMSEC));
+				std::this_thread::sleep_for(std::chrono::milliseconds(ll_ctl_pipe_check_interval_mmsec));
 			}
 		} while (gb_run_main_loop);
 

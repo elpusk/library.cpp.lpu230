@@ -113,6 +113,7 @@
     <ClInclude Include="..\shared\lib\inc\websocket\mp_ws_tools.h" />
     <ClInclude Include="..\shared\lib\inc\_dev\mp_cdev_util.h" />
     <ClInclude Include="..\shared\projects\ElpuskHidDaemon\inc\cfile_coffee_manager_ini.h" />
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <Xml Include="..\shared\projects\ElpuskHidDaemon\device.xml" />
@@ -121,6 +122,9 @@
   <ItemGroup>
     <None Include="..\shared\projects\ElpuskHidDaemon\elpusk-hid-d.json" />
     <None Include="ClassDiagram.cd" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="WiElpuskHidDaemon.rc" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
@@ -206,7 +210,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>HIDAPI_USE_DDK;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_SET_THREAD_NAME_;HIDAPI_USE_DDK;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(SolutionDir)shared\3thpart\inc</AdditionalIncludeDirectories>
@@ -225,7 +229,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>HIDAPI_USE_DDK;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_SET_THREAD_NAME_;HIDAPI_USE_DDK;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(SolutionDir)shared\3thpart\inc</AdditionalIncludeDirectories>
@@ -244,7 +248,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>HIDAPI_USE_DDK;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_SET_THREAD_NAME_;HIDAPI_USE_DDK;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(SolutionDir)shared\3thpart\inc</AdditionalIncludeDirectories>
@@ -263,7 +267,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>HIDAPI_USE_DDK;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_SET_THREAD_NAME_;HIDAPI_USE_DDK;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(SolutionDir)shared\3thpart\inc</AdditionalIncludeDirectories>

@@ -8,6 +8,10 @@
 #endif
 #endif
 
+#if !defined(_WIN32) && defined(_SET_THREAD_NAME_)
+#include <pthread.h>
+#endif
+
 namespace _mp{
 
         clibhid& clibhid::get_instance()
@@ -141,6 +145,9 @@ namespace _mp{
                 //
                 m_b_run_th_pluginout = true;
                 m_ptr_th_pluginout = std::shared_ptr<std::thread>(new std::thread(clibhid::_worker_pluginout, std::ref(*this)));
+#if !defined(_WIN32) && defined(_SET_THREAD_NAME_)
+                pthread_setname_np(m_ptr_th_pluginout->native_handle(), "clibhid");
+#endif
             }
         
         }

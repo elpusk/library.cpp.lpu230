@@ -50,6 +50,9 @@ namespace _mp {
                     m_n_dev = n_dev;
                     m_b_run_th_worker = true;
                     m_ptr_th_worker = std::shared_ptr<std::thread>(new std::thread(&clibhid_dev::_worker, this));
+#if !defined(_WIN32) && defined(_SET_THREAD_NAME_)
+                    pthread_setname_np(m_ptr_th_worker->native_handle(), "clibhid_dev");
+#endif
                 }
                 else {
                     m_p_hid_api_briage->api_close(n_dev);
@@ -66,7 +69,9 @@ namespace _mp {
             m_n_dev = n_dev;
             m_b_run_th_worker = true;
             m_ptr_th_worker = std::shared_ptr<std::thread>(new std::thread(&clibhid_dev::_worker, this));
-
+#if !defined(_WIN32) && defined(_SET_THREAD_NAME_)
+            pthread_setname_np(m_ptr_th_worker->native_handle(), "clibhid_dev");
+#endif
         } while (false);
     }
 
@@ -798,6 +803,10 @@ namespace _mp {
 
 		// thread for rx
         std::shared_ptr<std::thread> ptr_th_rx(new std::thread(&clibhid_dev::_worker_rx, this));
+
+#if !defined(_WIN32) && defined(_SET_THREAD_NAME_)
+        pthread_setname_np(ptr_th_rx->native_handle(), "_worker_rx");
+#endif
 
 #ifndef _WIN32
         //set priority level of _worker_rx()

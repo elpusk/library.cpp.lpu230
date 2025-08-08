@@ -294,7 +294,7 @@
       </Command>
     </RemotePreBuildEvent>
     <ClCompile>
-      <PreprocessorDefinitions>__linux__;USING_HIDAPI_LIBUSB;_DEBUG</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_SET_THREAD_NAME_;__linux__;USING_HIDAPI_LIBUSB;_DEBUG</PreprocessorDefinitions>
       <AdditionalOptions>-pthread %(AdditionalOptions)</AdditionalOptions>
       <UndefinePreprocessorDefinitions>
       </UndefinePreprocessorDefinitions>
@@ -311,7 +311,7 @@
       </Command>
     </RemotePreBuildEvent>
     <ClCompile>
-      <PreprocessorDefinitions>__linux__;USING_HIDAPI_LIBUSB;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_SET_THREAD_NAME_;__linux__;USING_HIDAPI_LIBUSB;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions>-pthread %(AdditionalOptions)</AdditionalOptions>
       <UndefinePreprocessorDefinitions>
       </UndefinePreprocessorDefinitions>
@@ -329,7 +329,7 @@
       </Command>
     </RemotePreBuildEvent>
     <ClCompile>
-      <PreprocessorDefinitions>__linux__;USING_HIDAPI_LIBUSB;_DEBUG</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_SET_THREAD_NAME_;__linux__;USING_HIDAPI_LIBUSB;_DEBUG</PreprocessorDefinitions>
       <AdditionalOptions>-pthread %(AdditionalOptions)</AdditionalOptions>
       <UndefinePreprocessorDefinitions>
       </UndefinePreprocessorDefinitions>
@@ -346,7 +346,7 @@
       </Command>
     </RemotePreBuildEvent>
     <ClCompile>
-      <PreprocessorDefinitions>__linux__;USING_HIDAPI_LIBUSB;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_SET_THREAD_NAME_;__linux__;USING_HIDAPI_LIBUSB;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions>-pthread %(AdditionalOptions)</AdditionalOptions>
       <UndefinePreprocessorDefinitions>
       </UndefinePreprocessorDefinitions>
@@ -364,7 +364,7 @@
       </Command>
     </RemotePreBuildEvent>
     <ClCompile>
-      <PreprocessorDefinitions>__linux__;USING_HIDAPI_LIBUSB;_DEBUG</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_SET_THREAD_NAME_;__linux__;USING_HIDAPI_LIBUSB;_DEBUG</PreprocessorDefinitions>
       <AdditionalOptions>-pthread %(AdditionalOptions)</AdditionalOptions>
       <UndefinePreprocessorDefinitions>
       </UndefinePreprocessorDefinitions>
@@ -381,7 +381,7 @@
       </Command>
     </RemotePreBuildEvent>
     <ClCompile>
-      <PreprocessorDefinitions>__linux__;USING_HIDAPI_LIBUSB;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_SET_THREAD_NAME_;__linux__;USING_HIDAPI_LIBUSB;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions>-pthread %(AdditionalOptions)</AdditionalOptions>
       <UndefinePreprocessorDefinitions>
       </UndefinePreprocessorDefinitions>
@@ -399,7 +399,7 @@
       </Command>
     </RemotePreBuildEvent>
     <ClCompile>
-      <PreprocessorDefinitions>__linux__;USING_HIDAPI_LIBUSB;_DEBUG</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_SET_THREAD_NAME_;__linux__;USING_HIDAPI_LIBUSB;_DEBUG</PreprocessorDefinitions>
       <AdditionalOptions>-pthread %(AdditionalOptions)</AdditionalOptions>
       <UndefinePreprocessorDefinitions>
       </UndefinePreprocessorDefinitions>
@@ -416,7 +416,7 @@
       </Command>
     </RemotePreBuildEvent>
     <ClCompile>
-      <PreprocessorDefinitions>__linux__;USING_HIDAPI_LIBUSB;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_SET_THREAD_NAME_;__linux__;USING_HIDAPI_LIBUSB;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions>-pthread %(AdditionalOptions)</AdditionalOptions>
       <UndefinePreprocessorDefinitions>
       </UndefinePreprocessorDefinitions>

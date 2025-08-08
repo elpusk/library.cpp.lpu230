@@ -305,6 +305,9 @@
     <ClInclude Include="..\shared\common\inc\cbootloader_lpu237.h">
       <Filter>common</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Xml Include="..\shared\projects\ElpuskHidDaemon\elpusk-hid-d.xml">
@@ -319,5 +322,10 @@
     <None Include="..\shared\projects\ElpuskHidDaemon\elpusk-hid-d.json">
       <Filter>common\json</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="WiElpuskHidDaemon.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>
