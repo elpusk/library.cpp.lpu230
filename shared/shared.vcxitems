@@ -100,6 +100,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)..\.gitignore" />
+    <None Include="$(MSBuildThisFileDirectory)..\doc\lpu230_api_user_manual.md" />
+    <None Include="$(MSBuildThisFileDirectory)..\doc\lpu237_api_ibutton_user_manual.md" />
+    <None Include="$(MSBuildThisFileDirectory)..\doc\lpu237_setting_guide.md" />
     <None Include="$(MSBuildThisFileDirectory)..\info.md" />
     <None Include="$(MSBuildThisFileDirectory)..\README.md" />
   </ItemGroup>
