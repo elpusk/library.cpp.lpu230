@@ -576,8 +576,9 @@ public:
 
 
 	/**
-	* get card data
-	* @reurn first -
+	* @brief get card data
+	* @reurn first - reading result(true - success, false - error),
+	*		second - array of reading result for each track(1,2,3).
 	*/
 	std::pair<bool, std::array<clpu237_msr::type_result_read,3> > LPU237_get_data(unsigned long dwBufferIndex, std::array<std::wstring,3> & ar_s_iso)
 	{

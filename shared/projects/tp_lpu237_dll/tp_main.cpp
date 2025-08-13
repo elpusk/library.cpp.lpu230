@@ -92,7 +92,12 @@ int main(int argc, char* argv[])
 		}
 		if (set_parameters.find(L"/msr") != std::end(set_parameters)) {
 			//msr test
-			n_result = main_lpu237_dll(set_parameters);
+			if (set_parameters.find(L"/getdataincallback") != std::end(set_parameters)) {
+				n_result = main_lpu237_dll_getdataincallback(set_parameters);
+				continue;
+			}
+			// default thread safty code style
+			n_result = main_lpu237_dll_threadsafty(set_parameters);
 			continue;
 		}
 
@@ -100,9 +105,11 @@ int main(int argc, char* argv[])
 	} while (false);
 
 	if(b_help) {
-		std::wcout << L"Usage: " << std::endl;
-		std::wcout << L"  /ibutton - run ibutton test." << std::endl;
-		std::wcout << L"  /msr - run msr test." << std::endl;
+		std::wcout << L"Usage: [/ibutton or /msr]" << std::endl;
+		std::wcout << L"  /ibutton : run ibutton test." << std::endl;
+		std::wcout << L"  /msr : run msr test." << std::endl;
+		std::wcout << L"  /threadsafty : use threadsafty-code-style.(default)" << std::endl;
+		std::wcout << L"  /getdataincallback : get ms-data in callback function." << std::endl;
 		n_result = EXIT_SUCCESS;
 	}
 

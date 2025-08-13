@@ -26,5 +26,8 @@
     <ClInclude Include="..\shared\lib\inc\mp_os_type.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\shared\projects\tp_lpu237_dll\cwait.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

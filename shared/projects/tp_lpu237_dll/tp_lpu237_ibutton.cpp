@@ -46,7 +46,7 @@ static void _CALLTYPE_ cb_ibutton(void* p_user)
 	}
 }
 
-static std::tuple<bool, HANDLE, std::wstring> _get_list_open_enable(clpu237_ibutton& lib, const std::wstring &s_dev)
+static std::tuple<bool, HANDLE, std::wstring> _get_list_open_enable_with_print(clpu237_ibutton& lib, const std::wstring &s_dev)
 {
 	HANDLE h_dev(NULL);
 	bool b_result(false);
@@ -147,7 +147,7 @@ int main_lpu237_ibutton(const std::set<std::wstring>& set_parameters)
 		std::wcout << L" : I : LPU237Lock_dll_on." << std::endl;
 				
 
-		std::tie(b_result, h_dev, s_path)=_get_list_open_enable(lib, s_path);
+		std::tie(b_result, h_dev, s_path)=_get_list_open_enable_with_print(lib, s_path);
 		if (!b_result) {
 			continue;
 		}
@@ -166,7 +166,7 @@ int main_lpu237_ibutton(const std::set<std::wstring>& set_parameters)
 				std::wcout << L" : I : RESETUP :LPU237Lock_close." << std::endl;
 				lib.LPU237Lock_close(h_dev);
 
-				std::tie(b_result, h_dev, s_path) = _get_list_open_enable(lib, s_path);
+				std::tie(b_result, h_dev, s_path) = _get_list_open_enable_with_print(lib, s_path);
 				if (!b_result) {
 					std::this_thread::sleep_for(std::chrono::milliseconds(500));
 					std::wcout << L" : I : FAIL : RESETUP." << std::endl;
