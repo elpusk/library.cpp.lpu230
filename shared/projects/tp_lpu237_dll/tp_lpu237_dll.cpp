@@ -360,7 +360,7 @@ int main_lpu237_dll_getdataincallback(const std::set<std::wstring>& set_paramete
 		b_need_close = true;
 		
 		unsigned long n_buffer_index(LPU237_DLL_RESULT_ERROR);
-		int n_max_loop = 1000;
+		int n_max_loop = 10;
 		int n_loop = n_max_loop;
 		int n = 1;
 
