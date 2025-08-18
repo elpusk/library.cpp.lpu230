@@ -30,4 +30,7 @@
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="tc.tp_li_lpu237.md" />
+  </ItemGroup>
 </Project>
