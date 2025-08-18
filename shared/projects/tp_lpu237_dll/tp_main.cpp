@@ -87,7 +87,12 @@ int main(int argc, char* argv[])
 
 		if (set_parameters.find(L"/ibutton") != std::end(set_parameters)) {
 			//ibutton test
-			n_result = main_lpu237_ibutton(set_parameters);
+			if (set_parameters.find(L"/getdataincallback") != std::end(set_parameters)) {
+				n_result = main_lpu237_ibutton_getdataincallback(set_parameters);
+				continue;
+			}
+			// default thread safty code style
+			n_result = main_lpu237_ibutton_threadsafty(set_parameters);
 			continue;
 		}
 		if (set_parameters.find(L"/msr") != std::end(set_parameters)) {
