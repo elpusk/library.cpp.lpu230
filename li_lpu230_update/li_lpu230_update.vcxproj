@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|ARM">
       <Configuration>Debug</Configuration>
@@ -35,14 +35,14 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{aec5de53-77ee-4f00-90a3-a7fcae765286}</ProjectGuid>
+    <ProjectGuid>{47a16cef-f648-47d8-ba32-7484cc0c03f0}</ProjectGuid>
     <Keyword>Linux</Keyword>
-    <RootNamespace>li_rom_build</RootNamespace>
+    <RootNamespace>li_lpu230_update</RootNamespace>
     <MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>
     <ApplicationType>Linux</ApplicationType>
     <ApplicationTypeRevision>1.0</ApplicationTypeRevision>
     <TargetLinuxPlatform>Generic</TargetLinuxPlatform>
-    <LinuxProjectType>{2238F9CD-F817-4ECC-BD14-2524D2669B35}</LinuxProjectType>
+    <LinuxProjectType>{D51BCBC9-82E9-4017-911E-C93873C4EA2B}</LinuxProjectType>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'" Label="Configuration">
@@ -75,82 +75,128 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
-    <TargetName>tg_rom_build</TargetName>
-    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\projects\rom;~/projects/li_rom/shared/lib/inc</IncludePath>
+    <TargetName>lpu230_update</TargetName>
+    <IncludePath>C:\local\FTXUI\include;C:\local\boost_1_80_0;$(SolutionDir)shared\lib\inc;/home/tester/FTXUI/include</IncludePath>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
-    <TargetName>tg_rom_build</TargetName>
-    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\projects\rom;~/projects/li_rom/shared/lib/inc</IncludePath>
+    <TargetName>lpu230_update</TargetName>
+    <IncludePath>C:\local\FTXUI\include;C:\local\boost_1_80_0;$(SolutionDir)shared\lib\inc;/home/tester/FTXUI/include</IncludePath>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
-    <TargetName>tg_rom_build</TargetName>
-    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\projects\rom;~/projects/li_rom/shared/lib/inc</IncludePath>
+    <TargetName>lpu230_update</TargetName>
+    <IncludePath>C:\local\FTXUI\include;C:\local\boost_1_80_0;$(SolutionDir)shared\lib\inc;/home/tester/FTXUI/include</IncludePath>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
-    <TargetName>tg_rom_build</TargetName>
-    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\projects\rom;~/projects/li_rom/shared/lib/inc</IncludePath>
+    <TargetName>lpu230_update</TargetName>
+    <IncludePath>C:\local\FTXUI\include;C:\local\boost_1_80_0;$(SolutionDir)shared\lib\inc;/home/tester/FTXUI/include</IncludePath>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <TargetName>tg_rom_build</TargetName>
-    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\projects\rom;~/projects/li_rom/shared/lib/inc</IncludePath>
+    <TargetName>lpu230_update</TargetName>
+    <IncludePath>C:\local\FTXUI\include;C:\local\boost_1_80_0;$(SolutionDir)shared\lib\inc;/home/tester/FTXUI/include</IncludePath>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <TargetName>tg_rom_build</TargetName>
-    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\projects\rom;~/projects/li_rom/shared/lib/inc</IncludePath>
+    <TargetName>lpu230_update</TargetName>
+    <IncludePath>C:\local\FTXUI\include;C:\local\boost_1_80_0;$(SolutionDir)shared\lib\inc;/home/tester/FTXUI/include</IncludePath>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
-    <TargetName>tg_rom_build</TargetName>
-    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\projects\rom;~/projects/li_rom/shared/lib/inc</IncludePath>
+    <TargetName>lpu230_update</TargetName>
+    <IncludePath>C:\local\FTXUI\include;C:\local\boost_1_80_0;$(SolutionDir)shared\lib\inc;/home/tester/FTXUI/include</IncludePath>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
-    <TargetName>tg_rom_build</TargetName>
-    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\projects\rom;~/projects/li_rom/shared/lib/inc</IncludePath>
+    <TargetName>lpu230_update</TargetName>
+    <IncludePath>C:\local\FTXUI\include;C:\local\boost_1_80_0;$(SolutionDir)shared\lib\inc;/home/tester/FTXUI/include</IncludePath>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemGroup>
-    <ClCompile Include="..\shared\projects\rom_builder\rom_build.cpp" />
+    <ClCompile Include="..\shared\lib\inc\mp_cnamed_pipe_.cpp" />
+    <ClCompile Include="..\shared\projects\lpu230_update\lpu230_update.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\shared\lib\inc\mp_cconvert.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_cfile.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_clog.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_cnamed_pipe_.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_coperation.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cstring.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_cwait.h" />
     <ClInclude Include="..\shared\lib\inc\mp_os_type.h" />
     <ClInclude Include="..\shared\lib\inc\mp_type.h" />
-    <ClInclude Include="..\shared\projects\rom\inc\tg_rom.h" />
   </ItemGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+    <Link>
+      <LibraryDependencies>ftxui-component;ftxui-dom;ftxui-screen</LibraryDependencies>
+      <AdditionalLibraryDirectories>%(Link.AdditionalLibraryDirectories);/home/tester/FTXUI/build</AdditionalLibraryDirectories>
+    </Link>
     <ClCompile>
       <CppLanguageStandard>c++17</CppLanguageStandard>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+    <Link>
+      <LibraryDependencies>ftxui-component;ftxui-dom;ftxui-screen</LibraryDependencies>
+      <AdditionalLibraryDirectories>%(Link.AdditionalLibraryDirectories);/home/tester/FTXUI/build</AdditionalLibraryDirectories>
+    </Link>
     <ClCompile>
       <CppLanguageStandard>c++17</CppLanguageStandard>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
+    <Link>
+      <LibraryDependencies>ftxui-component;ftxui-dom;ftxui-screen</LibraryDependencies>
+      <AdditionalLibraryDirectories>%(Link.AdditionalLibraryDirectories);/home/tester/FTXUI/build</AdditionalLibraryDirectories>
+    </Link>
     <ClCompile>
       <CppLanguageStandard>c++17</CppLanguageStandard>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
+    <Link>
+      <LibraryDependencies>ftxui-component;ftxui-dom;ftxui-screen</LibraryDependencies>
+      <AdditionalLibraryDirectories>%(Link.AdditionalLibraryDirectories);/home/tester/FTXUI/build</AdditionalLibraryDirectories>
+    </Link>
     <ClCompile>
       <CppLanguageStandard>c++17</CppLanguageStandard>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Link>
+      <LibraryDependencies>ftxui-component;ftxui-dom;ftxui-screen</LibraryDependencies>
+      <AdditionalLibraryDirectories>%(Link.AdditionalLibraryDirectories);/home/tester/FTXUI/build</AdditionalLibraryDirectories>
+    </Link>
     <ClCompile>
       <CppLanguageStandard>c++17</CppLanguageStandard>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Link>
+      <LibraryDependencies>ftxui-component;ftxui-dom;ftxui-screen</LibraryDependencies>
+      <AdditionalLibraryDirectories>%(Link.AdditionalLibraryDirectories);/home/tester/FTXUI/build</AdditionalLibraryDirectories>
+    </Link>
     <ClCompile>
       <CppLanguageStandard>c++17</CppLanguageStandard>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
+    <Link>
+      <LibraryDependencies>ftxui-component;ftxui-dom;ftxui-screen</LibraryDependencies>
+      <AdditionalLibraryDirectories>%(Link.AdditionalLibraryDirectories);/home/tester/FTXUI/build</AdditionalLibraryDirectories>
+    </Link>
     <ClCompile>
       <CppLanguageStandard>c++17</CppLanguageStandard>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
+    <Link>
+      <LibraryDependencies>ftxui-component;ftxui-dom;ftxui-screen</LibraryDependencies>
+      <AdditionalLibraryDirectories>%(Link.AdditionalLibraryDirectories);/home/tester/FTXUI/build</AdditionalLibraryDirectories>
+    </Link>
     <ClCompile>
       <CppLanguageStandard>c++17</CppLanguageStandard>
     </ClCompile>

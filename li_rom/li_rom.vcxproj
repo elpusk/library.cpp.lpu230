@@ -147,7 +147,7 @@
     <ClCompile>
       <PreprocessorDefinitions>__linux__;USER_LITTLE_ENDIAN;</PreprocessorDefinitions>
       <PositionIndependentCode>false</PositionIndependentCode>
-      <CppLanguageStandard>c++14</CppLanguageStandard>
+      <CppLanguageStandard>c++17</CppLanguageStandard>
       <AdditionalOptions>-fPIC %(AdditionalOptions)</AdditionalOptions>
       <AdditionalIncludeDirectories>$(SolutionDir)\shared\3thpart\inc;~/projects/li_rom/shared/3thpart/inc;%(ClCompile.AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
@@ -162,7 +162,7 @@
     <ClCompile>
       <PreprocessorDefinitions>__linux__;USER_LITTLE_ENDIAN;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PositionIndependentCode>false</PositionIndependentCode>
-      <CppLanguageStandard>c++14</CppLanguageStandard>
+      <CppLanguageStandard>c++17</CppLanguageStandard>
       <AdditionalOptions>-fPIC %(AdditionalOptions)</AdditionalOptions>
       <AdditionalIncludeDirectories>$(SolutionDir)\shared\3thpart\inc;~/projects/li_rom/shared/3thpart/inc;%(ClCompile.AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
@@ -177,7 +177,7 @@
     <ClCompile>
       <PreprocessorDefinitions>__linux__;USER_LITTLE_ENDIAN;</PreprocessorDefinitions>
       <PositionIndependentCode>false</PositionIndependentCode>
-      <CppLanguageStandard>c++14</CppLanguageStandard>
+      <CppLanguageStandard>c++17</CppLanguageStandard>
       <AdditionalOptions>-fPIC %(AdditionalOptions)</AdditionalOptions>
       <AdditionalIncludeDirectories>$(SolutionDir)\shared\3thpart\inc;~/projects/li_rom/shared/3thpart/inc;%(ClCompile.AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
@@ -192,7 +192,7 @@
     <ClCompile>
       <PreprocessorDefinitions>__linux__;USER_LITTLE_ENDIAN;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PositionIndependentCode>false</PositionIndependentCode>
-      <CppLanguageStandard>c++14</CppLanguageStandard>
+      <CppLanguageStandard>c++17</CppLanguageStandard>
       <AdditionalOptions>-fPIC %(AdditionalOptions)</AdditionalOptions>
       <AdditionalIncludeDirectories>$(SolutionDir)\shared\3thpart\inc;~/projects/li_rom/shared/3thpart/inc;%(ClCompile.AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
@@ -207,7 +207,7 @@
     <ClCompile>
       <PreprocessorDefinitions>__linux__;USER_LITTLE_ENDIAN;</PreprocessorDefinitions>
       <PositionIndependentCode>false</PositionIndependentCode>
-      <CppLanguageStandard>c++14</CppLanguageStandard>
+      <CppLanguageStandard>c++17</CppLanguageStandard>
       <AdditionalOptions>-fPIC %(AdditionalOptions)</AdditionalOptions>
       <AdditionalIncludeDirectories>$(SolutionDir)\shared\3thpart\inc;~/projects/li_rom/shared/3thpart/inc;%(ClCompile.AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
@@ -222,7 +222,7 @@
     <ClCompile>
       <PreprocessorDefinitions>__linux__;USER_LITTLE_ENDIAN;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PositionIndependentCode>false</PositionIndependentCode>
-      <CppLanguageStandard>c++14</CppLanguageStandard>
+      <CppLanguageStandard>c++17</CppLanguageStandard>
       <AdditionalOptions>-fPIC %(AdditionalOptions)</AdditionalOptions>
       <AdditionalIncludeDirectories>$(SolutionDir)\shared\3thpart\inc;~/projects/li_rom/shared/3thpart/inc;%(ClCompile.AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
@@ -237,7 +237,7 @@
     <ClCompile>
       <PreprocessorDefinitions>__linux__;USER_LITTLE_ENDIAN;</PreprocessorDefinitions>
       <PositionIndependentCode>false</PositionIndependentCode>
-      <CppLanguageStandard>c++14</CppLanguageStandard>
+      <CppLanguageStandard>c++17</CppLanguageStandard>
       <AdditionalOptions>-fPIC %(AdditionalOptions)</AdditionalOptions>
       <AdditionalIncludeDirectories>$(SolutionDir)\shared\3thpart\inc;~/projects/li_rom/shared/3thpart/inc;%(ClCompile.AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
@@ -252,7 +252,7 @@
     <ClCompile>
       <PreprocessorDefinitions>__linux__;USER_LITTLE_ENDIAN;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PositionIndependentCode>false</PositionIndependentCode>
-      <CppLanguageStandard>c++14</CppLanguageStandard>
+      <CppLanguageStandard>c++17</CppLanguageStandard>
       <AdditionalOptions>-fPIC %(AdditionalOptions)</AdditionalOptions>
       <AdditionalIncludeDirectories>$(SolutionDir)\shared\3thpart\inc;~/projects/li_rom/shared/3thpart/inc;%(ClCompile.AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
