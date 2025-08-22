@@ -8,6 +8,7 @@
 #include <thread>
 #include <iomanip> // std::setprecision을 사용하기 위한 헤더
 #include <sstream> // std::stringstream을 사용하기 위한 헤더
+#include <algorithm>
 
 #include <ftxui/dom/elements.hpp>
 #include <ftxui/dom/node.hpp>
@@ -15,12 +16,109 @@
 
 #include <mp_cconvert.h>
 
+#include "update.h"
+
 int main(int argc, char** argv)
 {
 	int n_result(EXIT_FAILURE);
 	bool b_help(false);
 
 	do {
+        //////////////////////////////////////////
+        //get command line parameters 
+        _mp::type_list_wstring list_parameters(_mp::cconvert::get_command_line_parameters_by_list(argc, argv));
+        /*
+        if (list_parameters.size() == 1) {
+            // none option case 
+            // 옵션 없이 updater 를 실행 하면, 동작 상태를 화면에 표시하고, 로그 파일도 기록한다.
+            continue;
+        }
+        */
+		auto it = std::find(list_parameters.begin(), list_parameters.end(), L"-h");
+        if( it != std::end(list_parameters) ) {
+            b_help = true;
+            n_result = EXIT_SUCCESS;
+            continue;
+		}
+        it = std::find(list_parameters.begin(), list_parameters.end(), L"/h");
+        if (it != std::end(list_parameters)) {
+            b_help = true;
+            n_result = EXIT_SUCCESS;
+            continue;
+        }
+        it = std::find(list_parameters.begin(), list_parameters.end(), L"--help");
+        if (it != std::end(list_parameters)) {
+            b_help = true;
+            n_result = EXIT_SUCCESS;
+            continue;
+        }
+		///////////////////////////////////////////
+        if (list_parameters.size() == 3) {
+            it = std::find(list_parameters.begin(), list_parameters.end(), L"--file");
+            if (it != std::end(list_parameters)) {
+                ++it;
+                if (it != std::end(list_parameters)) {
+                    // --file 옵션이 있고, 그 다음에 파일 경로가 있는 경우
+                    std::wstring s_file_path = *it;
+                    update_main(s_file_path);
+                }
+                n_result = EXIT_SUCCESS;
+                continue;
+            }
+        }
+
+        it = std::find(list_parameters.begin(), list_parameters.end(), L"-q");
+        if (it != std::end(list_parameters)) {
+            it = std::find(list_parameters.begin(), list_parameters.end(), L"-mmd1100_iso_mode");
+            if (it != std::end(list_parameters)) {
+                //firmware 업데이트 후, mmd1100 을 iso  mode 로 변경.(v1.4 부터)
+                // - q 또는 - qa 옵션도 같이 사용 가능.  이 option 은 lpu237 에서 만 사용 가능.
+                continue;
+			}
+			it = std::find(list_parameters.begin(), list_parameters.end(), L"-mmd1100_binary_mode");
+            if (it != std::end(list_parameters)) {
+                //firmware 업데이트 후, mmd1100 을 binary  mode 로 변경.(v1.4 부터)
+                // - q 또는 - qa 옵션도 같이 사용 가능.  이 option 은 lpu237 에서 만 사용 가능.
+                continue;
+			}
+            continue;
+        }
+
+        it = std::find(list_parameters.begin(), list_parameters.end(), L"-qa");
+        if (it != std::end(list_parameters)) {
+            it = std::find(list_parameters.begin(), list_parameters.end(), L"-mmd1100_iso_mode");
+            if (it != std::end(list_parameters)) {
+                //firmware 업데이트 후, mmd1100 을 iso  mode 로 변경.(v1.4 부터)
+                // - q 또는 - qa 옵션도 같이 사용 가능.  이 option 은 lpu237 에서 만 사용 가능.
+                continue;
+            }
+            it = std::find(list_parameters.begin(), list_parameters.end(), L"-mmd1100_binary_mode");
+            if (it != std::end(list_parameters)) {
+                //firmware 업데이트 후, mmd1100 을 binary  mode 로 변경.(v1.4 부터)
+                // - q 또는 - qa 옵션도 같이 사용 가능.  이 option 은 lpu237 에서 만 사용 가능.
+                continue;
+            }
+            continue;
+        }
+
+        it = std::find(list_parameters.begin(), list_parameters.end(), L"-mmd1100_iso_mode");
+        if (it != std::end(list_parameters)) {
+            //firmware 업데이트 후, mmd1100 을 iso  mode 로 변경.(v1.4 부터)
+            // - q 또는 - qa 옵션도 같이 사용 가능.  이 option 은 lpu237 에서 만 사용 가능.
+            continue;
+        }
+        it = std::find(list_parameters.begin(), list_parameters.end(), L"-mmd1100_binary_mode");
+        if (it != std::end(list_parameters)) {
+            //firmware 업데이트 후, mmd1100 을 binary  mode 로 변경.(v1.4 부터)
+            // - q 또는 - qa 옵션도 같이 사용 가능.  이 option 은 lpu237 에서 만 사용 가능.
+            continue;
+        }
+
+        b_help = true;
+		n_result = EXIT_FAILURE;
+
+        //////////////////////////////////////////
+        /*
         double progress = 0.0;
 
         // 화면 생성
@@ -73,16 +171,8 @@ int main(int argc, char** argv)
 
         ftxui::Render(screen, final_document.get());
         screen.Print();
+        */
 
-
-		//////////////////////////////////////////
-		//get command line parameters 
-		_mp::type_set_wstring set_parameters( _mp::cconvert::get_command_line_parameters(argc, argv));
-
-		if (set_parameters.size() < 2) {
-			b_help = true;
-			continue;
-		}
 
 
 		b_help = true;

@@ -19,7 +19,17 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\shared\projects\lpu230_update\cupdater.cpp" />
     <ClCompile Include="..\shared\projects\lpu230_update\lpu230_update.cpp" />
+    <ClCompile Include="..\shared\projects\lpu230_update\update.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\shared\projects\lpu230_update\cupdater.h" />
+    <ClInclude Include="..\shared\projects\lpu230_update\update.h" />
+    <ClInclude Include="resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="wi_lpu230_update.rc" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

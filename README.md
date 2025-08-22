@@ -10,6 +10,7 @@ lpu23x device c++ library
 + openssl-1.1.1s lib - path : /usr/local/openssl-1.1.1s/
 + libusb1.0 lib - path : /usr/local/libusb/
 + deb package directory : /home/tester/build_deb/
++ FTXUI 6.1.9 lib - path :/home/tester/FTXUI/
 
 ## build on debian12.
 + notice
@@ -31,6 +32,7 @@ lpu23x device c++ library
     * ./b2 -j4 -a --build-dir=build/release --stagedir=stage/release --toolset=gcc --architecture=x86_64 variant=release link=static threading=multi address-model=64 runtime-link=static
     * sudo cp -r ./boost /usr/local/include/
     * sudo cp -r ./stage/release/lib/* /usr/local/lib/
+
 + libusb
   - use version 1.0, static lib
   - build
@@ -57,6 +59,15 @@ lpu23x device c++ library
     * cd /usr/local
     * sudo git clone https://github.com/nlohmann/json.git
 
++ FTXUI
+  - use version 6.1.9, static lib
+  - build
+    * git clone https://github.com/ArthurSonzogni/FTXUI.git
+    * cd FTXUI
+    * mkdir build
+    * cd build
+    * cmake .. -DBUILD_SHARED_LIBS=OFF
+    * make -j
 
 
 ## run

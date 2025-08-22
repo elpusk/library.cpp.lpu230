@@ -116,7 +116,9 @@
   </PropertyGroup>
   <ItemGroup>
     <ClCompile Include="..\shared\lib\inc\mp_cnamed_pipe_.cpp" />
+    <ClCompile Include="..\shared\projects\lpu230_update\cupdater.cpp" />
     <ClCompile Include="..\shared\projects\lpu230_update\lpu230_update.cpp" />
+    <ClCompile Include="..\shared\projects\lpu230_update\update.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\lib\inc\mp_cconvert.h" />
@@ -125,9 +127,12 @@
     <ClInclude Include="..\shared\lib\inc\mp_cnamed_pipe_.h" />
     <ClInclude Include="..\shared\lib\inc\mp_coperation.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cstring.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_cversion.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cwait.h" />
     <ClInclude Include="..\shared\lib\inc\mp_os_type.h" />
     <ClInclude Include="..\shared\lib\inc\mp_type.h" />
+    <ClInclude Include="..\shared\projects\lpu230_update\cupdater.h" />
+    <ClInclude Include="..\shared\projects\lpu230_update\update.h" />
   </ItemGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <Link>

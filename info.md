@@ -63,3 +63,34 @@
 - executable file name : tp_wi_lpu237.exe
 - tg_lpu237_dll.dll test program.(msr test)
 
+## li_lpu237_update
+- for Debian 12.(x64)
+- executable file name : lpu237_update.out
+- lpu237 firmware update program.
+
+## wi_lpu237_update
+- for windows 11.(x64, x86)
+- executable file name : lpu237_update.exe
+- lpu237 firmware update program.
+
+## li_rom
+- for Debian 12.(x64)
+- executable file name : libtg_rom.so
+- rom file helper dynamic linked library.
+
+## wi_rom
+- for windows 11.(x64, x86)
+- executable file name : tg_rom.dll
+- rom file helper dynamic linked library.
+
+## li_rom_build
+- for Debian 12.(x64)
+- executable file name : tg_rom_build.out
+- rom file build program.
+
+## wi_rom_build
+- for windows 11.(x64, x86)
+- executable file name : tg_rom_build.exe
+- rom file build program.
+
+
