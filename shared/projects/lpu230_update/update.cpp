@@ -22,6 +22,7 @@ int update_main(const std::wstring & s_abs_full_rom_file)
 
 	cupdater updater;
 
+	updater.set_rom_file(selected_rom);
 	updater.start_update();
 
 	updater.main_loop();

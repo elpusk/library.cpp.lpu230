@@ -27,14 +27,8 @@ int main(int argc, char** argv)
         //////////////////////////////////////////
         //get command line parameters 
         _mp::type_list_wstring list_parameters(_mp::cconvert::get_command_line_parameters_by_list(argc, argv));
-        /*
-        if (list_parameters.size() == 1) {
-            // none option case 
-            // 옵션 없이 updater 를 실행 하면, 동작 상태를 화면에 표시하고, 로그 파일도 기록한다.
-            continue;
-        }
-        */
-		auto it = std::find(list_parameters.begin(), list_parameters.end(), L"-h");
+
+        auto it = std::find(list_parameters.begin(), list_parameters.end(), L"-h");
         if( it != std::end(list_parameters) ) {
             b_help = true;
             n_result = EXIT_SUCCESS;
@@ -116,66 +110,6 @@ int main(int argc, char** argv)
 
         b_help = true;
 		n_result = EXIT_FAILURE;
-
-        //////////////////////////////////////////
-        /*
-        double progress = 0.0;
-
-        // 화면 생성
-        auto screen = ftxui::Screen::Create(ftxui::Dimension::Full());
-
-        while (progress < 1.0) {
-            // 진행률 증가
-            progress += 0.01;
-
-            // 진행률을 문자열로 변환 (예: 50.0%)
-            std::stringstream ss;
-            ss << std::fixed << std::setprecision(1) << progress * 100.0 << "%";
-
-            // 게이지 바 생성
-            auto gauge_bar = ftxui::gauge(progress);
-
-            // 진행률 텍스트 생성 (진행률을 굵은 글씨로 표시)
-            auto percentage_text = ftxui::text(ss.str()) | ftxui::bold;
-
-            // 게이지 바와 텍스트를 수평으로 정렬
-            auto document = ftxui::hbox({
-                percentage_text,
-                ftxui::filler(), // 게이지 바와 텍스트 사이에 공간을 채워줌
-                gauge_bar
-                });
-
-            // 화면 렌더링
-            screen.Clear();
-            ftxui::Render(screen, document.get());
-            screen.Print();
-
-            // 잠시 대기
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        }
-
-        // 최종적으로 100% 진행률 표시
-        screen.Clear();
-
-        std::stringstream final_ss;
-        final_ss << std::fixed << std::setprecision(1) << 100.0 << "%";
-
-        auto final_gauge = ftxui::gauge(1.0);
-        auto final_text = ftxui::text(final_ss.str()) | ftxui::bold;
-
-        auto final_document = ftxui::hbox({
-            final_gauge,
-            ftxui::filler(),
-            final_text
-            });
-
-        ftxui::Render(screen, final_document.get());
-        screen.Print();
-        */
-
-
-
-		b_help = true;
 	} while (false);
 
 	if (b_help) {
