@@ -1645,6 +1645,19 @@ namespace _mp{
 			return list_parameters;
 		}
 
+		static type_list_string get_command_line_parameters_by_mcsc_list(int argc, char* argv[])
+		{
+			type_list_string list_parameters;
+
+			do {
+				for (int i = 0; i < argc; i++) {
+					if (argv[i]) {
+						list_parameters.push_back(argv[i]);
+					}
+				}//end for
+			} while (false);
+			return list_parameters;
+		}
 
 
 		//

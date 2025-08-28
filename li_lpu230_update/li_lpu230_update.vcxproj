@@ -125,6 +125,8 @@
     <ClInclude Include="..\shared\lib\inc\mp_cfile.h" />
     <ClInclude Include="..\shared\lib\inc\mp_clog.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cnamed_pipe_.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_coffee.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_coffee_path.h" />
     <ClInclude Include="..\shared\lib\inc\mp_coperation.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cstring.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cversion.h" />
@@ -136,7 +138,7 @@
   </ItemGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <Link>
-      <LibraryDependencies>ftxui-component;ftxui-dom;ftxui-screen</LibraryDependencies>
+      <LibraryDependencies>ftxui-component;ftxui-dom;ftxui-screen;boost_filesystem;boost_system;boost_thread;udev</LibraryDependencies>
       <AdditionalLibraryDirectories>%(Link.AdditionalLibraryDirectories);/home/tester/FTXUI/build</AdditionalLibraryDirectories>
     </Link>
     <ClCompile>
@@ -145,7 +147,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
     <Link>
-      <LibraryDependencies>ftxui-component;ftxui-dom;ftxui-screen</LibraryDependencies>
+      <LibraryDependencies>ftxui-component;ftxui-dom;ftxui-screen;boost_filesystem;boost_system;boost_thread;udev</LibraryDependencies>
       <AdditionalLibraryDirectories>%(Link.AdditionalLibraryDirectories);/home/tester/FTXUI/build</AdditionalLibraryDirectories>
     </Link>
     <ClCompile>
@@ -154,7 +156,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <Link>
-      <LibraryDependencies>ftxui-component;ftxui-dom;ftxui-screen</LibraryDependencies>
+      <LibraryDependencies>ftxui-component;ftxui-dom;ftxui-screen;boost_filesystem;boost_system;boost_thread;udev</LibraryDependencies>
       <AdditionalLibraryDirectories>%(Link.AdditionalLibraryDirectories);/home/tester/FTXUI/build</AdditionalLibraryDirectories>
     </Link>
     <ClCompile>
@@ -163,7 +165,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <Link>
-      <LibraryDependencies>ftxui-component;ftxui-dom;ftxui-screen</LibraryDependencies>
+      <LibraryDependencies>ftxui-component;ftxui-dom;ftxui-screen;boost_filesystem;boost_system;boost_thread;udev</LibraryDependencies>
       <AdditionalLibraryDirectories>%(Link.AdditionalLibraryDirectories);/home/tester/FTXUI/build</AdditionalLibraryDirectories>
     </Link>
     <ClCompile>
@@ -172,7 +174,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Link>
-      <LibraryDependencies>ftxui-component;ftxui-dom;ftxui-screen</LibraryDependencies>
+      <LibraryDependencies>ftxui-component;ftxui-dom;ftxui-screen;boost_filesystem;boost_system;boost_thread;udev</LibraryDependencies>
       <AdditionalLibraryDirectories>%(Link.AdditionalLibraryDirectories);/home/tester/FTXUI/build</AdditionalLibraryDirectories>
     </Link>
     <ClCompile>
@@ -181,7 +183,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Link>
-      <LibraryDependencies>ftxui-component;ftxui-dom;ftxui-screen</LibraryDependencies>
+      <LibraryDependencies>ftxui-component;ftxui-dom;ftxui-screen;boost_filesystem;boost_system;boost_thread;udev</LibraryDependencies>
       <AdditionalLibraryDirectories>%(Link.AdditionalLibraryDirectories);/home/tester/FTXUI/build</AdditionalLibraryDirectories>
     </Link>
     <ClCompile>
@@ -190,7 +192,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
     <Link>
-      <LibraryDependencies>ftxui-component;ftxui-dom;ftxui-screen</LibraryDependencies>
+      <LibraryDependencies>ftxui-component;ftxui-dom;ftxui-screen;boost_filesystem;boost_system;boost_thread;udev</LibraryDependencies>
       <AdditionalLibraryDirectories>%(Link.AdditionalLibraryDirectories);/home/tester/FTXUI/build</AdditionalLibraryDirectories>
     </Link>
     <ClCompile>
@@ -199,7 +201,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
     <Link>
-      <LibraryDependencies>ftxui-component;ftxui-dom;ftxui-screen</LibraryDependencies>
+      <LibraryDependencies>ftxui-component;ftxui-dom;ftxui-screen;boost_filesystem;boost_system;boost_thread;udev</LibraryDependencies>
       <AdditionalLibraryDirectories>%(Link.AdditionalLibraryDirectories);/home/tester/FTXUI/build</AdditionalLibraryDirectories>
     </Link>
     <ClCompile>

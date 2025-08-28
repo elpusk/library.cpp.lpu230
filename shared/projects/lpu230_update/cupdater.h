@@ -8,12 +8,13 @@
 #include <filesystem>
 #include <queue>
 
-#include <mp_cversion.h>
-#include <mp_cwait.h>
-
 #include <ftxui/component/component.hpp>
 #include <ftxui/component/screen_interactive.hpp>
 #include <ftxui/dom/elements.hpp>
+
+#include <mp_cversion.h>
+#include <mp_cwait.h>
+#include <mp_clog.h>
 
 class cupdater {
 
@@ -21,6 +22,29 @@ public:
 	typedef std::shared_ptr<cupdater> type_ptr;
 	typedef _mp::cversion<unsigned char>	type_version;
 public:
+	enum class Lpu237Interface {
+		nc = -1, //no consideration
+		usb_keyboard = 0,//0
+		usb_hid = 1,//1
+		usb_vcom = 2,//2
+		uart = 10
+	};
+	static std::string get_string(Lpu237Interface inf)
+	{
+		std::string s;
+		switch (inf) {
+		case cupdater::Lpu237Interface::nc: s = "no consideration"; break;
+		case cupdater::Lpu237Interface::usb_keyboard: s = "usb_keyboard"; break;
+		case cupdater::Lpu237Interface::usb_hid: s = "usb_hid"; break;
+		case cupdater::Lpu237Interface::usb_vcom: s = "usb_vcom"; break;
+		case cupdater::Lpu237Interface::uart: s = "uart"; break;
+		default:
+			s = "unknown";
+			break;
+		}
+		return s;
+	}
+
 	enum class AppState {
 		s_ini, s_selfile, s_selfirm, s_sellast, s_ing, s_com
 		, s_max //
@@ -85,7 +109,7 @@ public:
 		return s;
 	}
 public:
-	cupdater();
+	cupdater(_mp::clog& log,bool b_disaplay, bool b_log, cupdater::Lpu237Interface lpu237_interface_after_update);
 	virtual ~cupdater();
 	// Update function to be implemented by derived classes
 	bool start_update();
@@ -97,8 +121,9 @@ public:
 	cupdater& set_index_of_fw_in_rom(int n_index_of_fw_in_rom);
 	cupdater& set_update_condition_of_fw(const std::wstring& s_update_condition_of_fw);
 
-	cupdater& set_device_path(const std::wstring& s_device_path);
+	cupdater& set_device_path(const std::string& s_device_path);
 	cupdater& set_device_version(const std::wstring& s_device_version);
+	cupdater& set_mmd1100_iso_mode(bool b_enable);
 
 	// Getters for rom file and target device information
 	const std::string& get_rom_file() const;
@@ -106,8 +131,10 @@ public:
 	const std::wstring& get_update_condition_of_fw() const;
 	bool is_fw_file_in_rom_format() const;
 
-	const std::wstring& get_device_path() const;
+	const std::string& get_device_path() const;
 	const type_version& get_device_version() const;
+
+	bool is_mmd1100_iso_mode() const;
 	//
 
 	/**
@@ -126,6 +153,20 @@ private:
 	std::shared_ptr<ftxui::Component> _create_sub_ui3_last_confirm();
 	std::shared_ptr<ftxui::Component> _create_sub_ui4_updating();
 	std::shared_ptr<ftxui::Component> _create_sub_ui5_complete();
+
+	/**
+	* @brief push message with thread safety
+	* @param s_in_msg : pushed string
+	*/
+	void _push_message(const std::string& s_in_msg);
+
+	/**
+	* @brief pop message with thread safety
+	* @param s_out_msg : poped string
+	* @param b_remove_after_pop  true : if a item is poped,remove item from q.
+	* @return true : pop OK. false : none item in the q.
+	*/
+	bool _pop_message(std::string& s_out_msg,bool b_remove_after_pop = true);
 
 private:
 	std::atomic<cupdater::AppState> m_state;
@@ -178,6 +219,17 @@ private:
 	*/
 	std::tuple<bool,cupdater::AppState,std::string> _update_state(cupdater::AppEvent event,const std::string & s_rom_or_bin_file = std::string());
 
+	_mp::clog &m_log_ref;
+	//////////////////////////////////
+	// UI option
+	bool m_b_display; //CUI enable or disable
+	bool m_b_log; //log file generation
+
+	// MMD1100 option
+	bool m_b_mmd1100_iso_mode;
+
+	cupdater::Lpu237Interface m_lpu237_interface_after_update; // after updating, interface change value.
+
 	//////////////////////////////////
 	//rom file section
 	std::string m_s_abs_full_path_of_rom;
@@ -186,18 +238,21 @@ private:
 	bool m_b_fw_file_is_rom_format;
 
 	//target device section
-	std::wstring m_s_device_path;
+	std::string m_s_device_path;
 	cupdater::type_version m_version_of_device;
 
 	// Mutex for thread safety
 	std::mutex m_mutex;
+	std::queue<std::string> m_q_messages; // Queue for messages from the update thread
+
 	_mp::cwait m_wait; // Wait object for synchronization
 	int m_n_kill_signal; // Signal to stop the updater
 	std::atomic_bool m_b_is_running; // Atomic boolean to check if the updater is running
 	std::shared_ptr<std::thread> m_ptr_thread_update; // Thread for update process
-	std::queue<std::string> m_q_messages; // Queue for messages from the update thread
+	
 
 private:// don't call these functions
+	cupdater() = delete;
 	cupdater(const cupdater&) = delete; // Disable copy constructor
 	cupdater& operator=(const cupdater&) = delete; // Disable assignment operator
 };

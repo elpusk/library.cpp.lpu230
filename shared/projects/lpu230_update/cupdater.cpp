@@ -8,7 +8,13 @@
 #endif
 
 
-cupdater::cupdater() : m_screen(ftxui::ScreenInteractive::Fullscreen())
+cupdater::cupdater(_mp::clog& log,bool b_disaplay, bool b_log, cupdater::Lpu237Interface lpu237_interface_after_update) :
+	m_screen(ftxui::ScreenInteractive::Fullscreen())
+	, m_log_ref(log)
+	, m_b_display(b_disaplay)
+	, m_b_log(b_log)
+	, m_b_mmd1100_iso_mode(false) // default is binary mode.
+	, m_lpu237_interface_after_update(lpu237_interface_after_update)
 {
 	m_s_abs_full_path_of_rom.clear();
 	m_n_index_of_fw_in_rom = -1;
@@ -45,7 +51,7 @@ cupdater::cupdater() : m_screen(ftxui::ScreenInteractive::Fullscreen())
 	m_ptr_tab_container = std::make_shared<ftxui::Component>(ftxui::Container::Tab(m_v_tabs, &m_n_tab_index));
 
 	// Root with title
-	std::wstring version = L"1.2.0.0";
+	std::wstring version = L"2.0.0.0";
 	m_version_of_device.set_by_string(version);
 
 	m_ptr_root = std::make_shared<ftxui::Component>(ftxui::Renderer(*m_ptr_tab_container, [&]() {
@@ -276,6 +282,33 @@ std::shared_ptr<ftxui::Component> cupdater::_create_sub_ui5_complete()
 	return ptr_component;
 }
 
+void cupdater::_push_message(const std::string& s_in_msg)
+{
+	std::lock_guard<std::mutex> lock(m_mutex);
+	m_q_messages.push(s_in_msg);
+}
+
+bool cupdater::_pop_message(std::string& s_out_msg, bool b_remove_after_pop/*=true*/)
+{
+	bool b_result(false);
+
+	do {
+		std::lock_guard<std::mutex> lock(m_mutex);
+		s_out_msg.clear();
+
+		if (m_q_messages.empty()) {
+			continue;
+		}
+
+		s_out_msg = m_q_messages.front();
+		if (b_remove_after_pop) {
+			m_q_messages.pop();
+		}
+		b_result = true;
+	} while (false);
+	return b_result;
+}
+
 std::tuple<bool, cupdater::AppState, std::string> cupdater::_update_state(cupdater::AppEvent event, const std::string& s_rom_or_bin_file /*= std::string()*/)
 {
 	bool b_changed(false);
@@ -467,26 +500,6 @@ cupdater::~cupdater()
 			m_ptr_thread_update->join();
 		}
 	}
-	/*
-	m_ptr_final_root.reset();
-	m_ptr_root.reset();
-	m_ptr_tab_container.reset();
-
-	m_ptr_exit_button.reset();
-
-	m_ptr_cancel_confirm_button.reset();
-	m_ptr_ok_confirm_button.reset();
-
-	m_ptr_cancel_fw_button.reset();
-	m_ptr_ok_fw_button.reset();
-	m_ptr_fw_menu.reset();
-
-	m_ptr_cancel_file_button.reset();
-	m_ptr_select_file_button.reset();
-	m_ptr_file_menu.reset();
-
-	m_ptr_update_button.reset();
-	*/
 }
 
 // Update function to be implemented by derived classes
@@ -502,7 +515,7 @@ bool cupdater::start_update()
 		 
 		m_b_is_running = true; // Set running state
 		m_ptr_thread_update = std::make_shared<std::thread>(&cupdater::_updates_thread_function, this);
-
+		b_result = true;
 	} while (false); 
 	return b_result;
 }
@@ -542,7 +555,7 @@ cupdater& cupdater::set_update_condition_of_fw(const std::wstring& s_update_cond
 	return *this;
 }
 
-cupdater& cupdater::set_device_path(const std::wstring& s_device_path)
+cupdater& cupdater::set_device_path(const std::string& s_device_path)
 {
 	m_s_device_path = s_device_path;
 	return *this;
@@ -551,6 +564,12 @@ cupdater& cupdater::set_device_path(const std::wstring& s_device_path)
 cupdater& cupdater::set_device_version(const std::wstring& s_device_version)
 {
 	m_version_of_device.set_by_string(s_device_version);
+	return *this;
+}
+
+cupdater& cupdater::set_mmd1100_iso_mode(bool b_enable)
+{
+	m_b_mmd1100_iso_mode = b_enable;
 	return *this;
 }
 
@@ -572,7 +591,7 @@ bool cupdater::is_fw_file_in_rom_format() const
 	return m_b_fw_file_is_rom_format;
 }
 
-const std::wstring& cupdater::get_device_path() const
+const std::string& cupdater::get_device_path() const
 { 
 	return m_s_device_path;
 }
@@ -581,14 +600,27 @@ const cupdater::type_version& cupdater::get_device_version() const
 	return m_version_of_device;
 }
 
+bool cupdater::is_mmd1100_iso_mode() const
+{
+	return m_b_mmd1100_iso_mode;
+}
+
 void cupdater::update_files_list()
 {
 	m_v_files_in_current_dir.clear();
+#ifdef _WIN32
+	m_v_files_in_current_dir.push_back("..\\");
+#else
 	m_v_files_in_current_dir.push_back("../");
+#endif
 	for (const auto& entry : std::filesystem::directory_iterator(m_current_dir)) {
 		std::string name = entry.path().filename().string();
 		if (entry.is_directory()) {
+#ifdef _WIN32
+			name += "\\";
+#else
 			name += "/";
+#endif
 		}
 		m_v_files_in_current_dir.push_back(name);
 	}
@@ -610,12 +642,10 @@ void cupdater::main_loop()
 #endif
 
 		do {
-			std::lock_guard<std::mutex> lock(m_mutex); // Lock the mutex for thread safety
-			if (m_q_messages.empty()) {
+			std::string msg;
+			if (!_pop_message(msg)) {
 				continue;
 			}
-			std::string msg = m_q_messages.front();
-			m_q_messages.pop();
 			//
 			try {
 				m_screen.PostEvent(ftxui::Event::Custom);
@@ -642,8 +672,7 @@ void cupdater::_updates_thread_function()
 			break; // 종료 직전 체크
 
 		do {
-			std::lock_guard<std::mutex> lock(m_mutex); // Lock the mutex for thread safety
-			m_q_messages.push("Updating...");
+			_push_message("Updating...");
 			
 		}while (false);
 
