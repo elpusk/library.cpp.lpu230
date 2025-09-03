@@ -23,7 +23,6 @@ namespace _mp {
 		*/
 		static bool daemonize_on_linux(const std::wstring  & s_daemon_pid_file_full_path, const std::wstring& s_cur_dir_abs_with_slash, void(*signal_handler)(int));
 
-		static std::wstring get_cur_exe_abs_path();
 	public:
 		virtual ~csystem();
 

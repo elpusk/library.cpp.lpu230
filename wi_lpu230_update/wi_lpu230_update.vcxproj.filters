@@ -27,6 +27,12 @@
     <ClCompile Include="..\shared\projects\lpu230_update\update.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\shared\lib\inc\mp_csystem_.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\projects\lpu230_update\HidBootManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
@@ -42,6 +48,27 @@
       <Filter>lib</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\lib\inc\mp_coffee_path.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_csystem_.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\projects\lpu230_update\protocol.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_os_type.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\projects\lpu230_update\HidBootBuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\projects\rom\inc\tg_rom.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\projects\lpu230_update\HidBootManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_type.h">
       <Filter>lib</Filter>
     </ClInclude>
   </ItemGroup>

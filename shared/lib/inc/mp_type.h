@@ -83,15 +83,21 @@ namespace _mp{
     #define _PACK_BYTE  __attribute__((packed))
     #define __stdcall   __attribute__((__stdcall__))
 
-    #define PtrToUlong(_a)      ((unsigned long)(_a))
-    #define INVALID_HANDLE_VALUE    ((unsigned long)-1)
+    #define PtrToUlong(_a)      ((uint32_t)(_a))
+    #define INVALID_HANDLE_VALUE    ((uint32_t)-1)
+
     #define FALSE   0
     #define TRUE    1
-    typedef unsigned long HWND;
-    typedef unsigned long UINT;
-    typedef unsigned long HANDLE;
-    typedef unsigned long BOOL;
 
+    typedef uint32_t HWND;
+    typedef uint32_t UINT;
+    typedef uint32_t HANDLE;
+    typedef uint32_t BOOL;
+
+    typedef	void* HMODULE;
+
+    #define WPARAM unsigned long long
+    #define LPARAM long long
 
 #endif // !_WIN32
 

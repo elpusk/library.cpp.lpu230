@@ -553,6 +553,33 @@ namespace _mp{
 			return file_name_only;
 		}
 
+		/*
+		* @brief Function to get the absolute path of the current executable.
+		* @return A std::string containing the absolute path of the current executable.
+		*/
+		static std::string get_cur_exe_abs_path()
+		{
+			std::string path;
+
+#ifdef _WIN32
+			// Windows
+			std::vector<char> path_buffer(MAX_PATH);
+			DWORD length = GetModuleFileNameA(NULL, path_buffer.data(), static_cast<DWORD>(path_buffer.size()));
+			if (length > 0) {
+				path.assign(path_buffer.data(), length);
+			}
+#else
+			// Linux/POSIX implementation
+			std::vector<char> path_buffer(PATH_MAX); // Use a reasonable buffer size
+			ssize_t length = readlink("/proc/self/exe", path_buffer.data(), path_buffer.size());
+			if (length != -1) {
+				path.assign(path_buffer.data(), length);
+			}
+#endif
+
+			return path;
+		}
+
 #ifdef _WIN32
 		/**
 		* The returned path does not include a trailing backslash.
@@ -589,6 +616,7 @@ namespace _mp{
 			return s_path;
 		}
 #else
+	private:
 		static std::string _get_home_directory() 
 		{
 			const char* homedir;

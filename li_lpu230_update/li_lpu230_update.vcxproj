@@ -76,47 +76,49 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <TargetName>lpu230_update</TargetName>
-    <IncludePath>C:\local\FTXUI\include;C:\local\boost_1_80_0;$(SolutionDir)shared\lib\inc;/home/tester/FTXUI/include</IncludePath>
+    <IncludePath>C:\local\FTXUI\include;C:\local\boost_1_80_0;$(SolutionDir)shared\lib\inc;$(SolutionDir)shared\projects\rom\inc;/home/tester/FTXUI/include</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
     <TargetName>lpu230_update</TargetName>
-    <IncludePath>C:\local\FTXUI\include;C:\local\boost_1_80_0;$(SolutionDir)shared\lib\inc;/home/tester/FTXUI/include</IncludePath>
+    <IncludePath>C:\local\FTXUI\include;C:\local\boost_1_80_0;$(SolutionDir)shared\lib\inc;$(SolutionDir)shared\projects\rom\inc;/home/tester/FTXUI/include</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <TargetName>lpu230_update</TargetName>
-    <IncludePath>C:\local\FTXUI\include;C:\local\boost_1_80_0;$(SolutionDir)shared\lib\inc;/home/tester/FTXUI/include</IncludePath>
+    <IncludePath>C:\local\FTXUI\include;C:\local\boost_1_80_0;$(SolutionDir)shared\lib\inc;$(SolutionDir)shared\projects\rom\inc;/home/tester/FTXUI/include</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <TargetName>lpu230_update</TargetName>
-    <IncludePath>C:\local\FTXUI\include;C:\local\boost_1_80_0;$(SolutionDir)shared\lib\inc;/home/tester/FTXUI/include</IncludePath>
+    <IncludePath>C:\local\FTXUI\include;C:\local\boost_1_80_0;$(SolutionDir)shared\lib\inc;$(SolutionDir)shared\projects\rom\inc;/home/tester/FTXUI/include</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <TargetName>lpu230_update</TargetName>
-    <IncludePath>C:\local\FTXUI\include;C:\local\boost_1_80_0;$(SolutionDir)shared\lib\inc;/home/tester/FTXUI/include</IncludePath>
+    <IncludePath>C:\local\FTXUI\include;C:\local\boost_1_80_0;$(SolutionDir)shared\lib\inc;$(SolutionDir)shared\projects\rom\inc;/home/tester/FTXUI/include</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <TargetName>lpu230_update</TargetName>
-    <IncludePath>C:\local\FTXUI\include;C:\local\boost_1_80_0;$(SolutionDir)shared\lib\inc;/home/tester/FTXUI/include</IncludePath>
+    <IncludePath>C:\local\FTXUI\include;C:\local\boost_1_80_0;$(SolutionDir)shared\lib\inc;$(SolutionDir)shared\projects\rom\inc;/home/tester/FTXUI/include</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
     <TargetName>lpu230_update</TargetName>
-    <IncludePath>C:\local\FTXUI\include;C:\local\boost_1_80_0;$(SolutionDir)shared\lib\inc;/home/tester/FTXUI/include</IncludePath>
+    <IncludePath>C:\local\FTXUI\include;C:\local\boost_1_80_0;$(SolutionDir)shared\lib\inc;$(SolutionDir)shared\projects\rom\inc;/home/tester/FTXUI/include</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
     <TargetName>lpu230_update</TargetName>
-    <IncludePath>C:\local\FTXUI\include;C:\local\boost_1_80_0;$(SolutionDir)shared\lib\inc;/home/tester/FTXUI/include</IncludePath>
+    <IncludePath>C:\local\FTXUI\include;C:\local\boost_1_80_0;$(SolutionDir)shared\lib\inc;$(SolutionDir)shared\projects\rom\inc;/home/tester/FTXUI/include</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemGroup>
     <ClCompile Include="..\shared\lib\inc\mp_cnamed_pipe_.cpp" />
+    <ClCompile Include="..\shared\lib\inc\mp_csystem_.cpp" />
     <ClCompile Include="..\shared\projects\lpu230_update\cupdater.cpp" />
+    <ClCompile Include="..\shared\projects\lpu230_update\HidBootManager.cpp" />
     <ClCompile Include="..\shared\projects\lpu230_update\lpu230_update.cpp" />
     <ClCompile Include="..\shared\projects\lpu230_update\update.cpp" />
   </ItemGroup>
@@ -129,12 +131,17 @@
     <ClInclude Include="..\shared\lib\inc\mp_coffee_path.h" />
     <ClInclude Include="..\shared\lib\inc\mp_coperation.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cstring.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_csystem_.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cversion.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cwait.h" />
     <ClInclude Include="..\shared\lib\inc\mp_os_type.h" />
     <ClInclude Include="..\shared\lib\inc\mp_type.h" />
     <ClInclude Include="..\shared\projects\lpu230_update\cupdater.h" />
+    <ClInclude Include="..\shared\projects\lpu230_update\HidBootBuffer.h" />
+    <ClInclude Include="..\shared\projects\lpu230_update\HidBootManager.h" />
+    <ClInclude Include="..\shared\projects\lpu230_update\protocol.h" />
     <ClInclude Include="..\shared\projects\lpu230_update\update.h" />
+    <ClInclude Include="..\shared\projects\rom\inc\tg_rom.h" />
   </ItemGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <Link>
@@ -143,6 +150,7 @@
     </Link>
     <ClCompile>
       <CppLanguageStandard>c++17</CppLanguageStandard>
+      <PreprocessorDefinitions>_DEBUG</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
@@ -161,6 +169,7 @@
     </Link>
     <ClCompile>
       <CppLanguageStandard>c++17</CppLanguageStandard>
+      <PreprocessorDefinitions>_DEBUG</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
@@ -179,6 +188,7 @@
     </Link>
     <ClCompile>
       <CppLanguageStandard>c++17</CppLanguageStandard>
+      <PreprocessorDefinitions>_DEBUG</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -197,6 +207,7 @@
     </Link>
     <ClCompile>
       <CppLanguageStandard>c++17</CppLanguageStandard>
+      <PreprocessorDefinitions>_DEBUG</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">

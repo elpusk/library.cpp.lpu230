@@ -42,6 +42,15 @@
     <ClInclude Include="..\shared\lib\inc\mp_coffee_path.h">
       <Filter>lib</Filter>
     </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_csystem_.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\projects\lpu230_update\protocol.h" />
+    <ClInclude Include="..\shared\projects\lpu230_update\HidBootBuffer.h" />
+    <ClInclude Include="..\shared\projects\rom\inc\tg_rom.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\projects\lpu230_update\HidBootManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\shared\lib\inc\mp_cnamed_pipe_.cpp">
@@ -50,5 +59,9 @@
     <ClCompile Include="..\shared\projects\lpu230_update\cupdater.cpp" />
     <ClCompile Include="..\shared\projects\lpu230_update\lpu230_update.cpp" />
     <ClCompile Include="..\shared\projects\lpu230_update\update.cpp" />
+    <ClCompile Include="..\shared\lib\inc\mp_csystem_.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\projects\lpu230_update\HidBootManager.cpp" />
   </ItemGroup>
 </Project>

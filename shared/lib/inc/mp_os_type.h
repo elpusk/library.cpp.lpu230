@@ -2,6 +2,8 @@
 
 #include <cstdint>
 
+/////////////////////////////////////////////////////
+// warning - This file cannot be used with mp_type.h.
 // definition of type, for supporting, multi OS.  
 #ifdef _WIN32
 #include <Windows.h>

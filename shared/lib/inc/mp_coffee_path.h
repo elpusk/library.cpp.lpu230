@@ -192,5 +192,38 @@ namespace _mp{
 			return s;
 		}
 
+		static std::wstring get_abs_full_path_of_rom_dll()
+		{
+			std::wstring s_rom_abs_full_path;
+			
+			do {
+				s_rom_abs_full_path = _mp::_coffee::CONST_S_DIR_DLL_EXCEPT_BACKSLASH;
+#ifdef _DEBUG
+#ifdef _WIN32
+				//debug win
+				s_rom_abs_full_path += L"\\tg_rom.dll";
+#else
+				//debug linux 64
+				s_rom_abs_full_path += L"/libtg_rom.so";
+#endif
+#else
+#ifdef _WIN32
+				//release win
+#ifdef _WIN64
+				// x64 Windows
+				s_rom_abs_full_path += L"\\x64\\tg_rom.dll";
+#elif defined(_M_IX86)
+				// x86 32 bits Win
+				s_rom_abs_full_path += L"\\x86\\tg_rom.dll";
+#else
+#endif
+#else
+				//release linux 64
+				s_rom_abs_full_path += L"/libtg_rom.so";
+#endif //_WIN32
+#endif //_DEBUG
+			} while (false);
+			return s_rom_abs_full_path;
+		}
 	};
 }

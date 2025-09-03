@@ -20,15 +20,19 @@
 #include <windows.h>
 #else
 #include <unistd.h>
+#include <signal.h>
 #endif
 
+#include <mp_csystem_.h>
+#include <mp_cfile.h>
 #include <mp_coffee_path.h>
 
 #include "update.h"
 
 
 static std::vector<std::filesystem::path> _find_rom_files();
-static std::filesystem::path _get_executable_dir();
+
+static void _signal_handler(int signum);
 
 int update_main
 (
@@ -42,8 +46,31 @@ int update_main
 )
 {
 	int n_result(EXIT_FAILURE);
+	std::wstring s_pid_file_full_path;
+	bool b_need_remove_pid_file(false);
+
 
 	do {
+		/////////////////////////////////
+		//setting display
+		if (!b_display) {
+#ifdef _WIN32
+			HWND consoleWindow = GetConsoleWindow();
+			ShowWindow(consoleWindow, SW_HIDE); // 콘솔 창 숨기기
+#else
+			s_pid_file_full_path = _mp::_coffee::CONST_S_PID_FILE_FULL_PATH_LPU230_UPDATE;
+			if (!_mp::csystem::daemonize_on_linux(s_pid_file_full_path, std::wstring(), _signal_handler)) {
+				continue;
+			}
+			b_need_remove_pid_file = true;
+#endif
+		}
+
+		std::filesystem::path path_cur_exe = _mp::cfile::get_cur_exe_abs_path();
+		std::filesystem::path path_cur = path_cur_exe.parent_path();
+
+		/////////////////////////////////
+		// setup log
 		_mp::clog& log(_mp::clog::get_instance());
 		if (b_run_by_cf) {
 			std::wstring s_log_root_folder_except_backslash = _mp::ccoffee_path::get_path_of_coffee_logs_root_folder_except_backslash();
@@ -57,7 +84,7 @@ int update_main
 		}
 		else {
 			log.config(
-				std::wstring(L"./")
+				path_cur.wstring() // without backslash
 				,-1
 				,std::wstring()
 				, std::wstring()
@@ -68,6 +95,8 @@ int update_main
 		log.enable(b_log_file);
 		log.remove_log_files_older_then_now_day(3);
 
+		/////////////////////////////////
+		// find rom file
 		std::string s_rom(s_abs_full_rom_file);
 
 		if (!b_display && s_rom.empty()) {
@@ -106,16 +135,26 @@ int update_main
 
 		updater.set_rom_file(s_rom).set_device_path(s_device_path).set_mmd1100_iso_mode(b_mmd1100_iso_mode);
 
+		updater.initial_update();
+
 		if (!updater.start_update()) {
 			log.log_fmt(L"[E] start_update().\n");
 			continue;
 		}
 
-		updater.main_loop();
+		updater.ui_main_loop();
 
-		log.log_fmt(L"[I] end main_loop().\n");
+		log.log_fmt(L"[I] end ui_main_loop().\n");
 		n_result = EXIT_SUCCESS;
 	}while(false);
+
+#ifndef _WIN32
+	//linux only
+	if (b_need_remove_pid_file) {//normally! removed pid file.
+		std::string s_pid_file = _mp::cstring::get_mcsc_from_unicode(s_pid_file_full_path);
+		remove(s_pid_file.c_str());
+	}
+#endif
 
 	return n_result;
 }
@@ -125,7 +164,9 @@ std::vector<std::filesystem::path> _find_rom_files()
 	std::vector<std::filesystem::path> rom_files;
 
 	// 현재 실행 디렉터리
-	std::filesystem::path current_dir = _get_executable_dir();
+	std::filesystem::path current_exe = _mp::cfile::get_cur_exe_abs_path();
+
+	std::filesystem::path current_dir = current_exe.parent_path();
 
 	// 디렉터리 순회
 	for (const auto& entry : std::filesystem::directory_iterator(current_dir)) {
@@ -143,23 +184,20 @@ std::vector<std::filesystem::path> _find_rom_files()
 	return rom_files;
 }
 
-// 실행 파일 경로를 얻는 함수
-std::filesystem::path _get_executable_dir()
+void _signal_handler(int signum)
 {
-#ifdef _WIN32
-	wchar_t buffer[MAX_PATH];
-	GetModuleFileNameW(NULL, buffer, MAX_PATH);
-	std::filesystem::path exe_path(buffer);
-	return exe_path.parent_path();
-#else
-	char buf[1024];
-	ssize_t len = readlink("/proc/self/exe", buf, sizeof(buf) - 1);
-	if (len != -1) {
-		buf[len] = '\0';
-		std::filesystem::path exe_path(buf);
-		return exe_path.parent_path();
-	}
-	// 실패 시 현재 작업 디렉토리 반환
-	return std::filesystem::current_path();
+#ifndef _WIN32
+	do {
+
+		if (signum == SIGTERM) {
+			// Handle termination gracefully
+			_exit(EXIT_SUCCESS);
+			continue;
+		}
+		if (signum == SIGHUP) {
+			// notify reload initial file!
+		}
+
+	} while (false);
 #endif
 }

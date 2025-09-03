@@ -7,6 +7,7 @@
 #include <atltrace.h>
 #endif
 
+#include <mp_coffee_path.h>
 
 cupdater::cupdater(_mp::clog& log,bool b_disaplay, bool b_log, cupdater::Lpu237Interface lpu237_interface_after_update) :
 	m_screen(ftxui::ScreenInteractive::Fullscreen())
@@ -25,18 +26,29 @@ cupdater::cupdater(_mp::clog& log,bool b_disaplay, bool b_log, cupdater::Lpu237I
 	//
 	m_state = cupdater::AppState::s_ini;
 
+	//setup boot manager
+	m_p_mgmt = CHidBootManager::GetInstance();
+
+	std::filesystem::path path_rom_dll_full = _mp::ccoffee_path::get_abs_full_path_of_rom_dll();
+	if (!m_p_mgmt->load_rom_library(path_rom_dll_full)) {
+		m_log_ref.log_fmt(L"[E] setup rom library(%ls).\n", path_rom_dll_full.wstring().c_str());
+	}
+
 	m_current_dir = std::filesystem::current_path();
 	if(!m_s_abs_full_path_of_rom.empty()) {
 		m_current_dir = std::filesystem::path(m_s_abs_full_path_of_rom).parent_path();
 	}
 
-	update_files_list();
+	update_files_list_of_cur_dir();//m_current_dir 에 있는 file 를 m_v_files_in_current_dir 에 설정.
 	m_n_selected_file_in_v_files_in_current_dir = 0;
 	if(m_v_files_in_current_dir.empty()) {
 		m_n_selected_file_in_v_files_in_current_dir = -1;
 	}
 
-	m_f_progress = 0.0f;
+	m_n_progress_min = 0;
+	m_n_progress_cur = m_n_progress_min;
+	m_n_progress_max = 100;
+
 
 	m_n_tab_index = 0; // 0: s_ini, 1: s_selfile, 2: s_selfirm, 3: s_sellast, 4: s_ing, 5: s_scom
 	m_v_tabs = {
@@ -69,25 +81,74 @@ cupdater::cupdater(_mp::clog& log,bool b_disaplay, bool b_log, cupdater::Lpu237I
 
 	m_ptr_final_root = std::make_shared<ftxui::Component>(ftxui::CatchEvent(*m_ptr_root, [&](ftxui::Event event) {
 		if (event == ftxui::Event::Custom && m_state == cupdater::AppState::s_ing) {
-			m_f_progress += 0.1f;  // Increment by 10% each time
-			if (m_f_progress >= 1.0f) {
-				m_f_progress = 1.0f;
+			float progress_ratio = 0.0f;
+			int total_steps = m_n_progress_max - m_n_progress_min;
+			if (total_steps == 0) {
+				progress_ratio = 0.0f;
+			}
+			else {
+				progress_ratio = static_cast<float>(m_n_progress_cur - m_n_progress_min) / total_steps;
+			}
+
+			++m_n_progress_cur;
+			if (m_n_progress_cur >= m_n_progress_max) {
+				m_n_progress_cur = m_n_progress_max;
 				_update_state(cupdater::AppEvent::e_ulstep_s);
 #ifdef _WIN32
-				ATLTRACE(L"Progress update complete: %f\n", m_f_progress);
+				ATLTRACE(L"Progress update complete: (%d/%d)\n", m_n_progress_cur, m_n_progress_max);
 #endif
 				return false;
 			}
 			else {
 				_update_state(cupdater::AppEvent::e_ustep_s);
 #ifdef _WIN32
-				ATLTRACE(L"Progress update : %f\n", m_f_progress);
+				ATLTRACE(L"Progress update : (%d/%d)\n", m_n_progress_cur, m_n_progress_max);
 #endif
 			}
 		}
 		return false;  // Allow other events to propagate
 		})
 	);
+
+
+}
+
+bool cupdater::initial_update()
+{
+	bool b_result(false);
+
+	do {
+		set_range_of_progress(CHidBootManager::WSTEP_INI, CHidBootManager::WSTEP_DEV_IN);
+
+		// TOODO - need setting callback to p_mgmt;
+		// //////////////
+		m_p_mgmt->add_notify_cb(
+			[&](int n_msg, WPARAM wparm, LPARAM lparam) {
+			}
+			, 0
+		);
+
+		if (m_s_device_path.empty()) {
+			// 연결된 첫 lpu237 를 찾아 m_s_device_path 를 설정.
+		}
+
+		std::shared_ptr<CRom> m_ptr_rom_dll = m_p_mgmt->get_rom_library();
+		if (!m_ptr_rom_dll) {
+			m_log_ref.log_fmt(L"[E] no rom library.\n");
+			continue;
+		}
+
+		if (m_s_abs_full_path_of_rom.empty()) {
+			// 현재 디렉토리에서 .rom 파일을 찾아 설정.
+			std::filesystem::path path_cur_exe = _mp::cfile::get_cur_exe_abs_path();
+			std::filesystem::path path_cur = path_cur_exe.parent_path();
+
+		}
+
+		b_result = true;
+	} while (false);
+
+	return b_result;
 }
 
 std::shared_ptr<ftxui::Component> cupdater::_create_sub_ui0_ini()
@@ -119,14 +180,14 @@ std::shared_ptr<ftxui::Component> cupdater::_create_sub_ui1_select_file()
 		}
 		std::string selected = m_v_files_in_current_dir[m_n_selected_file_in_v_files_in_current_dir];
 		std::filesystem::path selected_path = m_current_dir / selected;
-		if (selected_path == "../") {
+		if (selected == "..") {
 			m_current_dir = m_current_dir.parent_path();
-			update_files_list();
+			update_files_list_of_cur_dir();
 			return;
 		}
 		if (std::filesystem::is_directory(selected_path)) {
 			m_current_dir = std::filesystem::path(selected_path);
-			update_files_list();
+			update_files_list_of_cur_dir();
 			return;
 		}
 		if (std::filesystem::path(selected_path).extension() == ".rom") {
@@ -159,10 +220,12 @@ std::shared_ptr<ftxui::Component> cupdater::_create_sub_ui1_select_file()
 }
 std::shared_ptr<ftxui::Component> cupdater::_create_sub_ui2_select_firmware()
 {
-	std::vector<std::string> firmware_list = { "Europa" };  // Hardcoded; in real scenario, parse from .rom file
-	m_v_firmware_list = firmware_list;
-
-	m_n_selected_fw = 0;
+	if (m_v_firmware_list.empty()) {
+		m_n_selected_fw = -1;
+	}
+	else {
+		m_n_selected_fw = 0;
+	}
 	m_ptr_fw_menu = std::make_shared<ftxui::Component>(ftxui::Menu(&m_v_firmware_list, &m_n_selected_fw));
 	m_ptr_ok_fw_button = std::make_shared<ftxui::Component>(ftxui::Button("OK", [&]() {
 		_update_state(cupdater::AppEvent::e_sfirm_o);
@@ -215,10 +278,15 @@ std::shared_ptr<ftxui::Component> cupdater::_create_sub_ui4_updating()
 	std::shared_ptr<ftxui::Component> ptr_component = std::make_shared<ftxui::Component>(ftxui::Renderer([&]() {
 		std::string status;
 
-		status = std::to_string(static_cast<int>(m_f_progress * 100)) + " %";
+		float a = (float)m_n_progress_cur - (float)m_n_progress_min;
+		float b = (float)m_n_progress_max - (float)m_n_progress_min;
+		float f = (float)(a/b);
+		f = f * 100.0f;
+
+		status = std::to_string((int)f) + " %";
 		return ftxui::vbox({
 					ftxui::text("Updating"),
-					ftxui::gauge(m_f_progress) | ftxui::color(ftxui::Color::Blue),
+					ftxui::gauge(static_cast<float>(m_n_progress_cur - m_n_progress_min) / (m_n_progress_max - m_n_progress_min)) | ftxui::color(ftxui::Color::Blue),
 					ftxui::text(status),
 					ftxui::text(m_s_abs_full_path_of_rom),
 					ftxui::emptyElement()
@@ -605,31 +673,79 @@ bool cupdater::is_mmd1100_iso_mode() const
 	return m_b_mmd1100_iso_mode;
 }
 
-void cupdater::update_files_list()
+void cupdater::set_range_of_progress(int n_progress_min, int n_progress_max)
+{
+	m_n_progress_cur = n_progress_min;
+	m_n_progress_min = n_progress_min;
+	m_n_progress_max = n_progress_max;
+}
+
+void cupdater::set_pos_of_progress(int n_progress_pos)
+{
+	m_n_progress_cur = n_progress_pos;
+}
+
+int cupdater::get_pos_of_progress() const
+{
+	return m_n_progress_cur;
+}
+
+void cupdater::update_files_list_of_cur_dir()
 {
 	m_v_files_in_current_dir.clear();
+	m_v_rom_files_in_current_dir.clear();
+
 #ifdef _WIN32
-	m_v_files_in_current_dir.push_back("..\\");
+	m_v_files_in_current_dir.push_back("..");
 #else
-	m_v_files_in_current_dir.push_back("../");
+	m_v_files_in_current_dir.push_back("..");
 #endif
 	for (const auto& entry : std::filesystem::directory_iterator(m_current_dir)) {
+		if (entry.is_regular_file()) {
+			// regular file only.
+			std::filesystem::path path_ext = entry.path().extension();
+			if (path_ext != ".rom" && path_ext != ".bin") {
+				continue;
+			}
+			if (path_ext == ".rom") {
+				m_v_rom_files_in_current_dir.push_back(entry.path().filename().string());
+			}
+		}
+
 		std::string name = entry.path().filename().string();
 		if (entry.is_directory()) {
 #ifdef _WIN32
-			name += "\\";
+			//name += "\\";
 #else
-			name += "/";
+			//name += "/";
 #endif
 		}
 		m_v_files_in_current_dir.push_back(name);
 	}
+
+	std::sort(m_v_rom_files_in_current_dir.begin(), m_v_rom_files_in_current_dir.end());
 	std::sort(m_v_files_in_current_dir.begin(), m_v_files_in_current_dir.end());
 
 }
 
+void cupdater::update_fw_list_of_selected_rom()
+{
+	m_v_firmware_list.clear();
+	if (m_s_abs_full_path_of_rom.empty()) {
+		return;
+	}
+	std::filesystem::path path_rom(m_s_abs_full_path_of_rom);
+	if (path_rom.extension() != ".rom") {
+		return;
+	}
+	
+	// TOODO - parse the rom file to get the firmware list.
+	m_v_firmware_list.push_back("Europa");
+	m_n_selected_fw = 0;
+}
 
-void cupdater::main_loop()
+
+void cupdater::ui_main_loop()
 {
 	ftxui::Loop loop(&m_screen, *m_ptr_final_root);
 

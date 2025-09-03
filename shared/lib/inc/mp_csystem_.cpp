@@ -60,8 +60,8 @@ namespace _mp {
 			return false;
 		}
 #else
-		uid_t uid = getuid();    // ½ÇÁ¦ »ç¿ëÀÚ ID
-		uid_t euid = geteuid();  // À¯È¿ »ç¿ëÀÚ ID
+		uid_t uid = getuid();    // ì‹¤ì œ ì‚¬ìš©ìž ID
+		uid_t euid = geteuid();  // ìœ íš¨ ì‚¬ìš©ìž ID
 		return (uid != euid && euid == 0);
 #endif
 	}
@@ -250,32 +250,7 @@ namespace _mp {
 		return b_result;
 	}
 
-std::wstring csystem::get_cur_exe_abs_path() 
-{
-    std::wstring path;
-
-#ifdef _WIN32
-    // Windows
-    wchar_t buffer[MAX_PATH];
-    DWORD length = GetModuleFileNameW(NULL, buffer, MAX_PATH);
-    if (length > 0) {
-        path = std::wstring(buffer, length);
-    }
-#else
-    // Linux
-    char buffer[PATH_MAX];
-    ssize_t length = readlink("/proc/self/exe", buffer, sizeof(buffer) - 1);
-    if (length != -1) {
-        buffer[length] = '\0';
-        // Convert char* to wchar_t* (assuming UTF-8 encoding)
-        std::string str(buffer);
-        path = std::wstring(str.begin(), str.end());
-    }
-#endif
-
-    return path;
-}	
-	csystem::~csystem()
+csystem::~csystem()
 	{
 	}
 

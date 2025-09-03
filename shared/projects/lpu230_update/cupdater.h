@@ -16,6 +16,8 @@
 #include <mp_cwait.h>
 #include <mp_clog.h>
 
+#include "HidBootManager.h"
+
 class cupdater {
 
 public:
@@ -138,11 +140,30 @@ public:
 	//
 
 	/**
-	* @brief Update the list of files in the current directory.
-	*   update m_v_files_in_current_dir with m_current_dir.
+	* @brief Set the range of progress for the update process.
+	* @param n_progress_min Minimum progress value.(greater than equal to 0)
+	*	f_progress_min must be less than f_progress_max.
+	* @param n_progress_max Maximum progress value.
 	*/
-	void update_files_list();
-	void main_loop();
+	void set_range_of_progress(int n_progress_min, int n_progress_max);
+
+	void set_pos_of_progress(int n_progress_pos);
+
+	int get_pos_of_progress() const;
+
+	/**
+	* @brief Update the list of files in the current directory.
+	*   update m_v_files_in_current_dir and m_v_rom_files_in_current_dir with m_current_dir.
+	*/
+	void update_files_list_of_cur_dir();
+	void update_fw_list_of_selected_rom();
+
+	void ui_main_loop();
+
+	/**
+	* @brief as like initial dialog
+	*/
+	bool initial_update();
 
 private:
 	void _updates_thread_function();
@@ -169,13 +190,16 @@ private:
 	bool _pop_message(std::string& s_out_msg,bool b_remove_after_pop = true);
 
 private:
+	CHidBootManager* m_p_mgmt;
+
 	std::atomic<cupdater::AppState> m_state;
 
 	int m_n_selected_file_in_v_files_in_current_dir;
 	std::vector<std::string> m_v_files_in_current_dir;
+	std::vector<std::string> m_v_rom_files_in_current_dir; // rom file list in the m_v_files_in_current_dir.
 	std::filesystem::path m_current_dir;
 
-	float m_f_progress;
+	int m_n_progress_cur, m_n_progress_min, m_n_progress_max;
 
 	ftxui::ScreenInteractive m_screen;
 
