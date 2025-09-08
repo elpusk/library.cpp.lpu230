@@ -128,10 +128,10 @@ public:
 		CRom rom(sRomfileName.c_str());
 		CRom::ROMFILE_HEAD header;
 
-		::memset(&header, 0, sizeof header);
+			::memset(&header, 0, sizeof header);
 		if (CRom::result_success != rom.LoadHeader(sRomfileName.c_str(), &header)) {
-			//fail load Header of rom
-			return n_size;
+				//fail load Header of rom
+				return n_size;
 		}
 
 		if (header.dwItem <= (unsigned long)nIndex)

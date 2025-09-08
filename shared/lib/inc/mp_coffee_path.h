@@ -194,36 +194,41 @@ namespace _mp{
 
 		static std::wstring get_abs_full_path_of_rom_dll()
 		{
-			std::wstring s_rom_abs_full_path;
+			std::wstring s;
 			
-			do {
-				s_rom_abs_full_path = _mp::_coffee::CONST_S_DIR_DLL_EXCEPT_BACKSLASH;
+#if defined(_WIN32) && !defined(_DEBUG)
+			//win release
+			s = _mp::cfile::get_path_ProgramFiles();
+			s += L"\\elpusk\\00000006\\coffee_manager\\dll";
+#else
+			s = _mp::_coffee::CONST_S_DIR_DLL_EXCEPT_BACKSLASH; // win debug & linux
+
+#endif //_WIN32
 #ifdef _DEBUG
 #ifdef _WIN32
 				//debug win
-				s_rom_abs_full_path += L"\\tg_rom.dll";
+			s += L"\\tg_rom.dll";
 #else
 				//debug linux 64
-				s_rom_abs_full_path += L"/libtg_rom.so";
+			s += L"/libtg_rom.so";
 #endif
 #else
 #ifdef _WIN32
 				//release win
 #ifdef _WIN64
 				// x64 Windows
-				s_rom_abs_full_path += L"\\x64\\tg_rom.dll";
+				s += L"\\x64\\tg_rom.dll";
 #elif defined(_M_IX86)
 				// x86 32 bits Win
-				s_rom_abs_full_path += L"\\x86\\tg_rom.dll";
+				s += L"\\x86\\tg_rom.dll";
 #else
 #endif
 #else
 				//release linux 64
-				s_rom_abs_full_path += L"/libtg_rom.so";
+				s += L"/libtg_rom.so";
 #endif //_WIN32
 #endif //_DEBUG
-			} while (false);
-			return s_rom_abs_full_path;
+			return s;
 		}
 	};
 }

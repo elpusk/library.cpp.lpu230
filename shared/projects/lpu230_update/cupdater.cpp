@@ -49,13 +49,17 @@ cupdater::cupdater(_mp::clog& log,bool b_disaplay, bool b_log, cupdater::Lpu237I
 	m_n_progress_cur = m_n_progress_min;
 	m_n_progress_max = 100;
 
+	m_n_index_updatable_fw_in_rom = -1;
+	m_n_selected_fw = -1;
 
-	m_n_tab_index = 0; // 0: s_ini, 1: s_selfile, 2: s_selfirm, 3: s_sellast, 4: s_ing, 5: s_scom
+	//
+	m_n_tab_index = 0; // 0: s_ini, 1: s_selfile, 2: s_selfirm, 3: s_sellast(confirm), 4: s_sellast(warning) ,5: s_ing, 6: s_scom
 	m_v_tabs = {
 		*_create_sub_ui0_ini(),
 		*_create_sub_ui1_select_file(),
 		*_create_sub_ui2_select_firmware(),
 		*_create_sub_ui3_last_confirm(),
+		*_create_sub_ui3_last_warning(),
 		*_create_sub_ui4_updating(),
 		*_create_sub_ui5_complete()
 	};
@@ -145,6 +149,10 @@ bool cupdater::initial_update()
 
 		}
 
+		m_v_device_model_name.resize(CRom::MAX_MODEL_NAME_SIZE, 0);
+		char s_model[] = "ganymede";
+		memcpy(&m_v_device_model_name[0], s_model, sizeof(s_model));
+
 		b_result = true;
 	} while (false);
 
@@ -192,6 +200,11 @@ std::shared_ptr<ftxui::Component> cupdater::_create_sub_ui1_select_file()
 		}
 		if (std::filesystem::path(selected_path).extension() == ".rom") {
 			m_s_abs_full_path_of_rom = selected_path.string();//SEE
+			m_n_index_updatable_fw_in_rom = update_fw_list_of_selected_rom();
+			if (m_n_index_updatable_fw_in_rom > 0) {
+				m_n_selected_fw = m_n_index_updatable_fw_in_rom;
+			}
+
 			_update_state(cupdater::AppEvent::e_sfile_or, selected_path.string());
 		}
 		else {
@@ -220,12 +233,16 @@ std::shared_ptr<ftxui::Component> cupdater::_create_sub_ui1_select_file()
 }
 std::shared_ptr<ftxui::Component> cupdater::_create_sub_ui2_select_firmware()
 {
+	std::shared_ptr<ftxui::Component> ptr_component;
+
+	m_n_index_updatable_fw_in_rom = -1;
 	if (m_v_firmware_list.empty()) {
 		m_n_selected_fw = -1;
 	}
 	else {
 		m_n_selected_fw = 0;
 	}
+
 	m_ptr_fw_menu = std::make_shared<ftxui::Component>(ftxui::Menu(&m_v_firmware_list, &m_n_selected_fw));
 	m_ptr_ok_fw_button = std::make_shared<ftxui::Component>(ftxui::Button("OK", [&]() {
 		_update_state(cupdater::AppEvent::e_sfirm_o);
@@ -237,7 +254,7 @@ std::shared_ptr<ftxui::Component> cupdater::_create_sub_ui2_select_firmware()
 	ftxui::Component container(ftxui::Container::Vertical(
 		{ *m_ptr_fw_menu, ftxui::Container::Horizontal({ *m_ptr_ok_fw_button, *m_ptr_cancel_fw_button }) }));
 
-	std::shared_ptr<ftxui::Component> ptr_component = std::make_shared<ftxui::Component>(ftxui::Renderer(container, [&]() {
+	ptr_component = std::make_shared<ftxui::Component>(ftxui::Renderer(container, [&]() {
 		return ftxui::vbox({
 				   ftxui::text("Select firmware"),
 				   (*m_ptr_fw_menu)->Render(),
@@ -262,8 +279,7 @@ std::shared_ptr<ftxui::Component> cupdater::_create_sub_ui3_last_confirm()
 	std::shared_ptr<ftxui::Component> ptr_component = std::make_shared<ftxui::Component>(ftxui::Renderer(container, [&]() {
 		return ftxui::vbox({
 				   ftxui::text("Notice"),
-				   ftxui::text("Compatibility between the selected firmware and the target"),
-				   ftxui::text("device cannot be confirmed."),
+				   ftxui::text("the selected firmware will be downloaded to your device."),
 				   ftxui::text("Would you like to proceed with the update?"),
 				   ftxui::hbox({(*m_ptr_ok_confirm_button)->Render() | ftxui::flex, (*m_ptr_cancel_confirm_button)->Render() | ftxui::flex}),
 			}) |
@@ -273,6 +289,32 @@ std::shared_ptr<ftxui::Component> cupdater::_create_sub_ui3_last_confirm()
 
 	return ptr_component;
 }
+
+std::shared_ptr<ftxui::Component> cupdater::_create_sub_ui3_last_warning()
+{
+	m_ptr_ok_warning_button = std::make_shared<ftxui::Component>(ftxui::Button("OK", [&]() {
+		_update_state(cupdater::AppEvent::e_slast_o);
+		}));
+	m_ptr_cancel_warning_button = std::make_shared<ftxui::Component>(ftxui::Button("Cancel", [&]() {
+		_update_state(cupdater::AppEvent::e_slast_c);
+		}));
+
+	ftxui::Component container(ftxui::Container::Horizontal({ *m_ptr_ok_warning_button, *m_ptr_cancel_warning_button }));
+	std::shared_ptr<ftxui::Component> ptr_component = std::make_shared<ftxui::Component>(ftxui::Renderer(container, [&]() {
+		return ftxui::vbox({
+				   ftxui::text("Warning"),
+				   ftxui::text("Compatibility between the selected firmware and the target"),
+				   ftxui::text("device cannot be confirmed."),
+				   ftxui::text("Would you like to proceed with the update?"),
+				   ftxui::hbox({(*m_ptr_ok_warning_button)->Render() | ftxui::flex, (*m_ptr_cancel_warning_button)->Render() | ftxui::flex}),
+			}) |
+			ftxui::border;
+		})
+	);
+
+	return ptr_component;
+}
+
 std::shared_ptr<ftxui::Component> cupdater::_create_sub_ui4_updating()
 {
 	std::shared_ptr<ftxui::Component> ptr_component = std::make_shared<ftxui::Component>(ftxui::Renderer([&]() {
@@ -521,16 +563,22 @@ std::tuple<bool, cupdater::AppState, std::string> cupdater::_update_state(cupdat
 					m_n_tab_index = 2;
 					break;
 				case cupdater::AppState::s_sellast:
-					m_n_tab_index = 3;
+					if (m_n_index_updatable_fw_in_rom > 0 && m_n_selected_fw == m_n_index_updatable_fw_in_rom) {
+						// selected firmware is updatable.
+						m_n_tab_index = 3;
+					}
+					else {
+						m_n_tab_index = 4;
+					}
 					break;
 				case cupdater::AppState::s_ing:
-					m_n_tab_index = 4;
-					break;
-				case cupdater::AppState::s_com:
 					m_n_tab_index = 5;
 					break;
+				case cupdater::AppState::s_com:
+					m_n_tab_index = 6;
+					break;
 				default:
-					m_n_tab_index = 5; // Default to s_ini state
+					m_n_tab_index = 6; // Default to s_ini state
 					break;
 				}
 			}
@@ -728,20 +776,78 @@ void cupdater::update_files_list_of_cur_dir()
 
 }
 
-void cupdater::update_fw_list_of_selected_rom()
+int cupdater::update_fw_list_of_selected_rom()
 {
-	m_v_firmware_list.clear();
-	if (m_s_abs_full_path_of_rom.empty()) {
-		return;
-	}
-	std::filesystem::path path_rom(m_s_abs_full_path_of_rom);
-	if (path_rom.extension() != ".rom") {
-		return;
-	}
-	
-	// TOODO - parse the rom file to get the firmware list.
-	m_v_firmware_list.push_back("Europa");
-	m_n_selected_fw = 0;
+	int n_updatable_fw_index(-1);
+
+	do {
+		auto ptr_rom_dll = m_p_mgmt->get_rom_library();
+		if (!ptr_rom_dll) {
+			continue;
+		}
+		if (m_s_abs_full_path_of_rom.empty()) {
+			continue;
+		}
+		std::filesystem::path path_rom(m_s_abs_full_path_of_rom);
+		if (path_rom.extension() != ".rom") {
+			continue;
+		}
+
+		std::wstring ws_abs_full_path_of_rom = _mp::cstring::get_unicode_from_mcsc(m_s_abs_full_path_of_rom);
+
+		CRom::ROMFILE_HEAD rom_header{ 0, };
+		CRom::type_result result_rom_dll = ptr_rom_dll->LoadHeader(ws_abs_full_path_of_rom.c_str(), &rom_header);
+		if (result_rom_dll != CRom::result_success) {
+			continue;
+		}
+		m_b_fw_file_is_rom_format = true;
+		m_v_firmware_list.clear();
+
+		for (uint32_t i = 0; i < rom_header.dwItem; ++i) {
+			CRom::ROMFILE_HEAD_ITEAM& item = rom_header.Item[i];
+			std::string s_model = (char*)item.sModel;
+			std::string s_version = std::to_string((int)item.sVersion[0]) + "." +
+				std::to_string((int)item.sVersion[1]) + "." +
+				std::to_string((int)item.sVersion[2]) + "." +
+				std::to_string((int)item.sVersion[3]);
+			std::string s_cond;
+			if (item.dwUpdateCondition & CRom::condition_eq) {
+				s_cond += " EQ";
+			}
+			if (item.dwUpdateCondition & CRom::condition_neq) {
+				s_cond += " NEQ";
+			}
+			if (item.dwUpdateCondition & CRom::condition_gt) {
+				s_cond += " GT";
+			}
+			if (item.dwUpdateCondition & CRom::condition_lt) {
+				s_cond += " LT";
+			}
+			if (s_cond.empty()) {
+				s_cond = " None";
+			}
+			std::string s_list_item = std::to_string(i) + ": " + s_model + " v" + s_version + " (" + s_cond + ")";
+			m_v_firmware_list.push_back(s_list_item);
+		}//end for
+
+		if (m_v_firmware_list.empty()) {
+			continue;
+		}
+
+		if (m_v_device_model_name.empty()) {
+			continue;
+		}
+		n_updatable_fw_index = ptr_rom_dll->GetUpdatableItemIndex(
+			&m_v_device_model_name[0],
+			m_version_of_device.get_major(),
+			m_version_of_device.get_minor(),
+			m_version_of_device.get_fix(),
+			m_version_of_device.get_build()
+		);
+
+	} while (false);
+
+	return n_updatable_fw_index;
 }
 
 

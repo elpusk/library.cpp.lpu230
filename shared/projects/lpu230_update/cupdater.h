@@ -156,7 +156,12 @@ public:
 	*   update m_v_files_in_current_dir and m_v_rom_files_in_current_dir with m_current_dir.
 	*/
 	void update_files_list_of_cur_dir();
-	void update_fw_list_of_selected_rom();
+
+	/**
+	* @brief Update the list of firmware in the selected rom file.
+	* @return 0>= : updatable firmware index.
+	*/
+	int update_fw_list_of_selected_rom();
 
 	void ui_main_loop();
 
@@ -171,7 +176,16 @@ private:
 	std::shared_ptr<ftxui::Component> _create_sub_ui0_ini();
 	std::shared_ptr<ftxui::Component> _create_sub_ui1_select_file();
 	std::shared_ptr<ftxui::Component> _create_sub_ui2_select_firmware();
+
+	/**
+	* @brief create last confirm dialog UI(firmware compatibility OK)
+	*/
 	std::shared_ptr<ftxui::Component> _create_sub_ui3_last_confirm();
+
+	/**
+	* @brief create last confirm dialog UI(firmware compatibility noknown)
+	*/
+	std::shared_ptr<ftxui::Component> _create_sub_ui3_last_warning();
 	std::shared_ptr<ftxui::Component> _create_sub_ui4_updating();
 	std::shared_ptr<ftxui::Component> _create_sub_ui5_complete();
 
@@ -209,6 +223,8 @@ private:
 	std::shared_ptr<ftxui::Component> m_ptr_select_file_button; // select button in file selection dialog
 	std::shared_ptr<ftxui::Component> m_ptr_cancel_file_button; // cancel button in file selection dialog
 
+
+	int m_n_index_updatable_fw_in_rom; // updatable firmware index in the selected rom file.
 	int m_n_selected_fw;
 	std::vector<std::string> m_v_firmware_list; //firmware list in the selected rom file.
 	std::shared_ptr<ftxui::Component> m_ptr_fw_menu; // list UI by m_v_firmware_list
@@ -217,7 +233,9 @@ private:
 
 	std::shared_ptr<ftxui::Component> m_ptr_ok_confirm_button;
 	std::shared_ptr<ftxui::Component> m_ptr_cancel_confirm_button;
-	
+
+	std::shared_ptr<ftxui::Component> m_ptr_ok_warning_button;
+	std::shared_ptr<ftxui::Component> m_ptr_cancel_warning_button;
 
 	std::shared_ptr<ftxui::Component> m_ptr_exit_button; //exit button in complete dialog
 	std::shared_ptr<ftxui::Component> m_ptr_exit_container;
@@ -263,6 +281,7 @@ private:
 
 	//target device section
 	std::string m_s_device_path;
+	_mp::type_v_buffer m_v_device_model_name;
 	cupdater::type_version m_version_of_device;
 
 	// Mutex for thread safety
