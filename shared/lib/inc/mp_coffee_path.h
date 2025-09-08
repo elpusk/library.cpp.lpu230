@@ -210,7 +210,7 @@ namespace _mp{
 			s += L"\\tg_rom.dll";
 #else
 				//debug linux 64
-			s += L"/libtg_rom.so";
+			s = _mp::_coffee::CONST_S_DIR_DLL_ROM_SO;
 #endif
 #else
 #ifdef _WIN32

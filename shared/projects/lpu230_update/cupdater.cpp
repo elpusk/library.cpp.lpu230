@@ -128,6 +128,9 @@ bool cupdater::initial_update()
 		// //////////////
 		m_p_mgmt->add_notify_cb(
 			[&](int n_msg, WPARAM wparm, LPARAM lparam) {
+#ifdef _WIN32
+				ATLTRACE(L"callback msg(%d) wparm(%u) lparam(%ld)\n", n_msg, (unsigned int)wparm, (long)lparam);
+#endif
 			}
 			, 0
 		);
