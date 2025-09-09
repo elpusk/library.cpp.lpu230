@@ -1,0 +1,7 @@
+LIBRARY dev_lib
+
+EXPORTS
+	dev_lib_on
+	dev_lib_off
+
+

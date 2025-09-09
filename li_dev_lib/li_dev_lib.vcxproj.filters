@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="lib">
+      <UniqueIdentifier>{f4a9d84a-cda6-48c5-bb32-e69c796d0f19}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="inc">
+      <UniqueIdentifier>{804f6e65-29cb-41b3-bab3-b267eb8edc56}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{0fbe654f-4324-4c4b-ac62-b66f8c0c5037}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\shared\projects\dev_lib\inc\dev_lib.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_os_type.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\shared\projects\dev_lib\src\dev_lib.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="li_dev_lib.ld" />
+  </ItemGroup>
+</Project>
