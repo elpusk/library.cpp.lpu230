@@ -71,26 +71,26 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>C:\local\boost_1_80_0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)shared/common/inc;$(SolutionDir)shared\3thpart\src\win;C:\local\libusb\out\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
-    <LibraryPath>C:\local\boost_1_80_0\stage\lib;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86)</LibraryPath>
+    <IncludePath>C:\local\boost_1_80_0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)shared/common/inc;$(SolutionDir)shared\3thpart\src\win;C:\local\libusb\out\include\libusb-1.0;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <LibraryPath>C:\local\boost_1_80_0\stage\lib;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);C:\local\libusb\build\v143\Win32\Debug-MT\lib</LibraryPath>
     <SourcePath>C:\local\boost_1_80_0\boost;$(VC_SourcePath);</SourcePath>
     <TargetName>dev_lib</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>C:\local\boost_1_80_0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)shared/common/inc;$(SolutionDir)shared\3thpart\src\win;C:\local\libusb\out\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
-    <LibraryPath>C:\local\boost_1_80_0\stage\lib;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86)</LibraryPath>
+    <IncludePath>C:\local\boost_1_80_0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)shared/common/inc;$(SolutionDir)shared\3thpart\src\win;C:\local\libusb\out\include\libusb-1.0;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <LibraryPath>C:\local\boost_1_80_0\stage\lib;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);C:\local\libusb\build\v143\Win32\Release-MT\lib</LibraryPath>
     <SourcePath>C:\local\boost_1_80_0\boost;$(VC_SourcePath);</SourcePath>
     <TargetName>dev_lib</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>C:\local\boost_1_80_0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)shared/common/inc;$(SolutionDir)shared\3thpart\src\win;C:\local\libusb\out\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
-    <LibraryPath>C:\local\boost_1_80_0\stage\lib;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
+    <IncludePath>C:\local\boost_1_80_0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)shared/common/inc;$(SolutionDir)shared\3thpart\src\win;C:\local\libusb\out\include\libusb-1.0;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <LibraryPath>C:\local\boost_1_80_0\stage\lib;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);C:\local\libusb\build\v143\x64\Debug-MT\lib</LibraryPath>
     <SourcePath>C:\local\boost_1_80_0\boost;$(VC_SourcePath);</SourcePath>
     <TargetName>dev_lib</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>C:\local\boost_1_80_0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)shared/common/inc;$(SolutionDir)shared\3thpart\src\win;C:\local\libusb\out\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
-    <LibraryPath>C:\local\boost_1_80_0\stage\lib;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
+    <IncludePath>C:\local\boost_1_80_0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)shared/common/inc;$(SolutionDir)shared\3thpart\src\win;C:\local\libusb\out\include\libusb-1.0;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <LibraryPath>C:\local\boost_1_80_0\stage\lib;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);C:\local\libusb\build\v143\x64\Release-MT\lib</LibraryPath>
     <SourcePath>C:\local\boost_1_80_0\boost;$(VC_SourcePath);</SourcePath>
     <TargetName>dev_lib</TargetName>
   </PropertyGroup>
@@ -111,6 +111,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <ModuleDefinitionFile>dev_lib.def</ModuleDefinitionFile>
+      <AdditionalDependencies>libusb-1.0.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -132,6 +133,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <ModuleDefinitionFile>dev_lib.def</ModuleDefinitionFile>
+      <AdditionalDependencies>libusb-1.0.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -151,6 +153,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <ModuleDefinitionFile>dev_lib.def</ModuleDefinitionFile>
+      <AdditionalDependencies>libusb-1.0.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -172,16 +175,49 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <ModuleDefinitionFile>dev_lib.def</ModuleDefinitionFile>
+      <AdditionalDependencies>libusb-1.0.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\local\libusb\out\include\libusb-1.0\libusb.h" />
+    <ClInclude Include="..\shared\3thpart\inc\hidapi.h" />
+    <ClInclude Include="..\shared\3thpart\src\win\hidapi_winapi.h" />
+    <ClInclude Include="..\shared\common\inc\ckey_map.h" />
+    <ClInclude Include="..\shared\common\inc\cprotocol_lpu237.h" />
+    <ClInclude Include="..\shared\common\inc\lpu230\compiler.h" />
+    <ClInclude Include="..\shared\common\inc\lpu230\config\cfg_msrlib.h" />
+    <ClInclude Include="..\shared\common\inc\lpu230\info_msr.h" />
+    <ClInclude Include="..\shared\common\inc\lpu230\info_sys.h" />
+    <ClInclude Include="..\shared\common\inc\lpu230\info_sys_cnst.h" />
+    <ClInclude Include="..\shared\common\inc\lpu230\KBConst.h" />
+    <ClInclude Include="..\shared\lib\inc\hid\_hid_api_briage.h" />
+    <ClInclude Include="..\shared\lib\inc\hid\_vhid_api_briage.h" />
+    <ClInclude Include="..\shared\lib\inc\hid\_vhid_info.h" />
+    <ClInclude Include="..\shared\lib\inc\hid\_vhid_info_lpu237.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_cconvert.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_cfile.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_clog.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_cnamed_pipe_.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_coperation.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_cqueue.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_cstring.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_cversion.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_cwait.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_elpusk.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_icprotocol.h" />
     <ClInclude Include="..\shared\lib\inc\mp_os_type.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_type.h" />
+    <ClInclude Include="..\shared\lib\inc\usb\mp_clibusb.h" />
     <ClInclude Include="..\shared\projects\dev_lib\inc\dev_lib.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\shared\3thpart\src\win\hid.c" />
+    <ClCompile Include="..\shared\lib\inc\mp_cnamed_pipe_.cpp" />
+    <ClCompile Include="..\shared\lib\src\hid\_hid_api_briage.cpp" />
+    <ClCompile Include="..\shared\lib\src\hid\_vhid_api_briage.cpp" />
     <ClCompile Include="..\shared\projects\dev_lib\src\dev_lib.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="pch.cpp">

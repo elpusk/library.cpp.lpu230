@@ -118,13 +118,13 @@
     <TargetName>libtg_lpu237_ibutton</TargetName>
     <TargetExt>.so.6.0.0</TargetExt>
     <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/openssl-1.1.1s;/usr/local/libusb/include/libusb-1.0;/usr/local/json/include;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc;/usr/local/openssl-1.1.1s/include</IncludePath>
-    <LibraryPath>/usr/local/openssl-1.1.1s/lib;C:\local\boost_1_80_0\stage\debug\lib;$(LibraryPath);C:\local\libusb\out\lib;C:\local\libusb\out\lib;/usr/local/lib;C:\local\libusb\out\lib;/usr/local/libusb/lib</LibraryPath>
+    <LibraryPath>/usr/local/openssl-1.1.1s/lib;/usr/local/lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <TargetName>libtg_lpu237_ibutton</TargetName>
     <TargetExt>.so.6.0.0</TargetExt>
     <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/openssl-1.1.1s;/usr/local/libusb/include/libusb-1.0;/usr/local/json/include;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc;/usr/local/openssl-1.1.1s/include</IncludePath>
-    <LibraryPath>/usr/local/openssl-1.1.1s/lib;C:\local\boost_1_80_0\stage\release\lib;$(LibraryPath);C:\local\libusb\out\lib;C:\local\libusb\out\lib;/usr/local/lib;C:\local\libusb\out\lib;/usr/local/libusb/lib</LibraryPath>
+    <LibraryPath>/usr/local/openssl-1.1.1s/lib;/usr/local/lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
     <TargetName>libtg_lpu237_ibutton</TargetName>
@@ -221,7 +221,7 @@
       <AdditionalOptions>-fPIC %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>/usr/local/libusb/lib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>/usr/local/ib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <LibraryDependencies>ssl;crypto;boost_filesystem</LibraryDependencies>
       <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_lpu237_ibutton/li_lpu237_ibutton/li_lpu237_ibutton.ld,-soname,libtg_lpu237_ibutton.so.6 %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -238,7 +238,7 @@
       <AdditionalOptions>-fPIC %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>/usr/local/libusb/lib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>/usr/local/ib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <LibraryDependencies>ssl;crypto;boost_filesystem</LibraryDependencies>
       <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_lpu237_ibutton/li_lpu237_ibutton/li_lpu237_ibutton.ld,-soname,libtg_lpu237_ibutton.so.6 %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -255,7 +255,7 @@
       <AdditionalOptions>-fPIC %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>/usr/local/libusb/lib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>/usr/local/ib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <LibraryDependencies>ssl;crypto;boost_filesystem</LibraryDependencies>
       <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_lpu237_ibutton/li_lpu237_ibutton/li_lpu237_ibutton.ld,-soname,libtg_lpu237_ibutton.so.6 %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -272,7 +272,7 @@
       <AdditionalOptions>-fPIC %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>/usr/local/libusb/lib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>/usr/local/ib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <LibraryDependencies>ssl;crypto;boost_filesystem</LibraryDependencies>
       <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_lpu237_ibutton/li_lpu237_ibutton/li_lpu237_ibutton.ld,-soname,libtg_lpu237_ibutton.so.6 %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -289,7 +289,7 @@
       <AdditionalOptions>-fPIC %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>/usr/local/libusb/lib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>/usr/local/ib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <LibraryDependencies>ssl;crypto;boost_filesystem</LibraryDependencies>
       <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_lpu237_ibutton/li_lpu237_ibutton/li_lpu237_ibutton.ld,-soname,libtg_lpu237_ibutton.so.6 %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -306,7 +306,7 @@
       <AdditionalOptions>-fPIC %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>/usr/local/libusb/lib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>/usr/local/ib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <LibraryDependencies>ssl;crypto;boost_filesystem</LibraryDependencies>
       <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_lpu237_ibutton/li_lpu237_ibutton/li_lpu237_ibutton.ld,-soname,libtg_lpu237_ibutton.so.6 %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -323,7 +323,7 @@
       <AdditionalOptions>-fPIC %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>/usr/local/libusb/lib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>/usr/local/ib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <LibraryDependencies>ssl;crypto;boost_filesystem</LibraryDependencies>
       <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_lpu237_ibutton/li_lpu237_ibutton/li_lpu237_ibutton.ld,-soname,libtg_lpu237_ibutton.so.6 %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -340,7 +340,7 @@
       <AdditionalOptions>-fPIC %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>/usr/local/libusb/lib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>/usr/local/ib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <LibraryDependencies>ssl;crypto;boost_filesystem</LibraryDependencies>
       <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_lpu237_ibutton/li_lpu237_ibutton/li_lpu237_ibutton.ld,-soname,libtg_lpu237_ibutton.so.6 %(AdditionalOptions)</AdditionalOptions>
     </Link>

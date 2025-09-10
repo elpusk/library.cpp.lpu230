@@ -93,56 +93,97 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <TargetName>libdev_lib</TargetName>
     <TargetExt>.so.1.0.0</TargetExt>
-    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/libusb/include/libusb-1.0;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc</IncludePath>
-    <LibraryPath>C:\local\boost_1_80_0\stage\debug\lib;C:\local\libusb\out\lib;/usr/local/lib;/usr/local/libusb/lib;$(LibraryPath);</LibraryPath>
+    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/libusb/include/libusb-1.0;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc;$(SolutionDir)\shared\3thpart\src\win;~/projects/li_dev_lib/job/library.cpp.lpu230/shared/3thpart/src/linux;~/projects/li_dev_lib/job/library.cpp.lpu230/shared/projects/dev_lib/inc</IncludePath>
+    <LibraryPath>/usr/local/lib</LibraryPath>
+    <RemoteLdCommmandTimeout>3600000</RemoteLdCommmandTimeout>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
     <TargetName>libdev_lib</TargetName>
     <TargetExt>.so.1.0.0</TargetExt>
-    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/libusb/include/libusb-1.0;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc</IncludePath>
-    <LibraryPath>C:\local\boost_1_80_0\stage\release\lib;C:\local\libusb\out\lib;/usr/local/lib;/usr/local/libusb/lib;$(LibraryPath);</LibraryPath>
+    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/libusb/include/libusb-1.0;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc;$(SolutionDir)\shared\3thpart\src\win;~/projects/li_dev_lib/job/library.cpp.lpu230/shared/3thpart/src/linux;~/projects/li_dev_lib/job/library.cpp.lpu230/shared/projects/dev_lib/inc</IncludePath>
+    <LibraryPath>/usr/local/lib</LibraryPath>
+    <RemoteLdCommmandTimeout>3600000</RemoteLdCommmandTimeout>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <TargetName>libdev_lib</TargetName>
     <TargetExt>.so.1.0.0</TargetExt>
-    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/libusb/include/libusb-1.0;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc</IncludePath>
-    <LibraryPath>C:\local\boost_1_80_0\stage\debug\lib;C:\local\libusb\out\lib;/usr/local/lib;/usr/local/libusb/lib;$(LibraryPath);</LibraryPath>
+    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/libusb/include/libusb-1.0;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc;$(SolutionDir)\shared\3thpart\src\win;~/projects/li_dev_lib/job/library.cpp.lpu230/shared/3thpart/src/linux;~/projects/li_dev_lib/job/library.cpp.lpu230/shared/projects/dev_lib/inc</IncludePath>
+    <LibraryPath>/usr/local/lib</LibraryPath>
+    <RemoteLdCommmandTimeout>3600000</RemoteLdCommmandTimeout>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <TargetName>libdev_lib</TargetName>
     <TargetExt>.so.1.0.0</TargetExt>
-    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/libusb/include/libusb-1.0;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc</IncludePath>
-    <LibraryPath>C:\local\boost_1_80_0\stage\release\lib;C:\local\libusb\out\lib;/usr/local/lib;/usr/local/libusb/lib;$(LibraryPath);</LibraryPath>
+    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/libusb/include/libusb-1.0;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc;$(SolutionDir)\shared\3thpart\src\win;~/projects/li_dev_lib/job/library.cpp.lpu230/shared/3thpart/src/linux;~/projects/li_dev_lib/job/library.cpp.lpu230/shared/projects/dev_lib/inc</IncludePath>
+    <LibraryPath>/usr/local/lib</LibraryPath>
+    <RemoteLdCommmandTimeout>3600000</RemoteLdCommmandTimeout>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <TargetName>libdev_lib</TargetName>
     <TargetExt>.so.1.0.0</TargetExt>
-    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/libusb/include/libusb-1.0;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc</IncludePath>
-    <LibraryPath>C:\local\boost_1_80_0\stage\debug\lib;C:\local\libusb\out\lib;/usr/local/lib;/usr/local/libusb/lib;$(LibraryPath);</LibraryPath>
+    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/libusb/include/libusb-1.0;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc;$(SolutionDir)\shared\3thpart\src\win;~/projects/li_dev_lib/job/library.cpp.lpu230/shared/3thpart/src/linux;~/projects/li_dev_lib/job/library.cpp.lpu230/shared/projects/dev_lib/inc</IncludePath>
+    <LibraryPath>/usr/local/lib</LibraryPath>
+    <RemoteLdCommmandTimeout>3600000</RemoteLdCommmandTimeout>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <TargetName>libdev_lib</TargetName>
     <TargetExt>.so.1.0.0</TargetExt>
-    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/libusb/include/libusb-1.0;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc</IncludePath>
-    <LibraryPath>C:\local\boost_1_80_0\stage\release\lib;C:\local\libusb\out\lib;/usr/local/lib;/usr/local/libusb/lib;$(LibraryPath);</LibraryPath>
+    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/libusb/include/libusb-1.0;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc;$(SolutionDir)\shared\3thpart\src\win;~/projects/li_dev_lib/job/library.cpp.lpu230/shared/3thpart/src/linux;~/projects/li_dev_lib/job/library.cpp.lpu230/shared/projects/dev_lib/inc</IncludePath>
+    <LibraryPath>/usr/local/lib</LibraryPath>
+    <RemoteLdCommmandTimeout>3600000</RemoteLdCommmandTimeout>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
     <TargetName>libdev_lib</TargetName>
     <TargetExt>.so.1.0.0</TargetExt>
-    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/libusb/include/libusb-1.0;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc</IncludePath>
-    <LibraryPath>C:\local\boost_1_80_0\stage\debug\lib;C:\local\libusb\out\lib;/usr/local/lib;/usr/local/libusb/lib;$(LibraryPath);</LibraryPath>
+    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/libusb/include/libusb-1.0;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc;$(SolutionDir)\shared\3thpart\src\win;~/projects/li_dev_lib/job/library.cpp.lpu230/shared/3thpart/src/linux;~/projects/li_dev_lib/job/library.cpp.lpu230/shared/projects/dev_lib/inc</IncludePath>
+    <LibraryPath>/usr/local/lib</LibraryPath>
+    <RemoteLdCommmandTimeout>3600000</RemoteLdCommmandTimeout>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
     <TargetName>libdev_lib</TargetName>
     <TargetExt>.so.1.0.0</TargetExt>
-    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/libusb/include/libusb-1.0;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc</IncludePath>
-    <LibraryPath>C:\local\boost_1_80_0\stage\release\lib;C:\local\libusb\out\lib;/usr/local/lib;/usr/local/libusb/lib;$(LibraryPath);</LibraryPath>
+    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/libusb/include/libusb-1.0;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc;$(SolutionDir)\shared\3thpart\src\win;~/projects/li_dev_lib/job/library.cpp.lpu230/shared/3thpart/src/linux;~/projects/li_dev_lib/job/library.cpp.lpu230/shared/projects/dev_lib/inc</IncludePath>
+    <LibraryPath>/usr/local/lib</LibraryPath>
+    <RemoteLdCommmandTimeout>3600000</RemoteLdCommmandTimeout>
   </PropertyGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\local\libusb\out\include\libusb-1.0\libusb.h" />
+    <ClInclude Include="..\shared\3thpart\inc\hidapi.h" />
+    <ClInclude Include="..\shared\3thpart\src\linux\hidapi_libusb.h" />
+    <ClInclude Include="..\shared\3thpart\src\linux\hidapi_thread_pthread.h" />
+    <ClInclude Include="..\shared\common\inc\ckey_map.h" />
+    <ClInclude Include="..\shared\common\inc\cprotocol_lpu237.h" />
+    <ClInclude Include="..\shared\common\inc\lpu230\compiler.h" />
+    <ClInclude Include="..\shared\common\inc\lpu230\config\cfg_msrlib.h" />
+    <ClInclude Include="..\shared\common\inc\lpu230\info_msr.h" />
+    <ClInclude Include="..\shared\common\inc\lpu230\info_sys.h" />
+    <ClInclude Include="..\shared\common\inc\lpu230\info_sys_cnst.h" />
+    <ClInclude Include="..\shared\common\inc\lpu230\KBConst.h" />
+    <ClInclude Include="..\shared\lib\inc\hid\_hid_api_briage.h" />
+    <ClInclude Include="..\shared\lib\inc\hid\_vhid_api_briage.h" />
+    <ClInclude Include="..\shared\lib\inc\hid\_vhid_info.h" />
+    <ClInclude Include="..\shared\lib\inc\hid\_vhid_info_lpu237.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_cconvert.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_cfile.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_clog.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_cnamed_pipe_.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_coperation.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_cqueue.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_cstring.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_cversion.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_cwait.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_elpusk.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_icprotocol.h" />
     <ClInclude Include="..\shared\lib\inc\mp_os_type.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_type.h" />
+    <ClInclude Include="..\shared\lib\inc\usb\mp_clibusb.h" />
     <ClInclude Include="..\shared\projects\dev_lib\inc\dev_lib.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\shared\3thpart\src\linux\hid.c" />
+    <ClCompile Include="..\shared\lib\inc\mp_cnamed_pipe_.cpp" />
+    <ClCompile Include="..\shared\lib\src\hid\_hid_api_briage.cpp" />
+    <ClCompile Include="..\shared\lib\src\hid\_vhid_api_briage.cpp" />
     <ClCompile Include="..\shared\projects\dev_lib\src\dev_lib.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -150,13 +191,13 @@
   </ItemGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <Link>
-      <AdditionalLibraryDirectories>/usr/local/libusb/lib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <LibraryDependencies>boost_filesystem</LibraryDependencies>
-      <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_dev_lib/li_dev_lib/li_dev_lib.ld,-soname,libdev_lib.so.1 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalLibraryDirectories>/usr/local/lib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <LibraryDependencies>usb-1.0;boost_filesystem;boost_system;boost_thread</LibraryDependencies>
+      <AdditionalOptions>-ludev -Wl,--version-script=/home/tester/projects/li_dev_lib/li_dev_lib/li_dev_lib.ld,-soname,libdev_lib.so.1 0  %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ClCompile>
-      <PreprocessorDefinitions>__linux__;</PreprocessorDefinitions>
-      <AdditionalOptions>-fPIC %(AdditionalOptions)</AdditionalOptions>
+      <PreprocessorDefinitions>_SET_THREAD_NAME_;__linux__;USING_HIDAPI_LIBUSB;</PreprocessorDefinitions>
+      <AdditionalOptions>-pthread -fPIC %(AdditionalOptions)</AdditionalOptions>
       <CppLanguageStandard>c++17</CppLanguageStandard>
       <PositionIndependentCode>false</PositionIndependentCode>
       <AdditionalIncludeDirectories>$(SolutionDir)shared/projects/dev_lib/inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -167,13 +208,13 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
     <Link>
-      <AdditionalLibraryDirectories>/usr/local/libusb/lib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <LibraryDependencies>boost_filesystem</LibraryDependencies>
-      <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_dev_lib/li_dev_lib/li_dev_lib.ld,-soname,libdev_lib.so.1 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalLibraryDirectories>/usr/local/lib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <LibraryDependencies>usb-1.0;boost_filesystem;boost_system;boost_thread</LibraryDependencies>
+      <AdditionalOptions>-ludev -Wl,--version-script=/home/tester/projects/li_dev_lib/li_dev_lib/li_dev_lib.ld,-soname,libdev_lib.so.1 0  %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ClCompile>
-      <PreprocessorDefinitions>__linux__;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalOptions>-fPIC %(AdditionalOptions)</AdditionalOptions>
+      <PreprocessorDefinitions>_SET_THREAD_NAME_;__linux__;USING_HIDAPI_LIBUSB;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalOptions>-pthread -fPIC %(AdditionalOptions)</AdditionalOptions>
       <CppLanguageStandard>c++17</CppLanguageStandard>
       <PositionIndependentCode>false</PositionIndependentCode>
       <AdditionalIncludeDirectories>$(SolutionDir)shared/projects/dev_lib/inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -184,13 +225,13 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <Link>
-      <AdditionalLibraryDirectories>/usr/local/libusb/lib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <LibraryDependencies>boost_filesystem</LibraryDependencies>
-      <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_dev_lib/li_dev_lib/li_dev_lib.ld,-soname,libdev_lib.so.1 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalLibraryDirectories>/usr/local/lib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <LibraryDependencies>usb-1.0;boost_filesystem;boost_system;boost_thread</LibraryDependencies>
+      <AdditionalOptions>-ludev -Wl,--version-script=/home/tester/projects/li_dev_lib/li_dev_lib/li_dev_lib.ld,-soname,libdev_lib.so.1 0  %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ClCompile>
-      <PreprocessorDefinitions>__linux__;</PreprocessorDefinitions>
-      <AdditionalOptions>-fPIC %(AdditionalOptions)</AdditionalOptions>
+      <PreprocessorDefinitions>_SET_THREAD_NAME_;__linux__;USING_HIDAPI_LIBUSB;</PreprocessorDefinitions>
+      <AdditionalOptions>-pthread -fPIC %(AdditionalOptions)</AdditionalOptions>
       <CppLanguageStandard>c++17</CppLanguageStandard>
       <PositionIndependentCode>false</PositionIndependentCode>
       <AdditionalIncludeDirectories>$(SolutionDir)shared/projects/dev_lib/inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -201,13 +242,13 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <Link>
-      <AdditionalLibraryDirectories>/usr/local/libusb/lib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <LibraryDependencies>boost_filesystem</LibraryDependencies>
-      <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_dev_lib/li_dev_lib/li_dev_lib.ld,-soname,libdev_lib.so.1 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalLibraryDirectories>/usr/local/lib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <LibraryDependencies>usb-1.0;boost_filesystem;boost_system;boost_thread</LibraryDependencies>
+      <AdditionalOptions>-ludev -Wl,--version-script=/home/tester/projects/li_dev_lib/li_dev_lib/li_dev_lib.ld,-soname,libdev_lib.so.1 0  %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ClCompile>
-      <PreprocessorDefinitions>__linux__;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalOptions>-fPIC %(AdditionalOptions)</AdditionalOptions>
+      <PreprocessorDefinitions>_SET_THREAD_NAME_;__linux__;USING_HIDAPI_LIBUSB;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalOptions>-pthread -fPIC %(AdditionalOptions)</AdditionalOptions>
       <CppLanguageStandard>c++17</CppLanguageStandard>
       <PositionIndependentCode>false</PositionIndependentCode>
       <AdditionalIncludeDirectories>$(SolutionDir)shared/projects/dev_lib/inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -218,13 +259,13 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Link>
-      <AdditionalLibraryDirectories>/usr/local/libusb/lib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <LibraryDependencies>boost_filesystem</LibraryDependencies>
+      <AdditionalLibraryDirectories>/usr/local/lib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <LibraryDependencies>usb-1.0;boost_filesystem;boost_system;boost_thread</LibraryDependencies>
       <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_dev_lib/li_dev_lib/li_dev_lib.ld,-soname,libdev_lib.so.1 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ClCompile>
-      <PreprocessorDefinitions>__linux__;</PreprocessorDefinitions>
-      <AdditionalOptions>-fPIC %(AdditionalOptions)</AdditionalOptions>
+      <PreprocessorDefinitions>_SET_THREAD_NAME_;__linux__;USING_HIDAPI_LIBUSB;_DEBUG</PreprocessorDefinitions>
+      <AdditionalOptions>-pthread -fPIC %(AdditionalOptions)</AdditionalOptions>
       <CppLanguageStandard>c++17</CppLanguageStandard>
       <PositionIndependentCode>false</PositionIndependentCode>
       <AdditionalIncludeDirectories>$(SolutionDir)shared/projects/dev_lib/inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -235,16 +276,17 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Link>
-      <AdditionalLibraryDirectories>/usr/local/libusb/lib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <LibraryDependencies>boost_filesystem</LibraryDependencies>
-      <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_dev_lib/li_dev_lib/li_dev_lib.ld,-soname,libdev_lib.so.1 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalLibraryDirectories>/usr/local/lib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <LibraryDependencies>usb-1.0;boost_filesystem;boost_system;boost_thread</LibraryDependencies>
+      <AdditionalOptions>-ludev -Wl,--version-script=/home/tester/projects/li_dev_lib/li_dev_lib/li_dev_lib.ld,-soname,libdev_lib.so.1 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ClCompile>
-      <PreprocessorDefinitions>__linux__;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalOptions>-fPIC %(AdditionalOptions)</AdditionalOptions>
+      <PreprocessorDefinitions>_SET_THREAD_NAME_;__linux__;USING_HIDAPI_LIBUSB;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalOptions>-pthread -fPIC %(AdditionalOptions)</AdditionalOptions>
       <CppLanguageStandard>c++17</CppLanguageStandard>
       <PositionIndependentCode>false</PositionIndependentCode>
       <AdditionalIncludeDirectories>$(SolutionDir)shared/projects/dev_lib/inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <Optimization>MinSize</Optimization>
     </ClCompile>
     <RemotePostBuildEvent>
       <Command>rm $(RemoteOutDir)$(TargetName).so;rm $(RemoteOutDir)$(TargetName).so.1;ln -sf $(RemoteOutDir)$(TargetFileName) $(RemoteOutDir)$(TargetName).so.1;ln -sf $(RemoteOutDir)$(TargetName).so.1 $(RemoteOutDir)$(TargetName).so</Command>
@@ -252,13 +294,13 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
     <Link>
-      <AdditionalLibraryDirectories>/usr/local/libusb/lib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <LibraryDependencies>boost_filesystem</LibraryDependencies>
-      <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_dev_lib/li_dev_lib/li_dev_lib.ld,-soname,libdev_lib.so.1 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalLibraryDirectories>/usr/local/lib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <LibraryDependencies>usb-1.0;boost_filesystem;boost_system;boost_thread</LibraryDependencies>
+      <AdditionalOptions>-ludev -Wl,--version-script=/home/tester/projects/li_dev_lib/li_dev_lib/li_dev_lib.ld,-soname,libdev_lib.so.1 0  %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ClCompile>
-      <PreprocessorDefinitions>__linux__;</PreprocessorDefinitions>
-      <AdditionalOptions>-fPIC %(AdditionalOptions)</AdditionalOptions>
+      <PreprocessorDefinitions>_SET_THREAD_NAME_;__linux__;USING_HIDAPI_LIBUSB;</PreprocessorDefinitions>
+      <AdditionalOptions>-pthread -fPIC %(AdditionalOptions)</AdditionalOptions>
       <CppLanguageStandard>c++17</CppLanguageStandard>
       <PositionIndependentCode>false</PositionIndependentCode>
       <AdditionalIncludeDirectories>$(SolutionDir)shared/projects/dev_lib/inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -269,13 +311,13 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
     <Link>
-      <AdditionalLibraryDirectories>/usr/local/libusb/lib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <LibraryDependencies>boost_filesystem</LibraryDependencies>
-      <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_dev_lib/li_dev_lib/li_dev_lib.ld,-soname,libdev_lib.so.1 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalLibraryDirectories>/usr/local/lib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <LibraryDependencies>usb-1.0;boost_filesystem;boost_system;boost_thread</LibraryDependencies>
+      <AdditionalOptions>-ludev -Wl,--version-script=/home/tester/projects/li_dev_lib/li_dev_lib/li_dev_lib.ld,-soname,libdev_lib.so.1 0  %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ClCompile>
-      <PreprocessorDefinitions>__linux__;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalOptions>-fPIC %(AdditionalOptions)</AdditionalOptions>
+      <PreprocessorDefinitions>_SET_THREAD_NAME_;__linux__;USING_HIDAPI_LIBUSB;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalOptions>-pthread -fPIC %(AdditionalOptions)</AdditionalOptions>
       <CppLanguageStandard>c++17</CppLanguageStandard>
       <PositionIndependentCode>false</PositionIndependentCode>
       <AdditionalIncludeDirectories>$(SolutionDir)shared/projects/dev_lib/inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>

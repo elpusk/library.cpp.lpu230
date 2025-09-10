@@ -10,6 +10,24 @@
     <Filter Include="Source Files">
       <UniqueIdentifier>{0fbe654f-4324-4c4b-ac62-b66f8c0c5037}</UniqueIdentifier>
     </Filter>
+    <Filter Include="3thpart">
+      <UniqueIdentifier>{e1707a92-855a-4ebe-bc86-97da892cc9bd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\hid">
+      <UniqueIdentifier>{f5de9197-0f6a-43ad-af59-c19c0fefb462}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common">
+      <UniqueIdentifier>{878e7296-f491-4ad8-b442-d688717cb919}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common\lpu230">
+      <UniqueIdentifier>{ff2159ed-6e4f-4380-ae5c-6350bb5285d1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common\lpu230\config">
+      <UniqueIdentifier>{63529c27-c54d-43c6-8cd1-316ec62be2c3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\usb">
+      <UniqueIdentifier>{2d3e34c0-5c72-4c7d-988d-266cd84cefc8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\projects\dev_lib\inc\dev_lib.h">
@@ -18,10 +36,109 @@
     <ClInclude Include="..\shared\lib\inc\mp_os_type.h">
       <Filter>lib</Filter>
     </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_type.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\3thpart\inc\hidapi.h">
+      <Filter>3thpart</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\local\libusb\out\include\libusb-1.0\libusb.h">
+      <Filter>3thpart</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\hid\_hid_api_briage.h">
+      <Filter>lib\hid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\hid\_vhid_api_briage.h">
+      <Filter>lib\hid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\hid\_vhid_info.h">
+      <Filter>lib\hid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\hid\_vhid_info_lpu237.h">
+      <Filter>lib\hid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_elpusk.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\cprotocol_lpu237.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\lpu230\compiler.h">
+      <Filter>common\lpu230</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\lpu230\info_msr.h">
+      <Filter>common\lpu230</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\lpu230\info_sys.h">
+      <Filter>common\lpu230</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\lpu230\info_sys_cnst.h">
+      <Filter>common\lpu230</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\lpu230\KBConst.h">
+      <Filter>common\lpu230</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\lpu230\config\cfg_msrlib.h">
+      <Filter>common\lpu230\config</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cstring.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\usb\mp_clibusb.h">
+      <Filter>lib\usb</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_clog.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cconvert.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cfile.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cnamed_pipe_.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_coperation.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cversion.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_icprotocol.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\ckey_map.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\3thpart\src\linux\hidapi_libusb.h">
+      <Filter>3thpart</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\3thpart\src\linux\hidapi_thread_pthread.h">
+      <Filter>3thpart</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cwait.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cqueue.h">
+      <Filter>lib</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\shared\projects\dev_lib\src\dev_lib.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\lib\src\hid\_hid_api_briage.cpp">
+      <Filter>lib\hid</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\lib\src\hid\_vhid_api_briage.cpp">
+      <Filter>lib\hid</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\lib\inc\mp_cnamed_pipe_.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\3thpart\src\linux\hid.c">
+      <Filter>3thpart</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
