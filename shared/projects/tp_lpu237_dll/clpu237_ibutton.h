@@ -228,6 +228,11 @@ public:
 		bool b_result(false);
 
 		do {
+			if (m_hMode) {
+				b_result = true; //already loaded
+				continue;
+			}
+
 			m_hMode = _load_lib(s_lib);
 			if (m_hMode == NULL)
 				continue;

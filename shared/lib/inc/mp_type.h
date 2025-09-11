@@ -182,4 +182,18 @@ namespace _mp{
 
     typedef	std::vector< type_bm_dev > type_v_bm_dev;
 
+    // For construting one transaction, the next request type.
+    typedef	enum : int {
+        // the current transaction is terminated in the current phase(request).
+        next_io_none = -1,
+
+        // the current transaction isn't terminated in the current phase(request).
+        // the next phase is writing request.
+        next_io_write = -2,
+
+        // the current transaction isn't terminated in the current phase(request).
+        // the next phase is reaing request.
+        next_io_read = -3
+    }type_next_io;
+
 }

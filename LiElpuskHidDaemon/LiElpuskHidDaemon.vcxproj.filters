@@ -82,6 +82,9 @@
     <ClCompile Include="..\shared\common\src\main_terminal.cpp">
       <Filter>common</Filter>
     </ClCompile>
+    <ClCompile Include="..\shared\common\src\chid_briage.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="3thpart">
@@ -333,6 +336,15 @@
       <Filter>lib</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\common\inc\cbootloader_lpu237.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\cdev_lib.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\chid_briage.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\projects\dev_lib\inc\dev_lib.h">
       <Filter>common</Filter>
     </ClInclude>
   </ItemGroup>

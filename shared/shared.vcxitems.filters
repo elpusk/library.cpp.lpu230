@@ -323,6 +323,9 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\mp_os_type.h">
       <Filter>lib\inc</Filter>
     </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)common\inc\cdev_lib.h">
+      <Filter>common\inc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)..\README.md" />

@@ -16,6 +16,7 @@
 #include <server/mp_cserver_.h>
 
 #include <cfile_coffee_manager_ini.h>
+#include <cdev_lib.h>
 
 
 static _mp::cnamed_pipe::type_ptr gptr_ctl_pipe;
@@ -50,6 +51,8 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 	std::wstring s_pid_file_full_path = cdef_const::get_pid_file_full_path();
 
 	std::wstring s_ini_file_full_path_of_coffee_mgmt(_mp::ccoffee_path::get_path_of_coffee_mgmt_ini_file());
+
+	std::wstring s_dev_lib_dll_abs_full_path(_mp::ccoffee_path::get_abs_full_path_of_dev_lib_dll());
 
 	long long ll_server_worker_sleep_interval_mmsec = 3;
 
@@ -118,6 +121,13 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 		log.log_fmt(L"[I] sid: %5d, pgid: %5d, pid: %5d, ppid: %5d.\n", (int)getsid(0), (int)getpgid(0), (int)getpid(), (int)getppid());
 		log.trace(L"[I] sid: %5d, pgid: %5d, pid: %5d, ppid: %5d.\n", (int)getsid(0), (int)getpgid(0), (int)getpid(), (int)getppid());
 #endif
+		//////////////////////////////////////////////////////////////
+		// load dev_lib.dll(.so)
+		if (!cdev_lib::get_instance().load(s_dev_lib_dll_abs_full_path)) {
+			log.log_fmt(L"[E] %ls | load dev_lib.dll(.so) | %ls.\n", __WFUNCTION__, s_dev_lib_dll_abs_full_path.c_str());
+			log.trace(L"[E] %ls | load dev_lib.dll(.so) | %ls.\n", __WFUNCTION__, s_dev_lib_dll_abs_full_path.c_str());
+			n_result = cdef_const::exit_error_create_ctl_pipe;
+		}
 
 		//////////////////////////////////////////////////////////////
 		// setup secure web socket server

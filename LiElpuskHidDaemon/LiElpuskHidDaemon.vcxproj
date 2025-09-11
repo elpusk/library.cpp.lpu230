@@ -85,54 +85,55 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <TargetName>elpusk-hid-d</TargetName>
     <TargetExt />
-    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/openssl-1.1.1s;/usr/local/libusb/include/libusb-1.0;/usr/local/json/include;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc;$(SolutionDir)\shared\3thpart\src\win;/usr/local/openssl-1.1.1s/include;~/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/3thpart/src/linux;~/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/projects/ElpuskHidDaemon/inc</IncludePath>
+    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/openssl-1.1.1s;/usr/local/libusb/include/libusb-1.0;/usr/local/json/include;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc;$(SolutionDir)\shared\3thpart\src\win;/usr/local/openssl-1.1.1s/include;~/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/3thpart/src/linux;~/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/projects/ElpuskHidDaemon/inc;~/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/projects/dev_lib/inc</IncludePath>
     <LibraryPath>/usr/local/openssl-1.1.1s/lib;$(LibraryPath);/usr/local/lib</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
     <TargetName>elpusk-hid-d</TargetName>
     <TargetExt />
-    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/openssl-1.1.1s;/usr/local/libusb/include/libusb-1.0;/usr/local/json/include;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc;$(SolutionDir)\shared\3thpart\src\win;/usr/local/openssl-1.1.1s/include;~/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/3thpart/src/linux;~/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/projects/ElpuskHidDaemon/inc</IncludePath>
+    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/openssl-1.1.1s;/usr/local/libusb/include/libusb-1.0;/usr/local/json/include;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc;$(SolutionDir)\shared\3thpart\src\win;/usr/local/openssl-1.1.1s/include;~/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/3thpart/src/linux;~/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/projects/ElpuskHidDaemon/inc;~/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/projects/dev_lib/inc</IncludePath>
     <LibraryPath>/usr/local/openssl-1.1.1s/lib;$(LibraryPath);/usr/local/lib</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <TargetName>elpusk-hid-d</TargetName>
     <TargetExt />
-    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/openssl-1.1.1s;/usr/local/libusb/include/libusb-1.0;/usr/local/json/include;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc;$(SolutionDir)\shared\3thpart\src\win;/usr/local/openssl-1.1.1s/include;~/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/3thpart/src/linux;~/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/projects/ElpuskHidDaemon/inc</IncludePath>
+    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/openssl-1.1.1s;/usr/local/libusb/include/libusb-1.0;/usr/local/json/include;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc;$(SolutionDir)\shared\3thpart\src\win;/usr/local/openssl-1.1.1s/include;~/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/3thpart/src/linux;~/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/projects/ElpuskHidDaemon/inc;~/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/projects/dev_lib/inc</IncludePath>
     <LibraryPath>/usr/local/openssl-1.1.1s/lib;$(LibraryPath);/usr/local/lib</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <TargetName>elpusk-hid-d</TargetName>
     <TargetExt />
-    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/openssl-1.1.1s;/usr/local/libusb/include/libusb-1.0;/usr/local/json/include;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc;$(SolutionDir)\shared\3thpart\src\win;/usr/local/openssl-1.1.1s/include;~/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/3thpart/src/linux;~/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/projects/ElpuskHidDaemon/inc</IncludePath>
+    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/openssl-1.1.1s;/usr/local/libusb/include/libusb-1.0;/usr/local/json/include;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc;$(SolutionDir)\shared\3thpart\src\win;/usr/local/openssl-1.1.1s/include;~/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/3thpart/src/linux;~/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/projects/ElpuskHidDaemon/inc;~/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/projects/dev_lib/inc</IncludePath>
     <LibraryPath>/usr/local/openssl-1.1.1s/lib;$(LibraryPath);/usr/local/lib</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <TargetName>elpusk-hid-d</TargetName>
     <TargetExt />
-    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/openssl-1.1.1s;/usr/local/libusb/include/libusb-1.0;/usr/local/json/include;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc;$(SolutionDir)\shared\3thpart\src\win;/usr/local/openssl-1.1.1s/include;~/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/3thpart/src/linux;~/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/projects/ElpuskHidDaemon/inc</IncludePath>
+    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/openssl-1.1.1s;/usr/local/libusb/include/libusb-1.0;/usr/local/json/include;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc;$(SolutionDir)\shared\3thpart\src\win;/usr/local/openssl-1.1.1s/include;~/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/3thpart/src/linux;~/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/projects/ElpuskHidDaemon/inc;~/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/projects/dev_lib/inc</IncludePath>
     <LibraryPath>/usr/local/openssl-1.1.1s/lib;$(LibraryPath);/usr/local/lib</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <TargetName>elpusk-hid-d</TargetName>
     <TargetExt />
-    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/openssl-1.1.1s;/usr/local/libusb/include/libusb-1.0;/usr/local/json/include;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc;$(SolutionDir)\shared\3thpart\src\win;/usr/local/openssl-1.1.1s/include;~/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/3thpart/src/linux;~/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/projects/ElpuskHidDaemon/inc</IncludePath>
+    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/openssl-1.1.1s;/usr/local/libusb/include/libusb-1.0;/usr/local/json/include;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc;$(SolutionDir)\shared\3thpart\src\win;/usr/local/openssl-1.1.1s/include;~/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/3thpart/src/linux;~/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/projects/ElpuskHidDaemon/inc;~/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/projects/dev_lib/inc</IncludePath>
     <LibraryPath>/usr/local/openssl-1.1.1s/lib;$(LibraryPath);/usr/local/lib</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
     <TargetName>elpusk-hid-d</TargetName>
     <TargetExt />
-    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/openssl-1.1.1s;/usr/local/libusb/include/libusb-1.0;/usr/local/json/include;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc;$(SolutionDir)\shared\3thpart\src\win;/usr/local/openssl-1.1.1s/include;~/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/3thpart/src/linux;~/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/projects/ElpuskHidDaemon/inc</IncludePath>
+    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/openssl-1.1.1s;/usr/local/libusb/include/libusb-1.0;/usr/local/json/include;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc;$(SolutionDir)\shared\3thpart\src\win;/usr/local/openssl-1.1.1s/include;~/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/3thpart/src/linux;~/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/projects/ElpuskHidDaemon/inc;~/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/projects/dev_lib/inc</IncludePath>
     <LibraryPath>/usr/local/openssl-1.1.1s/lib;$(LibraryPath);/usr/local/lib</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
     <TargetName>elpusk-hid-d</TargetName>
     <TargetExt />
-    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/openssl-1.1.1s;/usr/local/libusb/include/libusb-1.0;/usr/local/json/include;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc;$(SolutionDir)\shared\3thpart\src\win;/usr/local/openssl-1.1.1s/include;~/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/3thpart/src/linux;~/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/projects/ElpuskHidDaemon/inc</IncludePath>
+    <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/openssl-1.1.1s;/usr/local/libusb/include/libusb-1.0;/usr/local/json/include;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc;$(SolutionDir)\shared\3thpart\src\win;/usr/local/openssl-1.1.1s/include;~/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/3thpart/src/linux;~/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/projects/ElpuskHidDaemon/inc;~/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/projects/dev_lib/inc</IncludePath>
     <LibraryPath>/usr/local/openssl-1.1.1s/lib;$(LibraryPath);/usr/local/lib</LibraryPath>
   </PropertyGroup>
   <ItemGroup>
     <ClCompile Include="..\shared\3thpart\src\linux\hid.c" />
     <ClCompile Include="..\shared\common\src\cbootloader_lpu237.cpp" />
+    <ClCompile Include="..\shared\common\src\chid_briage.cpp" />
     <ClCompile Include="..\shared\common\src\main_bye.cpp" />
     <ClCompile Include="..\shared\common\src\main_cert.cpp" />
     <ClCompile Include="..\shared\common\src\main_remove_all.cpp" />
@@ -174,6 +175,8 @@
     <ClInclude Include="..\shared\3thpart\src\linux\hidapi_libusb.h" />
     <ClInclude Include="..\shared\3thpart\src\linux\hidapi_thread_pthread.h" />
     <ClInclude Include="..\shared\common\inc\cbootloader_lpu237.h" />
+    <ClInclude Include="..\shared\common\inc\cdev_lib.h" />
+    <ClInclude Include="..\shared\common\inc\chid_briage.h" />
     <ClInclude Include="..\shared\common\inc\ckey_map.h" />
     <ClInclude Include="..\shared\common\inc\cprotocol_lpu237.h" />
     <ClInclude Include="..\shared\common\inc\lpu230\compiler.h" />
@@ -240,6 +243,7 @@
     <ClInclude Include="..\shared\lib\inc\websocket\mp_win_nt.h" />
     <ClInclude Include="..\shared\lib\inc\websocket\mp_ws_tools.h" />
     <ClInclude Include="..\shared\lib\inc\_dev\mp_cdev_util.h" />
+    <ClInclude Include="..\shared\projects\dev_lib\inc\dev_lib.h" />
     <ClInclude Include="..\shared\projects\ElpuskHidDaemon\inc\cfile_coffee_manager_ini.h" />
   </ItemGroup>
   <ItemGroup>

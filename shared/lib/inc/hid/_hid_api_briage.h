@@ -30,20 +30,6 @@ public:
 		const_default_hid_write_interval_mmsec = 1
 	};
 
-	// For construting one transaction, the next request type.
-	typedef	enum : int{
-		// the current transaction is terminated in the current phase(request).
-		next_io_none = -1, 
-
-		// the current transaction isn't terminated in the current phase(request).
-		// the next phase is writing request.
-		next_io_write = -2, 
-		
-		// the current transaction isn't terminated in the current phase(request).
-		// the next phase is reaing request.
-		next_io_read = -3
-	}type_next_io;
-
 protected:
 	enum {
 		const_default_req_q_check_interval_mmsec_of_child = 1 // for child class, the child will use worker thread.
@@ -168,7 +154,7 @@ public:
 	*
 	* @return -1 : error, else : the size of sent data(on buf).
 	*/
-	virtual int api_write(int n_primitive_map_index, const unsigned char* data, size_t length, _hid_api_briage::type_next_io next);
+	virtual int api_write(int n_primitive_map_index, const unsigned char* data, size_t length, _mp::type_next_io next);
 
 	/**
 	* @brief receive data from device.(hid_read())

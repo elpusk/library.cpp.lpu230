@@ -750,7 +750,7 @@ int _hid_api_briage::api_get_report_descriptor(int n_primitive_map_index, unsign
     return hid_get_report_descriptor(p_dev, buf, buf_size);
 }
 
-int _hid_api_briage::api_write(int n_primitive_map_index, const unsigned char* data, size_t length, _hid_api_briage::type_next_io next)
+int _hid_api_briage::api_write(int n_primitive_map_index, const unsigned char* data, size_t length, _mp::type_next_io next)
 {
     std::lock_guard<std::mutex> lock(_hid_api_briage::get_mutex_for_hidapi());
 

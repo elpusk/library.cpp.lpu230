@@ -82,6 +82,7 @@ namespace _mp{
         constexpr const wchar_t* CONST_S_DIR_MGMT_EXCEPT_BACKSLASH = L"/home/tester/projects/LiElpuskHidDaemon/bin/x64/Debug";
         constexpr const wchar_t* CONST_S_DIR_DLL_EXCEPT_BACKSLASH = L"/home/tester/projects/LiElpuskHidDaemon/bin/x64/Debug";
         constexpr const wchar_t* CONST_S_DIR_DLL_ROM_SO = L"/home/tester/projects/li_rom/bin/x64/Debug/libtg_rom.so";
+        constexpr const wchar_t* CONST_S_DIR_DLL_DEV_LIB_SO = L"/home/tester/projects/li_rom/bin/x64/Debug/libdev_lib.so";
 #else
         constexpr const wchar_t* CONST_S_CERT_ABS_FULL_PATH = L"/usr/share/elpusk/programdata/00000006/coffee_manager/data/server/coffee_server.crt";
         constexpr const wchar_t* CONST_S_PRIVATE_KEY_ABS_FULL_PATH = L"/usr/share/elpusk/programdata/00000006/coffee_manager/data/server/coffee_server.key";

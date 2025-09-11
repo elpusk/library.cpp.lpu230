@@ -48,6 +48,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)3thpart\src\win\hidapi_hidsdi.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)3thpart\src\win\hidapi_winapi.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)common\inc\capi_client.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)common\inc\cdev_lib.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)common\inc\ckey_map.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)common\inc\cprotocol_lpu237.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)common\inc\i_device_of_client.h" />

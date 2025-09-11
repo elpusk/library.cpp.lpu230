@@ -55,13 +55,13 @@ private:
 		*/
 		void setup_for_set_nonblocking(int nonblock);
 		void setup_for_get_report_descriptor( unsigned char* buf, size_t buf_size);
-		void setup_for_write(const unsigned char* data, size_t length, _hid_api_briage::type_next_io next);
+		void setup_for_write(const unsigned char* data, size_t length, _mp::type_next_io next);
 		void setup_for_read(unsigned char* data, size_t length, size_t n_report);
 
 		_vhid_api_briage::_q_item::type_cmd get_cmd() const;
 		std::wstring get_cmd_by_string() const;
 		_mp::type_v_buffer get_tx() const;
-		_hid_api_briage::type_next_io get_next_io_type() const;
+		_mp::type_next_io get_next_io_type() const;
 
 		size_t get_rx_size() const;
 		_vhid_api_briage::_q_item& set_rx(const _mp::type_ptr_v_buffer& ptr_v_rx);
@@ -92,7 +92,7 @@ private:
 		_q_item::type_cmd m_cmd;
 		_mp::type_v_buffer m_v_tx, m_v_rx;
 
-		_hid_api_briage::type_next_io m_next;
+		_mp::type_next_io m_next;
 		size_t m_n_in_report;
 		int m_n_rx_timeout_mmsec;
 		
@@ -478,7 +478,7 @@ public:
 	*
 	* @return -1 : error, else : the size of sent data(on buf).
 	*/
-	virtual int api_write(int n_map_index, const unsigned char* data, size_t length, _hid_api_briage::type_next_io next);
+	virtual int api_write(int n_map_index, const unsigned char* data, size_t length, _mp::type_next_io next);
 
 	/**
 	* @brief receive data from device.(hid_read()).

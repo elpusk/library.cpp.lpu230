@@ -309,7 +309,7 @@ namespace _mp {
             int n_result = -1;
             b_result = true;
 
-            _hid_api_briage::type_next_io next(_hid_api_briage::next_io_none);
+            _mp::type_next_io next(_mp::next_io_none);
 
             for (size_t i = 0; i < n_loop; i++) {
                 std::fill(v_report.begin(), v_report.end(), 0);
@@ -323,14 +323,14 @@ namespace _mp {
                 if (i + 1 == n_loop) {
                     //last write
                     if (b_req_is_tx_rx_pair) {
-                        next = _hid_api_briage::next_io_read;
+                        next = _mp::next_io_read;
                     }
                     else {
-                        next = _hid_api_briage::next_io_none;
+                        next = _mp::next_io_none;
                     }
                 }
                 else {
-                    next = _hid_api_briage::next_io_write;
+                    next = _mp::next_io_write;
                 }
                 n_result = m_p_hid_api_briage->api_write(m_n_dev, &v_report[0], v_report.size(), next);
                 //_mp::clog::get_instance().log_data_in_debug_mode(v_report, L"v_report = ", L"\n");
@@ -559,7 +559,7 @@ namespace _mp {
                 continue;
             }
 
-            int n_result = m_p_hid_api_briage->api_write(m_n_dev, NULL, 0, _hid_api_briage::next_io_none);
+            int n_result = m_p_hid_api_briage->api_write(m_n_dev, NULL, 0, _mp::next_io_none);
             if (n_result < 0) {
                 _mp::clog::get_instance().log_fmt(L"[E] hid_write()-cancel < 0(n_result) = (%d).\n", n_result);
                 continue;

@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClCompile Include="..\shared\3thpart\src\win\hid.c" />
     <ClCompile Include="..\shared\common\src\cbootloader_lpu237.cpp" />
+    <ClCompile Include="..\shared\common\src\chid_briage.cpp" />
     <ClCompile Include="..\shared\common\src\main_bye.cpp" />
     <ClCompile Include="..\shared\common\src\main_cert.cpp" />
     <ClCompile Include="..\shared\common\src\main_remove_all.cpp" />
@@ -56,6 +57,8 @@
     <ClInclude Include="..\shared\3thpart\inc\hidapi.h" />
     <ClInclude Include="..\shared\3thpart\src\win\hidapi_winapi.h" />
     <ClInclude Include="..\shared\common\inc\cbootloader_lpu237.h" />
+    <ClInclude Include="..\shared\common\inc\cdev_lib.h" />
+    <ClInclude Include="..\shared\common\inc\chid_briage.h" />
     <ClInclude Include="..\shared\common\inc\ckey_map.h" />
     <ClInclude Include="..\shared\common\inc\lpu230\info_sys.h" />
     <ClInclude Include="..\shared\common\inc\lpu230\info_sys_cnst.h" />
@@ -112,6 +115,7 @@
     <ClInclude Include="..\shared\lib\inc\websocket\mp_cws_server.h" />
     <ClInclude Include="..\shared\lib\inc\websocket\mp_ws_tools.h" />
     <ClInclude Include="..\shared\lib\inc\_dev\mp_cdev_util.h" />
+    <ClInclude Include="..\shared\projects\dev_lib\inc\dev_lib.h" />
     <ClInclude Include="..\shared\projects\ElpuskHidDaemon\inc\cfile_coffee_manager_ini.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
@@ -182,28 +186,28 @@
     <ExecutablePath>$(VC_ExecutablePath_x86);$(CommonExecutablePath)</ExecutablePath>
     <LibraryPath>C:\local\boost_1_80_0\stage\lib;C:\local\openssl-1.1.1s\x86\OpenSSL\lib;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);C:\local\libusb\build\v143\Win32\Debug-MT\lib</LibraryPath>
     <SourcePath>C:\local\boost_1_80_0\boost;$(VC_SourcePath);</SourcePath>
-    <IncludePath>C:\local\nlohmann\json\include;C:\local\libusb\libusb;C:\local\boost_1_80_0;$(SolutionDir)shared/lib/inc;$(SolutionDir)shared/common/inc;$(SolutionDir)shared\3thpart\src\win;C:\local\openssl-1.1.1s\x86\OpenSSL\include;$(IncludePath);$(SolutionDir)/shared/projects/ElpuskHidDaemon/inc;C:\local\libusb\out\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <IncludePath>C:\local\nlohmann\json\include;C:\local\libusb\libusb;$(SolutionDir)/shared/projects/dev_lib/inc;C:\local\boost_1_80_0;$(SolutionDir)shared/lib/inc;$(SolutionDir)shared/common/inc;$(SolutionDir)shared\3thpart\src\win;C:\local\openssl-1.1.1s\x86\OpenSSL\include;$(IncludePath);$(SolutionDir)/shared/projects/ElpuskHidDaemon/inc;C:\local\libusb\out\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
     <TargetName>elpusk-hid-d</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ExecutablePath>$(VC_ExecutablePath_x86);$(CommonExecutablePath)</ExecutablePath>
     <LibraryPath>C:\local\boost_1_80_0\stage\lib;C:\local\openssl-1.1.1s\x86\OpenSSL\lib;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);C:\local\libusb\build\v143\Win32\Release-MT\lib</LibraryPath>
     <SourcePath>C:\local\boost_1_80_0\boost;$(VC_SourcePath);</SourcePath>
-    <IncludePath>C:\local\nlohmann\json\include;C:\local\libusb\libusb;C:\local\boost_1_80_0;$(SolutionDir)shared/lib/inc;$(SolutionDir)shared/common/inc;$(SolutionDir)shared\3thpart\src\win;C:\local\openssl-1.1.1s\x86\OpenSSL\include;$(IncludePath);$(SolutionDir)/shared/projects/ElpuskHidDaemon/inc;C:\local\libusb\out\include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <IncludePath>C:\local\nlohmann\json\include;C:\local\libusb\libusb;$(SolutionDir)/shared/projects/dev_lib/inc;C:\local\boost_1_80_0;$(SolutionDir)shared/lib/inc;$(SolutionDir)shared/common/inc;$(SolutionDir)shared\3thpart\src\win;C:\local\openssl-1.1.1s\x86\OpenSSL\include;$(IncludePath);$(SolutionDir)/shared/projects/ElpuskHidDaemon/inc;C:\local\libusb\out\include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
     <TargetName>elpusk-hid-d</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ExecutablePath>$(VC_ExecutablePath_x64);$(CommonExecutablePath)</ExecutablePath>
     <LibraryPath>C:\local\boost_1_80_0\stage\lib;$(VC_LibraryPath_x64);C:\local\openssl-1.1.1s\x64\OpenSSL\lib;$(WindowsSDK_LibraryPath_x64);C:\local\libusb\build\v143\x64\Debug-MT\lib</LibraryPath>
     <SourcePath>C:\local\boost_1_80_0\boost;$(VC_SourcePath);</SourcePath>
-    <IncludePath>C:\local\nlohmann\json\include;C:\local\libusb\libusb;$(VC_IncludePath);$(SolutionDir)shared/lib/inc;$(SolutionDir)shared/common/inc;$(SolutionDir)shared\3thpart\src\win;$(IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)/shared/projects/ElpuskHidDaemon/inc;C:\local\libusb\out\include;C:\local\boost_1_80_0;C:\local\openssl-1.1.1s\x64\OpenSSL\include</IncludePath>
+    <IncludePath>C:\local\nlohmann\json\include;C:\local\libusb\libusb;$(SolutionDir)/shared/projects/dev_lib/inc;$(VC_IncludePath);$(SolutionDir)shared/lib/inc;$(SolutionDir)shared/common/inc;$(SolutionDir)shared\3thpart\src\win;$(IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)/shared/projects/ElpuskHidDaemon/inc;C:\local\libusb\out\include;C:\local\boost_1_80_0;C:\local\openssl-1.1.1s\x64\OpenSSL\include</IncludePath>
     <TargetName>elpusk-hid-d</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ExecutablePath>$(VC_ExecutablePath_x64);$(CommonExecutablePath)</ExecutablePath>
     <LibraryPath>C:\local\boost_1_80_0\stage\lib;$(VC_LibraryPath_x64);C:\local\openssl-1.1.1s\x64\OpenSSL\lib;$(WindowsSDK_LibraryPath_x64);C:\local\libusb\build\v143\x64\Release-MT\lib</LibraryPath>
     <SourcePath>C:\local\boost_1_80_0\boost;$(VC_SourcePath);</SourcePath>
-    <IncludePath>C:\local\nlohmann\json\include;C:\local\libusb\libusb;$(VC_IncludePath);$(SolutionDir)shared/lib/inc;$(SolutionDir)shared/common/inc;$(SolutionDir)shared\3thpart\src\win;$(IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)/shared/projects/ElpuskHidDaemon/inc;C:\local\libusb\out\include;C:\local\boost_1_80_0;C:\local\openssl-1.1.1s\x64\OpenSSL\include</IncludePath>
+    <IncludePath>C:\local\nlohmann\json\include;C:\local\libusb\libusb;$(SolutionDir)/shared/projects/dev_lib/inc;$(VC_IncludePath);$(SolutionDir)shared/lib/inc;$(SolutionDir)shared/common/inc;$(SolutionDir)shared\3thpart\src\win;$(IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)/shared/projects/ElpuskHidDaemon/inc;C:\local\libusb\out\include;C:\local\boost_1_80_0;C:\local\openssl-1.1.1s\x64\OpenSSL\include</IncludePath>
     <TargetName>elpusk-hid-d</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">

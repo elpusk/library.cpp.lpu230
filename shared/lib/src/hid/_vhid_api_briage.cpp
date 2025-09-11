@@ -296,7 +296,7 @@ int _vhid_api_briage::api_get_report_descriptor(int n_map_index, unsigned char* 
     return n_result;
 }
 
-int _vhid_api_briage::api_write(int n_map_index, const unsigned char* data, size_t length, _hid_api_briage::type_next_io next)
+int _vhid_api_briage::api_write(int n_map_index, const unsigned char* data, size_t length, _mp::type_next_io next)
 {
     bool b_run(false);
     int n_result(-1);
@@ -323,7 +323,7 @@ int _vhid_api_briage::api_write(int n_map_index, const unsigned char* data, size
             continue;
         }
 
-        if (next == _hid_api_briage::next_io_read && it->second.first->is_lpu237_device()) {
+        if (next == _mp::next_io_read && it->second.first->is_lpu237_device()) {
             //TODO....
         }
         b_run = true;
@@ -334,7 +334,7 @@ int _vhid_api_briage::api_write(int n_map_index, const unsigned char* data, size
             continue;
         }
         //
-        if (next == _hid_api_briage::next_io_none) {
+        if (next == _mp::next_io_none) {
             //waits response
             ptr_item->waits();
             //rx data will be save on buf directly.
@@ -638,7 +638,7 @@ std::tuple<bool,int> _vhid_api_briage::_q_worker::_process_req(
         //
         size_t n_size_report_in(0);
         //
-        _hid_api_briage::type_next_io next_io(_hid_api_briage::next_io_none);
+        _mp::type_next_io next_io(_mp::next_io_none);
 
         // setup parameter from request 
         if (ptr_item->get_user_rx_buffer() && ptr_item->get_user_rx_buffer_size() > 0) {
@@ -714,7 +714,7 @@ std::pair<bool, _mp::type_v_buffer> _vhid_api_briage::_q_worker::_process(
 
         bool b_complete(true);
         int n_result(-1);
-        _hid_api_briage::type_next_io next_io(_hid_api_briage::next_io_none);
+        _mp::type_next_io next_io(_mp::next_io_none);
 
         if (ptr_list->size() == 1) {
             //single request
@@ -727,7 +727,7 @@ std::pair<bool, _mp::type_v_buffer> _vhid_api_briage::_q_worker::_process(
 
         //
         _q_container::type_list::iterator it_list = ptr_list->begin();//get first request of list
-        if ((*it_list)->get_next_io_type() == _hid_api_briage::next_io_none) {
+        if ((*it_list)->get_next_io_type() == _mp::next_io_none) {
             //multi rx request mode with the diffent map index. 
             std::tie(std::ignore, n_result) = _process_req((*it_list), p_api_briage, ptr_v_rx, L"Multi");
             _save_rx_to_msr_or_ibutton_buffer_in_single_or_multi_rx_requests(n_result, ptr_v_rx);
@@ -798,7 +798,7 @@ std::pair<bool, _mp::type_v_buffer> _vhid_api_briage::_q_worker::_process(
                 break; // exit for
             }
 
-            if (next_io == _hid_api_briage::next_io_none) {
+            if (next_io == _mp::next_io_none) {
                 //notify the last request
                 (*ptr_list->back()).set_result(n_result).set_rx(ptr_v_rx);
                 (*ptr_list->back()).set_event();
@@ -854,14 +854,14 @@ bool _vhid_api_briage::_q_worker::_process_cancel(_q_container::type_ptr_list& p
         // cancel 바로 앞 명령 얻기.
         --it;
         _q_item::type_ptr ptr_item_normal_last(*it);
-        _hid_api_briage::type_next_io next_io_normal_last(ptr_item_normal_last->get_next_io_type());
+        _mp::type_next_io next_io_normal_last(ptr_item_normal_last->get_next_io_type());
         //
         _q_item::type_ptr ptr_item_first(*ptr_list->begin());
         _q_item::type_cmd cmd_first(ptr_item_first->get_cmd());
 
         b_result = true;
 
-        if (next_io_normal_last == _hid_api_briage::next_io_none) {
+        if (next_io_normal_last == _mp::next_io_none) {
             //complete transaction is canceled.
             if (cmd_first != _q_item::cmd_read) {
                 ptr_item_normal_last->set_result(-1,L"complete transaction is canceled").set_rx(v_rx).set_event();
@@ -1132,7 +1132,7 @@ int _vhid_api_briage::_q_worker::_rx(_mp::type_v_buffer& v_rx, _hid_api_briage* 
 
 _vhid_api_briage::_q_item::_q_item(int n_compositive_map_index) : m_n_compositive_map_index(n_compositive_map_index)
 {
-    m_next = _hid_api_briage::next_io_none;
+    m_next = _mp::next_io_none;
     m_n_in_report = 0;
     m_n_rx_timeout_mmsec = 0;
 
@@ -1173,7 +1173,7 @@ void _vhid_api_briage::_q_item::setup_for_get_report_descriptor(unsigned char* b
     m_n_result = -1;
     m_n_event = m_waiter.generate_new_event();
 }
-void _vhid_api_briage::_q_item::setup_for_write(const unsigned char* data, size_t length, _hid_api_briage::type_next_io next)
+void _vhid_api_briage::_q_item::setup_for_write(const unsigned char* data, size_t length, _mp::type_next_io next)
 {
     m_v_rx.resize(0);
     m_ps_rx = nullptr;
@@ -1241,7 +1241,7 @@ std::wstring _vhid_api_briage::_q_item::get_cmd_by_string() const
     return s;
 }
 
-_hid_api_briage::type_next_io _vhid_api_briage::_q_item::get_next_io_type() const
+_mp::type_next_io _vhid_api_briage::_q_item::get_next_io_type() const
 {
     return m_next;
 }
@@ -1418,11 +1418,11 @@ bool _vhid_api_briage::_q_container::push( const _vhid_api_briage::_q_item::type
         //
         _q_container::type_req_list_status status_transaction(_q_container::st_transaction);
         _q_item::type_cmd cmd(ptr_item->get_cmd());
-        _hid_api_briage::type_next_io next_type(ptr_item->get_next_io_type());
+        _mp::type_next_io next_type(ptr_item->get_next_io_type());
         int n_map_index(ptr_item->get_map_index());
         _mp::type_v_buffer v_tx(ptr_item->get_tx());
 
-        if (next_type != _hid_api_briage::next_io_none) {
+        if (next_type != _mp::next_io_none) {
             //하나의 transaction 의 마지막 request 는 next_type 이 next_io_none 임.
             status_transaction = _q_container::st_not_yet_transaction;
         }
