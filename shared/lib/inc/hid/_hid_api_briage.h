@@ -13,6 +13,7 @@
 
 #include <hidapi.h>
 
+#include <mp_clog.h>
 #include <usb/mp_clibusb.h>
 
 /**
@@ -55,6 +56,11 @@ public:
 		static std::mutex mutex_hidapi; //each hidapi function must be guarded by this mutex. all instance of this class must be shared this mutex.
 
 		return mutex_hidapi;
+	}
+
+	virtual _mp::clog* get_clog() const
+	{
+		return m_p_clog;
 	}
 
 	virtual ~_hid_api_briage();
@@ -193,11 +199,14 @@ public:
 
 protected:
 	_hid_api_briage();
+	_hid_api_briage(_mp::clog* p_clog);
 
 private:
 	bool _lpu237_ibutton_enable(hid_device* p_dev,bool b_enable);
 
 protected:
+	_mp::clog *m_p_clog;
+
 	std::atomic_llong m_atll_req_q_check_interval_mmsec;
 	std::atomic_llong m_atll_hid_write_interval_mmsec;
 	std::atomic_llong m_atll_hid_read_interval_mmsec;

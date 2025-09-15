@@ -1,5 +1,6 @@
 
 #include <hid/mp_clibhid_dev.h>
+#include <hid/_vhid_info.h>
 
 #ifndef _WIN32
 #include <pthread.h>
@@ -15,7 +16,7 @@
 #endif
 
 namespace _mp {
-    clibhid_dev::clibhid_dev(const clibhid_dev_info & info, _hid_api_briage* p_hid_api_briage) :
+    clibhid_dev::clibhid_dev(const clibhid_dev_info & info, chid_briage* p_hid_api_briage) :
 		m_atll_rx_by_api_in_rx_worker_check_interval_mmsec(clibhid_dev::_const_dev_rx_by_api_in_rx_worker_check_interval_mmsec),
 		m_atll_rx_q_check_interval_mmsec(clibhid_dev::_const_dev_rx_q_check_interval_mmsec),
         m_n_dev(-1),
@@ -260,7 +261,8 @@ namespace _mp {
         int n_flush = 0;
         _mp::type_ptr_v_buffer ptr_flush_buffer;
 
-        std::lock_guard<std::mutex> lock(_hid_api_briage::get_mutex_for_hidapi());
+        //std::lock_guard<std::mutex> lock(_hid_api_briage::get_mutex_for_hidapi());
+        std::lock_guard<std::mutex> lock(chid_briage::get_mutex_for_hidapi());
 
         while (m_q_rx_ptr_v.try_pop(ptr_flush_buffer)) {
             n_flush++;

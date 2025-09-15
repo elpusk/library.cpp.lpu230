@@ -32,6 +32,15 @@
 #include <main.h>
 //#include <test/test_tp_hid.h>
 
+
+#ifdef _WIN32
+// for libusb
+#pragma comment(lib, "hid.lib")
+#pragma comment(lib, "setupapi.lib")
+#pragma comment(lib, "Cfgmgr32.lib")
+#endif //_WIN32
+
+
 /**
 * 2025.08.08 - v2.0
 */

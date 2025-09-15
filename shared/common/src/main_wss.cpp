@@ -123,7 +123,7 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 #endif
 		//////////////////////////////////////////////////////////////
 		// load dev_lib.dll(.so)
-		if (!cdev_lib::get_instance().load(s_dev_lib_dll_abs_full_path)) {
+		if (!cdev_lib::get_instance().load(s_dev_lib_dll_abs_full_path,&log)) {
 			log.log_fmt(L"[E] %ls | load dev_lib.dll(.so) | %ls.\n", __WFUNCTION__, s_dev_lib_dll_abs_full_path.c_str());
 			log.trace(L"[E] %ls | load dev_lib.dll(.so) | %ls.\n", __WFUNCTION__, s_dev_lib_dll_abs_full_path.c_str());
 			n_result = cdef_const::exit_error_create_ctl_pipe;

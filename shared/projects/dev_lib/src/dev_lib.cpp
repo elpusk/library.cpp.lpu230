@@ -1,4 +1,5 @@
 
+#include <mp_clog.h>
 #include <dev_lib.h>
 
 #include <hid/_vhid_api_briage.h>
@@ -22,38 +23,39 @@ void _so_fini(void)
 }
 #endif // _WIN32
 
+static _mp::clog* gp_log(nullptr);
 
-bool _CALLTYPE_ dev_lib_on()
+int _CALLTYPE_ dev_lib_on(void* p_log)
 {
-	bool b_result(true);
+	int n_result(1);
 
 	do {
-
+		gp_log = (_mp::clog*)p_log;
 	} while (false);
-	return b_result;
+	return n_result;
 }
 
 
-bool _CALLTYPE_ dev_lib_off()
+int _CALLTYPE_ dev_lib_off()
 {
-	bool b_result(true);
+	int n_result(1);
 
 	do {
 
 	} while (false);
-	return b_result;
+	return n_result;
 
 }
 
 std::mutex* _CALLTYPE_ dev_lib_get_mutex()
 {
 	std::mutex& m(_hid_api_briage::get_mutex_for_hidapi());
-	return &m;
+	return & m;
 }
 
 void* _CALLTYPE_ dev_lib_constrcutor()
 {
-	_vhid_api_briage *p_vhid_api(new _vhid_api_briage());
+	_vhid_api_briage *p_vhid_api(new _vhid_api_briage(gp_log));
 	return p_vhid_api;
 }
 
@@ -70,20 +72,22 @@ void _CALLTYPE_ dev_lib_destructor(void* p_instance)
 	} while (false);
 }
 
-bool _CALLTYPE_ dev_lib_is_ini(void* p_instance)
+int _CALLTYPE_ dev_lib_is_ini(void* p_instance)
 {
-	bool b_result(false);
+	int n_result(0);
 	do {
 		if (!p_instance) {
 			continue;
 		}
 
 		_vhid_api_briage* p_vhid_api((_vhid_api_briage*)p_instance);
-		b_result = p_vhid_api->is_ini();
+		if (p_vhid_api->is_ini()) {
+			n_result = 1;
+		}
 		//
 	} while (false);
 
-	return b_result;
+	return n_result;
 }
 
 std::set<std::tuple<std::string, unsigned short, unsigned short, int, std::string>>* _CALLTYPE_ dev_lib_hid_enumerate(void* p_instance)

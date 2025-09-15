@@ -3,8 +3,6 @@
     global:
 		dev_lib_on;
 		dev_lib_off;
-		_so_init;
-		_so_fini;
 		dev_lib_get_mutex;
 		dev_lib_constrcutor;
 		dev_lib_destructor;
@@ -23,10 +21,11 @@
 		dev_lib_set_req_q_check_interval_in_child;
 		dev_lib_set_hid_write_interval_in_child;
 		dev_lib_set_hid_read_interval_in_child;
-		get_req_q_check_interval_in_child;
-		get_hid_write_interval_in_child;
-		get_hid_read_interval_in_child;
-
+		dev_lib_get_req_q_check_interval_in_child;
+		dev_lib_get_hid_write_interval_in_child;
+		dev_lib_get_hid_read_interval_in_child;
+		_so_init;
+		_so_fini;
     local:
         *;
 };

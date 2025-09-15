@@ -11,7 +11,8 @@
 #include <mp_elpusk.h>
 #include <mp_coperation.h>
 #include <hid/mp_clibhid_dev.h>
-#include <hid/_vhid_api_briage.h>
+//#include <hid/_vhid_api_briage.h>
+#include <chid_briage.h>
 
 
 namespace _mp{
@@ -112,7 +113,8 @@ namespace _mp{
     protected:
 
         // virtual hidapi library instance
-        _hid_api_briage::type_ptr m_ptr_hid_api_briage;
+        //_hid_api_briage::type_ptr m_ptr_hid_api_briage;
+        chid_briage::type_ptr m_ptr_hid_api_briage;
 
 		void* m_p_user;// user parameter for callback(m_cb)
 		clibhid::type_callback_pluginout m_cb; // callback function for plugin out.(change of device list)

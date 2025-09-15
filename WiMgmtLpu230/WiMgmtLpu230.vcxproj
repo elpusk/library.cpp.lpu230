@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\shared\3thpart\src\win\hid.c" />
+    <ClCompile Include="..\shared\common\src\chid_briage.cpp" />
     <ClCompile Include="..\shared\lib\inc\mp_cnamed_pipe_.cpp" />
     <ClCompile Include="..\shared\lib\inc\mp_csystem_.cpp" />
     <ClCompile Include="..\shared\lib\src\cert\mp_ccertificate_.cpp" />
@@ -34,6 +35,8 @@
   <ItemGroup>
     <ClInclude Include="..\shared\3thpart\inc\hidapi.h" />
     <ClInclude Include="..\shared\3thpart\src\win\hidapi_winapi.h" />
+    <ClInclude Include="..\shared\common\inc\cdev_lib.h" />
+    <ClInclude Include="..\shared\common\inc\chid_briage.h" />
     <ClInclude Include="..\shared\lib\inc\cert\mp_ccertificate_.h" />
     <ClInclude Include="..\shared\lib\inc\cert\mp_ccoffee_hlp_cert_.h" />
     <ClInclude Include="..\shared\lib\inc\hid\mp_clibhid.h" />
@@ -61,6 +64,7 @@
     <ClInclude Include="..\shared\lib\inc\mp_type.h" />
     <ClInclude Include="..\shared\lib\inc\test\test_tp_hid.h" />
     <ClInclude Include="..\shared\lib\inc\_dev\mp_cdev_util.h" />
+    <ClInclude Include="..\shared\projects\dev_lib\inc\dev_lib.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
@@ -116,25 +120,25 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <TargetName>mgmt_lpu230</TargetName>
-    <IncludePath>C:\local\libusb\libusb;$(SolutionDir)shared/lib/inc;$(SolutionDir)shared/common/inc;$(SolutionDir)shared\3thpart\src\win;$(IncludePath);$(SolutionDir)../shared/projects/MgmtLpu230/inc;C:\local\libusb\out\include;C:\local\boost_1_80_0;C:\local\openssl-1.1.1s\x86\OpenSSL\include</IncludePath>
+    <IncludePath>C:\local\libusb\libusb;$(SolutionDir)shared/lib/inc;$(SolutionDir)shared/common/inc;$(SolutionDir)shared\3thpart\src\win;$(SolutionDir)shared/projects/MgmtLpu230/inc;$(SolutionDir)shared/projects/dev_lib/inc;$(IncludePath);C:\local\libusb\out\include;C:\local\boost_1_80_0;C:\local\openssl-1.1.1s\x86\OpenSSL\include</IncludePath>
     <LibraryPath>C:\local\boost_1_80_0\stage\lib;C:\local\openssl-1.1.1s\x86\OpenSSL\lib;C:\local\libusb\build\v143\Win32\Debug-MT\lib;$(LibraryPath)</LibraryPath>
     <SourcePath>C:\local\boost_1_80_0\boost;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <TargetName>mgmt_lpu230</TargetName>
-    <IncludePath>C:\local\libusb\libusb;$(SolutionDir)shared/lib/inc;$(SolutionDir)shared/common/inc;$(SolutionDir)shared\3thpart\src\win;$(IncludePath);$(SolutionDir)../shared/projects/MgmtLpu230/inc;C:\local\libusb\out\include;C:\local\boost_1_80_0;C:\local\openssl-1.1.1s\x86\OpenSSL\include</IncludePath>
+    <IncludePath>C:\local\libusb\libusb;$(SolutionDir)shared/lib/inc;$(SolutionDir)shared/common/inc;$(SolutionDir)shared\3thpart\src\win;$(SolutionDir)shared/projects/MgmtLpu230/inc;$(SolutionDir)shared/projects/dev_lib/inc;$(IncludePath);C:\local\libusb\out\include;C:\local\boost_1_80_0;C:\local\openssl-1.1.1s\x86\OpenSSL\include</IncludePath>
     <LibraryPath>C:\local\boost_1_80_0\stage\lib;C:\local\openssl-1.1.1s\x86\OpenSSL\lib;C:\local\libusb\build\v143\Win32\Release-MT\lib;$(LibraryPath)</LibraryPath>
     <SourcePath>C:\local\boost_1_80_0\boost;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <TargetName>mgmt_lpu230</TargetName>
-    <IncludePath>C:\local\libusb\libusb;$(SolutionDir)shared/lib/inc;$(SolutionDir)shared/common/inc;$(SolutionDir)shared\3thpart\src\win;$(IncludePath);$(SolutionDir)../shared/projects/MgmtLpu230/inc;C:\local\libusb\out\include;C:\local\boost_1_80_0;C:\local\openssl-1.1.1s\x64\OpenSSL\include</IncludePath>
+    <IncludePath>C:\local\libusb\libusb;$(SolutionDir)shared/lib/inc;$(SolutionDir)shared/common/inc;$(SolutionDir)shared\3thpart\src\win;$(SolutionDir)shared/projects/MgmtLpu230/inc;$(SolutionDir)shared/projects/dev_lib/inc;$(IncludePath);C:\local\libusb\out\include;C:\local\boost_1_80_0;C:\local\openssl-1.1.1s\x64\OpenSSL\include</IncludePath>
     <LibraryPath>C:\local\boost_1_80_0\stage\lib;C:\local\openssl-1.1.1s\x64\OpenSSL\lib;C:\local\libusb\build\v143\x64\Debug-MT\lib;$(LibraryPath)</LibraryPath>
     <SourcePath>C:\local\boost_1_80_0\boost;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <TargetName>mgmt_lpu230</TargetName>
-    <IncludePath>C:\local\libusb\libusb;$(SolutionDir)shared/lib/inc;$(SolutionDir)shared/common/inc;$(SolutionDir)shared\3thpart\src\win;$(IncludePath);$(SolutionDir)../shared/projects/MgmtLpu230/inc;C:\local\libusb\out\include;C:\local\boost_1_80_0;C:\local\openssl-1.1.1s\x64\OpenSSL\include</IncludePath>
+    <IncludePath>C:\local\libusb\libusb;$(SolutionDir)shared/lib/inc;$(SolutionDir)shared/common/inc;$(SolutionDir)shared\3thpart\src\win;$(SolutionDir)shared/projects/MgmtLpu230/inc;$(SolutionDir)shared/projects/dev_lib/inc;$(IncludePath);C:\local\libusb\out\include;C:\local\boost_1_80_0;C:\local\openssl-1.1.1s\x64\OpenSSL\include</IncludePath>
     <LibraryPath>C:\local\boost_1_80_0\stage\lib;C:\local\openssl-1.1.1s\x64\OpenSSL\lib;C:\local\libusb\build\v143\x64\Release-MT\lib;$(LibraryPath)</LibraryPath>
     <SourcePath>C:\local\boost_1_80_0\boost;$(SourcePath)</SourcePath>
   </PropertyGroup>

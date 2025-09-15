@@ -2,7 +2,6 @@
 #include <algorithm>
 #include <mp_elpusk.h>
 
-#include <mp_clog.h>
 #include <hid/_vhid_info_lpu237.h>
 #include <hid/_vhid_api_briage.h>
 #include <hid/_vhid_info.h>
@@ -24,6 +23,11 @@
 * member function bodies
 */
 _vhid_api_briage::_vhid_api_briage() : _hid_api_briage()
+{
+    m_s_class_name = L"_vhid_api_briage";
+}
+
+_vhid_api_briage::_vhid_api_briage(_mp::clog* p_clog) : _hid_api_briage(p_clog)
 {
     m_s_class_name = L"_vhid_api_briage";
 }
@@ -361,13 +365,15 @@ int _vhid_api_briage::api_read(int n_map_index, unsigned char* data, size_t leng
         std::lock_guard<std::mutex> lock(m_mutex_for_map);
 
         if (n_primitive == _vhid_info::const_map_index_invalid) {
-            _mp::clog::get_instance().log_fmt(L"[E] %ls : invalid map index.\n", __WFUNCTION__);
+            if (m_p_clog)
+                m_p_clog->log_fmt(L"[E] %ls : invalid map index.\n", __WFUNCTION__);
             continue;
         }
 
         auto it = m_map_ptr_hid_info_ptr_worker.find(n_primitive);
         if (it == std::end(m_map_ptr_hid_info_ptr_worker)) {
-            _mp::clog::get_instance().log_fmt(L"[E] %ls : not found map item.\n", __WFUNCTION__);
+            if (m_p_clog)
+                m_p_clog->log_fmt(L"[E] %ls : not found map item.\n", __WFUNCTION__);
             continue;
         }
 
@@ -375,7 +381,8 @@ int _vhid_api_briage::api_read(int n_map_index, unsigned char* data, size_t leng
         ptr_item->setup_for_read(data, length,n_report);
 
         if (!it->second.second->push(ptr_item)) {
-            _mp::clog::get_instance().log_fmt(L"[E] %ls : push().\n", __WFUNCTION__);
+            if (m_p_clog)
+                m_p_clog->log_fmt(L"[E] %ls : push().\n", __WFUNCTION__);
             continue;
         }
 
@@ -419,7 +426,8 @@ int _vhid_api_briage::api_read(int n_map_index, unsigned char* data, size_t leng
     } while (false);
 
     if (n_result < 0) {
-        _mp::clog::get_instance().log_fmt(L"[E] %ls : n_result = %d.\n", __WFUNCTION__, n_result);
+        if (m_p_clog)
+            m_p_clog->log_fmt(L"[E] %ls : n_result = %d.\n", __WFUNCTION__, n_result);
 #ifdef _WIN32
 #ifdef _DEBUG
         ATLTRACE(L"0x%08X(%s)-ERROR-RX (n_result) = (%d)\n",
@@ -760,7 +768,8 @@ std::pair<bool, _mp::type_v_buffer> _vhid_api_briage::_q_worker::_process(
                 continue;
             }
 
-            _mp::clog::get_instance().log_fmt_in_debug_mode(L"[D] TXRX REQ : %ls.\n", ptr_req->get_cmd_by_string().c_str());
+            if (p_api_briage->get_clog())
+                p_api_briage->get_clog()->log_fmt_in_debug_mode(L"[D] TXRX REQ : %ls.\n", ptr_req->get_cmd_by_string().c_str());
 
             next_io = ptr_req->get_next_io_type();
             ptr_v_rx.reset();
@@ -768,11 +777,13 @@ std::pair<bool, _mp::type_v_buffer> _vhid_api_briage::_q_worker::_process(
             do {
                 std::tie(b_complete, n_result) = _process_req(ptr_req, p_api_briage, ptr_v_rx, L"TXRX");
                 if(!m_b_run_worker ){
-                    _mp::clog::get_instance().log_fmt_in_debug_mode(L"[D] TXRX REQ : %ls - complete BY TH : %d.\n", ptr_req->get_cmd_by_string().c_str(), n_result);
+                    if (p_api_briage->get_clog())
+                        p_api_briage->get_clog()->log_fmt_in_debug_mode(L"[D] TXRX REQ : %ls - complete BY TH : %d.\n", ptr_req->get_cmd_by_string().c_str(), n_result);
                     break;//exit while
                 }
                 if (b_complete) {
-                    _mp::clog::get_instance().log_fmt_in_debug_mode(L"[D] TXRX REQ : %ls - complete : %d.\n", ptr_req->get_cmd_by_string().c_str(), n_result);
+                    if (p_api_briage->get_clog())
+                        p_api_briage->get_clog()->log_fmt_in_debug_mode(L"[D] TXRX REQ : %ls - complete : %d.\n", ptr_req->get_cmd_by_string().c_str(), n_result);
                     break;// continue while
                 }
 
@@ -1109,11 +1120,13 @@ int _vhid_api_briage::_q_worker::_rx(_mp::type_v_buffer& v_rx, _hid_api_briage* 
 
         if ((n_result + n_offset) >= v_rx.size()) {
             n_result = n_result + n_offset;
-            _mp::clog::get_instance().log_fmt_in_debug_mode(L"[D%d] RX-OK : (n_offset, n_read)=(%d,%d,%u).\n", n_loop, n_offset, n_result, v_rx.size());
+            if (p_api_briage->get_clog())
+                p_api_briage->get_clog()->log_fmt_in_debug_mode(L"[D%d] RX-OK : (n_offset, n_read)=(%d,%d,%u).\n", n_loop, n_offset, n_result, v_rx.size());
             break; // read complete
         }
         //
-        _mp::clog::get_instance().log_fmt_in_debug_mode(L"[D%d] RX : (n_offset, n_read)=(%d,%d,%u).\n", n_loop, n_offset, n_result, v_rx.size());
+        if (p_api_briage->get_clog())
+            p_api_briage->get_clog()->log_fmt_in_debug_mode(L"[D%d] RX : (n_offset, n_read)=(%d,%d,%u).\n", n_loop, n_offset, n_result, v_rx.size());
 
         n_offset = n_offset + n_result;
         n_len = n_len - n_result;

@@ -108,7 +108,7 @@ namespace _mp{
 
             //
             // for supporting, virtual device. code is create child of _hid_api_briage class.
-			m_ptr_hid_api_briage = std::make_shared<_vhid_api_briage>();//create single instance of virtual hidapi library
+			m_ptr_hid_api_briage = std::make_shared<chid_briage>();//create single instance of virtual hidapi library
 
             if (m_ptr_hid_api_briage->is_ini()) {
                 m_b_ini = true;

@@ -372,6 +372,7 @@ private:
 
 public:
 	_vhid_api_briage();
+	_vhid_api_briage(_mp::clog* p_clog);
 
 	virtual ~_vhid_api_briage();
 

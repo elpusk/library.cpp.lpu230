@@ -10,7 +10,8 @@
 #include <mp_clog.h>
 
 #include <hid/mp_clibhid_dev_info.h>
-#include <hid/_vhid_api_briage.h>
+//#include <hid/_vhid_api_briage.h>
+#include <chid_briage.h>
 
 namespace _mp {
     /**
@@ -61,7 +62,7 @@ namespace _mp {
 		* @param info - device information
 		* @param p_vhid_api_briage - virtual HID API bridge
         */
-        clibhid_dev(const clibhid_dev_info& info, _hid_api_briage *p_hid_api_briage);
+        clibhid_dev(const clibhid_dev_info& info, chid_briage*p_hid_api_briage);
         ~clibhid_dev();
 
         bool is_detect_replugin();
@@ -247,7 +248,8 @@ namespace _mp {
 		// rx by api check interval in msec.( _worker_rx() call api-read with this sleeptime )
         std::atomic_llong m_atll_rx_by_api_in_rx_worker_check_interval_mmsec;
 
-        _hid_api_briage* m_p_hid_api_briage;//virtual hidapi library instance
+        //_hid_api_briage* m_p_hid_api_briage;//virtual hidapi library instance
+        chid_briage* m_p_hid_api_briage;
 
 		int m_n_dev;//valid is zero or positive. map index of primitive or composite map.
         clibhid_dev_info m_dev_info;

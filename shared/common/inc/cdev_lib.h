@@ -8,6 +8,8 @@
 
 #include <dev_lib.h>
 
+#include <mp_clog.h>
+
 /**
 * this class is warpper class of dev_lib.dll(or .so)
 */
@@ -17,14 +19,14 @@ public:
 	typedef	std::shared_ptr<cdev_lib>	type_ptr;
 
 private:
-	typedef	uint32_t(_CALLTYPE_* _type_dev_lib_on)();
-	typedef	uint32_t(_CALLTYPE_* _type_dev_lib_off)();
+	typedef	int(_CALLTYPE_* _type_dev_lib_on)(void*);
+	typedef	int(_CALLTYPE_* _type_dev_lib_off)();
 
 	typedef	std::mutex* (_CALLTYPE_* _type_dev_lib_get_mutex)();
 
 	typedef	void* (_CALLTYPE_* _type_dev_lib_constrcutor)();
 	typedef	void (_CALLTYPE_* _type_dev_lib_destructor)(void*);
-	typedef	bool (_CALLTYPE_* _type_dev_lib_is_ini)(void*);
+	typedef	int (_CALLTYPE_* _type_dev_lib_is_ini)(void*);
 
 	typedef	std::set< std::tuple<std::string, unsigned short, unsigned short, int, std::string>>* (_CALLTYPE_* _type_dev_lib_hid_enumerate)(void*);
 	typedef void (_CALLTYPE_* _type_dev_lib_hid_enumerate_free)(std::set< std::tuple<std::string, unsigned short, unsigned short, int, std::string>>*);
@@ -66,7 +68,7 @@ public:
 
 	void unload()
 	{
-		std::lock_guard<std::mutex> lock(m_mutex);
+		//std::lock_guard<std::mutex> lock(m_mutex);
 		if (m_hMode) {
 			if (m_dev_lib_off) {
 				m_dev_lib_off();
@@ -77,19 +79,41 @@ public:
 		_ini();
 	}
 
-	bool load(const std::wstring& s_lib)
+	bool load(const std::wstring& s_lib,void* p_log)
 	{
-		std::lock_guard<std::mutex> lock(m_mutex);
+		//std::lock_guard<std::mutex> lock(m_mutex);
 		bool b_result(false);
 		do {
+			m_p_clog = (_mp::clog*)p_log;
+
+			if (m_p_clog) {
+				m_p_clog->log_fmt(L" I : cdev_lib::load() : try loading library(%ls).\n", s_lib.c_str());
+				m_p_clog->trace(L" I : cdev_lib::load() : try loading library(%ls).\n", s_lib.c_str());
+			}
+
 			if (m_hMode) {
+				if (m_p_clog) {
+					m_p_clog->log_fmt(L" I : cdev_lib::load() : already loaded.\n");
+					m_p_clog->trace(L" I : cdev_lib::load() : already loaded.\n");
+				}
 				b_result = true; //already loaded
 				continue;
 			}
 			m_hMode = _load_lib(s_lib);
 			if (m_hMode == NULL) {
+				if (m_p_clog) {
+					if (!s_lib.empty()) {
+						m_p_clog->log_fmt(L"cdev_lib::load() : failed to load library(%s).\n", s_lib.c_str());
+						m_p_clog->trace(L"cdev_lib::load() : failed to load library(%s).\n", s_lib.c_str());
+					}
+					else {
+						m_p_clog->log_fmt(L"cdev_lib::load() : failed to load library(-).\n");
+						m_p_clog->trace(L"cdev_lib::load() : failed to load library(-).\n");
+					}
+				}
 				continue;
 			}
+
 			m_dev_lib_on = reinterpret_cast<cdev_lib::_type_dev_lib_on>(_load_symbol(m_hMode, "dev_lib_on"));
 			m_dev_lib_off = reinterpret_cast<cdev_lib::_type_dev_lib_off>(_load_symbol(m_hMode, "dev_lib_off"));
 			m_dev_lib_get_mutex = reinterpret_cast<cdev_lib::_type_dev_lib_get_mutex>(_load_symbol(m_hMode, "dev_lib_get_mutex"));
@@ -143,11 +167,85 @@ public:
 
 		//
 		if (!b_result) {
+			if (m_p_clog) {
+				m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_on = 0x%x.\n", (void*)m_dev_lib_on);
+				m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_on = 0x%x.\n", (void*)m_dev_lib_on);
+
+				m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_off = 0x%x.\n", (void*)m_dev_lib_off);
+				m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_off = 0x%x.\n", (void*)m_dev_lib_off);
+
+				m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_get_mutex = 0x%x.\n", (void*)m_dev_lib_get_mutex);
+				m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_get_mutex = 0x%x.\n", (void*)m_dev_lib_get_mutex);
+
+				m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_constrcutor = 0x%x.\n", (void*)m_dev_lib_constrcutor);
+				m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_constrcutor = 0x%x.\n", (void*)m_dev_lib_constrcutor);
+
+				m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_destructor = 0x%x.\n", (void*)m_dev_lib_destructor);
+				m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_destructor = 0x%x.\n", (void*)m_dev_lib_destructor);
+
+				m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_is_ini = 0x%x.\n", (void*)m_dev_lib_is_ini);
+				m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_is_ini = 0x%x.\n", (void*)m_dev_lib_is_ini);
+
+				m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_hid_enumerate = 0x%x.\n", (void*)m_dev_lib_hid_enumerate);
+				m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_hid_enumerate = 0x%x.\n", (void*)m_dev_lib_hid_enumerate);
+
+				m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_hid_enumerate_free = 0x%x.\n", (void*)m_dev_lib_hid_enumerate_free);
+				m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_hid_enumerate_free = 0x%x.\n", (void*)m_dev_lib_hid_enumerate_free);
+
+				m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_is_open = 0x%x.\n", (void*)m_dev_lib_is_open);
+				m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_is_open = 0x%x.\n", (void*)m_dev_lib_is_open);
+
+				m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_is_open_free = 0x%x.\n", (void*)m_dev_lib_is_open_free);
+				m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_is_open_free = 0x%x.\n", (void*)m_dev_lib_is_open_free);
+
+				m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_api_open_path = 0x%x.\n", (void*)m_dev_lib_api_open_path);
+				m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_api_open_path = 0x%x.\n", (void*)m_dev_lib_api_open_path);
+
+				m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_api_close = 0x%x.\n", (void*)m_dev_lib_api_close);
+				m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_api_close = 0x%x.\n", (void*)m_dev_lib_api_close);
+
+				m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_api_set_nonblocking = 0x%x.\n", (void*)m_dev_lib_api_set_nonblocking);
+				m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_api_set_nonblocking = 0x%x.\n", (void*)m_dev_lib_api_set_nonblocking);
+
+				m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_api_get_report_descriptor = 0x%x.\n", (void*)m_dev_lib_api_get_report_descriptor);
+				m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_api_get_report_descriptor = 0x%x.\n", (void*)m_dev_lib_api_get_report_descriptor);
+
+				m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_api_write = 0x%x.\n", (void*)m_dev_lib_api_write);
+				m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_api_write = 0x%x.\n", (void*)m_dev_lib_api_write);
+
+				m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_api_read = 0x%x.\n", (void*)m_dev_lib_api_read);
+				m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_api_read = 0x%x.\n", (void*)m_dev_lib_api_read);
+
+				m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_api_error = 0x%x.\n", (void*)m_dev_lib_api_error);
+				m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_api_error = 0x%x.\n", (void*)m_dev_lib_api_error);
+
+				m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_set_req_q_check_interval_in_child = 0x%x.\n", (void*)m_dev_lib_set_req_q_check_interval_in_child);
+				m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_set_req_q_check_interval_in_child = 0x%x.\n", (void*)m_dev_lib_set_req_q_check_interval_in_child);
+
+				m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_set_hid_write_interval_in_child = 0x%x.\n", (void*)m_dev_lib_set_hid_write_interval_in_child);
+				m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_set_hid_write_interval_in_child = 0x%x.\n", (void*)m_dev_lib_set_hid_write_interval_in_child);
+
+				m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_set_hid_read_interval_in_child = 0x%x.\n", (void*)m_dev_lib_set_hid_read_interval_in_child);
+				m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_set_hid_read_interval_in_child = 0x%x.\n", (void*)m_dev_lib_set_hid_read_interval_in_child);
+
+				m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_get_req_q_check_interval_in_child = 0x%x.\n", (void*)m_dev_lib_get_req_q_check_interval_in_child);
+				m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_get_req_q_check_interval_in_child = 0x%x.\n", (void*)m_dev_lib_get_req_q_check_interval_in_child);
+
+				m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_get_hid_write_interval_in_child = 0x%x.\n", (void*)m_dev_lib_get_hid_write_interval_in_child);
+				m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_get_hid_write_interval_in_child = 0x%x.\n", (void*)m_dev_lib_get_hid_write_interval_in_child);
+
+				m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_get_hid_read_interval_in_child = 0x%x.\n", (void*)m_dev_lib_get_hid_read_interval_in_child);
+				m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_get_hid_read_interval_in_child = 0x%x.\n", (void*)m_dev_lib_get_hid_read_interval_in_child);
+			}
+
 			_ini();
 			if (m_hMode) {
 				_free_lib(m_hMode);
 				m_hMode = NULL;
 			}
+		}
+		else {
+			m_dev_lib_on(p_log);
 		}
 		return b_result;
 	}
@@ -155,7 +253,7 @@ public:
 	void* constructor()
 	{
 		void* p(NULL);
-		std::lock_guard<std::mutex> lock(m_mutex);
+		//std::lock_guard<std::mutex> lock(m_mutex);
 		if (m_dev_lib_constrcutor)
 			p = m_dev_lib_constrcutor();
 		//
@@ -164,7 +262,7 @@ public:
 
 	void destructor(void* p_instance)
 	{
-		std::lock_guard<std::mutex> lock(m_mutex);
+		//std::lock_guard<std::mutex> lock(m_mutex);
 		if (m_dev_lib_destructor) {
 			m_dev_lib_destructor(p_instance);
 		}
@@ -174,7 +272,7 @@ public:
 	{
 		static std::mutex dummy_mutex;
 
-		std::lock_guard<std::mutex> lock(m_mutex);
+		//std::lock_guard<std::mutex> lock(m_mutex);
 		if (m_dev_lib_get_mutex == NULL) {
 			return dummy_mutex;
 		}
@@ -190,11 +288,13 @@ public:
 	{
 		bool b_result(false);
 		do {
-			std::lock_guard<std::mutex> lock(m_mutex);
+			//std::lock_guard<std::mutex> lock(m_mutex);
 			if (m_dev_lib_is_ini == NULL) {
 				continue;
 			}
-			b_result = m_dev_lib_is_ini(p_instance);
+			if( m_dev_lib_is_ini(p_instance) ) {
+				b_result = true;
+			}
 		} while (false);
 		return b_result;
 	}
@@ -204,7 +304,7 @@ public:
 		std::set<std::tuple<std::string, unsigned short, unsigned short, int, std::string>> set_result;
 
 		do {
-			std::lock_guard<std::mutex> lock(m_mutex);
+			//std::lock_guard<std::mutex> lock(m_mutex);
 			if (m_dev_lib_hid_enumerate == NULL) {
 				continue;
 			}
@@ -217,7 +317,7 @@ public:
 				continue;
 			}
 			set_result = *p;
-			delete p;
+			m_dev_lib_hid_enumerate_free(p);
 		} while (false);
 		return set_result;
 	}
@@ -226,7 +326,7 @@ public:
 	{
 		std::tuple<bool, int, bool> tuple_result(false, -1, false);
 		do {
-			std::lock_guard<std::mutex> lock(m_mutex);
+			//std::lock_guard<std::mutex> lock(m_mutex);
 			if (m_dev_lib_is_open == NULL) {
 				continue;
 			}
@@ -238,7 +338,7 @@ public:
 				continue;
 			}
 			tuple_result = *p;
-			delete p;
+			m_dev_lib_is_open_free(p);
 		} while (false);
 		return tuple_result;
 	}
@@ -247,7 +347,7 @@ public:
 	{
 		int n_result(-1);
 		do {
-			std::lock_guard<std::mutex> lock(m_mutex);
+			//std::lock_guard<std::mutex> lock(m_mutex);
 			if (m_dev_lib_api_open_path == NULL) {
 				continue;
 			}
@@ -259,7 +359,7 @@ public:
 	void api_close(void* p_instance, int n_primitive_map_index)
 	{
 		do {
-			std::lock_guard<std::mutex> lock(m_mutex);
+			//std::lock_guard<std::mutex> lock(m_mutex);
 			if (m_dev_lib_api_close == NULL) {
 				continue;
 			}
@@ -271,7 +371,7 @@ public:
 	{
 		int n_result(-1);
 		do {
-			std::lock_guard<std::mutex> lock(m_mutex);
+			//std::lock_guard<std::mutex> lock(m_mutex);
 			if (m_dev_lib_api_set_nonblocking == NULL) {
 				continue;
 			}
@@ -284,7 +384,7 @@ public:
 	{
 		int n_result(-1);
 		do {
-			std::lock_guard<std::mutex> lock(m_mutex);
+			//std::lock_guard<std::mutex> lock(m_mutex);
 			if (m_dev_lib_api_get_report_descriptor == NULL) {
 				continue;
 			}
@@ -297,7 +397,7 @@ public:
 	{
 		int n_result(-1);
 		do {
-			std::lock_guard<std::mutex> lock(m_mutex);
+			//std::lock_guard<std::mutex> lock(m_mutex);
 			if (m_dev_lib_api_write == NULL) {
 				continue;
 			}
@@ -310,7 +410,7 @@ public:
 	{
 		int n_result(-1);
 		do {
-			std::lock_guard<std::mutex> lock(m_mutex);
+			//std::lock_guard<std::mutex> lock(m_mutex);
 			if (m_dev_lib_api_read == NULL) {
 				continue;
 			}
@@ -324,7 +424,7 @@ public:
 		const wchar_t* p_s(NULL);
 
 		do {
-			std::lock_guard<std::mutex> lock(m_mutex);
+			//std::lock_guard<std::mutex> lock(m_mutex);
 			if (m_dev_lib_api_error == NULL) {
 				continue;
 			}
@@ -336,7 +436,7 @@ public:
 	void set_req_q_check_interval_in_child(void* p_instance, long long n_interval_mmsec)
 	{
 		do {
-			std::lock_guard<std::mutex> lock(m_mutex);
+			//std::lock_guard<std::mutex> lock(m_mutex);
 			if (m_dev_lib_set_req_q_check_interval_in_child == NULL) {
 				continue;
 			}
@@ -348,7 +448,7 @@ public:
 	void set_hid_write_interval_in_child(void* p_instance, long long n_interval_mmsec)
 	{
 		do {
-			std::lock_guard<std::mutex> lock(m_mutex);
+			//std::lock_guard<std::mutex> lock(m_mutex);
 			if (m_dev_lib_set_hid_write_interval_in_child == NULL) {
 				continue;
 			}
@@ -360,7 +460,7 @@ public:
 	void set_hid_read_interval_in_child(void* p_instance, long long n_interval_mmsec)
 	{
 		do {
-			std::lock_guard<std::mutex> lock(m_mutex);
+			//std::lock_guard<std::mutex> lock(m_mutex);
 			if (m_dev_lib_set_hid_read_interval_in_child == NULL) {
 				continue;
 			}
@@ -374,7 +474,7 @@ public:
 		long long ll_result(-1);
 
 		do {
-			std::lock_guard<std::mutex> lock(m_mutex);
+			//std::lock_guard<std::mutex> lock(m_mutex);
 			if (m_dev_lib_get_req_q_check_interval_in_child == NULL) {
 				continue;
 			}
@@ -389,7 +489,7 @@ public:
 		long long ll_result(-1);
 
 		do {
-			std::lock_guard<std::mutex> lock(m_mutex);
+			//std::lock_guard<std::mutex> lock(m_mutex);
 			if (m_dev_lib_get_hid_write_interval_in_child == NULL) {
 				continue;
 			}
@@ -404,7 +504,7 @@ public:
 		long long ll_result(-1);
 
 		do {
-			std::lock_guard<std::mutex> lock(m_mutex);
+			//std::lock_guard<std::mutex> lock(m_mutex);
 			if (m_dev_lib_get_hid_read_interval_in_child == NULL) {
 				continue;
 			}
@@ -416,7 +516,7 @@ public:
 
 
 private:
-	cdev_lib() : m_hMode(NULL), m_hDev(INVALID_HANDLE_VALUE)
+	cdev_lib() : m_p_clog(nullptr),m_hMode(NULL), m_hDev(INVALID_HANDLE_VALUE)
 	{
 		_ini();
 	}
@@ -521,7 +621,9 @@ private:
 	}
 
 private:
-	std::mutex m_mutex;
+	//std::mutex m_mutex; //don't use this mutex. this mutex cause dead lock.
+
+	_mp::clog* m_p_clog;
 
 	HMODULE m_hMode;
 	HANDLE m_hDev;

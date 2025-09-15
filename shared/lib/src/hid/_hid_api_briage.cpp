@@ -38,7 +38,7 @@ extern "C"
 
 static struct hid_device_info* _hid_internal_get_device_info(const wchar_t* path);
 
-static struct hid_device_info* _hid_enumerate(libusb_context* usb_context, unsigned short vendor_id, unsigned short product_id);
+static struct hid_device_info* _hid_enumerate(_mp::clog* p_clog,libusb_context* usb_context, unsigned short vendor_id, unsigned short product_id);
 #else
 //////////////////////////////////////////////////////////
 // for linux
@@ -54,7 +54,7 @@ static char* _hidapi_make_path(libusb_device* dev, int config_number, int interf
 //modified create_device_info_for_device of hidapi
 static struct hid_device_info* _hidapi_create_device_info_for_device(libusb_device* device, struct libusb_device_descriptor* desc, int config_number, int interface_num);
 
-static struct hid_device_info* _hid_enumerate(libusb_context* usb_context, unsigned short w_vid, unsigned short w_pid);
+static struct hid_device_info* _hid_enumerate(_mp::clog* p_clog,libusb_context* usb_context, unsigned short w_vid, unsigned short w_pid);
 #endif //_WIN32
 static void  _hid_free_enumeration(struct hid_device_info* devs);
 
@@ -114,7 +114,7 @@ struct hid_device_info* _hid_internal_get_device_info(const wchar_t* path)
     return dev;
 }
 
-struct hid_device_info* _hid_enumerate(libusb_context* usb_context, unsigned short vendor_id, unsigned short product_id)
+struct hid_device_info* _hid_enumerate(_mp::clog* p_clog,libusb_context* usb_context, unsigned short vendor_id, unsigned short product_id)
 {
     struct hid_device_info* root = NULL; /* return object */
     struct hid_device_info* cur_dev = NULL;
@@ -137,7 +137,9 @@ struct hid_device_info* _hid_enumerate(libusb_context* usb_context, unsigned sho
     do {
         cr = CM_Get_Device_Interface_List_SizeW(&len, &interface_class_guid, NULL, CM_GET_DEVICE_INTERFACE_LIST_PRESENT);
         if (cr != CR_SUCCESS) {
-            _mp::clog::get_instance().log_fmt(L"[E] %ls : Failed to get size of HID device interface list.\n", __WFUNCTION__);
+            if (p_clog) {
+                p_clog->log_fmt(L"[E] %ls : Failed to get size of HID device interface list.\n", __WFUNCTION__);
+            }
             break;
         }
 
@@ -146,7 +148,8 @@ struct hid_device_info* _hid_enumerate(libusb_context* usb_context, unsigned sho
 
         cr = CM_Get_Device_Interface_ListW(&interface_class_guid, NULL, &v_device_interface_list[0], v_device_interface_list.size(), CM_GET_DEVICE_INTERFACE_LIST_PRESENT);
         if (cr != CR_SUCCESS && cr != CR_BUFFER_SMALL) {
-            _mp::clog::get_instance().log_fmt(L"[E] %ls : Failed to get HID device interface list.\n", __WFUNCTION__);
+            if (p_clog)
+                p_clog->log_fmt(L"[E] %ls : Failed to get HID device interface list.\n", __WFUNCTION__);
         }
     } while (cr == CR_BUFFER_SMALL);
 
@@ -213,10 +216,12 @@ struct hid_device_info* _hid_enumerate(libusb_context* usb_context, unsigned sho
 
     if (root == NULL) {
         if (vendor_id == 0 && product_id == 0) {
-            //_mp::clog::get_instance().log_fmt(L"[W] %ls : No HID devices found in the system.\n", __WFUNCTION__);
+            //if(p_clog)
+            //  p_clog->log_fmt(L"[W] %ls : No HID devices found in the system.\n", __WFUNCTION__);
         }
         else {
-            //_mp::clog::get_instance().log_fmt(L"[W] %ls : No HID devices with requested VID/PID found in the system.\n", __WFUNCTION__);
+            //if(m_p_clog)
+            //  m_p_clog->log_fmt(L"[W] %ls : No HID devices with requested VID/PID found in the system.\n", __WFUNCTION__);
         }
     }
 
@@ -289,7 +294,7 @@ struct hid_device_info* _hidapi_create_device_info_for_device(libusb_device* dev
     return cur_dev;
 }
 
-struct hid_device_info* _hid_enumerate(libusb_context* usb_context, unsigned short w_vid, unsigned short w_pid)
+struct hid_device_info* _hid_enumerate(_mp::clog* p_clog,libusb_context* usb_context, unsigned short w_vid, unsigned short w_pid)
 {
     libusb_device** devs;
     libusb_device* dev;
@@ -379,9 +384,33 @@ void  _hid_free_enumeration(struct hid_device_info* devs)
 * member function bodies
 */
 _hid_api_briage::_hid_api_briage() :
-    m_atll_req_q_check_interval_mmsec(_hid_api_briage::const_default_req_q_check_interval_mmsec_of_child)
+    m_p_clog(nullptr)
+    , m_atll_req_q_check_interval_mmsec(_hid_api_briage::const_default_req_q_check_interval_mmsec_of_child)
 	, m_atll_hid_write_interval_mmsec(_hid_api_briage::const_default_hid_write_interval_mmsec)
 	, m_atll_hid_read_interval_mmsec(_hid_api_briage::const_default_hid_read_interval_mmsec)
+    , m_s_class_name(L"_hid_api_briage")
+    , m_b_ini(false)
+    , m_n_map_index(_vhid_info::const_map_index_invalid)
+{
+    m_ptr_usb_lib = std::make_shared<_mp::clibusb>();
+
+    if (hid_init() == 0) {
+        m_b_ini = true;
+
+#if defined(__APPLE__) && HID_API_VERSION >= HID_API_MAKE_VERSION(0, 12, 0)
+        // To work properly needs to be called before hid_open/hid_open_path after hid_init.
+        // Best/recommended option - call it right after hid_init.
+        hid_darwin_set_open_exclusive(0);
+#endif
+
+    }
+}
+
+_hid_api_briage::_hid_api_briage(_mp::clog* p_clog) :
+    m_p_clog(p_clog)
+    , m_atll_req_q_check_interval_mmsec(_hid_api_briage::const_default_req_q_check_interval_mmsec_of_child)
+    , m_atll_hid_write_interval_mmsec(_hid_api_briage::const_default_hid_write_interval_mmsec)
+    , m_atll_hid_read_interval_mmsec(_hid_api_briage::const_default_hid_read_interval_mmsec)
     , m_s_class_name(L"_hid_api_briage")
     , m_b_ini(false)
     , m_n_map_index(_vhid_info::const_map_index_invalid)
@@ -451,7 +480,7 @@ std::set< std::tuple<std::string, unsigned short, unsigned short, int,std::strin
         /**
         * don't use the hid_enumerate() of hidapi. it will occur packer-losting.
         */
-        p_devs_org = p_devs = _hid_enumerate(m_ptr_usb_lib->get_context(), 0x0, 0x0);
+        p_devs_org = p_devs = _hid_enumerate(m_p_clog,m_ptr_usb_lib->get_context(), 0x0, 0x0);
 
         while (p_devs) {
             st.emplace(
@@ -786,7 +815,8 @@ int _hid_api_briage::api_read(int n_primitive_map_index, unsigned char* data, si
     std::lock_guard<std::mutex> lock(_hid_api_briage::get_mutex_for_hidapi());
 
     if (!m_b_ini) {
-        _mp::clog::get_instance().log_fmt(L"[E] %ls : not m_b_ini.\n", __WFUNCTION__);
+        if (m_p_clog)
+            m_p_clog->log_fmt(L"[E] %ls : not m_b_ini.\n", __WFUNCTION__);
         return -1;
     }
 
@@ -797,7 +827,8 @@ int _hid_api_briage::api_read(int n_primitive_map_index, unsigned char* data, si
 
     int n_result = hid_read(p_dev, data, length);
     if (n_result < 0) {
-        _mp::clog::get_instance().log_fmt(L"[E] %ls : n_result = %d.\n", __WFUNCTION__, n_result);
+        if (m_p_clog)
+            m_p_clog->log_fmt(L"[E] %ls : n_result = %d.\n", __WFUNCTION__, n_result);
     }
     
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)

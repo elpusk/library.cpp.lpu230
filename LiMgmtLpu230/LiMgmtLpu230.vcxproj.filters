@@ -102,6 +102,9 @@
     <ClCompile Include="..\shared\lib\src\server\mp_cbase_ctl_fn_.cpp">
       <Filter>lib\svr</Filter>
     </ClCompile>
+    <ClCompile Include="..\shared\common\src\chid_briage.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\local\libusb\out\include\libusb-1.0\libusb.h">
@@ -280,6 +283,15 @@
     </ClInclude>
     <ClInclude Include="..\shared\lib\inc\mp_os_type.h">
       <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\projects\dev_lib\inc\dev_lib.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\cdev_lib.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\chid_briage.h">
+      <Filter>common</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

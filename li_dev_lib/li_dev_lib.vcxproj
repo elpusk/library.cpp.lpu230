@@ -187,7 +187,32 @@
     <ClCompile Include="..\shared\projects\dev_lib\src\dev_lib.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="li_dev_lib.ld" />
+    <None Include="li_dev_lib.ld">
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</RemoteCopyFile>
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</RemoteCopyFile>
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</RemoteCopyFile>
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</RemoteCopyFile>
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">true</RemoteCopyFile>
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Release|x86'">true</RemoteCopyFile>
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</RemoteCopyFile>
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</RemoteCopyFile>
+      <RemoteCopyToOutputDir Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</RemoteCopyToOutputDir>
+      <RemoteCopyToOutputDir Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</RemoteCopyToOutputDir>
+      <RemoteCopyToOutputDir Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</RemoteCopyToOutputDir>
+      <RemoteCopyToOutputDir Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</RemoteCopyToOutputDir>
+      <RemoteCopyToOutputDir Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">true</RemoteCopyToOutputDir>
+      <RemoteCopyToOutputDir Condition="'$(Configuration)|$(Platform)'=='Release|x86'">true</RemoteCopyToOutputDir>
+      <RemoteCopyToOutputDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</RemoteCopyToOutputDir>
+      <RemoteCopyToOutputDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</RemoteCopyToOutputDir>
+      <RemoteFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(RemoteProjectDir)li_dev_lib/$(ProjectName).ld</RemoteFile>
+      <RemoteFile Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(RemoteProjectDir)li_dev_lib/$(ProjectName).ld</RemoteFile>
+      <RemoteFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(RemoteProjectDir)li_dev_lib/$(ProjectName).ld</RemoteFile>
+      <RemoteFile Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">$(RemoteProjectDir)li_dev_lib/$(ProjectName).ld</RemoteFile>
+      <RemoteFile Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">$(RemoteProjectDir)li_dev_lib/$(ProjectName).ld</RemoteFile>
+      <RemoteFile Condition="'$(Configuration)|$(Platform)'=='Release|x86'">$(RemoteProjectDir)li_dev_lib/$(ProjectName).ld</RemoteFile>
+      <RemoteFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(RemoteProjectDir)li_dev_lib/$(ProjectName).ld</RemoteFile>
+      <RemoteFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(RemoteProjectDir)li_dev_lib/$(ProjectName).ld</RemoteFile>
+    </None>
   </ItemGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <Link>

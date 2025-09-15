@@ -15,6 +15,7 @@ gCA_CERT_ALIAS="ca-coffee_server"
 
 # 원본 파일 경로 (사용자 환경에 맞게 수정 필요)
 ORIGIN_ELPUSK_HID_D="/home/tester/projects/LiElpuskHidDaemon/bin/x64/Release/elpusk-hid-d"
+ORIGIN_LIBDEV_LIB_XYZ="/home/tester/projects/li_dev_lib/bin/x64/Release/libdev_lib.so.1.0.0" # <-- x.y.z 실제 버전으로 변경
 ORIGIN_LIBTG_LPU237_DLL_XYZ="/home/tester/projects/li_lpu237_dll/bin/x64/Release/libtg_lpu237_dll.so.6.0.0" # <-- x.y.z 실제 버전으로 변경
 ORIGIN_LIBTG_LPU237_IBUTTON_XYZ="/home/tester/projects/li_lpu237_ibutton/bin/x64/Release/libtg_lpu237_ibutton.so.6.0.0" # <-- x.y.z 실제 버전으로 변경
 ORIGIN_ELPUSK_HID_D_JSON="/home/tester/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/projects/ElpuskHidDaemon/elpusk-hid-d.json"
@@ -42,6 +43,7 @@ cp "${ORIGIN_ELPUSK_HID_D_JSON}" "${DEB_DIR}/usr/share/elpusk/programdata/000000
 cp "${ORIGIN_TG_LPU237_DLL_INI}" "${DEB_DIR}/usr/share/elpusk/programdata/00000006/coffee_manager/tg_lpu237_dll/"
 cp "${ORIGIN_TG_LPU237_IBUTTON_INI}" "${DEB_DIR}/usr/share/elpusk/programdata/00000006/coffee_manager/tg_lpu237_ibutton/"
 cp "${ORIGIN_ELPUSK_HID_D}" "${DEB_DIR}/usr/share/elpusk/program/00000006/coffee_manager/bin/"
+cp "${ORIGIN_LIBDEV_LIB_XYZ}" "${DEB_DIR}/usr/share/elpusk/program/00000006/coffee_manager/so/"
 cp "${ORIGIN_LIBTG_LPU237_DLL_XYZ}" "${DEB_DIR}/usr/share/elpusk/program/00000006/coffee_manager/so/"
 cp "${ORIGIN_LIBTG_LPU237_IBUTTON_XYZ}" "${DEB_DIR}/usr/share/elpusk/program/00000006/coffee_manager/so/"
 
@@ -127,8 +129,16 @@ chmod 755 /var/log/elpusk/00000006/coffee_manager -R
 
 # 심볼릭 링크 생성
 SO_DIR="/usr/share/elpusk/program/00000006/coffee_manager/so"
+LIBDEV_LIB_XYZ="libdev_lib.so.1.0.0" # <-- x.y.z 실제 버전으로 변경
 LIBTG_LPU237_DLL_XYZ="libtg_lpu237_dll.so.6.0.0" # <-- x.y.z 실제 버전으로 변경
 LIBTG_LPU237_IBUTTON_XYZ="libtg_lpu237_ibutton.so.6.0.0" # <-- x.y.z 실제 버전으로 변경
+
+# libdev_lib.so.x.y.z -> libdev_lib.so.x
+if [ -f "\$SO_DIR/\$LIBDEV_LIB_XYZ" ]; then
+    VERSION_DLL=\$(echo "\$LIBDEV_LIB_XYZ" | sed -E 's/libdev_lib.so.([0-9]+).([0-9]+).([0-9]+)/\1/')
+    ln -sf "\$SO_DIR/\$LIBDEV_LIB_XYZ" "\$SO_DIR/libdev_lib.so.\$VERSION_DLL"
+    ln -sf "\$SO_DIR/libdev_lib.so.\$VERSION_DLL" "\$SO_DIR/libdev_lib.so"
+fi
 
 # libtg_lpu237_dll.so.x.y.z -> libtg_lpu237_dll.so.x
 if [ -f "\$SO_DIR/\$LIBTG_LPU237_DLL_XYZ" ]; then
@@ -353,4 +363,4 @@ echo "설치 명령어: sudo dpkg -i ${DEB_PACKAGE_NAME}"
 # echo "제거 명령어: sudo dpkg -r ${PACKAGE_NAME}"
 echo "완전 제거 명령어: sudo dpkg -P ${PACKAGE_NAME}"
 echo ""
-echo "!!! 중요: 'libtg_lpu237_dll.so.x.y.z'와 'libtg_lpu237_ibutton.so.x.y.z'의 'x.y.z' 부분을 실제 파일 버전에 맞게 수정해야 합니다."
+echo "!!! 중요: 'libdev_lib.so.x.y.x, libtg_lpu237_dll.so.x.y.z'와 'libtg_lpu237_ibutton.so.x.y.z'의 'x.y.z' 부분을 실제 파일 버전에 맞게 수정해야 합니다."

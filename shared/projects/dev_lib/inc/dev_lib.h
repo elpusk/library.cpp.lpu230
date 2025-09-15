@@ -17,9 +17,18 @@
 extern "C" {
 #endif
 
-bool _CALLTYPE_ dev_lib_on();
+/**
+* @brief initialize lib. setup logger if p_log is not null.
+* @param p_log - pointer of mp::clog instance.
+* @return true : success, false : error
+*/
+int _CALLTYPE_ dev_lib_on(void *p_log);
 
-bool _CALLTYPE_ dev_lib_off();
+/**
+* @brief finalize lib.
+* @return true : success, false : error
+*/
+int _CALLTYPE_ dev_lib_off();
 
 // the exported function is determined by _hid_api_briage class public method.
 
@@ -29,7 +38,13 @@ bool _CALLTYPE_ dev_lib_off();
 std::mutex* _CALLTYPE_ dev_lib_get_mutex();
 void* _CALLTYPE_ dev_lib_constrcutor();
 void _CALLTYPE_ dev_lib_destructor(void* p_instance);
-bool _CALLTYPE_ dev_lib_is_ini(void* p_instance);
+
+/**
+* @brief check is ini or not
+* @param p_instance - pointer of _vhid_api_briage instance.
+* @return true : ini, false : not ini or error
+*/
+int _CALLTYPE_ dev_lib_is_ini(void* p_instance);
 
 /**
 * @brief get connected information of devices.
