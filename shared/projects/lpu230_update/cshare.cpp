@@ -242,8 +242,9 @@ int cshare::update_fw_list_of_selected_rom()
 		if (m_s_rom_file_abs_full_path.empty()) {
 			continue;
 		}
-		if (!m_b_fw_file_is_rom_format) {
-			m_b_fw_file_is_rom_format = false;
+
+		std::filesystem::path p(m_s_rom_file_abs_full_path);
+		if (p.extension() != ".rom") {
 			continue;
 		}
 
