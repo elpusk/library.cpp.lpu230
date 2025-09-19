@@ -4,6 +4,15 @@
     <Filter Include="lib">
       <UniqueIdentifier>{3b917e10-9354-48dc-8e90-3afcc8834f89}</UniqueIdentifier>
     </Filter>
+    <Filter Include="lib\hid">
+      <UniqueIdentifier>{334db0d4-af11-471b-86df-58f336f25eac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common">
+      <UniqueIdentifier>{1e604aed-1e66-44c2-a61e-609f91ea5701}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common\lpu230">
+      <UniqueIdentifier>{aa461c7e-43a7-40c3-a180-6ff99fafef08}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\lib\inc\mp_type.h">
@@ -51,6 +60,63 @@
       <Filter>lib</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\projects\lpu230_update\HidBootManager.h" />
+    <ClInclude Include="..\shared\lib\inc\hid\mp_clibhid_dev.h">
+      <Filter>lib\hid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\hid\mp_clibhid_dev_info.h">
+      <Filter>lib\hid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\hid\_vhid_info.h">
+      <Filter>lib\hid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\hid\_vhid_info_lpu237.h">
+      <Filter>lib\hid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\hid\mp_clibhid.h">
+      <Filter>lib\hid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_elpusk.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\cprotocol_lpu237.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\ckey_map.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\lpu230\info_sys.h">
+      <Filter>common\lpu230</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\lpu230\info_sys_cnst.h">
+      <Filter>common\lpu230</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\lpu230\KBConst.h">
+      <Filter>common\lpu230</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\lpu230\compiler.h">
+      <Filter>common\lpu230</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\lpu230\info_msr.h">
+      <Filter>common\lpu230</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\cdev_lib.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cqueue.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cqitem_dev.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\chid_briage.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\projects\dev_lib\inc\dev_lib.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\projects\lpu230_update\cshare.h">
+      <Filter>common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\shared\lib\inc\mp_cnamed_pipe_.cpp">
@@ -63,5 +129,20 @@
       <Filter>lib</Filter>
     </ClCompile>
     <ClCompile Include="..\shared\projects\lpu230_update\HidBootManager.cpp" />
+    <ClCompile Include="..\shared\lib\src\hid\mp_clibhid.cpp">
+      <Filter>lib\hid</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\lib\src\hid\mp_clibhid_dev.cpp">
+      <Filter>lib\hid</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\lib\src\hid\mp_clibhid_dev_info.cpp">
+      <Filter>lib\hid</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\common\src\chid_briage.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\projects\lpu230_update\cshare.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

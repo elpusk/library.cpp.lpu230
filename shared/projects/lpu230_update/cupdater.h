@@ -12,40 +12,19 @@
 #include <ftxui/component/screen_interactive.hpp>
 #include <ftxui/dom/elements.hpp>
 
-#include <mp_cversion.h>
+
 #include <mp_cwait.h>
 #include <mp_clog.h>
 
+#include <chid_briage.h>
 #include "HidBootManager.h"
 
 class cupdater {
 
 public:
 	typedef std::shared_ptr<cupdater> type_ptr;
-	typedef _mp::cversion<unsigned char>	type_version;
+	
 public:
-	enum class Lpu237Interface {
-		nc = -1, //no consideration
-		usb_keyboard = 0,//0
-		usb_hid = 1,//1
-		usb_vcom = 2,//2
-		uart = 10
-	};
-	static std::string get_string(Lpu237Interface inf)
-	{
-		std::string s;
-		switch (inf) {
-		case cupdater::Lpu237Interface::nc: s = "no consideration"; break;
-		case cupdater::Lpu237Interface::usb_keyboard: s = "usb_keyboard"; break;
-		case cupdater::Lpu237Interface::usb_hid: s = "usb_hid"; break;
-		case cupdater::Lpu237Interface::usb_vcom: s = "usb_vcom"; break;
-		case cupdater::Lpu237Interface::uart: s = "uart"; break;
-		default:
-			s = "unknown";
-			break;
-		}
-		return s;
-	}
 
 	enum class AppState {
 		s_ini, s_selfile, s_selfirm, s_sellast, s_ing, s_com
@@ -111,33 +90,10 @@ public:
 		return s;
 	}
 public:
-	cupdater(_mp::clog& log,bool b_disaplay, bool b_log, cupdater::Lpu237Interface lpu237_interface_after_update);
+	cupdater(_mp::clog& log,bool b_disaplay, bool b_log);
 	virtual ~cupdater();
 	// Update function to be implemented by derived classes
 	bool start_update();
-	// Function to check if an update is available
-	bool is_update_available() const;
-
-	//setters for rom file and target device information
-	cupdater& set_rom_file(const std::string& s_abs_full_path_of_rom);
-	cupdater& set_index_of_fw_in_rom(int n_index_of_fw_in_rom);
-	cupdater& set_update_condition_of_fw(const std::wstring& s_update_condition_of_fw);
-
-	cupdater& set_device_path(const std::string& s_device_path);
-	cupdater& set_device_version(const std::wstring& s_device_version);
-	cupdater& set_mmd1100_iso_mode(bool b_enable);
-
-	// Getters for rom file and target device information
-	const std::string& get_rom_file() const;
-	int get_index_of_fw_in_rom() const;
-	const std::wstring& get_update_condition_of_fw() const;
-	bool is_fw_file_in_rom_format() const;
-
-	const std::string& get_device_path() const;
-	const type_version& get_device_version() const;
-
-	bool is_mmd1100_iso_mode() const;
-	//
 
 	/**
 	* @brief Set the range of progress for the update process.
@@ -150,18 +106,6 @@ public:
 	void set_pos_of_progress(int n_progress_pos);
 
 	int get_pos_of_progress() const;
-
-	/**
-	* @brief Update the list of files in the current directory.
-	*   update m_v_files_in_current_dir and m_v_rom_files_in_current_dir with m_current_dir.
-	*/
-	void update_files_list_of_cur_dir();
-
-	/**
-	* @brief Update the list of firmware in the selected rom file.
-	* @return 0>= : updatable firmware index.
-	*/
-	int update_fw_list_of_selected_rom();
 
 	void ui_main_loop();
 
@@ -203,15 +147,13 @@ private:
 	*/
 	bool _pop_message(std::string& s_out_msg,bool b_remove_after_pop = true);
 
+	std::vector<std::filesystem::path> _find_rom_files();
+
 private:
 	CHidBootManager* m_p_mgmt;
+	chid_briage::type_ptr m_ptr_hid_api_briage;
 
 	std::atomic<cupdater::AppState> m_state;
-
-	int m_n_selected_file_in_v_files_in_current_dir;
-	std::vector<std::string> m_v_files_in_current_dir;
-	std::vector<std::string> m_v_rom_files_in_current_dir; // rom file list in the m_v_files_in_current_dir.
-	std::filesystem::path m_current_dir;
 
 	int m_n_progress_cur, m_n_progress_min, m_n_progress_max;
 
@@ -223,10 +165,6 @@ private:
 	std::shared_ptr<ftxui::Component> m_ptr_select_file_button; // select button in file selection dialog
 	std::shared_ptr<ftxui::Component> m_ptr_cancel_file_button; // cancel button in file selection dialog
 
-
-	int m_n_index_updatable_fw_in_rom; // updatable firmware index in the selected rom file.
-	int m_n_selected_fw;
-	std::vector<std::string> m_v_firmware_list; //firmware list in the selected rom file.
 	std::shared_ptr<ftxui::Component> m_ptr_fw_menu; // list UI by m_v_firmware_list
 	std::shared_ptr<ftxui::Component> m_ptr_ok_fw_button; // ok(selection) button of firmware select dialog.
 	std::shared_ptr<ftxui::Component> m_ptr_cancel_fw_button; // cancel button of firmware select dialog.
@@ -266,23 +204,6 @@ private:
 	// UI option
 	bool m_b_display; //CUI enable or disable
 	bool m_b_log; //log file generation
-
-	// MMD1100 option
-	bool m_b_mmd1100_iso_mode;
-
-	cupdater::Lpu237Interface m_lpu237_interface_after_update; // after updating, interface change value.
-
-	//////////////////////////////////
-	//rom file section
-	std::string m_s_abs_full_path_of_rom;
-	int m_n_index_of_fw_in_rom;
-	std::wstring m_s_update_condition_of_fw;
-	bool m_b_fw_file_is_rom_format;
-
-	//target device section
-	std::string m_s_device_path;
-	_mp::type_v_buffer m_v_device_model_name;
-	cupdater::type_version m_version_of_device;
 
 	// Mutex for thread safety
 	std::mutex m_mutex;

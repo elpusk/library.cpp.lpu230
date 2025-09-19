@@ -46,6 +46,40 @@ void _CALLTYPE_ dev_lib_destructor(void* p_instance);
 */
 int _CALLTYPE_ dev_lib_is_ini(void* p_instance);
 
+
+/**
+* usb id tuple
+* 
+*   each item's
+* 
+*	1'st - std::string, device path,
+*
+*	2'nd - unsigned short, usb vendor id,
+*
+*	3'th - unsigned short, usb product id,
+*
+*	4'th - int, usb interface number,
+*
+*	5'th - std::string, extra data
+* 
+*/
+typedef std::tuple<std::string, unsigned short, unsigned short, int, std::string> type_tuple_dev_lib_usb_id;
+
+/**
+* set of usb id tuple
+*
+*	1'st - std::string, device path,
+*
+*	2'nd - unsigned short, usb vendor id,
+*
+*	3'th - unsigned short, usb product id,
+*
+*	4'th - int, usb interface number,
+*
+*	5'th - std::string, extra data
+*
+*/
+typedef std::set< type_tuple_dev_lib_usb_id> type_set_tuple_dev_lib_usb_id;
 /**
 * @brief get connected information of devices.
 *
@@ -61,13 +95,13 @@ int _CALLTYPE_ dev_lib_is_ini(void* p_instance);
 *
 *	5'th - std::string, extra data
 */
-std::set< std::tuple<std::string, unsigned short, unsigned short, int, std::string>>* _CALLTYPE_ dev_lib_hid_enumerate(void* p_instance);
+type_set_tuple_dev_lib_usb_id* _CALLTYPE_ dev_lib_hid_enumerate(void* p_instance);
 
 /**
 * @brief free memory of the set returned by dev_lib_hid_enumerate()
 * @param p_tuple - pointer of the set returned by dev_lib_hid_enumerate()
 */
-void _CALLTYPE_ dev_lib_hid_enumerate_free(std::set< std::tuple<std::string, unsigned short, unsigned short, int, std::string>>*p_tuple);
+void _CALLTYPE_ dev_lib_hid_enumerate_free(type_set_tuple_dev_lib_usb_id*p_tuple);
 
 
 /**

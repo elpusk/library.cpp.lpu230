@@ -62,7 +62,7 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 	
 	do {
 		if (!_mp::csystem::daemonize_on_linux(s_pid_file_full_path, std::wstring(), _signal_handler)) {
-			n_result = cdef_const::exit_error_daemonize;
+			n_result = _mp::exit_error_daemonize;
 			continue;
 		}
 
@@ -72,7 +72,7 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 		//check single instance
 		ptr_file_lock_for_single_instance = _mp::csystem::get_file_lock_for_single_instance(_mp::_coffee::CONST_S_COFFEE_MGMT_FILE_LOCK_FOR_SINGLE);
 		if (!ptr_file_lock_for_single_instance) {
-			n_result = cdef_const::exit_error_already_running;
+			n_result = _mp::exit_error_already_running;
 			continue;//Another instance is already running.
 		}
 
@@ -113,7 +113,7 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 		if (!gptr_ctl_pipe) {
 			log.log_fmt(L"[E] %ls | create controller pipe.\n", __WFUNCTION__);
 			log.trace(L"[E] %ls | create controller pipe.\n", __WFUNCTION__);
-			n_result = cdef_const::exit_error_create_ctl_pipe;
+			n_result = _mp::exit_error_create_ctl_pipe;
 			continue;
 		}
 
@@ -126,7 +126,7 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 		if (!cdev_lib::get_instance().load(s_dev_lib_dll_abs_full_path,&log)) {
 			log.log_fmt(L"[E] %ls | load dev_lib.dll(.so) | %ls.\n", __WFUNCTION__, s_dev_lib_dll_abs_full_path.c_str());
 			log.trace(L"[E] %ls | load dev_lib.dll(.so) | %ls.\n", __WFUNCTION__, s_dev_lib_dll_abs_full_path.c_str());
-			n_result = cdef_const::exit_error_create_ctl_pipe;
+			n_result = _mp::exit_error_load_dev_lib;
 		}
 
 		//////////////////////////////////////////////////////////////
@@ -156,7 +156,7 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 		if (!wss_svr.start(n_thread_for_server, s_root_folder_except_backslash)) {
 			log.log_fmt(L"[E] %ls | cserver::get_instance().start().\n", __WFUNCTION__);
 			log.trace(L"[E] - %ls | cserver::get_instance().start().\n", __WFUNCTION__);
-			n_result = cdef_const::exit_error_start_server;
+			n_result = _mp::exit_error_start_server;
 			continue;
 		}
 		n_result = EXIT_SUCCESS;
@@ -184,7 +184,7 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 					gb_run_main_loop = false;
 					log.log_fmt(L"[I] %ls | req - server stop.\n", __WFUNCTION__);
 					log.trace(L"[I] - %ls | req - server stop.\n", __WFUNCTION__);
-					n_result = cdef_const::exit_info_ctl_pipe_requst_terminate;
+					n_result = _mp::exit_info_ctl_pipe_requst_terminate;
 					continue;
 				}
 

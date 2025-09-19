@@ -27,6 +27,7 @@
 #include <mp_cfile.h>
 #include <mp_coffee_path.h>
 
+#include <cdev_lib.h>
 #include "update.h"
 
 
@@ -34,6 +35,27 @@ static std::vector<std::filesystem::path> _find_rom_files();
 
 static void _signal_handler(int signum);
 
+static bool setup_display(bool b_display);
+
+static void setup_log(bool b_run_by_coffee_manager, bool b_enable);
+
+/**
+*
+* @return first - true : success processing, second - error code. if first is true, second must be EXIT_SUCCESS.
+*/
+static std::pair<bool, int> setup_dev_io_dll(_mp::clog& log);
+
+
+/**
+*
+* @return first - true : success processing, second - error code. if first is true, second must be EXIT_SUCCESS.
+*/
+static std::pair<bool, int> setup_rom_dll(_mp::clog& log);
+
+/**
+* @brief 사용자로 부터 받은 command option 울 받아.
+*   GUI 를 생성하고, 업데이트 manager 를 실행.
+*/
 int update_main
 (
 	const std::string& s_abs_full_rom_file,
@@ -41,7 +63,7 @@ int update_main
 	bool b_display,
 	bool b_log_file,
 	bool b_mmd1100_iso_mode,
-	cupdater::Lpu237Interface lpu237_interface_after_update,
+	cshare::Lpu237Interface lpu237_interface_after_update,
 	bool b_run_by_cf
 )
 {
@@ -49,93 +71,75 @@ int update_main
 	std::wstring s_pid_file_full_path;
 	bool b_need_remove_pid_file(false);
 
-
 	do {
-		/////////////////////////////////
-		//setting display
-		if (!b_display) {
-#ifdef _WIN32
-			HWND consoleWindow = GetConsoleWindow();
-			ShowWindow(consoleWindow, SW_HIDE); // 콘솔 창 숨기기
-#else
-			s_pid_file_full_path = _mp::_coffee::CONST_S_PID_FILE_FULL_PATH_LPU230_UPDATE;
-			if (!_mp::csystem::daemonize_on_linux(s_pid_file_full_path, std::wstring(), _signal_handler)) {
-				continue;
-			}
-			b_need_remove_pid_file = true;
-#endif
-		}
+		b_need_remove_pid_file = setup_display(b_display);
 
-		std::filesystem::path path_cur_exe = _mp::cfile::get_cur_exe_abs_path();
-		std::filesystem::path path_cur = path_cur_exe.parent_path();
+		setup_log(b_run_by_cf, b_log_file);
+		// from this line, _mp::clog::get_instance() can be used.
 
-		/////////////////////////////////
-		// setup log
 		_mp::clog& log(_mp::clog::get_instance());
-		if (b_run_by_cf) {
-			std::wstring s_log_root_folder_except_backslash = _mp::ccoffee_path::get_path_of_coffee_logs_root_folder_except_backslash();
-			log.config(
-				s_log_root_folder_except_backslash
-				,6
-				, std::wstring(L"coffee_manager")
-				, std::wstring(L"lpu230_update")
-				, std::wstring(L"lpu230_update")
-				);
+
+		auto result_dev_io_dll = setup_dev_io_dll(log);
+		if (!result_dev_io_dll.first) {
+			n_result = result_dev_io_dll.second;
+			continue;
 		}
-		else {
-			log.config(
-				path_cur.wstring() // without backslash
-				,-1
-				,std::wstring()
-				, std::wstring()
-				, std::wstring()
-			);
+		// from this line, cdev_lib::get_instance() can be used. 
+
+		auto result_rom_dll = setup_rom_dll(log);
+		if (!result_rom_dll.first) {
+			n_result = result_rom_dll.second;
+			continue;
 		}
 
-		log.enable(b_log_file);
-		log.remove_log_files_older_then_now_day(3);
-
-		/////////////////////////////////
-		// find rom file
-		std::string s_rom(s_abs_full_rom_file);
-
-		if (!b_display && s_rom.empty()) {
-			std::vector<std::filesystem::path> v_roms = _find_rom_files();
-			if (v_roms.empty()) {
-				log.log_fmt(L"[E] none rom file.\n");
-				continue;
-			}
-
-			s_rom = v_roms[0].string();
-		}
+		// from this line, CHidBootManager::GetInstance() can be used.
+		// from this line, cshare::get_instance() can be used. because cshare use CHidBootManager.
 
 		///////////////////////////////////////////////////
 		// setup info
 		if (b_display) {
+			cshare::get_instance().set_manual_mode(true);
 			log.log_fmt(L"[I] Enable UI\n");
 		}
+		else {
+			cshare::get_instance().set_manual_mode(false);
+		}
 		log.log_fmt(L"[I] after done,change interface %ls.\n",
-			_mp::cstring::get_unicode_from_mcsc(cupdater::get_string(lpu237_interface_after_update)).c_str()
+			_mp::cstring::get_unicode_from_mcsc(cshare::get_string(lpu237_interface_after_update)).c_str()
 			);
 		
-		log.log_fmt(L"[I] rom file : %ls\n",s_rom.c_str());
+		if (s_abs_full_rom_file.empty()) {
+			log.log_fmt(L"[I] rom file : auto detected rom.\n");
+		}
+		else {
+			log.log_fmt(L"[I] rom file : %s.\n", s_abs_full_rom_file.c_str());
+			cshare::get_instance().set_rom_file_abs_full_path(s_abs_full_rom_file);
+		}
+		//
 		if (s_device_path.empty()) {
 			log.log_fmt(L"[I] target device : auto detected device.\n");
 		}
 		else{
-			log.log_fmt(L"[I] target device : %ls.\n",s_device_path.c_str());
+			log.log_fmt(L"[I] target device : %s.\n",s_device_path.c_str());
+			cshare::get_instance().set_device_path(s_device_path);
 		}
 
 		if (b_mmd1100_iso_mode) {
 			log.log_fmt(L"[I] after updating,mmd1100 is set to iso mode.\n");
+			cshare::get_instance().set_iso_mode_after_update(b_mmd1100_iso_mode);
 		}
+
+		//
+		
 		///////////////////////////////////////////////////
 
-		cupdater updater(log,b_display, b_log_file, lpu237_interface_after_update);
 
-		updater.set_rom_file(s_rom).set_device_path(s_device_path).set_mmd1100_iso_mode(b_mmd1100_iso_mode);
+		cupdater updater(log,b_display, b_log_file);
 
-		updater.initial_update();
+		if (!updater.initial_update()) {
+			log.log_fmt(L"[E] initial_update().\n");
+			continue;
+		}
 
 		if (!updater.start_update()) {
 			log.log_fmt(L"[E] start_update().\n");
@@ -200,4 +204,103 @@ void _signal_handler(int signum)
 
 	} while (false);
 #endif
+}
+
+
+bool setup_display(bool b_display)
+{
+	bool b_result(true);
+
+	if (!b_display) {
+#ifdef _WIN32
+		HWND consoleWindow = GetConsoleWindow();
+		ShowWindow(consoleWindow, SW_HIDE); // 콘솔 창 숨기기
+#else
+		std::wstring s_pid_file_full_path = _mp::_coffee::CONST_S_PID_FILE_FULL_PATH_LPU230_UPDATE;
+		if (!_mp::csystem::daemonize_on_linux(s_pid_file_full_path, std::wstring(), _signal_handler)) {
+			b_result = false;
+		}
+#endif
+	}
+
+	return b_result;
+}
+
+void setup_log(bool b_run_by_coffee_manager, bool b_enable)
+{
+	std::filesystem::path path_cur_exe = _mp::cfile::get_cur_exe_abs_path();
+	std::filesystem::path path_cur = path_cur_exe.parent_path();
+
+	/////////////////////////////////
+	// setup log
+	_mp::clog& log(_mp::clog::get_instance());
+	if (b_run_by_coffee_manager) {
+		std::wstring s_log_root_folder_except_backslash = _mp::ccoffee_path::get_path_of_coffee_logs_root_folder_except_backslash();
+		log.config(
+			s_log_root_folder_except_backslash
+			, 6
+			, std::wstring(L"coffee_manager")
+			, std::wstring(L"lpu230_update")
+			, std::wstring(L"lpu230_update")
+		);
+	}
+	else {
+		log.config(
+			path_cur.wstring() // without backslash
+			, -1
+			, std::wstring()
+			, std::wstring()
+			, std::wstring()
+		);
+	}
+
+	log.enable(b_enable);
+	log.remove_log_files_older_then_now_day(3);
+
+}
+
+/**
+*
+* @return first - true : success processing, second - error code. if first is true, second must be EXIT_SUCCESS.
+*/
+std::pair<bool, int> setup_dev_io_dll(_mp::clog& log)
+{
+	bool b_result(false);
+	int n_error_code(EXIT_SUCCESS);
+	do {
+		// load dev_lib.dll(.so)
+		std::wstring s_dev_lib_dll_abs_full_path(_mp::ccoffee_path::get_abs_full_path_of_dev_lib_dll());
+
+		if (!cdev_lib::get_instance().load(s_dev_lib_dll_abs_full_path, &log)) {
+			log.log_fmt(L"[E] %ls | load dev_lib.dll(.so) | %ls.\n", __WFUNCTION__, s_dev_lib_dll_abs_full_path.c_str());
+			log.trace(L"[E] %ls | load dev_lib.dll(.so) | %ls.\n", __WFUNCTION__, s_dev_lib_dll_abs_full_path.c_str());
+			n_error_code = _mp::exit_error_load_dev_lib;
+			continue;
+		}
+
+		b_result = true;
+	} while (false);
+	return std::make_pair(b_result, n_error_code);
+}
+
+
+/**
+*
+* @return first - true : success processing, second - error code. if first is true, second must be EXIT_SUCCESS.
+*/
+std::pair<bool, int> setup_rom_dll(_mp::clog& log)
+{
+	bool b_result(false);
+	int n_error_code(EXIT_SUCCESS);
+	do {
+		std::filesystem::path path_rom_dll_full = _mp::ccoffee_path::get_abs_full_path_of_rom_dll();
+		if (!CHidBootManager::GetInstance()->load_rom_library(path_rom_dll_full)) {
+			log.log_fmt(L"[E] setup rom library(%ls).\n", path_rom_dll_full.wstring().c_str());
+			n_error_code = _mp::exit_error_load_rom_lib;
+			continue;
+		}
+
+		b_result = true;
+	} while (false);
+	return std::make_pair(b_result, n_error_code);
 }

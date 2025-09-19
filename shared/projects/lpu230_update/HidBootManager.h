@@ -16,11 +16,16 @@
 #include <mp_type.h>
 #include <mp_cwait.h>
 #include <mp_cfile.h>
+#include <hid/mp_clibhid.h>
+
 #include "HidBootBuffer.h"
+
+// DONT INCLUDE cshare.h
 
 class CHidBootManager
 {
 public:
+	typedef std::pair< std::string, _mp::clibhid::pair_ptrs >	type_pair_handle;
 	// callback function type
 	// int : user defined message type
 	// WPARAM : WPARAM of user parameter
@@ -106,6 +111,7 @@ public:
 
 	int GetDeviceList();
 	bool SelectDevice(int nSel);
+	bool SelectDevice(const std::string& s_device_path);
 	bool UnselectDevice();
 
 	bool IsInitialOk() { return m_bIniOk; }
@@ -197,11 +203,11 @@ private:
 
 private:
 	static int _DDL_GetList(std::list<std::wstring>& ListDev, int nVid, int nPid, int nInf);
-	static HANDLE _DDL_open(const std::wstring & szDevicePath);
-	static bool _DDL_close(HANDLE hDevice);
-	static int _DDL_write(HANDLE hDev, unsigned char* lpData, int nTx, int nOutReportSize);
-	static int _DDL_read(HANDLE hDev, unsigned char* lpData, int nRx, int nInReportSize);
-	static bool _DDL_TxRx(HANDLE hDev, unsigned char* lpTxData, int nTx, int nOutReportSize, unsigned char* lpRxData, int* nRx, int nInReportSize);
+	static CHidBootManager::type_pair_handle _DDL_open(const std::wstring & szDevicePath);
+	static bool _DDL_close(CHidBootManager::type_pair_handle hDevice);
+	static int _DDL_write(CHidBootManager::type_pair_handle hDev, unsigned char* lpData, int nTx, int nOutReportSize);
+	static int _DDL_read(CHidBootManager::type_pair_handle hDev, unsigned char* lpData, int nRx, int nInReportSize);
+	static bool _DDL_TxRx(CHidBootManager::type_pair_handle hDev, unsigned char* lpTxData, int nTx, int nOutReportSize, unsigned char* lpRxData, int* nRx, int nInReportSize);
 
 
 	/**
@@ -244,7 +250,8 @@ private:
 	Do_Status m_DoStatus;
 
 	std::list<std::wstring> m_listDev;
-	HANDLE m_hDev;
+
+	CHidBootManager::type_pair_handle m_pair_dev_ptrs;// <- HANDLE m_hDev;
 
 	std::mutex m_mutex_cb;
 	_mp::cwait m_waiter_cb;

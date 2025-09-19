@@ -10,19 +10,6 @@
 */
 
 class cdef_const {
-public:
-	typedef enum : int {
-		exit_error_not_supported = 200,
-		exit_error_daemonize = 250,
-		exit_error_already_running = 251,
-		exit_error_create_ctl_pipe = 252,
-		exit_error_start_server = 253,
-		exit_error_get_ctl_pipe = 254,
-		exit_error_create_install_cert = 255,
-		exit_error_remove_cert = 256,
-
-		exit_info_ctl_pipe_requst_terminate = 300
-	}type_exit_code;
 
 public:
 	~cdef_const() {}

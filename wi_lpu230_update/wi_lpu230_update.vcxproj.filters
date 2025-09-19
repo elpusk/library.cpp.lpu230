@@ -16,6 +16,15 @@
     <Filter Include="lib">
       <UniqueIdentifier>{f291d313-8819-4f28-81bd-f9cdeeefc3a7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="lib\hid">
+      <UniqueIdentifier>{5b7858d6-7642-41ce-8db2-c466af387570}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common">
+      <UniqueIdentifier>{b7093994-4ac5-4dea-94da-b27f8ccd89f3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common\lpi230">
+      <UniqueIdentifier>{e1df3af4-7745-4439-9570-b36718a8ff3c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\shared\projects\lpu230_update\lpu230_update.cpp">
@@ -32,6 +41,24 @@
     </ClCompile>
     <ClCompile Include="..\shared\projects\lpu230_update\HidBootManager.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\lib\src\hid\mp_clibhid.cpp">
+      <Filter>lib\hid</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\lib\src\hid\mp_clibhid_dev.cpp">
+      <Filter>lib\hid</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\lib\src\hid\mp_clibhid_dev_info.cpp">
+      <Filter>lib\hid</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\common\src\chid_briage.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\lib\inc\mp_cnamed_pipe_.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\projects\lpu230_update\cshare.cpp">
+      <Filter>common</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -70,6 +97,78 @@
     </ClInclude>
     <ClInclude Include="..\shared\lib\inc\mp_type.h">
       <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\hid\_vhid_info_lpu237.h">
+      <Filter>lib\hid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\hid\mp_clibhid.h">
+      <Filter>lib\hid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\hid\mp_clibhid_dev.h">
+      <Filter>lib\hid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\hid\mp_clibhid_dev_info.h">
+      <Filter>lib\hid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\hid\_vhid_info.h">
+      <Filter>lib\hid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_elpusk.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\cprotocol_lpu237.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cversion.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_icprotocol.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cconvert.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_clog.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\ckey_map.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_coperation.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\lpu230\info_sys.h">
+      <Filter>common\lpi230</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\lpu230\info_sys_cnst.h">
+      <Filter>common\lpi230</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\lpu230\KBConst.h">
+      <Filter>common\lpi230</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\lpu230\compiler.h">
+      <Filter>common\lpi230</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\lpu230\info_msr.h">
+      <Filter>common\lpi230</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\cdev_lib.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cqueue.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cqitem_dev.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\chid_briage.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cnamed_pipe_.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\projects\lpu230_update\cshare.h">
+      <Filter>common</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

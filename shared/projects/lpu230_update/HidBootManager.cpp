@@ -1,6 +1,7 @@
 #include "HidBootManager.h"
 #include <memory>
 #include <algorithm>
+#include <functional>
 
 
 #ifdef	WIN32
@@ -8,13 +9,16 @@
 #include <atltrace.h>
 #endif
 
+#include <mp_cstring.h>
 #include <mp_csystem_.h>
+#include <mp_cwait.h>
+
+// DONT INCLUDE cshare.h
 
 CHidBootManager::CHidBootManager(void) :
 	m_bIniOk(true),
 	m_n_evt_Kill(-1), m_n_evt_Do(-1), m_n_evt_Stop(-1), m_n_evt_Pause(-1), m_n_evt_Resume(-1),
 	m_DoStatus(DS_IDLE),
-	m_hDev(NULL),
 	m_nRomItemIndex(-1),
 	m_nCurRomReadOffset(0)
 {
@@ -464,13 +468,13 @@ bool CHidBootManager::_do_send_data_in_worker(bool b_resend_mode)
 
 		//_tprintf( L" * sector = %d.\n",nSec );
 
-		if( _DDL_write( m_hDev, &vReq[0], 64, 64 ) ){
+		if( _DDL_write(m_pair_dev_ptrs, &vReq[0], 64, 64 ) ){
 
 			if( m_RBuffer.is_complete_get_one_sector_from_buffer()) {
 				
 				int nRx;
 				do{
-					nRx = _DDL_read( m_hDev, &vReplay[0], 64, 64 );
+					nRx = _DDL_read(m_pair_dev_ptrs, &vReplay[0], 64, 64 );
 					if( nRx != 64 ){
 						bResult = false;
 						break;// exit break
@@ -522,11 +526,11 @@ bool CHidBootManager::_do_erase_in_worker(int n_sec)
 
 	int nRx = 64;
 
-	if( _DDL_TxRx( m_hDev, &vReq[0], 64, 64, &vReplay[0], &nRx, 64 ) ){
+	if( _DDL_TxRx(m_pair_dev_ptrs, &vReq[0], 64, 64, &vReplay[0], &nRx, 64 ) ){
 
 		while( _is_zero_packet( vReplay ) ){
 
-			nRx = _DDL_read( m_hDev, &vReplay[0], 64, 64 );
+			nRx = _DDL_read(m_pair_dev_ptrs, &vReplay[0], 64, 64 );
 
 			if( nRx != 64 ){
 				bResult = false;
@@ -538,7 +542,7 @@ bool CHidBootManager::_do_erase_in_worker(int n_sec)
 			if( pReplay->cResult != HIDB_REP_RESULT_SUCCESS ){
 
 				//retry
-				nRx = _DDL_read( m_hDev, &vReplay[0], 64, 64 );
+				nRx = _DDL_read(m_pair_dev_ptrs, &vReplay[0], 64, 64 );
 
 				if( nRx == 64 ){
 					bResult = true;
@@ -604,35 +608,219 @@ void CHidBootManager::_woker_for_update()
 
 int CHidBootManager::_DDL_GetList(std::list<std::wstring>& ListDev, int nVid, int nPid, int nInf)
 {
-	return 0;
+	_mp::clibhid& mclibhid(_mp::clibhid::get_manual_instance());
+	_mp::type_set_usb_filter set_usb_filter;
+	set_usb_filter.emplace(nVid, nPid, nInf);
+
+	mclibhid.set_usb_filter(set_usb_filter);
+
+	mclibhid.update_dev_set_in_manual();
+	_mp::clibhid_dev_info::type_set set_dev_info = mclibhid.get_cur_device_set();
+
+	ListDev.clear();
+
+	for (auto item : set_dev_info) {
+		ListDev.push_back(
+			item.get_path_by_wstring()
+		);
+	}//end for
+
+	return ListDev.size();
 }
 
-HANDLE CHidBootManager::_DDL_open(const std::wstring& szDevicePath)
+CHidBootManager::type_pair_handle CHidBootManager::_DDL_open(const std::wstring& szDevicePath)
 {
-	return 0;
+	_mp::clibhid& mclibhid(_mp::clibhid::get_manual_instance());
+	_mp::clibhid_dev_info::type_set set_dev_info = mclibhid.get_cur_device_set();
+
+	_mp::clibhid_dev::type_ptr ptr_dev;
+	_mp::clibhid_dev_info::type_ptr ptr_info;
+	_mp::clibhid::pair_ptrs dev_ptrs(ptr_dev, ptr_info);
+
+	CHidBootManager::type_pair_handle pair_dev_ptrs("", dev_ptrs);
+
+	for (auto item : set_dev_info) {
+		if (item.get_path_by_wstring() != szDevicePath) {
+			continue;
+		}
+		//
+		ptr_dev = std::make_shared<_mp::clibhid_dev>(item, mclibhid.get_briage().get());// create & open clibhid_dev.
+		ptr_info = std::make_shared<_mp::clibhid_dev_info>(item);
+		dev_ptrs = std::make_pair(ptr_dev, ptr_info);
+		pair_dev_ptrs = std::make_pair(item.get_path_by_string(), dev_ptrs);
+	}//end for
+
+	return pair_dev_ptrs;
 }
 
-bool CHidBootManager::_DDL_close(HANDLE hDevice) {
+bool CHidBootManager::_DDL_close(CHidBootManager::type_pair_handle hDevice) {
 	bool b_result(false);
 
 	do {
+		if (hDevice.first.empty()) {
+			continue;
+		}
 
+		hDevice.second.first.reset();
+		hDevice.second.second.reset();
+		hDevice.first.clear();
+
+		b_result = true;
 	} while (false);
 	return b_result;
 }
 
-int CHidBootManager::_DDL_write(HANDLE hDev, unsigned char* lpData, int nTx, int nOutReportSize) {
-	return 0;
+int CHidBootManager::_DDL_write(CHidBootManager::type_pair_handle hDev, unsigned char* lpData, int nTx, int nOutReportSize) 
+{
+	int n_data(0);
+
+	do {
+		if (hDev.first.empty()) {
+			continue;
+		}
+
+		if (!hDev.second.first) {
+			continue;
+		}
+		if (lpData == NULL) {
+			continue;
+		}
+		if (nTx <= 0) {
+			continue;
+		}
+
+		_mp::cwait w;
+		int n_w = w.generate_new_event();
+		_mp::type_v_buffer v_tx(lpData[0], lpData[nTx]);
+		std::pair<int, _mp::cwait*> param(n_w, &w);
+		hDev.second.first->start_write(0, v_tx,
+			[](_mp::cqitem_dev& qi, void* p_user)->std::pair<bool, std::vector<size_t> > {
+				std::pair<int, _mp::cwait*>* p_param = (std::pair<int, _mp::cwait*>*)p_user;
+				p_param->second->set(p_param->first);//trigger
+				return std::make_pair(qi.is_complete(), std::vector<size_t>());
+		}
+		, &param);
+
+		w.wait_for_one_at_time();
+
+		n_data = nTx;
+	} while (false);
+	return n_data;
 }
 
-int CHidBootManager::_DDL_read(HANDLE hDev, unsigned char* lpData, int nRx, int nInReportSize) {
-	return 0;
+int CHidBootManager::_DDL_read(CHidBootManager::type_pair_handle hDev, unsigned char* lpData, int nRx, int nInReportSize) 
+{
+	int n_data(0);
+
+	do {
+		if (hDev.first.empty()) {
+			continue;
+		}
+
+		if (!hDev.second.first) {
+			continue;
+		}
+		if (lpData == NULL) {
+			continue;
+		}
+		if (nRx <= 0) {
+			continue;
+		}
+
+		_mp::type_v_buffer v_rx;
+		_mp::cwait w;
+		int n_w = w.generate_new_event();
+		std::tuple<int, _mp::cwait*, _mp::type_v_buffer*> param(n_w, &w,&v_rx);
+		hDev.second.first->start_read(0, 
+			[](_mp::cqitem_dev& qi, void* p_user)->std::pair<bool, std::vector<size_t>> {
+				std::tuple<int, _mp::cwait*, _mp::type_v_buffer*>* p_param = (std::tuple<int, _mp::cwait*, _mp::type_v_buffer*>*)p_user;
+
+				if (qi.is_complete()) {
+					
+					int n = std::get<0>(*p_param);
+					_mp::cwait* p_w = std::get<1>(*p_param);
+					_mp::type_v_buffer* p_v_rx = std::get<2>(*p_param);
+					*p_v_rx = qi.get_rx();
+					p_w->set(n);//trigger
+				}
+				
+				return std::make_pair(qi.is_complete(), std::vector<size_t>());
+			}
+		, &param);
+
+		w.wait_for_one_at_time();
+
+		n_data = v_rx.size();
+		if(nRx>= v_rx.size()){
+			memcpy(lpData, &v_rx[0], v_rx.size());
+		}
+		else {
+			memcpy(lpData, &v_rx[0], nRx);
+		}
+	} while (false);
+	return n_data;
 }
 
-bool CHidBootManager::_DDL_TxRx(HANDLE hDev, unsigned char* lpTxData, int nTx, int nOutReportSize, unsigned char* lpRxData, int* nRx, int nInReportSize) {
-	return 0;
-}
+bool CHidBootManager::_DDL_TxRx(CHidBootManager::type_pair_handle hDev, unsigned char* lpTxData, int nTx, int nOutReportSize, unsigned char* lpRxData, int* p_nRx, int nInReportSize) 
+{
+	int n_data(0);
 
+	do {
+		if (hDev.first.empty()) {
+			continue;
+		}
+
+		if (!hDev.second.first) {
+			continue;
+		}
+		if (lpTxData == NULL) {
+			continue;
+		}
+		if (nTx <= 0) {
+			continue;
+		}
+		if (lpRxData == NULL) {
+			continue;
+		}
+		if (p_nRx == NULL) {
+			continue;
+		}
+
+		_mp::type_v_buffer v_tx(lpTxData[0], lpTxData[nTx]);
+		_mp::type_v_buffer v_rx;
+		_mp::cwait w;
+		int n_w = w.generate_new_event();
+		std::tuple<int, _mp::cwait*, _mp::type_v_buffer*> param(n_w, &w, &v_rx);
+		hDev.second.first->start_write_read(0, v_tx,
+			[](_mp::cqitem_dev& qi, void* p_user)->std::pair<bool, std::vector<size_t>> {
+				std::tuple<int, _mp::cwait*, _mp::type_v_buffer*>* p_param = (std::tuple<int, _mp::cwait*, _mp::type_v_buffer*>*)p_user;
+
+				if (qi.is_complete()) {
+
+					int n = std::get<0>(*p_param);
+					_mp::cwait* p_w = std::get<1>(*p_param);
+					_mp::type_v_buffer* p_v_rx = std::get<2>(*p_param);
+					*p_v_rx = qi.get_rx();
+					p_w->set(n);//trigger
+				}
+
+				return std::make_pair(qi.is_complete(), std::vector<size_t>());
+			}
+		, &param);
+
+		w.wait_for_one_at_time();
+
+		n_data = v_rx.size();
+		if (*p_nRx >= v_rx.size()) {
+			memcpy(lpRxData, &v_rx[0], v_rx.size());
+		}
+		else {
+			memcpy(lpRxData, &v_rx[0], *p_nRx);
+		}
+
+	} while (false);
+	return n_data;
+}
 
 
 
@@ -662,11 +850,11 @@ std::tuple<bool, bool, unsigned long, unsigned long> CHidBootManager::_get_secto
 
 	int nRx = 64;
 
-	if (_DDL_TxRx(m_hDev, &vReq[0], 64, 64, &vReplay[0], &nRx, 64)) {
+	if (_DDL_TxRx(m_pair_dev_ptrs, &vReq[0], 64, 64, &vReplay[0], &nRx, 64)) {
 
 		while (_is_zero_packet(vReplay)) {
 
-			nRx = _DDL_read(m_hDev, &vReplay[0], 64, 64);
+			nRx = _DDL_read(m_pair_dev_ptrs, &vReplay[0], 64, 64);
 
 			if (nRx != 64) {
 				bResult = false;
@@ -717,8 +905,8 @@ bool CHidBootManager::SelectDevice( int nSel )
 					nSel--;
 			}
 
-			m_hDev = _DDL_open( *iter );
-			if( m_hDev == NULL )
+			m_pair_dev_ptrs = _DDL_open( *iter );
+			if(m_pair_dev_ptrs.first.empty())
 				bResult = false;
 			//
 			auto result = _get_sector_info_from_device();
@@ -735,14 +923,43 @@ bool CHidBootManager::SelectDevice( int nSel )
 	return bResult;
 }
 
+bool CHidBootManager::SelectDevice(const std::string& s_device_path)
+{
+	bool b_result(false);
+
+	std::wstring s = _mp::cstring::get_unicode_from_mcsc(s_device_path);
+	std::list<std::wstring>::iterator iter = m_listDev.begin();
+
+	for (auto item : m_listDev) {
+		if (s != item) {
+			continue;
+		}
+		m_pair_dev_ptrs = _DDL_open(item);
+		if (!m_pair_dev_ptrs.first.empty()) {
+			b_result = true;
+		}
+		auto result = _get_sector_info_from_device();
+		if (std::get<0>(result) && std::get<1>(result)) {
+			m_RBuffer.reset(std::get<2>(result), std::get<3>(result), true, false);
+		}
+		else {
+			m_RBuffer.reset();
+		}
+		break;
+	}//end for
+	return b_result;
+}
+
 bool CHidBootManager::UnselectDevice()
 {
 	bool bResult = true;
 	std::lock_guard<std::mutex> lock(m_mutex_main);
 
-	if( m_hDev ){
-		_DDL_close( m_hDev );
-		m_hDev = NULL;
+	if(!m_pair_dev_ptrs.first.empty()){
+		_DDL_close(m_pair_dev_ptrs);
+		m_pair_dev_ptrs.first.clear();
+		m_pair_dev_ptrs.second.first.reset();
+		m_pair_dev_ptrs.second.second.reset();
 	}
 
 	return bResult;
@@ -753,7 +970,7 @@ bool CHidBootManager::GotoApp()
 	bool bResult = true;
 	std::lock_guard<std::mutex> lock(m_mutex_main);
 
-	if( m_hDev ){
+	if(!m_pair_dev_ptrs.first.empty()){
 		unsigned char sTx[64];
 		int nRx = 0;
 
@@ -764,9 +981,11 @@ bool CHidBootManager::GotoApp()
 
 		pReq->cCmd = HIDB_REQ_CMD_RUN;
 
-		if( _DDL_write( m_hDev, sTx, 64, 64 ) ){
-			_DDL_close( m_hDev );
-			m_hDev = NULL;
+		if( _DDL_write(m_pair_dev_ptrs, sTx, 64, 64 ) ){
+			_DDL_close(m_pair_dev_ptrs);
+			m_pair_dev_ptrs.first.clear();
+			m_pair_dev_ptrs.second.first.reset();
+			m_pair_dev_ptrs.second.second.reset();
 		}
 		else{
 			bResult = false;

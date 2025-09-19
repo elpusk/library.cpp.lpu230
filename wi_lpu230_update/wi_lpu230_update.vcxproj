@@ -19,18 +19,48 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\shared\common\src\chid_briage.cpp" />
+    <ClCompile Include="..\shared\lib\inc\mp_cnamed_pipe_.cpp" />
     <ClCompile Include="..\shared\lib\inc\mp_csystem_.cpp" />
+    <ClCompile Include="..\shared\lib\src\hid\mp_clibhid.cpp" />
+    <ClCompile Include="..\shared\lib\src\hid\mp_clibhid_dev.cpp" />
+    <ClCompile Include="..\shared\lib\src\hid\mp_clibhid_dev_info.cpp" />
+    <ClCompile Include="..\shared\projects\lpu230_update\cshare.cpp" />
     <ClCompile Include="..\shared\projects\lpu230_update\cupdater.cpp" />
     <ClCompile Include="..\shared\projects\lpu230_update\HidBootManager.cpp" />
     <ClCompile Include="..\shared\projects\lpu230_update\lpu230_update.cpp" />
     <ClCompile Include="..\shared\projects\lpu230_update\update.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\shared\common\inc\cdev_lib.h" />
+    <ClInclude Include="..\shared\common\inc\chid_briage.h" />
+    <ClInclude Include="..\shared\common\inc\ckey_map.h" />
+    <ClInclude Include="..\shared\common\inc\cprotocol_lpu237.h" />
+    <ClInclude Include="..\shared\common\inc\lpu230\compiler.h" />
+    <ClInclude Include="..\shared\common\inc\lpu230\info_msr.h" />
+    <ClInclude Include="..\shared\common\inc\lpu230\info_sys.h" />
+    <ClInclude Include="..\shared\common\inc\lpu230\info_sys_cnst.h" />
+    <ClInclude Include="..\shared\common\inc\lpu230\KBConst.h" />
+    <ClInclude Include="..\shared\lib\inc\hid\mp_clibhid.h" />
+    <ClInclude Include="..\shared\lib\inc\hid\mp_clibhid_dev.h" />
+    <ClInclude Include="..\shared\lib\inc\hid\mp_clibhid_dev_info.h" />
+    <ClInclude Include="..\shared\lib\inc\hid\_vhid_info.h" />
+    <ClInclude Include="..\shared\lib\inc\hid\_vhid_info_lpu237.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_cconvert.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_clog.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_cnamed_pipe_.h" />
     <ClInclude Include="..\shared\lib\inc\mp_coffee.h" />
     <ClInclude Include="..\shared\lib\inc\mp_coffee_path.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_coperation.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_cqitem_dev.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_cqueue.h" />
     <ClInclude Include="..\shared\lib\inc\mp_csystem_.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_cversion.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_elpusk.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_icprotocol.h" />
     <ClInclude Include="..\shared\lib\inc\mp_os_type.h" />
     <ClInclude Include="..\shared\lib\inc\mp_type.h" />
+    <ClInclude Include="..\shared\projects\lpu230_update\cshare.h" />
     <ClInclude Include="..\shared\projects\lpu230_update\cupdater.h" />
     <ClInclude Include="..\shared\projects\lpu230_update\HidBootBuffer.h" />
     <ClInclude Include="..\shared\projects\lpu230_update\HidBootManager.h" />
@@ -95,28 +125,28 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>C:\local\FTXUI\include;C:\local\boost_1_80_0;$(SolutionDir)shared\lib\inc;$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)shared\projects\rom\inc</IncludePath>
+    <IncludePath>C:\local\FTXUI\include;C:\local\boost_1_80_0;$(SolutionDir)shared\lib\inc;$(SolutionDir)shared\common\inc;$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)shared\projects\rom\inc;$(SolutionDir)shared\projects\dev_lib\inc</IncludePath>
     <LibraryPath>C:\local\boost_1_80_0\stage\lib;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86)</LibraryPath>
     <TargetName>lpu230_update</TargetName>
     <ExecutablePath>C:\local\boost_1_80_0;$(VC_ExecutablePath_x86);$(CommonExecutablePath)</ExecutablePath>
     <SourcePath>C:\local\boost_1_80_0\boost;$(VC_SourcePath);</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>C:\local\FTXUI\include;C:\local\boost_1_80_0;$(SolutionDir)shared\lib\inc;$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)shared\projects\rom\inc</IncludePath>
+    <IncludePath>C:\local\FTXUI\include;C:\local\boost_1_80_0;$(SolutionDir)shared\lib\inc;$(SolutionDir)shared\common\inc;$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)shared\projects\rom\inc;$(SolutionDir)shared\projects\dev_lib\inc</IncludePath>
     <LibraryPath>C:\local\boost_1_80_0\stage\lib;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86)</LibraryPath>
     <TargetName>lpu230_update</TargetName>
     <ExecutablePath>C:\local\boost_1_80_0;$(VC_ExecutablePath_x86);$(CommonExecutablePath)</ExecutablePath>
     <SourcePath>C:\local\boost_1_80_0\boost;$(VC_SourcePath);</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>C:\local\FTXUI\include;C:\local\boost_1_80_0;$(SolutionDir)shared\lib\inc;$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)shared\projects\rom\inc</IncludePath>
+    <IncludePath>C:\local\FTXUI\include;C:\local\boost_1_80_0;$(SolutionDir)shared\lib\inc;$(SolutionDir)shared\common\inc;$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)shared\projects\rom\inc;$(SolutionDir)shared\projects\dev_lib\inc</IncludePath>
     <LibraryPath>C:\local\boost_1_80_0\stage\lib;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
     <TargetName>lpu230_update</TargetName>
     <ExecutablePath>C:\local\boost_1_80_0;$(VC_ExecutablePath_x64);$(CommonExecutablePath)</ExecutablePath>
     <SourcePath>C:\local\boost_1_80_0\boost;$(VC_SourcePath);</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>C:\local\FTXUI\include;C:\local\boost_1_80_0;$(SolutionDir)shared\lib\inc;$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)shared\projects\rom\inc</IncludePath>
+    <IncludePath>C:\local\FTXUI\include;C:\local\boost_1_80_0;$(SolutionDir)shared\lib\inc;$(SolutionDir)shared\common\inc;$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)shared\projects\rom\inc;$(SolutionDir)shared\projects\dev_lib\inc</IncludePath>
     <LibraryPath>C:\local\boost_1_80_0\stage\lib;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
     <TargetName>lpu230_update</TargetName>
     <ExecutablePath>C:\local\boost_1_80_0;$(VC_ExecutablePath_x64);$(CommonExecutablePath)</ExecutablePath>

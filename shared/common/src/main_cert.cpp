@@ -48,7 +48,7 @@ int main_cert(const _mp::type_set_wstring &set_parameters)
 	}
 	else {
 		_mp::clog::get_instance().trace(L"[E] - %ls - %ls - config certificates.\n", __WFILE__, __WFUNCTION__);
-		n_result = cdef_const::exit_error_create_install_cert;
+		n_result = _mp::exit_error_create_install_cert;
 	}
 	return n_result;
 }

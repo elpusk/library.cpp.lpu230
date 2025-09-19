@@ -23,6 +23,7 @@
 #include <mp_cconvert.h>
 
 #include "update.h"
+#include "cshare.h"
 
 static void _hide_console();
 static void _print_help(const std::string& program_name);
@@ -39,7 +40,7 @@ int main(int argc, char** argv)
     bool b_rom_file(false);
     bool b_device_path(false);
     bool b_manual(false);
-    cupdater::Lpu237Interface lpu237_interface_after_update(cupdater::Lpu237Interface::nc);
+    cshare::Lpu237Interface lpu237_interface_after_update(cshare::Lpu237Interface::nc);
     bool b_run_by_cf(false); //executed by coffee manager 2'nd 
 
     std::string s_rom_file;
@@ -231,31 +232,31 @@ int main(int argc, char** argv)
         // -mx option
         it = std::find(list_parameters.begin(), list_parameters.end(), "-m0");
         if (it != std::end(list_parameters)) {
-            lpu237_interface_after_update = cupdater::Lpu237Interface::usb_keyboard;
+            lpu237_interface_after_update = cshare::Lpu237Interface::usb_keyboard;
         }
         it = std::find(list_parameters.begin(), list_parameters.end(), "-m1");
         if (it != std::end(list_parameters)) {
-            if (lpu237_interface_after_update != cupdater::Lpu237Interface::nc) {
+            if (lpu237_interface_after_update != cshare::Lpu237Interface::nc) {
                 b_help = true;
                 continue;//error
             }
-            lpu237_interface_after_update = cupdater::Lpu237Interface::usb_hid;
+            lpu237_interface_after_update = cshare::Lpu237Interface::usb_hid;
         }
         it = std::find(list_parameters.begin(), list_parameters.end(), "-m2");
         if (it != std::end(list_parameters)) {
-            if (lpu237_interface_after_update != cupdater::Lpu237Interface::nc) {
+            if (lpu237_interface_after_update != cshare::Lpu237Interface::nc) {
                 b_help = true;
                 continue;//error
             }
-            lpu237_interface_after_update = cupdater::Lpu237Interface::usb_vcom;
+            lpu237_interface_after_update = cshare::Lpu237Interface::usb_vcom;
         }
         it = std::find(list_parameters.begin(), list_parameters.end(), "-m10");
         if (it != std::end(list_parameters)) {
-            if (lpu237_interface_after_update != cupdater::Lpu237Interface::nc) {
+            if (lpu237_interface_after_update != cshare::Lpu237Interface::nc) {
                 b_help = true;
                 continue;//error
             }
-            lpu237_interface_after_update = cupdater::Lpu237Interface::uart;
+            lpu237_interface_after_update = cshare::Lpu237Interface::uart;
         }
 
         // coffee manager flag

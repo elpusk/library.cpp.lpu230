@@ -1,4 +1,4 @@
-#include "cupdater.h"
+#include "cupdater.h" // ftxui 에 min 조건부 정의가 있어서 ftxui/component/loop.hpp 보다 먼저 정의해야 함.
 #include <algorithm>
 
 #include <ftxui/component/loop.hpp>
@@ -8,20 +8,16 @@
 #endif
 
 #include <mp_coffee_path.h>
+#include <hid/mp_clibhid.h>
 
-cupdater::cupdater(_mp::clog& log,bool b_disaplay, bool b_log, cupdater::Lpu237Interface lpu237_interface_after_update) :
+#include "cshare.h"
+
+cupdater::cupdater(_mp::clog& log,bool b_disaplay, bool b_log) :
 	m_screen(ftxui::ScreenInteractive::Fullscreen())
 	, m_log_ref(log)
 	, m_b_display(b_disaplay)
 	, m_b_log(b_log)
-	, m_b_mmd1100_iso_mode(false) // default is binary mode.
-	, m_lpu237_interface_after_update(lpu237_interface_after_update)
 {
-	m_s_abs_full_path_of_rom.clear();
-	m_n_index_of_fw_in_rom = -1;
-	m_s_update_condition_of_fw.clear();
-	m_b_fw_file_is_rom_format = false;
-	m_s_device_path.clear();//
 	m_n_kill_signal = m_wait.generate_new_event();
 	//
 	m_state = cupdater::AppState::s_ini;
@@ -29,28 +25,16 @@ cupdater::cupdater(_mp::clog& log,bool b_disaplay, bool b_log, cupdater::Lpu237I
 	//setup boot manager
 	m_p_mgmt = CHidBootManager::GetInstance();
 
-	std::filesystem::path path_rom_dll_full = _mp::ccoffee_path::get_abs_full_path_of_rom_dll();
-	if (!m_p_mgmt->load_rom_library(path_rom_dll_full)) {
-		m_log_ref.log_fmt(L"[E] setup rom library(%ls).\n", path_rom_dll_full.wstring().c_str());
+	auto current_dir = std::filesystem::current_path();
+	if(!cshare::get_instance().get_rom_file_abs_full_path().empty()) {
+		current_dir = std::filesystem::path(cshare::get_instance().get_rom_file_abs_full_path()).parent_path();
 	}
 
-	m_current_dir = std::filesystem::current_path();
-	if(!m_s_abs_full_path_of_rom.empty()) {
-		m_current_dir = std::filesystem::path(m_s_abs_full_path_of_rom).parent_path();
-	}
-
-	update_files_list_of_cur_dir();//m_current_dir 에 있는 file 를 m_v_files_in_current_dir 에 설정.
-	m_n_selected_file_in_v_files_in_current_dir = 0;
-	if(m_v_files_in_current_dir.empty()) {
-		m_n_selected_file_in_v_files_in_current_dir = -1;
-	}
+	cshare::get_instance().update_files_list_of_cur_dir(current_dir);//m_current_dir 에 있는 file 를 m_v_files_in_current_dir 에 설정.
 
 	m_n_progress_min = 0;
 	m_n_progress_cur = m_n_progress_min;
 	m_n_progress_max = 100;
-
-	m_n_index_updatable_fw_in_rom = -1;
-	m_n_selected_fw = -1;
 
 	//
 	m_n_tab_index = 0; // 0: s_ini, 1: s_selfile, 2: s_selfirm, 3: s_sellast(confirm), 4: s_sellast(warning) ,5: s_ing, 6: s_scom
@@ -67,15 +51,12 @@ cupdater::cupdater(_mp::clog& log,bool b_disaplay, bool b_log, cupdater::Lpu237I
 	m_ptr_tab_container = std::make_shared<ftxui::Component>(ftxui::Container::Tab(m_v_tabs, &m_n_tab_index));
 
 	// Root with title
-	std::wstring version = L"2.0.0.0";
-	m_version_of_device.set_by_string(version);
-
 	m_ptr_root = std::make_shared<ftxui::Component>(ftxui::Renderer(*m_ptr_tab_container, [&]() {
 		return ftxui::vbox({
 				   ftxui::text("lpu230_update " + 
-					   _mp::cstring::get_mcsc_from_unicode(m_version_of_device.get_by_string() )
+					   _mp::cstring::get_mcsc_from_unicode(cshare::get_instance().get_version_target_device().get_by_string() )
 					   + " : " 
-					   + m_s_abs_full_path_of_rom
+					   + cshare::get_instance().get_rom_file_abs_full_path()
 				   ) | ftxui::border,
 				   (*m_ptr_tab_container)->Render() | ftxui::flex,
 			}) |
@@ -113,8 +94,6 @@ cupdater::cupdater(_mp::clog& log,bool b_disaplay, bool b_log, cupdater::Lpu237I
 		return false;  // Allow other events to propagate
 		})
 	);
-
-
 }
 
 bool cupdater::initial_update()
@@ -122,9 +101,59 @@ bool cupdater::initial_update()
 	bool b_result(false);
 
 	do {
+		//UI ini
 		set_range_of_progress(CHidBootManager::WSTEP_INI, CHidBootManager::WSTEP_DEV_IN);
 
-		// TOODO - need setting callback to p_mgmt;
+		m_ptr_hid_api_briage = std::make_shared<chid_briage>();
+
+
+		// 현재 연결된 장비를 얻는다.
+		_mp::type_set_usb_filter set_usb_filter;
+		set_usb_filter.emplace(_mp::_elpusk::const_usb_vid, _mp::_elpusk::_lpu237::const_usb_pid, _mp::_elpusk::_lpu237::const_usb_inf_hid); //lpu237
+		set_usb_filter.emplace(_mp::_elpusk::const_usb_vid, _mp::_elpusk::_lpu238::const_usb_pid, _mp::_elpusk::_lpu238::const_usb_inf_hid); //lpu238
+		//set_usb_filter.emplace(_mp::_elpusk::const_usb_vid, _mp::_elpusk::const_usb_pid_hidbl, _mp::_elpusk::const_usb_inf_hidbl); //hidbootloader
+
+		_mp::clibhid& mlibhid(_mp::clibhid::get_manual_instance());
+		mlibhid.set_usb_filter(set_usb_filter);
+
+		mlibhid.update_dev_set_in_manual();
+		_mp::clibhid_dev_info::type_set set_dev_info = mlibhid.get_cur_device_set();
+
+		if (set_dev_info.empty()) {
+			// 연결된 lpu237 or lpu238 없음.
+
+			if (!cshare::get_instance().is_manual()) {
+				continue;
+			}
+			if (cshare::get_instance().get_device_path().empty()) {
+				// 주어진 device path 도 없음,
+				m_log_ref.log_fmt(L"[E] not found lpu237 or lpu238 devices.\n");
+				continue; // target device 없음.
+			}
+
+			//m_s_device_path 가 이미 주어진 경우.//
+			
+			//처음 부터 bootloader가 연결되어 있는지 검사. 
+			if (m_p_mgmt->GetDeviceList() <= 0) {
+				// 연결된 bootloader 도 없음.
+				m_log_ref.log_fmt(L"[E] also not found bootloader devices.\n");
+				continue;
+			}
+
+			// 연결된 부트로더 있으면, 주어진 path 로 부트로더 열기 시도.
+			if (!m_p_mgmt->SelectDevice(cshare::get_instance().get_device_path())) {
+				m_log_ref.log_fmt(L"[E] can't open bootloader.\n");
+				continue;
+			}
+
+			cshare::get_instance().set_start_from_bootloader(true);
+		}
+		
+		// here
+		//exist device or (manual mode & bootloader only)
+
+
+		// need setting callback to p_mgmt;
 		// //////////////
 		m_p_mgmt->add_notify_cb(
 			[&](int n_msg, WPARAM wparm, LPARAM lparam) {
@@ -135,26 +164,9 @@ bool cupdater::initial_update()
 			, 0
 		);
 
-		if (m_s_device_path.empty()) {
-			// 연결된 첫 lpu237 를 찾아 m_s_device_path 를 설정.
-		}
-
-		std::shared_ptr<CRom> m_ptr_rom_dll = m_p_mgmt->get_rom_library();
-		if (!m_ptr_rom_dll) {
-			m_log_ref.log_fmt(L"[E] no rom library.\n");
-			continue;
-		}
-
-		if (m_s_abs_full_path_of_rom.empty()) {
-			// 현재 디렉토리에서 .rom 파일을 찾아 설정.
-			std::filesystem::path path_cur_exe = _mp::cfile::get_cur_exe_abs_path();
-			std::filesystem::path path_cur = path_cur_exe.parent_path();
+		if (!cshare::get_instance().get_start_from_bootloader()) {
 
 		}
-
-		m_v_device_model_name.resize(CRom::MAX_MODEL_NAME_SIZE, 0);
-		char s_model[] = "ganymede";
-		memcpy(&m_v_device_model_name[0], s_model, sizeof(s_model));
 
 		b_result = true;
 	} while (false);
@@ -165,7 +177,7 @@ bool cupdater::initial_update()
 std::shared_ptr<ftxui::Component> cupdater::_create_sub_ui0_ini()
 {
 	m_ptr_update_button = std::make_shared<ftxui::Component>(ftxui::Button("Update", [&]() {
-		std::string s(m_s_abs_full_path_of_rom);
+		std::string s(cshare::get_instance().get_rom_file_abs_full_path());
 		_update_state(cupdater::AppEvent::e_start, s);
 		}));
 
@@ -183,30 +195,62 @@ std::shared_ptr<ftxui::Component> cupdater::_create_sub_ui0_ini()
 
 std::shared_ptr<ftxui::Component> cupdater::_create_sub_ui1_select_file()
 {
-	m_ptr_file_menu = std::make_shared<ftxui::Component>(ftxui::Menu(&m_v_files_in_current_dir, &m_n_selected_file_in_v_files_in_current_dir));
+	static int _n_selected_file_in_v_files_in_current_dir(-1);
+	static std::vector<std::string> _v_files_in_current_dir;
+	static std::vector<std::string> _v_rom_files_in_current_dir; // rom file list in the _v_files_in_current_dir.
+	static std::filesystem::path _current_dir;
+
+	std::tie(
+		_n_selected_file_in_v_files_in_current_dir,
+		_current_dir,
+		_v_files_in_current_dir,
+		_v_rom_files_in_current_dir
+	) = cshare::get_instance().get_file_list_of_selected_dir();
+
+	m_ptr_file_menu = std::make_shared<ftxui::Component>(ftxui::Menu(&_v_files_in_current_dir, &_n_selected_file_in_v_files_in_current_dir));
 
 	m_ptr_select_file_button = std::make_shared<ftxui::Component>(ftxui::Button("Select", [&]() {
-		if (m_v_files_in_current_dir.empty()) {
+		/*
+		std::tie(
+			_n_selected_file_in_v_files_in_current_dir,
+			_current_dir,
+			_v_files_in_current_dir,
+			_v_rom_files_in_current_dir
+		) = cshare::get_instance().get_file_list_of_selected_dir();
+		*/
+		if (_v_files_in_current_dir.empty()) {
 			return;
 		}
-		std::string selected = m_v_files_in_current_dir[m_n_selected_file_in_v_files_in_current_dir];
-		std::filesystem::path selected_path = m_current_dir / selected;
+		std::string selected = _v_files_in_current_dir[_n_selected_file_in_v_files_in_current_dir];
+		std::filesystem::path selected_path = _current_dir / selected;
 		if (selected == "..") {
-			m_current_dir = m_current_dir.parent_path();
-			update_files_list_of_cur_dir();
+			_current_dir = _current_dir.parent_path();
+			cshare::get_instance().update_files_list_of_cur_dir(_current_dir);
+
+			std::tie(
+				_n_selected_file_in_v_files_in_current_dir,
+				std::ignore,
+				_v_files_in_current_dir,
+				_v_rom_files_in_current_dir
+			) = cshare::get_instance().get_file_list_of_selected_dir();
 			return;
 		}
 		if (std::filesystem::is_directory(selected_path)) {
-			m_current_dir = std::filesystem::path(selected_path);
-			update_files_list_of_cur_dir();
+			_current_dir = std::filesystem::path(selected_path);
+			cshare::get_instance().update_files_list_of_cur_dir(_current_dir);
+
+			std::tie(
+				_n_selected_file_in_v_files_in_current_dir,
+				std::ignore,
+				_v_files_in_current_dir,
+				_v_rom_files_in_current_dir
+			) = cshare::get_instance().get_file_list_of_selected_dir();
+
 			return;
 		}
 		if (std::filesystem::path(selected_path).extension() == ".rom") {
-			m_s_abs_full_path_of_rom = selected_path.string();//SEE
-			m_n_index_updatable_fw_in_rom = update_fw_list_of_selected_rom();
-			if (m_n_index_updatable_fw_in_rom > 0) {
-				m_n_selected_fw = m_n_index_updatable_fw_in_rom;
-			}
+			cshare::get_instance().set_rom_file_abs_full_path(selected_path.string());
+			cshare::get_instance().update_fw_list_of_selected_rom();
 
 			_update_state(cupdater::AppEvent::e_sfile_or, selected_path.string());
 		}
@@ -222,9 +266,11 @@ std::shared_ptr<ftxui::Component> cupdater::_create_sub_ui1_select_file()
 		{ *m_ptr_file_menu, ftxui::Container::Horizontal({ *m_ptr_select_file_button, *m_ptr_cancel_file_button }) }));
 
 	std::shared_ptr<ftxui::Component> ptr_component = std::make_shared<ftxui::Component>(ftxui::Renderer(container, [&]() {
+		std::filesystem::path path_cur;
+		std::tie(std::ignore, path_cur, std::ignore, std::ignore) = cshare::get_instance().get_file_list_of_selected_dir();
 		return ftxui::vbox({
 				   ftxui::text("Select rom file"),
-				   ftxui::text("Current directory: " + m_current_dir.string()),
+				   ftxui::text("Current directory: " + path_cur.string()),
 				   (*m_ptr_file_menu)->Render() | ftxui::frame | ftxui::flex,
 				   ftxui::hbox({(*m_ptr_select_file_button)->Render() | ftxui::flex, (*m_ptr_cancel_file_button)->Render() | ftxui::flex}),
 			}) |
@@ -236,18 +282,16 @@ std::shared_ptr<ftxui::Component> cupdater::_create_sub_ui1_select_file()
 }
 std::shared_ptr<ftxui::Component> cupdater::_create_sub_ui2_select_firmware()
 {
+	static std::vector<std::string> _v_firmware_list; //firmware list in the selected rom file.
+	static int _n_selected_fw(-1);
+
 	std::shared_ptr<ftxui::Component> ptr_component;
 
-	m_n_index_updatable_fw_in_rom = -1;
-	if (m_v_firmware_list.empty()) {
-		m_n_selected_fw = -1;
-	}
-	else {
-		m_n_selected_fw = 0;
-	}
+	std::tie(_n_selected_fw, _v_firmware_list) = cshare::get_instance().get_firmware_list_of_rom_file();
 
-	m_ptr_fw_menu = std::make_shared<ftxui::Component>(ftxui::Menu(&m_v_firmware_list, &m_n_selected_fw));
+	m_ptr_fw_menu = std::make_shared<ftxui::Component>(ftxui::Menu(&_v_firmware_list, &_n_selected_fw));
 	m_ptr_ok_fw_button = std::make_shared<ftxui::Component>(ftxui::Button("OK", [&]() {
+		cshare::get_instance().set_firmware_list_of_rom_file(_n_selected_fw, _v_firmware_list);
 		_update_state(cupdater::AppEvent::e_sfirm_o);
 		}));
 	m_ptr_cancel_fw_button = std::make_shared<ftxui::Component>(ftxui::Button("Cancel", [&]() {
@@ -333,7 +377,7 @@ std::shared_ptr<ftxui::Component> cupdater::_create_sub_ui4_updating()
 					ftxui::text("Updating"),
 					ftxui::gauge(static_cast<float>(m_n_progress_cur - m_n_progress_min) / (m_n_progress_max - m_n_progress_min)) | ftxui::color(ftxui::Color::Blue),
 					ftxui::text(status),
-					ftxui::text(m_s_abs_full_path_of_rom),
+					ftxui::text(cshare::get_instance().get_rom_file_abs_full_path()),
 					ftxui::emptyElement()
 			}) |
 			ftxui::border;
@@ -359,7 +403,7 @@ std::shared_ptr<ftxui::Component> cupdater::_create_sub_ui5_complete()
 		return ftxui::vbox({
 				   ftxui::text("SUCCESS"),
 				   ftxui::text(status),
-				   ftxui::text(m_s_abs_full_path_of_rom),
+				   ftxui::text(cshare::get_instance().get_rom_file_abs_full_path()),
 				   (*m_ptr_exit_button)->Render()
 			}) |
 			ftxui::border;
@@ -383,7 +427,7 @@ std::shared_ptr<ftxui::Component> cupdater::_create_sub_ui5_complete()
 		ftxui::Container::Vertical({
 		ftxui::Renderer([] { return ftxui::text("SUCCESS"); }),
 		ftxui::Renderer([] { return ftxui::text("The parameter has been recovered. all complete."); }),
-		ftxui::Renderer([this] { return ftxui::text(m_s_abs_full_path_of_rom); }),
+		ftxui::Renderer([this] { return ftxui::text(cshare::get_instance().get_rom_file_abs_full_path()); }),
 		*m_ptr_exit_button
 		})
 	);
@@ -420,6 +464,31 @@ bool cupdater::_pop_message(std::string& s_out_msg, bool b_remove_after_pop/*=tr
 		b_result = true;
 	} while (false);
 	return b_result;
+}
+
+std::vector<std::filesystem::path> cupdater::_find_rom_files()
+{
+	std::vector<std::filesystem::path> rom_files;
+
+	// 현재 실행 디렉터리
+	std::filesystem::path current_exe = _mp::cfile::get_cur_exe_abs_path();
+
+	std::filesystem::path current_dir = current_exe.parent_path();
+
+	// 디렉터리 순회
+	for (const auto& entry : std::filesystem::directory_iterator(current_dir)) {
+		if (entry.is_regular_file() && entry.path().extension() == ".rom") {
+			rom_files.push_back(entry.path());
+		}
+	}
+
+	// 내림차순 정렬
+	std::sort(rom_files.begin(), rom_files.end(),
+		[](const std::filesystem::path& a, const std::filesystem::path& b) {
+			return a.filename().string() > b.filename().string();
+		});
+
+	return rom_files;
 }
 
 std::tuple<bool, cupdater::AppState, std::string> cupdater::_update_state(cupdater::AppEvent event, const std::string& s_rom_or_bin_file /*= std::string()*/)
@@ -566,7 +635,7 @@ std::tuple<bool, cupdater::AppState, std::string> cupdater::_update_state(cupdat
 					m_n_tab_index = 2;
 					break;
 				case cupdater::AppState::s_sellast:
-					if (m_n_index_updatable_fw_in_rom > 0 && m_n_selected_fw == m_n_index_updatable_fw_in_rom) {
+					if (cshare::get_instance().is_select_fw_updatable()) {
 						// selected firmware is updatable.
 						m_n_tab_index = 3;
 					}
@@ -639,91 +708,6 @@ bool cupdater::start_update()
 	return b_result;
 }
 
-// Function to check if an update is available
-bool cupdater::is_update_available() const
-{
-	bool b_result(false);
-	do {
-		if (m_s_abs_full_path_of_rom.empty()) {
-			continue; // No ROM file set, cannot check for updates
-		}
-		if(m_n_index_of_fw_in_rom < 0 && m_b_fw_file_is_rom_format) {
-			continue; // Invalid index for firmware in ROM
-		}
-
-		b_result = true; // Assume update is available if conditions are met
-	} while (false);
-	return b_result;
-}
-
-cupdater& cupdater::set_rom_file(const std::string& s_abs_full_path_of_rom)
-{
-	m_s_abs_full_path_of_rom = s_abs_full_path_of_rom;
-	return *this;
-}
-
-cupdater& cupdater::set_index_of_fw_in_rom(int n_index_of_fw_in_rom)
-{
-	m_n_index_of_fw_in_rom = n_index_of_fw_in_rom;
-	return *this;
-}
-
-cupdater& cupdater::set_update_condition_of_fw(const std::wstring& s_update_condition_of_fw)
-{
-	m_s_update_condition_of_fw = s_update_condition_of_fw;
-	return *this;
-}
-
-cupdater& cupdater::set_device_path(const std::string& s_device_path)
-{
-	m_s_device_path = s_device_path;
-	return *this;
-}
-
-cupdater& cupdater::set_device_version(const std::wstring& s_device_version)
-{
-	m_version_of_device.set_by_string(s_device_version);
-	return *this;
-}
-
-cupdater& cupdater::set_mmd1100_iso_mode(bool b_enable)
-{
-	m_b_mmd1100_iso_mode = b_enable;
-	return *this;
-}
-
-const std::string& cupdater::get_rom_file() const
-{ 
-	return m_s_abs_full_path_of_rom;
-
-}
-int cupdater::get_index_of_fw_in_rom() const
-{
-	return m_n_index_of_fw_in_rom;
-}
-const std::wstring& cupdater::get_update_condition_of_fw() const
-{ 
-	return m_s_update_condition_of_fw;
-}
-bool cupdater::is_fw_file_in_rom_format() const
-{ 
-	return m_b_fw_file_is_rom_format;
-}
-
-const std::string& cupdater::get_device_path() const
-{ 
-	return m_s_device_path;
-}
-const cupdater::type_version& cupdater::get_device_version() const
-{ 
-	return m_version_of_device;
-}
-
-bool cupdater::is_mmd1100_iso_mode() const
-{
-	return m_b_mmd1100_iso_mode;
-}
-
 void cupdater::set_range_of_progress(int n_progress_min, int n_progress_max)
 {
 	m_n_progress_cur = n_progress_min;
@@ -740,119 +724,6 @@ int cupdater::get_pos_of_progress() const
 {
 	return m_n_progress_cur;
 }
-
-void cupdater::update_files_list_of_cur_dir()
-{
-	m_v_files_in_current_dir.clear();
-	m_v_rom_files_in_current_dir.clear();
-
-#ifdef _WIN32
-	m_v_files_in_current_dir.push_back("..");
-#else
-	m_v_files_in_current_dir.push_back("..");
-#endif
-	for (const auto& entry : std::filesystem::directory_iterator(m_current_dir)) {
-		if (entry.is_regular_file()) {
-			// regular file only.
-			std::filesystem::path path_ext = entry.path().extension();
-			if (path_ext != ".rom" && path_ext != ".bin") {
-				continue;
-			}
-			if (path_ext == ".rom") {
-				m_v_rom_files_in_current_dir.push_back(entry.path().filename().string());
-			}
-		}
-
-		std::string name = entry.path().filename().string();
-		if (entry.is_directory()) {
-#ifdef _WIN32
-			//name += "\\";
-#else
-			//name += "/";
-#endif
-		}
-		m_v_files_in_current_dir.push_back(name);
-	}
-
-	std::sort(m_v_rom_files_in_current_dir.begin(), m_v_rom_files_in_current_dir.end());
-	std::sort(m_v_files_in_current_dir.begin(), m_v_files_in_current_dir.end());
-
-}
-
-int cupdater::update_fw_list_of_selected_rom()
-{
-	int n_updatable_fw_index(-1);
-
-	do {
-		auto ptr_rom_dll = m_p_mgmt->get_rom_library();
-		if (!ptr_rom_dll) {
-			continue;
-		}
-		if (m_s_abs_full_path_of_rom.empty()) {
-			continue;
-		}
-		std::filesystem::path path_rom(m_s_abs_full_path_of_rom);
-		if (path_rom.extension() != ".rom") {
-			continue;
-		}
-
-		std::wstring ws_abs_full_path_of_rom = _mp::cstring::get_unicode_from_mcsc(m_s_abs_full_path_of_rom);
-
-		CRom::ROMFILE_HEAD rom_header{ 0, };
-		CRom::type_result result_rom_dll = ptr_rom_dll->LoadHeader(ws_abs_full_path_of_rom.c_str(), &rom_header);
-		if (result_rom_dll != CRom::result_success) {
-			continue;
-		}
-		m_b_fw_file_is_rom_format = true;
-		m_v_firmware_list.clear();
-
-		for (uint32_t i = 0; i < rom_header.dwItem; ++i) {
-			CRom::ROMFILE_HEAD_ITEAM& item = rom_header.Item[i];
-			std::string s_model = (char*)item.sModel;
-			std::string s_version = std::to_string((int)item.sVersion[0]) + "." +
-				std::to_string((int)item.sVersion[1]) + "." +
-				std::to_string((int)item.sVersion[2]) + "." +
-				std::to_string((int)item.sVersion[3]);
-			std::string s_cond;
-			if (item.dwUpdateCondition & CRom::condition_eq) {
-				s_cond += " EQ";
-			}
-			if (item.dwUpdateCondition & CRom::condition_neq) {
-				s_cond += " NEQ";
-			}
-			if (item.dwUpdateCondition & CRom::condition_gt) {
-				s_cond += " GT";
-			}
-			if (item.dwUpdateCondition & CRom::condition_lt) {
-				s_cond += " LT";
-			}
-			if (s_cond.empty()) {
-				s_cond = " None";
-			}
-			std::string s_list_item = std::to_string(i) + ": " + s_model + " v" + s_version + " (" + s_cond + ")";
-			m_v_firmware_list.push_back(s_list_item);
-		}//end for
-
-		if (m_v_firmware_list.empty()) {
-			continue;
-		}
-
-		if (m_v_device_model_name.empty()) {
-			continue;
-		}
-		n_updatable_fw_index = ptr_rom_dll->GetUpdatableItemIndex(
-			&m_v_device_model_name[0],
-			m_version_of_device.get_major(),
-			m_version_of_device.get_minor(),
-			m_version_of_device.get_fix(),
-			m_version_of_device.get_build()
-		);
-
-	} while (false);
-
-	return n_updatable_fw_index;
-}
-
 
 void cupdater::ui_main_loop()
 {

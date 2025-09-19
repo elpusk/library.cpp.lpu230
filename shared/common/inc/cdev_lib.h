@@ -28,8 +28,8 @@ private:
 	typedef	void (_CALLTYPE_* _type_dev_lib_destructor)(void*);
 	typedef	int (_CALLTYPE_* _type_dev_lib_is_ini)(void*);
 
-	typedef	std::set< std::tuple<std::string, unsigned short, unsigned short, int, std::string>>* (_CALLTYPE_* _type_dev_lib_hid_enumerate)(void*);
-	typedef void (_CALLTYPE_* _type_dev_lib_hid_enumerate_free)(std::set< std::tuple<std::string, unsigned short, unsigned short, int, std::string>>*);
+	typedef	type_set_tuple_dev_lib_usb_id* (_CALLTYPE_* _type_dev_lib_hid_enumerate)(void*);
+	typedef void (_CALLTYPE_* _type_dev_lib_hid_enumerate_free)(type_set_tuple_dev_lib_usb_id*);
 
 	typedef	std::tuple<bool, int, bool>* (_CALLTYPE_* _type_dev_lib_is_open)(void*, const char*);
 	typedef	void (_CALLTYPE_* _type_dev_lib_is_open_free)(std::tuple<bool, int, bool>*);
@@ -299,9 +299,9 @@ public:
 		return b_result;
 	}
 
-	std::set<std::tuple<std::string, unsigned short, unsigned short, int, std::string>> hid_enumerate(void* p_instance)
+	type_set_tuple_dev_lib_usb_id hid_enumerate(void* p_instance)
 	{
-		std::set<std::tuple<std::string, unsigned short, unsigned short, int, std::string>> set_result;
+		type_set_tuple_dev_lib_usb_id set_result;
 
 		do {
 			//std::lock_guard<std::mutex> lock(m_mutex);

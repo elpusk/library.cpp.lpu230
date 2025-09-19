@@ -21,6 +21,21 @@ public:
 
 	bool is_ini();
 
+	/**
+	* @brief get connected information of devices.
+	*
+	* @return  each item's
+	*
+	*	1'st - std::string, device path,
+	*
+	*	2'nd - unsigned short, usb vendor id,
+	*
+	*	3'th - unsigned short, usb product id,
+	*
+	*	4'th - int, usb interface number,
+	*
+	*	5'th - std::string, extra data
+	*/
 	std::set<std::tuple<std::string, unsigned short, unsigned short, int, std::string>> hid_enumerate();
 
 	std::tuple<bool, int, bool> is_open(const char* path);

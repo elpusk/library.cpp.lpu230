@@ -10,7 +10,6 @@
 #include <mp_clog.h>
 
 #include <hid/mp_clibhid_dev_info.h>
-//#include <hid/_vhid_api_briage.h>
 #include <chid_briage.h>
 
 namespace _mp {

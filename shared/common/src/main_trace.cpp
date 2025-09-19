@@ -16,7 +16,7 @@ int main_trace(const _mp::type_set_wstring& set_parameters)
 	do {
 		ptr_ctl_pipe = _mp::clog::get_trace_client(_mp::_coffee::CONST_S_COFFEE_MGMT_TRACE_PIPE_NAME);
 		if (!ptr_ctl_pipe) {
-			n_result = cdef_const::exit_error_get_ctl_pipe;
+			n_result = _mp::exit_error_get_ctl_pipe;
 			std::wcout << L"Error Server trace source open.\n";
 			continue;
 		}

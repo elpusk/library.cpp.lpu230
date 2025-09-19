@@ -90,9 +90,9 @@ int _CALLTYPE_ dev_lib_is_ini(void* p_instance)
 	return n_result;
 }
 
-std::set<std::tuple<std::string, unsigned short, unsigned short, int, std::string>>* _CALLTYPE_ dev_lib_hid_enumerate(void* p_instance)
+type_set_tuple_dev_lib_usb_id* _CALLTYPE_ dev_lib_hid_enumerate(void* p_instance)
 {
-	std::set<std::tuple<std::string, unsigned short, unsigned short, int, std::string>>* p_result(nullptr);
+	type_set_tuple_dev_lib_usb_id* p_result(nullptr);
 	do {
 		if (!p_instance) {
 			continue;
@@ -100,14 +100,14 @@ std::set<std::tuple<std::string, unsigned short, unsigned short, int, std::strin
 
 		_vhid_api_briage* p_vhid_api((_vhid_api_briage*)p_instance);
 		auto result = p_vhid_api->hid_enumerate();
-		p_result = new std::set<std::tuple<std::string, unsigned short, unsigned short, int, std::string>>(result);
+		p_result = new type_set_tuple_dev_lib_usb_id(result);
 		//
 	} while (false);
 
 	return p_result;
 }
 
-void _CALLTYPE_ dev_lib_hid_enumerate_free(std::set<std::tuple<std::string, unsigned short, unsigned short, int, std::string>>* p_tuple)
+void _CALLTYPE_ dev_lib_hid_enumerate_free(type_set_tuple_dev_lib_usb_id* p_tuple)
 {
 	if(p_tuple) {
 		delete p_tuple;
