@@ -93,6 +93,11 @@ namespace _mp {
         m_n_dev = -1;
     }
 
+    void clibhid_dev::clear_api_briage()
+    {
+        m_p_hid_api_briage = nullptr;
+    }
+
     bool clibhid_dev::is_detect_replugin()
     {
         return m_b_detect_replugin;

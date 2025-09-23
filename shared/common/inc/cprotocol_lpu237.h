@@ -1070,6 +1070,28 @@ public:
 		} while (false);
 		return b_result;
 	}
+	bool generate_get_system_information_with_name()
+	{
+		bool b_result(false);
+
+		do {
+			if (!generate_enter_config_mode())//must be first
+				continue;
+			if (!_generate_get_version())//must be second
+				continue;
+			if (!_generate_get_device_type())//must be third
+				continue;
+			if (!_generate_get_version_strcuture())// must be ?
+				continue;
+			if (!_generate_get_name())
+				continue;
+			if (!generate_leave_config_mode())//must be last.
+				continue;
+			b_result = true;
+		} while (false);
+		return b_result;
+	}
+
 	bool generate_get_parameters()
 	{
 		bool b_result(false);

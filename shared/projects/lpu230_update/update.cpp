@@ -54,7 +54,10 @@ static std::pair<bool, int> setup_rom_dll(_mp::clog& log);
 
 /**
 * @brief 사용자로 부터 받은 command option 울 받아.
-*   GUI 를 생성하고, 업데이트 manager 를 실행.
+* 
+*	GUI 를 생성하고, 업데이트 manager 를 실행.
+*	
+*	software component 검증.
 */
 int update_main
 (
@@ -95,18 +98,38 @@ int update_main
 		// from this line, CHidBootManager::GetInstance() can be used.
 		// from this line, cshare::get_instance() can be used. because cshare use CHidBootManager.
 
+		// b_run_by_cf 조건 조사, b_run_by_cf 가 enable 되어 있으면 아래의 조건을 만족해야 한다.
+		// 1. rom 파일 path 가 주어져야 한다.
+		// 2. device path 가 주어져야 한다.
+		if (b_run_by_cf) {
+			if (s_abs_full_rom_file.empty()) {
+				log.log_fmt(L"[E] b_run_by_cf is set, but none rom file.\n");
+				n_result = _mp::exit_error_run_by_cf_rom_file;
+				continue;
+			}
+			if (s_device_path.empty()) {
+				log.log_fmt(L"[E] b_run_by_cf is set, but none devie.\n");
+				n_result = _mp::exit_error_run_by_cf_device;
+				continue;
+			}
+			log.log_fmt(L"[I] run by cf is on.\n");
+			cshare::get_instance().set_run_by_cf(b_run_by_cf);
+		}
+
 		///////////////////////////////////////////////////
 		// setup info
 		if (b_display) {
-			cshare::get_instance().set_manual_mode(true);
 			log.log_fmt(L"[I] Enable UI\n");
 		}
 		else {
-			cshare::get_instance().set_manual_mode(false);
+			log.log_fmt(L"[I] Disable UI\n");
 		}
+
 		log.log_fmt(L"[I] after done,change interface %ls.\n",
 			_mp::cstring::get_unicode_from_mcsc(cshare::get_string(lpu237_interface_after_update)).c_str()
 			);
+		cshare::get_instance().set_lpu23x_interface_change_after_update(lpu237_interface_after_update);
+
 		
 		if (s_abs_full_rom_file.empty()) {
 			log.log_fmt(L"[I] rom file : auto detected rom.\n");
@@ -138,11 +161,6 @@ int update_main
 
 		if (!updater.initial_update()) {
 			log.log_fmt(L"[E] initial_update().\n");
-			continue;
-		}
-
-		if (!updater.start_update()) {
-			log.log_fmt(L"[E] start_update().\n");
 			continue;
 		}
 

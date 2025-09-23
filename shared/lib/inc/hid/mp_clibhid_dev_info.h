@@ -32,6 +32,9 @@ namespace _mp{
             const clibhid_dev_info::type_set& in,
             const type_v_bm_dev& v_type_filter
         );
+
+        static clibhid_dev_info::type_set::iterator find(clibhid_dev_info::type_set& in, const std::wstring& sw_path);
+        static clibhid_dev_info::type_set::iterator find(clibhid_dev_info::type_set& in, const std::string& sw_path);
     public: //constructor & destructor      
         clibhid_dev_info();
         

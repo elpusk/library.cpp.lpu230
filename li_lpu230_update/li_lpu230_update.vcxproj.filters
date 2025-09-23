@@ -13,6 +13,9 @@
     <Filter Include="common\lpu230">
       <UniqueIdentifier>{aa461c7e-43a7-40c3-a180-6ff99fafef08}</UniqueIdentifier>
     </Filter>
+    <Filter Include="common\lpu230\config">
+      <UniqueIdentifier>{0dac5a39-d75e-4c42-a290-ade8ff456770}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\lib\inc\mp_type.h">
@@ -116,6 +119,12 @@
     </ClInclude>
     <ClInclude Include="..\shared\projects\lpu230_update\cshare.h">
       <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_icprotocol.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\lpu230\config\cfg_msrlib.h">
+      <Filter>common\lpu230\config</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

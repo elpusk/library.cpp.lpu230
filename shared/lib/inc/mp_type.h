@@ -210,6 +210,9 @@ namespace _mp{
         exit_error_load_rom_lib = 258,
         exit_error_create_dev_mgmt = 259,
 
+        exit_error_run_by_cf_rom_file = 260,
+        exit_error_run_by_cf_device = 261,
+
         exit_info_ctl_pipe_requst_terminate = 300
     }type_exit_code;
 

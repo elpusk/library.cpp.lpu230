@@ -51,7 +51,7 @@ namespace _mp{
         static clibhid::type_ptr ptr_obj;
         if (b_first) {
             b_first = false;
-            ptr_obj = std::shared_ptr<clibhid>(new clibhid());
+            ptr_obj = std::shared_ptr<clibhid>(new clibhid(true));
         }
 
         return *ptr_obj;

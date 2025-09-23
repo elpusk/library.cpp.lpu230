@@ -64,6 +64,8 @@ namespace _mp {
         clibhid_dev(const clibhid_dev_info& info, chid_briage*p_hid_api_briage);
         ~clibhid_dev();
 
+        void clear_api_briage();
+
         bool is_detect_replugin();
 
         bool is_open() const;

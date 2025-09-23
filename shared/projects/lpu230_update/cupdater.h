@@ -27,8 +27,13 @@ public:
 public:
 
 	enum class AppState {
-		s_ini, s_selfile, s_selfirm, s_sellast, s_ing, s_com
-		, s_max //
+		s_ini // not initialized
+		,s_selfile // selecting rom or bin file
+		,s_selfirm // selecting fw in the rom file.
+		,s_sellast // the last chance of cancel operaion of updating fw.(confirmation)
+		,s_ing // updating ....... save system parameter, run boot. erase sector, write and verify, recover parameter.
+		,s_com // complete processing. waits for exsiting.
+		, s_max // the number of state. 
 	};
 
 	static std::string get_string(AppState st)
@@ -115,7 +120,23 @@ public:
 	bool initial_update();
 
 private:
-	void _updates_thread_function();
+	void _updates_thread_function();//thread main
+
+	bool _updates_sub_thread_backup_system_param(int &n_step);
+	bool _updates_sub_thread_run_bootloader(int& n_step);
+
+	bool _updates_sub_thread_wait_plugout_lpu23x(int& n_step);
+	bool _updates_sub_thread_wait_plugin_bootloader(int& n_step);
+
+	bool _updates_sub_thread_erase_sector(int& n_step);
+	bool _updates_sub_thread_read_sector_from_file(int& n_step);
+	bool _updates_sub_thread_write_sector(int& n_step);
+	bool _updates_sub_thread_run_app(int& n_step);
+
+	bool _updates_sub_thread_wait_plugout_bootloader(int& n_step);
+	bool _updates_sub_thread_wait_plugin_lpu23x(int& n_step);
+
+	bool _updates_sub_thread_recover_system_param(int& n_step);
 
 	std::shared_ptr<ftxui::Component> _create_sub_ui0_ini();
 	std::shared_ptr<ftxui::Component> _create_sub_ui1_select_file();
@@ -149,7 +170,35 @@ private:
 
 	std::vector<std::filesystem::path> _find_rom_files();
 
+	/**
+	* @brief cheks tagrget device validation.
+	* 
+	* @return target device. if return is empty, error
+	*/
+	std::string _check_target_device_path_in_initial();
+
+	/**
+	* @brief cheks tagrget file validation.
+	*
+	* @return target file path. if return is empty, error
+	*/
+	std::string _check_target_file_path_in_initial();
+
+
+	/**
+	* @brief cheks fw index of tagrget file validation.
+	*
+	* @param s_target_rom_file - valid firmware file.(rom or raw)
+	* 
+	* @return first - total fw in the selected file.( if the selected firmware isn't rom, this value is 1 and second is -1 )
+	* 
+	*	second - updatable fw index of the selected rom file.
+	*/
+	std::pair<int, int> _check_target_fw_of_selected_rom_in_initial(const std::string& s_target_rom_file);
+
 private:
+	bool m_b_ini;
+
 	CHidBootManager* m_p_mgmt;
 	chid_briage::type_ptr m_ptr_hid_api_briage;
 
@@ -168,6 +217,9 @@ private:
 	std::shared_ptr<ftxui::Component> m_ptr_fw_menu; // list UI by m_v_firmware_list
 	std::shared_ptr<ftxui::Component> m_ptr_ok_fw_button; // ok(selection) button of firmware select dialog.
 	std::shared_ptr<ftxui::Component> m_ptr_cancel_fw_button; // cancel button of firmware select dialog.
+
+	std::vector<std::string> m_v_firmware_list_for_ui; //firmware list in the selected rom file.
+	int m_n_selected_fw_for_ui;
 
 	std::shared_ptr<ftxui::Component> m_ptr_ok_confirm_button;
 	std::shared_ptr<ftxui::Component> m_ptr_cancel_confirm_button;

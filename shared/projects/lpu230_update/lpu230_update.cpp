@@ -28,6 +28,9 @@
 static void _hide_console();
 static void _print_help(const std::string& program_name);
 
+/**
+* @brief command option 유효성 검사. ONLY
+*/
 int main(int argc, char** argv)
 {
 	int n_result(EXIT_FAILURE);
@@ -289,13 +292,14 @@ int main(int argc, char** argv)
         if (!b_display) {
             //hide mode
             _hide_console();
-
+        }
+        else {
+            if (b_help) {
+                _print_help(std::filesystem::path(argv[0]).filename().string());
+                continue;
+            }
         }
 
-        if (b_help) {
-            _print_help(std::filesystem::path(argv[0]).filename().string());
-            continue;
-        }
         if (n_result != EXIT_SUCCESS) {
             continue;
         }

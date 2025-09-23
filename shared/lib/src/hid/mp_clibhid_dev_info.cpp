@@ -104,6 +104,25 @@ namespace _mp{
         return out.size();
     }
 
+    clibhid_dev_info::type_set::iterator clibhid_dev_info::find(clibhid_dev_info::type_set& in, const std::wstring& ws_path)
+    {
+        std::string s_path = _mp::cstring::get_mcsc_from_unicode(ws_path);
+        return clibhid_dev_info::find(in,s_path);
+    }
+
+    clibhid_dev_info::type_set::iterator clibhid_dev_info::find(clibhid_dev_info::type_set& in, const std::string& s_path)
+    {
+        clibhid_dev_info::type_set::iterator it = std::begin(in);
+
+        for (; it != std::end(in); ++it) {
+            if (it->get_path_by_string() == s_path) {
+                break; //found ok
+            }
+        }//end for
+        return it;
+    }
+
+
     clibhid_dev_info::clibhid_dev_info() :
         m_w_vid(0), m_w_pid(0), m_n_interface(-1),
         m_n_size_in_report(0),
