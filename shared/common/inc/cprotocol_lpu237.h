@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <unordered_set>
 
 #include <mp_type.h>
@@ -211,7 +212,7 @@ public:
 		m_v_name.resize(0);
 	}
 
-	unsigned long get_current_scr_transaction_counter() const
+	uint32_t get_current_scr_transaction_counter() const
 	{
 		return m_dw_scr_transaction_counter;
 	}
@@ -600,6 +601,11 @@ public:
 			return true;
 	}
 
+	size_t get_generated_the_number_of_tx() const
+	{
+		return m_deque_generated_tx.size();
+	}
+
 	void set_global_pre_postfix_send_condition(bool b_all_no_error)
 	{
 		if (b_all_no_error != m_b_global_pre_postfix_send_condition) {
@@ -614,14 +620,14 @@ public:
 			_set_insert_change_set(cp_Interface);
 		}
 	}
-	void set_buzzer_frequency(unsigned long dw_buzzer_frequency)
+	void set_buzzer_frequency(uint32_t dw_buzzer_frequency)
 	{
 		if (m_dw_buzzer_frequency != dw_buzzer_frequency) {
 			m_dw_buzzer_frequency = dw_buzzer_frequency;
 			_set_insert_change_set(cp_BuzzerFrequency);
 		}
 	}
-	void set_boot_run_time(unsigned long dw_boot_run_time)
+	void set_boot_run_time(uint32_t dw_boot_run_time)
 	{
 		if (m_dw_boot_run_time != dw_boot_run_time) {
 			m_dw_boot_run_time = dw_boot_run_time;
@@ -838,8 +844,8 @@ public:
 	bool get_device_is_ibutton_only() const { return m_b_device_is_ibutton_only; }
 	bool get_device_is_standard() { return m_b_device_is_standard; }
 	type_system_interface get_interface() const { return m_interface; }
-	unsigned long get_buzzer_frequency() const { return m_dw_buzzer_frequency; }
-	unsigned long get_boot_run_time() const { return m_dw_boot_run_time; }
+	uint32_t get_buzzer_frequency() const { return m_dw_buzzer_frequency; }
+	uint32_t get_boot_run_time() const { return m_dw_boot_run_time; }
 	type_keyboard_language_index get_language() const { return m_language_index; }
 	bool get_enable_iso(type_msr_track_Numer track) const
 	{ 
@@ -887,21 +893,21 @@ public:
 		bool b_result(false);
 		_mp::type_v_buffer _v_tx(the_size_of_out_report_except_id - the_size_of_host_packet_header, 0);
 		unsigned char c_chain(0);
-		unsigned long dw_total((unsigned long)v_tx.size());
-		unsigned long n_remainder(dw_total);
-		unsigned long dw_offset(0);
-		unsigned long n_data(0);
-		unsigned long n_tx(0);
-		unsigned long dw_scr_transaction_counter(_get_new_scr_transaction_counter());
+		uint32_t dw_total((uint32_t)v_tx.size());
+		uint32_t n_remainder(dw_total);
+		uint32_t dw_offset(0);
+		uint32_t n_data(0);
+		uint32_t n_tx(0);
+		uint32_t dw_scr_transaction_counter(_get_new_scr_transaction_counter());
 
-		memcpy(&_v_tx[0], &dw_scr_transaction_counter, sizeof(unsigned long));
-		memcpy(&_v_tx[sizeof(unsigned long)], &dw_total, sizeof(unsigned long));
+		memcpy(&_v_tx[0], &dw_scr_transaction_counter, sizeof(uint32_t));
+		memcpy(&_v_tx[sizeof(uint32_t)], &dw_total, sizeof(uint32_t));
 
-		n_data = (unsigned long)_v_tx.size() - (sizeof(unsigned long) * 2);
-		if (n_data > (unsigned long)v_tx.size())
-			n_data = (unsigned long)v_tx.size();
-		memcpy(&_v_tx[sizeof(unsigned long) * 2], &v_tx[dw_offset], n_data);
-		n_tx = n_data + (sizeof(unsigned long) * 2);
+		n_data = (uint32_t)_v_tx.size() - (sizeof(uint32_t) * 2);
+		if (n_data > (uint32_t)v_tx.size())
+			n_data = (uint32_t)v_tx.size();
+		memcpy(&_v_tx[sizeof(uint32_t) * 2], &v_tx[dw_offset], n_data);
+		n_tx = n_data + (sizeof(uint32_t) * 2);
 		do {
 			b_result = _generate_request(cmd_uart_bypass, c_chain, n_tx, &_v_tx[0]);
 			if (!b_result) {
@@ -916,14 +922,14 @@ public:
 			c_chain++;
 
 			if (n_remainder > 0) {
-				n_data = (unsigned long)_v_tx.size() - sizeof(unsigned long);
+				n_data = (uint32_t)_v_tx.size() - sizeof(uint32_t);
 				if (n_data > n_remainder)
 					n_data = n_remainder;
-				n_tx = n_data + sizeof(unsigned long);
+				n_tx = n_data + sizeof(uint32_t);
 
 				std::fill(std::begin(_v_tx), std::end(_v_tx), 0);
-				memcpy(&_v_tx[0], &dw_scr_transaction_counter, sizeof(unsigned long));
-				memcpy(&_v_tx[sizeof(unsigned long)], &v_tx[dw_offset], n_data);
+				memcpy(&_v_tx[0], &dw_scr_transaction_counter, sizeof(uint32_t));
+				memcpy(&_v_tx[sizeof(uint32_t)], &v_tx[dw_offset], n_data);
 			}
 		} while (n_remainder > 0);
 
@@ -1226,6 +1232,40 @@ public:
 		return b_result;
 	}
 
+	void set_all_parameter_to_changed()
+	{
+		// . set iButton Pretag
+		m_set_change_parameter.insert(cp_Prefix_iButton);
+		m_set_change_parameter.insert(cp_Postfix_iButton);
+		m_set_change_parameter.insert(cp_Prefix_Uart);
+		m_set_change_parameter.insert(cp_Postfix_Uart);
+		m_set_change_parameter.insert(cp_EnableF12iButton);
+		m_set_change_parameter.insert(cp_EnableZerosiButton);
+		m_set_change_parameter.insert(cp_EnableZeros7TimesiButton);
+		m_set_change_parameter.insert(cp_EnableAddmitCodeStickiButton);
+		m_set_change_parameter.insert(cp_iButton_Remove);
+		m_set_change_parameter.insert(cp_Prefix_iButton_Remove);
+		m_set_change_parameter.insert(cp_Postfix_iButton_Remove);
+		m_set_change_parameter.insert(cp_GlobalPrePostfixSendCondition);
+		m_set_change_parameter.insert(cp_Interface);
+		m_set_change_parameter.insert(cp_Language);
+		m_set_change_parameter.insert(cp_BuzzerFrequency);
+		m_set_change_parameter.insert(cp_EnableISO1);
+		m_set_change_parameter.insert(cp_EnableISO2);
+		m_set_change_parameter.insert(cp_EnableISO3);
+		m_set_change_parameter.insert(cp_Direction1);
+		m_set_change_parameter.insert(cp_Direction2);
+		m_set_change_parameter.insert(cp_Direction3);
+		m_set_change_parameter.insert(cp_GlobalPrefix);
+		m_set_change_parameter.insert(cp_GlobalPostfix);
+		m_set_change_parameter.insert(cp_PrivatePrefix1);
+		m_set_change_parameter.insert(cp_PrivatePostfix1);
+		m_set_change_parameter.insert(cp_PrivatePrefix2);
+		m_set_change_parameter.insert(cp_PrivatePostfix2);
+		m_set_change_parameter.insert(cp_PrivatePrefix3);
+		m_set_change_parameter.insert(cp_PrivatePostfix3);
+	}
+
 	bool generate_set_parameters()
 	{
 		bool b_result(false);
@@ -1300,7 +1340,7 @@ public:
 			}
 			//. set globalPrePostfixSendCondition
 			if (m_set_change_parameter.find(cp_GlobalPrePostfixSendCondition) != m_set_change_parameter.end())
-				if(_generate_set_global_pre_postfix_send_condition())
+				if(!_generate_set_global_pre_postfix_send_condition())
 					continue;
 
 			// . set interface
@@ -1924,7 +1964,7 @@ private:
 		bool b_result(false);
 
 		do {
-			unsigned long dw_size;
+			uint32_t dw_size;
 			switch (track) {
 			case iso1_track:
 				dw_size = sizeofstructmember(SYSINFO, InfoMsr[0].cEnableTrack);
@@ -1957,7 +1997,7 @@ private:
 		bool b_result(false);
 
 		do {
-			unsigned long dw_size;
+			uint32_t dw_size;
 			switch (track) {
 			case iso1_track:
 				dw_size = sizeofstructmember(SYSINFO, InfoMsr[0].cRDirect[0]);
@@ -2025,7 +2065,7 @@ private:
 		bool b_result(false);
 
 		do {
-			unsigned long dw_size;
+			uint32_t dw_size;
 			switch (track) {
 			case iso1_track:
 				dw_size = sizeofstructmember(SYSINFO, InfoMsr[0].PrivatePrefix[0]);
@@ -2057,7 +2097,7 @@ private:
 		bool b_result(false);
 
 		do {
-			unsigned long dw_size;
+			uint32_t dw_size;
 			switch (track) {
 			case iso1_track:
 				dw_size = sizeofstructmember(SYSINFO, InfoMsr[0].PrivatePostfix[0]);
@@ -2302,14 +2342,14 @@ private:
 		
 
 	//generate basic IO pattern . save to m_dequeu_v_tx
-	bool _generate_request(const type_cmd cmd, const unsigned char c_sub, const unsigned long dw_data, const unsigned char* s_data)
+	bool _generate_request(const type_cmd cmd, const unsigned char c_sub, const uint32_t dw_data, const unsigned char* s_data)
 	{
 		bool b_result = false;
 
 		do {
 			_mp::type_v_buffer v_tx(0);
 
-			unsigned long nOffset = 0;
+			uint32_t nOffset = 0;
 			_mp::type_v_buffer v_packet(65, 0);
 				
 			if (dw_data > 0 && s_data == nullptr)
@@ -2331,16 +2371,16 @@ private:
 	}
 		
 	//generate IO pattern with _generate_request()
-	bool _generate_config_get(unsigned long dw_offset, unsigned long dw_size)//GetFromDevice
+	bool _generate_config_get(uint32_t dw_offset, uint32_t dw_size)//GetFromDevice
 	{
-		_mp::type_v_buffer v_data(sizeof(unsigned long) + sizeof(unsigned long), 0);////offset and size
+		_mp::type_v_buffer v_data(sizeof(uint32_t) + sizeof(uint32_t), 0);////offset and size
 		unsigned char* p_data = (unsigned char*)&dw_offset;
 		std::copy(&p_data[0], &p_data[sizeof(dw_offset)], std::begin(v_data));
 
 		p_data = (unsigned char*)&dw_size;
 		std::copy(&p_data[0], &p_data[sizeof(dw_size)], std::begin(v_data)+ sizeof(dw_offset));
 
-		return _generate_request(cmd_config, (const unsigned char)request_config_get, (unsigned long)(v_data.size()), &v_data[0]);
+		return _generate_request(cmd_config, (const unsigned char)request_config_get, (uint32_t)(v_data.size()), &v_data[0]);
 	}
 
 	//generate IO pattern with _generate_config_get()
@@ -2446,8 +2486,8 @@ private:
 		bool b_result(false);
 
 		do {
-			unsigned long dw_offset;
-			unsigned long dw_size;
+			uint32_t dw_offset;
+			uint32_t dw_size;
 
 			switch (track) {
 			case iso1_track:
@@ -2491,8 +2531,8 @@ private:
 		bool b_result(false);
 
 		do {
-			unsigned long dw_offset;
-			unsigned long dw_size;
+			uint32_t dw_offset;
+			uint32_t dw_size;
 
 			switch (track) {
 			case iso1_track:
@@ -2554,8 +2594,8 @@ private:
 		bool b_result(false);
 
 		do {
-			unsigned long dw_offset;
-			unsigned long dw_size;
+			uint32_t dw_offset;
+			uint32_t dw_size;
 
 			switch (track) {
 			case iso1_track:
@@ -2599,8 +2639,8 @@ private:
 		bool b_result(false);
 
 		do {
-			unsigned long dw_offset;
-			unsigned long dw_size;
+			uint32_t dw_offset;
+			uint32_t dw_size;
 
 			switch (track) {
 			case iso1_track:
@@ -2732,18 +2772,20 @@ private:
 	}
 
 	//generate IO pattern with _generate_request()
-	bool _generate_config_set(unsigned long dw_offset, unsigned long dw_size, unsigned char* ps_data)//SetToDevice
+	bool _generate_config_set(uint32_t dw_offset, uint32_t dw_size, unsigned char* ps_data)//SetToDevice
 	{
-		_mp::type_v_buffer v_data(sizeof(unsigned long) + sizeof(unsigned long) + dw_size, 0);////offset and size and data field
+		_mp::type_v_buffer v_data(sizeof(uint32_t) + sizeof(uint32_t) + dw_size, 0);////offset and size and data field
 		unsigned char* p_data = (unsigned char*)&dw_offset;
 		std::copy(&p_data[0], &p_data[sizeof(dw_offset)], std::begin(v_data));
 
 		p_data = (unsigned char*)&dw_size;
 		std::copy(&p_data[0], &p_data[sizeof(dw_size)], std::begin(v_data) + sizeof(dw_offset));
 
-		std::copy(&ps_data[0], &ps_data[sizeof(dw_size)], std::begin(v_data) + sizeof(dw_offset) + sizeof(dw_size));
+		if (dw_size > 0) {
+			std::copy(&ps_data[0], &ps_data[dw_size], std::begin(v_data) + sizeof(dw_offset) + sizeof(dw_size));
+		}
 
-		if(_generate_request(cmd_config, (const unsigned char)request_config_set, (unsigned long)(v_data.size()), &v_data[0])) {
+		if(_generate_request(cmd_config, (const unsigned char)request_config_set, (uint32_t)(v_data.size()), &v_data[0])) {
 			m_deque_generated_tx.push_back(gt_set_config);
 			return true;
 		}
@@ -2753,7 +2795,7 @@ private:
 	//generate IO pattern with _generate_config_set()
 	bool _generate_set_global_pre_postfix_send_condition()
 	{
-		unsigned long n_condition(0);
+		uint32_t n_condition(0);
 
 		if (get_global_pre_postfix_send_condition())
 			n_condition = 1;
@@ -2778,7 +2820,7 @@ private:
 		bool b_result(false);
 
 		do {
-			unsigned long n_mapping_table_index = static_cast<unsigned long>(get_language());
+			uint32_t n_mapping_table_index = static_cast<uint32_t>(get_language());
 
 			b_result = _generate_config_set(
 				offsetof(SYSINFO, ContainerInfoMsrObj.KeyMap.nMappingTableIndex),
@@ -2814,7 +2856,7 @@ private:
 	}
 	bool _generate_set_buzzer_frequency()
 	{
-		unsigned long n_freq = static_cast<unsigned long>(get_buzzer_frequency());
+		uint32_t n_freq = static_cast<uint32_t>(get_buzzer_frequency());
 
 		if (m_b_device_is_mmd1000) {
 			//change default value.
@@ -2838,7 +2880,7 @@ private:
 		bool b_result(false);
 
 		do {
-			unsigned long dw_offset,dw_size;
+			uint32_t dw_offset,dw_size;
 			unsigned char c_track(0);
 
 			if (get_enable_iso(track))
@@ -2874,7 +2916,7 @@ private:
 		bool b_result(false);
 
 		do {
-			unsigned long dw_offset, dw_size;
+			uint32_t dw_offset, dw_size;
 			unsigned char c_track(0);
 
 			if (get_enable_iso(track))
@@ -2945,7 +2987,7 @@ private:
 
 			_get_tag_from_type_tag(Tag, get_private_prefix(track));
 
-			unsigned long dw_offset, dw_size;
+			uint32_t dw_offset, dw_size;
 
 			switch (track) {
 			case iso1_track:
@@ -2978,7 +3020,7 @@ private:
 
 			_get_tag_from_type_tag(Tag, get_private_postfix(track));
 
-			unsigned long dw_offset, dw_size;
+			uint32_t dw_offset, dw_size;
 
 			switch (track) {
 			case iso1_track:
@@ -3007,8 +3049,8 @@ private:
 		bool b_result(false);
 
 		do {
-			unsigned long n_mapping_table_index = static_cast<unsigned long>(get_language());
-			unsigned long dw_offset, dw_size;
+			uint32_t n_mapping_table_index = static_cast<uint32_t>(get_language());
+			uint32_t dw_offset, dw_size;
 			unsigned char* p_data;
 
 			//USB map
@@ -3299,7 +3341,7 @@ private:
 				if ((cFirst != L'\'') || (cLast != L'\''))
 					n_result = -1;
 				else {
-					n_result = static_cast<unsigned long>(sToken[1]);
+					n_result = static_cast<uint32_t>(sToken[1]);
 					if (n_result > 255)
 						n_result = -1;
 					else {
@@ -3312,7 +3354,7 @@ private:
 
 			if (sToken.size() == 1) {
 				// case 4
-				n_result = static_cast<unsigned long>(sToken[0]);
+				n_result = static_cast<uint32_t>(sToken[0]);
 				if (n_result > 255)
 					n_result = -1;
 				else {
@@ -3328,14 +3370,14 @@ private:
 		return n_result;
 	}
 
-	unsigned long _get_new_scr_transaction_counter()
+	uint32_t _get_new_scr_transaction_counter()
 	{
 		++m_dw_scr_transaction_counter;
-		unsigned long n_new = m_dw_scr_transaction_counter;
+		uint32_t n_new = m_dw_scr_transaction_counter;
 		return n_new;
 	}
 private:
-	unsigned long m_dw_scr_transaction_counter;
+	uint32_t m_dw_scr_transaction_counter;
 	_type_deque_generated_tx m_deque_generated_tx;
 
 	_mp::type_dequeu_v_buffer m_dequeu_v_tx;//not included report id
@@ -3362,8 +3404,8 @@ private:
 	bool m_b_device_is_standard;
 
 	type_system_interface m_interface;
-	unsigned long m_dw_buzzer_frequency;
-	unsigned long m_dw_boot_run_time;
+	uint32_t m_dw_buzzer_frequency;
+	uint32_t m_dw_boot_run_time;
 	type_keyboard_language_index m_language_index;
 
 	bool m_b_enable_iso[the_number_of_reack];

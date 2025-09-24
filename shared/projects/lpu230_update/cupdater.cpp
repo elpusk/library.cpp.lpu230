@@ -12,6 +12,7 @@
 #include <hid/mp_clibhid.h>
 #include <cprotocol_lpu237.h>
 
+#include "HidBootManager.h"
 #include "cshare.h"
 
 cupdater::cupdater(_mp::clog& log,bool b_disaplay, bool b_log) :
@@ -29,8 +30,10 @@ cupdater::cupdater(_mp::clog& log,bool b_disaplay, bool b_log) :
 	//setup boot manager
 	m_p_mgmt = CHidBootManager::GetInstance();
 
+	// 현재 디렉토리를 얻음.
 	auto current_dir = std::filesystem::current_path();
 	if(!cshare::get_instance().get_rom_file_abs_full_path().empty()) {
+		//사용자가 커맨트 라인 옵션으로 rom/bin 파일을 지정한 경우, 그 파일이 있는 디렉토리를 현재 디렉토리로 설정. 
 		current_dir = std::filesystem::path(cshare::get_instance().get_rom_file_abs_full_path()).parent_path();
 	}
 
@@ -47,26 +50,52 @@ cupdater::cupdater(_mp::clog& log,bool b_disaplay, bool b_log) :
 		}
 
 		// 여기 부터는 s_target_dev_path 가 실제 연결된 장비로 검증됨.
-		std::string s_target_rom_file = _check_target_file_path_in_initial();
+		bool b_file_is_rom_type(false);
+		std::string s_target_rom_file;
+		std::tie(s_target_rom_file, b_file_is_rom_type) = _check_target_file_path_in_initial();
 		if (!cshare::get_instance().get_rom_file_abs_full_path().empty()) {
 			if (s_target_rom_file.empty()) {
-				continue; //ERROR 주어진 파일이 없는 경우.
+				continue; //ERROR. 주어진 파일이 있으니 실제 존재하지 않음.
 			}
+
+			// 여기는 s_target_rom_file 은 cshare::get_instance().get_rom_file_abs_full_path() 와 동일하므로, 다시 저장 불요.
+			// 
 			//fw check 로.
 			// 여기 부터는 s_target_dev_path 가 실제 연결된 장비로 검증 & s_target_rom_file 파일 존재 검증.
-			int n_updatable_index = -1;
-			int n_total_fw(0);
-			std::tie(n_total_fw, n_updatable_index) = _check_target_fw_of_selected_rom_in_initial(s_target_rom_file);
-			if (n_total_fw > 0 && n_updatable_index < 0) {
-				continue; // FW 있는데, 적절한 것이 없음.
+			if (b_file_is_rom_type) {
+
+				int n_updatable_index = -1;
+				int n_total_fw(0);
+				std::tie(n_total_fw, n_updatable_index) = _check_target_fw_of_selected_rom_in_initial();
+				if (n_total_fw <= 0) {
+					continue;// error잘못된 파일
+				}
+				if (n_updatable_index < 0) {
+					// FW 있는데, 적절한 것이 없음.
+					if (!m_b_display) {
+						continue; // 에러 ... UI 가 숨겨져
+					}
+				}
+			}
+			else {
+				// raw 파일 선택.
+				// UI 가 숨겨져 있어도 사용자 설정이므로 raw(bin) 으로 계속 진행.
 			}
 		}
 		else {
-			//주어진 파일이 없고, 현재 폴더에도 없는데
+			//주어진 파일이 없고,
 			if (s_target_rom_file.empty()) {
+				// 현재 폴더에도 없는데.
 				if (!m_b_display) {
 					// UI 까지 숨겨서 선택 할 수 없으로 에러.
 					continue;
+				}
+			}
+			else {
+				// 자동 선택의 경우
+				if (!m_b_display && b_file_is_rom_type) {
+					// UI 가 숨겨져 있고, 선택파일이 rom type 일때만 자동 선택 저장.
+					cshare::get_instance().set_rom_file_abs_full_path(s_target_rom_file);
 				}
 			}
 		}
@@ -77,27 +106,8 @@ cupdater::cupdater(_mp::clog& log,bool b_disaplay, bool b_log) :
 	m_n_progress_min = 0;
 	m_n_progress_cur = m_n_progress_min;
 
-	// 작업에 필요한 step 의 수를 계산 한다. <- TODO 
-	if (cshare::get_instance().get_start_from_bootloader()) {
-		//erase 수, 
-		// 쓸 sector 의 수
-		// run app
-		// bootload plugout 기다림
-		// lpu23x lpugin 기다림.
-	}
-	else {
-		//>>system parameter 저장과 복구가 필요한 경우.<<
-		//읽을 system parameter 의 수.
-		// run boot loader
-		// lpu23x plugout 기다림
-		// bootloader plugin 기다림.
-		
-		// 위 step 의 수
-
-		// 복구할 system parameter 의 수.
-		// apply step.
-	}
-	m_n_progress_max = 100;
+	// 작업에 필요한 step 의 수를 계산 한다.
+	m_n_progress_max = cshare::get_instance().calculate_update_step();
 
 
 	m_n_tab_index = 0; // 0: s_ini, 1: s_selfile, 2: s_selfirm, 3: s_sellast(confirm), 4: s_sellast(warning) ,5: s_ing, 6: s_scom
@@ -170,8 +180,6 @@ bool cupdater::initial_update()
 			continue; // constructure failure
 		}
 		//UI ini
-		set_range_of_progress(CHidBootManager::WSTEP_INI, CHidBootManager::WSTEP_DEV_IN);
-
 
 		// need setting callback to p_mgmt;
 		// //////////////
@@ -188,11 +196,11 @@ bool cupdater::initial_update()
 		b_result = true;
 
 		if (cshare::get_instance().is_run_by_cf()) {
-			b_result = start_update(); // run by cf 이면, 자동으로 실행되어야 한다.
+			b_result = start_update_with_thread(); // run by cf 이면, 자동으로 실행되어야 한다.
 		}
 		else {
 			if (!m_b_display) {
-				b_result = start_update(); // UI 표시가 없으므로 자동 실행되어야 한다.
+				b_result = start_update_with_thread(); // UI 표시가 없으므로 자동 실행되어야 한다.
 			}
 		}
 		
@@ -275,14 +283,18 @@ std::shared_ptr<ftxui::Component> cupdater::_create_sub_ui1_select_file()
 
 			return;
 		}
+
+		cshare::get_instance().set_rom_file_abs_full_path(selected_path.string());// UI 에 선택 변경을 저장.
+
 		if (std::filesystem::path(selected_path).extension() == ".rom") {
-			cshare::get_instance().set_rom_file_abs_full_path(selected_path.string());
-			cshare::get_instance().update_fw_list_of_selected_rom();
+			// rom 파일 선택 후, OK
+			cshare::get_instance().update_fw_list_of_selected_rom(CHidBootManager::GetInstance()->get_rom_library());
 			std::tie(m_n_selected_fw_for_ui, m_v_firmware_list_for_ui) = cshare::get_instance().get_firmware_list_of_rom_file();
 
 			_update_state(cupdater::AppEvent::e_sfile_or, selected_path.string());
 		}
 		else {
+			// 그 외 파일 선택 후 OK.
 			_update_state(cupdater::AppEvent::e_sfile_ob, selected_path.string());
 		}
 		}));
@@ -343,7 +355,7 @@ std::shared_ptr<ftxui::Component> cupdater::_create_sub_ui3_last_confirm()
 	m_ptr_ok_confirm_button = std::make_shared<ftxui::Component>(ftxui::Button("OK", [&]() {
 		
 		_update_state(cupdater::AppEvent::e_slast_o);
-		start_update();
+		start_update_with_thread();//최종 확인 후 실행.
 		}));
 	m_ptr_cancel_confirm_button = std::make_shared<ftxui::Component>(ftxui::Button("Cancel", [&]() {
 		_update_state(cupdater::AppEvent::e_slast_c);
@@ -368,7 +380,7 @@ std::shared_ptr<ftxui::Component> cupdater::_create_sub_ui3_last_warning()
 {
 	m_ptr_ok_warning_button = std::make_shared<ftxui::Component>(ftxui::Button("OK", [&]() {
 		_update_state(cupdater::AppEvent::e_slast_o);
-		start_update();
+		start_update_with_thread();//경고 후 실행.
 		}));
 	m_ptr_cancel_warning_button = std::make_shared<ftxui::Component>(ftxui::Button("Cancel", [&]() {
 		_update_state(cupdater::AppEvent::e_slast_c);
@@ -598,42 +610,54 @@ std::string cupdater::_check_target_device_path_in_initial()
 
 	} while (false);// target device finding while
 
-	if (!s_target_dev_path.empty() && !cshare::get_instance().get_start_from_bootloader()) {
-		//target devie 가 lpu237 or kpu238 이면 open 해서 정보를 얻어와서 
-		// version & name 설정.
-		// 를 해야함.
+	if (s_target_dev_path.empty()) {
+		return s_target_dev_path; //ERROR
+	}
+
+	if (cshare::get_instance().get_start_from_bootloader()) {
+		cshare::get_instance().set_device_path(s_target_dev_path);// 시작 장비가 hidboot loader 로 장비가 설정됨
+		return s_target_dev_path;
+	}
+
+	//target devie 가 lpu237 or kpu238 이면 open 해서 정보를 얻어와서 
+	// version & name 설정.
+	// 를 해야함.
 		
-		// create & open clibhid_dev.
-		_mp::clibhid_dev::type_ptr ptr_dev = std::make_shared<_mp::clibhid_dev>(*it_dev, m_ptr_hid_api_briage.get());
-		if (!ptr_dev->is_open()) {
-			m_log_ref.log_fmt("[E] open : %s\n", s_target_dev_path.c_str());
+	// create & open clibhid_dev.
+	_mp::clibhid_dev::type_ptr ptr_dev = std::make_shared<_mp::clibhid_dev>(*it_dev, m_ptr_hid_api_briage.get());
+	if (!ptr_dev->is_open()) {
+		m_log_ref.log_fmt("[E] open : %s\n", s_target_dev_path.c_str());
+		s_target_dev_path.clear();
+	}
+	else {
+		cshare::get_instance().set_target_lpu23x(ptr_dev);
+
+		if (!cshare::get_instance().io_get_system_info_and_set_name_version()) {
+			m_log_ref.log_fmt("[E] get system data : %s\n", s_target_dev_path.c_str());
 			s_target_dev_path.clear();
+
+			_mp::clibhid_dev::type_ptr ptr_null;
+			cshare::get_instance().set_target_lpu23x(ptr_null); // clear dev
 		}
 		else {
-			cshare::get_instance().set_target_lpu23x(ptr_dev);
-
-			if (!cshare::get_instance().io_get_system_info_and_set_name_version()) {
-				m_log_ref.log_fmt("[E] get system data : %s\n", s_target_dev_path.c_str());
-				s_target_dev_path.clear();
-			}
-			else {
-				m_log_ref.log_fmt("[I] get system data : %s : (name,version) = (%s,%s).\n"
-					, s_target_dev_path.c_str()
-					, cshare::get_instance().get_target_device_model_name_by_string().c_str()
-					, cshare::get_instance().get_target_device_model_name_by_string().c_str()
-				);
-			}
+			m_log_ref.log_fmt("[I] get system data : %s : (name,version) = (%s,%s).\n"
+				, s_target_dev_path.c_str()
+				, cshare::get_instance().get_target_device_model_name_by_string().c_str()
+				, cshare::get_instance().get_target_device_model_name_by_string().c_str()
+			);
+			cshare::get_instance().set_device_path(s_target_dev_path);// 시작 장비가 lpu23x 로 장비가 설정됨
 		}
 	}
 
 	return s_target_dev_path;
 }
 
-std::string cupdater::_check_target_file_path_in_initial()
+std::pair<std::string, bool> cupdater::_check_target_file_path_in_initial()
 {
 	////////////////////////////////////////////////////////////////////////////
 	// 주어진 rom file 검증
 	std::string s_target_rom_file = cshare::get_instance().get_rom_file_abs_full_path();
+	bool b_rom_type(false);
 
 	// 우선순위
 	// 1. 주어진 파일
@@ -652,14 +676,20 @@ std::string cupdater::_check_target_file_path_in_initial()
 				continue;
 			}
 
+			std::filesystem::path p(s_target_rom_file);
+			if (p.extension() == ".rom") {
+				b_rom_type = true;
+			}
+
 			m_log_ref.log_fmt("[I] target file - %s\n", s_target_rom_file.c_str());
 			continue;
 		}
 
-		// 주어진 파일이 없음(auto). constructor 에서 이미 읽은 리스트 있음.
+		// 주어진 파일이 없음(auto). 이미 읽은 리스트 있음.
 		std::vector<std::string> v_s_rom = cshare::get_instance().get_vector_rom_files_in_current_dir();
 		if (!v_s_rom.empty()) {
 			s_target_rom_file = *v_s_rom.begin();
+			b_rom_type = true;
 			m_log_ref.log_fmt("[I] auto target file - %s\n", s_target_rom_file.c_str());
 			continue;
 		}
@@ -672,25 +702,25 @@ std::string cupdater::_check_target_file_path_in_initial()
 
 		m_log_ref.log_fmt("[E] none target file.\n"); // ERROR
 	} while (false);
-	return s_target_rom_file;
+	return std::make_pair(s_target_rom_file,b_rom_type);
 }
 
-std::pair<int, int> cupdater::_check_target_fw_of_selected_rom_in_initial(const std::string &s_target_rom_file)
+std::pair<int, int> cupdater::_check_target_fw_of_selected_rom_in_initial()
 {
 	int n_updatable_index = -1;
 	int n_total_fw(0);
+	std::string s_target_rom_file(cshare::get_instance().get_rom_file_abs_full_path());
 	std::filesystem::path fp_target_file(s_target_rom_file);
 	if (fp_target_file.extension() == ".rom") {
 		// 이 경우 rom 내에 있는 fw 를 확인 필요.
-		cshare::get_instance().set_rom_file_abs_full_path(fp_target_file.string());
-		std::tie(n_total_fw, n_updatable_index) = cshare::get_instance().update_fw_list_of_selected_rom();
+		std::tie(n_total_fw, n_updatable_index) = cshare::get_instance().update_fw_list_of_selected_rom(CHidBootManager::GetInstance()->get_rom_library());
 		if (n_updatable_index < 0) {
 			m_log_ref.log_fmt("[E] not valied firmware in %s\n", s_target_rom_file.c_str());
 			//ERROR
 		}
 		else {
 			// 유효한 조건을 만족하는 firmware 가 존재
-			m_log_ref.log_fmt("[E] valied firmware index (%d/%d) in %s\n", n_updatable_index, n_total_fw, s_target_rom_file.c_str());
+			m_log_ref.log_fmt("[I] valied firmware index (%d/%d) in %s\n", n_updatable_index, n_total_fw, s_target_rom_file.c_str());
 		}
 	}
 	else {
@@ -905,7 +935,7 @@ cupdater::~cupdater()
 }
 
 // Update function to be implemented by derived classes
-bool cupdater::start_update()
+bool cupdater::start_update_with_thread()
 {
 	bool b_result(false);
 
@@ -1100,8 +1130,12 @@ bool cupdater::_updates_sub_thread_backup_system_param(int& n_step)
 
 	do {
 		// 작업을 시작한다.
-		// 시스템 파라메터 백업
+		if (sh.get_start_from_bootloader()) {
+			b_result = true; // bootloader 에서 시작했으므로 system parameter 를 백업 불요.
+			continue;
+		}
 
+		// 시스템 파라메터 백업
 		bool b_first(true);
 		do {
 			++n_step;

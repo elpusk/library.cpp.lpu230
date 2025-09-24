@@ -6,6 +6,8 @@
 #include <hid/mp_clibhid_dev.h>
 #include <cprotocol_lpu237.h>
 
+#include "tg_rom.h"
+
 class cshare {
 public:
 	enum class Lpu237Interface {
@@ -52,9 +54,6 @@ public:
 	cshare& set_iso_mode_after_update(bool b_enable_iso_mode_after_update);
 	cshare& set_lpu23x_interface_change_after_update(cshare::Lpu237Interface inf_new);
 
-	cshare& set_index_of_fw_in_rom(int n_index);
-	cshare& set_update_condition_of_fw(const std::wstring& s_cond);
-	cshare& set_fw_file_is_rom_format(bool b_yes);
 	cshare& set_firmware_list_of_rom_file(int n_fw_index, const std::vector<std::string>& v_s_fw);
 
 
@@ -74,15 +73,9 @@ public:
 	bool is_iso_mode_after_update() const;
 	cshare::Lpu237Interface get_lpu23x_interface_change_after_update() const;
 
-	int get_index_of_fw_in_rom() const;
-	std::wstring get_update_condition_of_fw() const;
-	bool is_fw_file_is_rom_format() const;
-
 	_mp::type_v_buffer get_target_device_model_name() const;
 	cshare::type_version get_target_device_version() const;
 	
-	bool is_update_available() const;
-
 	std::vector<std::string> get_vector_files_in_current_dir() const;
 	std::vector<std::string> get_vector_files_in_current_dir_except_dir() const;
 	std::vector<std::string> get_vector_rom_files_in_current_dir() const;
@@ -111,11 +104,27 @@ public:
 	* @brief update fw list with the selected rom file
 	* @return  first - the number of fw in the rom file, second - 0>= : updatable firmware index.
 	*/
-	std::pair<int,int> update_fw_list_of_selected_rom();
+	std::pair<int,int> update_fw_list_of_selected_rom(std::shared_ptr<CRom> ptr_rom_dll);
 
+	/**
+	* @brief set current file lists with the given current directory.
+	* 
+	*	changed : m_current_dir, m_n_selected_file_in_v_files_in_current_dir
+	*
+	*	changed : m_v_files_in_current_dir, m_v_files_in_current_dir_except_dir.
+	* 
+	*	changed : m_v_rom_files_in_current_dir, m_v_bin_files_in_current_dir.
+	* 
+	*/
 	void update_files_list_of_cur_dir(const std::filesystem::path &current_dir);
 
 	bool is_select_fw_updatable() const;
+
+	/**
+	* @brief calculate the number of update step.
+	* @return the number of update step.
+	*/
+	int calculate_update_step();
 
 private:
 	void _ini();
@@ -124,17 +133,12 @@ private:
 private:
 	bool m_b_run_by_cf; // this updater is run by coffee manager.
 	bool m_b_start_from_bootloader;
-	std::string m_s_rom_file_abs_full_path;
+	std::string m_s_rom_file_abs_full_path;//rom or bin file path.
 	std::string m_s_device_path;
 
 	bool m_b_enable_iso_mode_after_update;
 	cshare::Lpu237Interface m_lpu23x_interface_after_update;
-	//
-	//rom file section
-	int m_n_index_of_fw_in_rom;
-	std::wstring m_s_update_condition_of_fw;
-	bool m_b_fw_file_is_rom_format;
-
+	
 	// file list section.
 	int m_n_selected_file_in_v_files_in_current_dir;
 	std::vector<std::string> m_v_files_in_current_dir;//this include folder and ".."
@@ -143,10 +147,11 @@ private:
 	std::vector<std::string> m_v_bin_files_in_current_dir; // bin file list in the m_v_files_in_current_dir.
 	std::filesystem::path m_current_dir;
 
-	// fw section
+	//fw section of the rom file
 	std::vector<std::string> m_v_firmware_list; //firmware list in the selected rom file.
-	int m_n_selected_fw;
-	int m_n_index_updatable_fw_in_rom;
+	int m_n_selected_fw_in_firmware_list;
+	int m_n_index_updatable_fw_in_firmware_list;
+	CRom::ROMFILE_HEAD m_rom_header;
 
 	//target device section
 	cprotocol_lpu237 m_target_protocol_lpu237;

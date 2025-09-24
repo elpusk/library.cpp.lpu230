@@ -98,7 +98,7 @@ public:
 	cupdater(_mp::clog& log,bool b_disaplay, bool b_log);
 	virtual ~cupdater();
 	// Update function to be implemented by derived classes
-	bool start_update();
+	bool start_update_with_thread();
 
 	/**
 	* @brief Set the range of progress for the update process.
@@ -179,22 +179,26 @@ private:
 
 	/**
 	* @brief cheks tagrget file validation.
+	* 
+	*	cshare::get_instance().set_x() isn't used. 
 	*
-	* @return target file path. if return is empty, error
+	* @return first - target file path. if return is empty, error.
+	* 
+	*	second - true : rom type, false : raw(bin or ..... )
 	*/
-	std::string _check_target_file_path_in_initial();
+	std::pair<std::string,bool> _check_target_file_path_in_initial();
 
 
 	/**
 	* @brief cheks fw index of tagrget file validation.
-	*
+	* 
 	* @param s_target_rom_file - valid firmware file.(rom or raw)
 	* 
 	* @return first - total fw in the selected file.( if the selected firmware isn't rom, this value is 1 and second is -1 )
 	* 
 	*	second - updatable fw index of the selected rom file.
 	*/
-	std::pair<int, int> _check_target_fw_of_selected_rom_in_initial(const std::string& s_target_rom_file);
+	std::pair<int, int> _check_target_fw_of_selected_rom_in_initial();
 
 private:
 	bool m_b_ini;

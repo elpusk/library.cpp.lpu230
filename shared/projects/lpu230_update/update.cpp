@@ -136,7 +136,7 @@ int update_main
 		}
 		else {
 			log.log_fmt(L"[I] rom file : %s.\n", s_abs_full_rom_file.c_str());
-			cshare::get_instance().set_rom_file_abs_full_path(s_abs_full_rom_file);
+			cshare::get_instance().set_rom_file_abs_full_path(s_abs_full_rom_file);//커맨드라인에서 주어지는 rom/bin 파일 저장.
 		}
 		//
 		if (s_device_path.empty()) {

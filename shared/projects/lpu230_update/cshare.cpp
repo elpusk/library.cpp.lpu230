@@ -4,12 +4,58 @@
 
 #include "cshare.h"
 #include <tg_rom.h>
-#include "HidBootManager.h"
 
 cshare& cshare::get_instance()
 {
 	static cshare obj;
 	return obj;
+}
+
+int cshare::calculate_update_step()
+{
+	int n_step(0);
+
+	do {
+		if (!m_b_start_from_bootloader) {
+			//lpu23x 로 부터 시작
+			if (!m_ptr_dev) {
+				// lpu23x 로 부터 시작하자만 선태괸 장비가 없어 에러.
+				continue;
+			}
+
+			// generate_get_parameters() 전에
+			// generate_get_system_information() ,generate_get_system_information_with() 
+			// 로 장비로 부터 데이터를 얻어 왔어야 함.
+
+			// system parameter 저장을 위한 step 개수를 더함.
+			m_target_protocol_lpu237.clear_transaction();
+			m_target_protocol_lpu237.generate_get_parameters();
+			n_step += (int)m_target_protocol_lpu237.get_generated_the_number_of_tx();
+			m_target_protocol_lpu237.clear_transaction();
+
+			// system parameter 복원을 위한 step 개수를 더함.
+			m_target_protocol_lpu237.set_all_parameter_to_changed();
+			m_target_protocol_lpu237.generate_set_parameters();
+			n_step += (int)m_target_protocol_lpu237.get_generated_the_number_of_tx();
+			m_target_protocol_lpu237.clear_transaction();
+
+			n_step += 1;// run boot loader
+			n_step += 1;// lpu23x plugout 기다림
+			n_step += 1;// bootloader plugin 기다림.
+			n_step += 1;// apply step.
+		}
+		/////////////////////////////
+		// 공용 step 의 개수.
+
+		// erase 수, 
+		// write sector 의 수
+		n_step += 1;// run app
+		n_step += 1;// bootload plugout 기다림
+		n_step += 1;// lpu23x lpugin 기다림.
+
+	} while (false);
+
+	return n_step;
 }
 
 void cshare::_ini()
@@ -21,15 +67,10 @@ void cshare::_ini()
 	m_b_enable_iso_mode_after_update = false;
 	m_lpu23x_interface_after_update = cshare::Lpu237Interface::nc;
 
-	m_n_index_of_fw_in_rom = -1;
-	m_s_update_condition_of_fw.clear();
-	m_b_fw_file_is_rom_format = false;
-
-	//m_v_target_device_model_name.resize(CRom::MAX_MODEL_NAME_SIZE, 0);
-
 	m_v_firmware_list.resize(0);
-	m_n_selected_fw = -1;
-	m_n_index_updatable_fw_in_rom = -1;
+	m_n_selected_fw_in_firmware_list = -1;
+	m_n_index_updatable_fw_in_firmware_list = -1;
+	memset(&m_rom_header, 0, sizeof(m_rom_header));
 
 	//
 	m_n_selected_file_in_v_files_in_current_dir = -1;
@@ -93,26 +134,9 @@ cshare& cshare::set_lpu23x_interface_change_after_update(cshare::Lpu237Interface
 	return *this;
 }
 
-cshare& cshare::set_index_of_fw_in_rom(int n_index)
-{
-	m_n_index_of_fw_in_rom = n_index;
-	return *this;
-}
-
-cshare& cshare::set_update_condition_of_fw(const std::wstring& s_cond)
-{
-	m_s_update_condition_of_fw = s_cond;
-	return *this;
-}
-cshare& cshare::set_fw_file_is_rom_format(bool b_yes)
-{
-	m_b_fw_file_is_rom_format = b_yes;
-	return *this;
-}
-
 cshare& cshare::set_firmware_list_of_rom_file(int n_fw_index, const std::vector<std::string>& v_s_fw)
 {
-	m_n_selected_fw = n_fw_index;
+	m_n_selected_fw_in_firmware_list = n_fw_index;
 	m_v_firmware_list = v_s_fw;
 	return *this;
 }
@@ -127,7 +151,7 @@ _mp::type_pair_bool_result_bool_complete cshare::io_save_all_variable_sys_parame
 	}
 	//
 	if (b_first) {
-		m_target_protocol_lpu237.reset();
+		m_target_protocol_lpu237.clear_transaction();
 		m_target_protocol_lpu237.generate_get_parameters();
 	}
 
@@ -218,9 +242,11 @@ bool cshare::io_run_bootloader()
 
 	size_t n_remainder_transaction(0);
 	
+	m_target_protocol_lpu237.generate_enter_config_mode();
 	m_target_protocol_lpu237.generate_run_boot_loader();
 
 	_mp::type_v_buffer v_tx;
+	_mp::type_v_buffer v_rx;
 
 	bool b_result(true);
 	do {
@@ -228,10 +254,20 @@ bool cshare::io_run_bootloader()
 		if (v_tx.size() == 0)
 			continue;
 		//
-		if (!cshare::get_instance().io_write_sync(m_ptr_dev, v_tx)) {
+		if (!cshare::get_instance().io_write_read_sync(m_ptr_dev, v_tx, v_rx)) {
 			b_result = false;
 			break;
 		}
+		//waits the complete of tx.
+		if (!m_target_protocol_lpu237.set_rx_transaction(v_rx)) {
+			b_result = false;
+			break;
+		}
+		if (!m_target_protocol_lpu237.set_from_rx()) {
+			b_result = false;
+			break;
+		}
+
 	} while (n_remainder_transaction > 0);
 
 	m_target_protocol_lpu237.clear_transaction();
@@ -406,21 +442,6 @@ cshare::Lpu237Interface cshare::get_lpu23x_interface_change_after_update() const
 	return m_lpu23x_interface_after_update;
 }
 
-int cshare::get_index_of_fw_in_rom() const
-{
-	return m_n_index_of_fw_in_rom;
-}
-
-std::wstring cshare::get_update_condition_of_fw() const
-{
-	return m_s_update_condition_of_fw;
-}
-
-bool cshare::is_fw_file_is_rom_format() const
-{
-	return m_b_fw_file_is_rom_format;
-}
-
 _mp::type_v_buffer cshare::get_target_device_model_name() const
 {
 	return m_target_protocol_lpu237.get_name();
@@ -429,23 +450,6 @@ _mp::type_v_buffer cshare::get_target_device_model_name() const
 cshare::type_version cshare::get_target_device_version() const
 {
 	return m_target_protocol_lpu237.get_system_version();
-}
-
-bool cshare::is_update_available() const
-{
-	bool b_result(false);
-	do {
-		if (m_s_rom_file_abs_full_path.empty()) {
-			continue; // No ROM file set, cannot check for updates
-		}
-		if (m_n_index_of_fw_in_rom < 0 && m_b_fw_file_is_rom_format) {
-			continue; // Invalid index for firmware in ROM
-		}
-
-		b_result = true; // Assume update is available if conditions are met
-	} while (false);
-	return b_result;
-
 }
 
 std::vector<std::string> cshare::get_vector_files_in_current_dir() const
@@ -470,7 +474,7 @@ std::vector<std::string> cshare::get_vector_bin_files_in_current_dir() const
 
 std::pair<int, std::vector<std::string>> cshare::get_firmware_list_of_rom_file() const
 {
-	return std::make_pair(m_n_selected_fw, m_v_firmware_list);
+	return std::make_pair(m_n_selected_fw_in_firmware_list, m_v_firmware_list);
 }
 
 std::tuple<int, std::filesystem::path, std::vector<std::string>, std::vector<std::string>> cshare::get_file_list_of_selected_dir() const
@@ -484,13 +488,12 @@ std::tuple<int, std::filesystem::path, std::vector<std::string>, std::vector<std
 	);
 }
 
-std::pair<int, int> cshare::update_fw_list_of_selected_rom()
+std::pair<int, int> cshare::update_fw_list_of_selected_rom(std::shared_ptr<CRom> ptr_rom_dll)
 {
 	int n_updatable_fw_index(-1);
 	int n_total_fw(0);
 
 	do {
-		auto ptr_rom_dll = CHidBootManager::GetInstance()->get_rom_library();
 		if (!ptr_rom_dll) {
 			continue;
 		}
@@ -505,20 +508,18 @@ std::pair<int, int> cshare::update_fw_list_of_selected_rom()
 
 		std::wstring ws_abs_full_path_of_rom = get_rom_file_abs_full_wpath();
 
-		CRom::ROMFILE_HEAD rom_header{ 0, };
-		CRom::type_result result_rom_dll = ptr_rom_dll->LoadHeader(ws_abs_full_path_of_rom.c_str(), &rom_header);
+		memset(&m_rom_header, 0, sizeof(m_rom_header));
+		CRom::type_result result_rom_dll = ptr_rom_dll->LoadHeader(ws_abs_full_path_of_rom.c_str(), &m_rom_header);
 		if (result_rom_dll != CRom::result_success) {
 			continue;
 		}
 
-		m_b_fw_file_is_rom_format = true;
-
 		m_v_firmware_list.clear();
 
-		n_total_fw = (int)rom_header.dwItem;
+		n_total_fw = (int)m_rom_header.dwItem;
 
-		for (uint32_t i = 0; i < rom_header.dwItem; ++i) {
-			CRom::ROMFILE_HEAD_ITEAM& item = rom_header.Item[i];
+		for (uint32_t i = 0; i < m_rom_header.dwItem; ++i) {
+			CRom::ROMFILE_HEAD_ITEAM& item = m_rom_header.Item[i];
 			std::string s_model = (char*)item.sModel;
 			std::string s_version = std::to_string((int)item.sVersion[0]) + "." +
 				std::to_string((int)item.sVersion[1]) + "." +
@@ -565,9 +566,9 @@ std::pair<int, int> cshare::update_fw_list_of_selected_rom()
 
 	} while (false);
 
-	m_n_index_updatable_fw_in_rom = n_updatable_fw_index;
+	m_n_index_updatable_fw_in_firmware_list = n_updatable_fw_index;
 	if (n_updatable_fw_index >= 0) {
-		m_n_selected_fw = n_updatable_fw_index;
+		m_n_selected_fw_in_firmware_list = n_updatable_fw_index;
 	}
 
 	return std::make_pair(n_total_fw,n_updatable_fw_index);
@@ -575,7 +576,7 @@ std::pair<int, int> cshare::update_fw_list_of_selected_rom()
 
 bool cshare::is_select_fw_updatable() const
 {
-	if (m_n_index_updatable_fw_in_rom > 0 && m_n_selected_fw == m_n_index_updatable_fw_in_rom) {
+	if (m_n_index_updatable_fw_in_firmware_list > 0 && m_n_selected_fw_in_firmware_list == m_n_index_updatable_fw_in_firmware_list) {
 		return true;
 	}
 	else {
