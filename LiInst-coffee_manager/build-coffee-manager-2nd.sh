@@ -4,7 +4,7 @@
 
 # 패키지 정보 설정
 PACKAGE_NAME="coffee-manager-2nd"
-VERSION="2.0~beta1"
+VERSION="2.0"
 ARCH="amd64" # 또는 'arm64', 'i386' 등 실제 아키텍처에 맞게 수정
 DEB_PACKAGE_NAME="${PACKAGE_NAME}_${VERSION}_${ARCH}.deb"
 INSTALL_ROOT="opt/${PACKAGE_NAME}" # 패키지 내부의 임시 설치 경로
@@ -58,7 +58,7 @@ Version: ${VERSION}
 Architecture: ${ARCH}
 Pre-Depends: libnss3-tools
 Maintainer: Elpusk<elpusk@naver.com>
-Description: Coffee Manager 2nd Daemon 2.0~beta1
+Description: Coffee Manager 2nd Daemon 2.0
  Provides the necessary daemon and libraries for the coffee manager 2nd system.
 EOF
 
