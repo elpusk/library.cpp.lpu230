@@ -83,7 +83,9 @@ namespace _mp{
         static clibhid& get_instance( const _mp::type_set_usb_filter& set_usb_filter = _mp::type_set_usb_filter() );
 
         /**
-        * create  singleton instance of clibhid class.(device manager) WITH MANUAL mode.
+        * @brief create singleton instance of clibhid class.(device manager) WITH MANUAL mode.
+        * 
+        *   in this mode, all zeros packet is ignored.
         * 
         *   get_instance() and get_manual_instance() must be used exculsively.
         * 
@@ -113,6 +115,10 @@ namespace _mp{
         */
         clibhid_dev_info::type_set get_cur_device_set();
 
+        clibhid_dev_info::type_set get_removed_device_set();
+
+        clibhid_dev_info::type_set get_inserted_device_set();
+
         clibhid_dev::type_wptr get_device(const clibhid_dev_info& dev_info);
         clibhid_dev::type_wptr get_device(const std::string& s_path);
         clibhid_dev::type_wptr get_device(const std::wstring& sw_path);
@@ -133,7 +139,7 @@ namespace _mp{
         
     protected:
         clibhid();
-        clibhid(bool b_manual);
+        clibhid(bool b_manual,bool b_remove_all_zero_in_report);
 		clibhid(const _mp::type_set_usb_filter& set_usb_filter);
 
         clibhid_dev::type_wptr _get_device(const std::string& s_path);
@@ -178,6 +184,7 @@ namespace _mp{
         void _ini(const chid_briage::type_ptr & ptr_briage = chid_briage::type_ptr());
 
     protected:
+        bool m_b_remove_all_zero_in_report; // default false, all zeros value report is ignored
 
         bool m_b_manual;
 

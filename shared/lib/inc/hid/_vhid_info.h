@@ -56,6 +56,10 @@ public:
 	)
 	{
 		static const _vhid_info::type_set_path_type v_extra_empty;
+		static const _vhid_info::type_set_path_type v_extra_hid_primitive = {
+			{std::string(),_mp::type_bm_dev_hid,false, 0}//primitive type
+		};
+
 		static const _vhid_info::type_set_path_type v_extra_lpu237 = {
 			{std::string(),_mp::type_bm_dev_hid,false, 0}//primitive type
 			,{"&msr",_mp::type_bm_dev_lpu200_msr,false, ((int)(_vhid_info::const_map_index_mask_additional_compositive)& _mp::type_bm_dev_lpu200_msr)}
@@ -64,8 +68,20 @@ public:
 			,{"&switch0",_mp::type_bm_dev_lpu200_switch0,true, ((int)(_vhid_info::const_map_index_mask_additional_compositive) & _mp::type_bm_dev_lpu200_switch0)}
 		};
 
+		static const _vhid_info::type_set_path_type v_extra_lpu238 = {
+			{std::string(),_mp::type_bm_dev_hid,false, 0}//primitive type
+			,{"&msr",_mp::type_bm_dev_lpu200_msr,false, ((int)(_vhid_info::const_map_index_mask_additional_compositive)&_mp::type_bm_dev_lpu200_msr)}
+			,{"&ibutton",_mp::type_bm_dev_lpu200_ibutton,true, ((int)(_vhid_info::const_map_index_mask_additional_compositive)&_mp::type_bm_dev_lpu200_ibutton)}
+		};
+
 		if (w_vid == _mp::_elpusk::const_usb_vid && w_pid == _mp::_elpusk::_lpu237::const_usb_pid && n_interface == _mp::_elpusk::_lpu237::const_usb_inf_hid) {
 			return v_extra_lpu237;
+		}
+		else if (w_vid == _mp::_elpusk::const_usb_vid && w_pid == _mp::_elpusk::_lpu238::const_usb_pid && n_interface == _mp::_elpusk::_lpu238::const_usb_inf_hid) {
+			return v_extra_lpu238;
+		}
+		else {
+			return v_extra_hid_primitive; // hidboot & another hid device.
 		}
 
 		return v_extra_empty;

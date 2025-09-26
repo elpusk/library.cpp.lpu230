@@ -3,9 +3,9 @@
 #include <chid_briage.h>
 #include <cdev_lib.h>
 
-chid_briage::chid_briage()
+chid_briage::chid_briage(bool b_remove_all_zero_in_report)
 {
-	m_p_api_brage_instance = cdev_lib::get_instance().constructor();
+	m_p_api_brage_instance = cdev_lib::get_instance().constructor(b_remove_all_zero_in_report);
 }
 
 chid_briage::~chid_briage()

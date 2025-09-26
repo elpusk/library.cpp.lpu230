@@ -212,9 +212,9 @@ private:
 		};
 
 	public:
-		_q_worker(int n_primitive_map_index, _vhid_api_briage *p_api_briage);
+		_q_worker(int n_primitive_map_index, _vhid_api_briage* p_api_briage,bool b_remove_all_zero_in_report);
 		~_q_worker();
-
+		
 		/**
 		* @brief push requst to worker queue.
 		* 
@@ -361,6 +361,8 @@ private:
 		// primitive map index. setting on constructure.
 		const int m_n_primitive_map_index;
 
+		bool m_b_remove_all_zero_in_report; // default false, all zeros value report is ignored
+
 	private://don't call these methods
 		_q_worker();
 	};
@@ -373,6 +375,7 @@ private:
 public:
 	_vhid_api_briage();
 	_vhid_api_briage(_mp::clog* p_clog);
+	_vhid_api_briage(_mp::clog* p_clog, bool b_remove_all_zero_in_report);
 
 	virtual ~_vhid_api_briage();
 
@@ -513,6 +516,7 @@ public:
 private:
 	std::tuple<bool, int, bool> _is_open(const char* path) const;
 
+	bool m_b_remove_all_zero_in_report; // default false, all zeros value report is ignored
 private:
 	// key is primitive map index.
 	// value is pair of vhid_info ptr and worker ptr

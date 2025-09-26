@@ -25,11 +25,19 @@
 _vhid_api_briage::_vhid_api_briage() : _hid_api_briage()
 {
     m_s_class_name = L"_vhid_api_briage";
+    m_b_remove_all_zero_in_report = false;
 }
 
 _vhid_api_briage::_vhid_api_briage(_mp::clog* p_clog) : _hid_api_briage(p_clog)
 {
     m_s_class_name = L"_vhid_api_briage";
+    m_b_remove_all_zero_in_report = false;
+}
+
+_vhid_api_briage::_vhid_api_briage(_mp::clog* p_clog, bool b_remove_all_zero_in_report) : _hid_api_briage(p_clog)
+{
+    m_s_class_name = L"_vhid_api_briage";
+    m_b_remove_all_zero_in_report = b_remove_all_zero_in_report;
 }
 
 _vhid_api_briage::~_vhid_api_briage()
@@ -46,7 +54,7 @@ std::set< std::tuple<std::string, unsigned short, unsigned short, int, std::stri
     std::set< std::tuple<std::string, unsigned short, unsigned short, int, std::string> > set_dev_in, set_dev_out;
 
     // get pysical device list
-    set_dev_in = _hid_api_briage::hid_enumerate();
+    set_dev_in = _hid_api_briage::hid_enumerate();//연결된 HID list 를 얻음. 
 
     for (auto item : set_dev_in) {
         std::string s_path(std::get<0>(item));
@@ -67,7 +75,9 @@ std::set< std::tuple<std::string, unsigned short, unsigned short, int, std::stri
         );
 
         //add virtual devices for lpu237
-        for ( auto extra_item : _vhid_info::get_extra_paths(w_vid, w_pid, n_interface)) {
+        const _vhid_info::type_set_path_type& set_path_type(_vhid_info::get_extra_paths(w_vid, w_pid, n_interface));
+
+        for (auto extra_item : set_path_type) {
             std::get<4>(out_item) = std::get<0>(extra_item);
             set_dev_out.insert(out_item);
         }//end for
@@ -121,7 +131,7 @@ int _vhid_api_briage::api_open_path(const char* path)
             m_map_ptr_hid_info_ptr_worker[n_primitive_map_index] =
                 std::make_pair(
                     std::make_shared<_vhid_info_lpu237>(t), // in constructure, type open counter is increased.
-                    std::make_shared<_q_worker>(n_primitive_map_index, this)
+                    std::make_shared<_q_worker>(n_primitive_map_index, this, m_b_remove_all_zero_in_report)
                 );
             //convert primitive index to composite index.
             n_map_index = _vhid_info::get_compositive_map_index_from_primitive_map_index(t, n_primitive_map_index);
@@ -488,9 +498,10 @@ std::tuple<bool, int, bool> _vhid_api_briage::_is_open(const char* path) const
 * ***************************************************
 * _vhid_api_briage::_q_worker member function bodies
 */
-_vhid_api_briage::_q_worker::_q_worker(int n_primitive_map_index, _vhid_api_briage* p_api_briage) :
+_vhid_api_briage::_q_worker::_q_worker(int n_primitive_map_index, _vhid_api_briage* p_api_briage, bool b_remove_all_zero_in_report) :
     m_b_run_worker(false),
-    m_n_primitive_map_index(n_primitive_map_index)
+    m_n_primitive_map_index(n_primitive_map_index),
+    m_b_remove_all_zero_in_report(b_remove_all_zero_in_report)
 {
     m_b_run_worker = true;
     m_ptr_worker = std::shared_ptr<std::thread>(new std::thread(&_vhid_api_briage::_q_worker::_worker, this, p_api_briage));
@@ -502,6 +513,9 @@ _vhid_api_briage::_q_worker::_q_worker(int n_primitive_map_index, _vhid_api_bria
 
 _vhid_api_briage::_q_worker::~_q_worker()
 {
+#if defined(_WIN32) && defined(_DEBUG)
+    //ATLTRACE(L" ** destructor ._q_worker()\n");
+#endif
     if (m_ptr_worker) {
         m_b_run_worker = false;
 
@@ -1085,6 +1099,8 @@ int _vhid_api_briage::_q_worker::_rx(_mp::type_v_buffer& v_rx, _hid_api_briage* 
     int n_loop = 0;
     int n_retry = 0;
 
+    std::fill(v_rx.begin(), v_rx.end(), 0);
+
 	long long ll_check_read_interval_mmsec = _hid_api_briage::const_default_hid_read_interval_mmsec;
     if( p_api_briage != nullptr) {
         ll_check_read_interval_mmsec = p_api_briage->get_hid_read_interval_in_child();
@@ -1115,21 +1131,45 @@ int _vhid_api_briage::_q_worker::_rx(_mp::type_v_buffer& v_rx, _hid_api_briage* 
                 continue;
             }
         }
+
         //
         n_retry = 0;
 
         if ((n_result + n_offset) >= v_rx.size()) {
             n_result = n_result + n_offset;
-            if (p_api_briage->get_clog())
-                p_api_briage->get_clog()->log_fmt_in_debug_mode(L"[D%d] RX-OK : (n_offset, n_read)=(%d,%d,%u).\n", n_loop, n_offset, n_result, v_rx.size());
-            break; // read complete
-        }
-        //
-        if (p_api_briage->get_clog())
-            p_api_briage->get_clog()->log_fmt_in_debug_mode(L"[D%d] RX : (n_offset, n_read)=(%d,%d,%u).\n", n_loop, n_offset, n_result, v_rx.size());
+            //
+            if (m_b_remove_all_zero_in_report) {
+                auto it = std::find_if_not(v_rx.begin(), v_rx.begin() + n_result, [](unsigned char c) { return c == 0; });
+                if (it == std::end(v_rx)) {
+                    std::fill(v_rx.begin(), v_rx.begin() + n_result, 0); // reset for re-read
+                    n_offset = n_result = 0;
 
-        n_offset = n_offset + n_result;
-        n_len = n_len - n_result;
+#if defined(_WIN32) && defined(_DEBUG)
+                    ATLTRACE(L" ++ ignored zeros in-report\n");
+#endif
+                }
+                else {
+                    //
+                    if (p_api_briage->get_clog())
+                        p_api_briage->get_clog()->log_fmt_in_debug_mode(L"[D%d] RX-OK : (n_offset, n_read)=(%d,%d,%u).\n", n_loop, n_offset, n_result, v_rx.size());
+                    break; // read complete
+                }
+            }
+            else {
+                //
+                if (p_api_briage->get_clog())
+                    p_api_briage->get_clog()->log_fmt_in_debug_mode(L"[D%d] RX-OK : (n_offset, n_read)=(%d,%d,%u).\n", n_loop, n_offset, n_result, v_rx.size());
+                break; // read complete
+            }
+        }
+        else {
+            //
+            if (p_api_briage->get_clog())
+                p_api_briage->get_clog()->log_fmt_in_debug_mode(L"[D%d] RX : (n_offset, n_read)=(%d,%d,%u).\n", n_loop, n_offset, n_result, v_rx.size());
+
+            n_offset = n_offset + n_result;
+            n_len = n_len - n_result;
+        }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(ll_check_read_interval_mmsec));
     } while (m_b_run_worker);

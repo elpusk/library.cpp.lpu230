@@ -41,7 +41,7 @@ cupdater::cupdater(_mp::clog& log,bool b_disaplay, bool b_log) :
 
 	//parameter valied check
 	do {
-		m_ptr_hid_api_briage = std::make_shared<chid_briage>();
+		m_ptr_hid_api_briage = std::make_shared<chid_briage>(true); //remove_all_zero_in_report
 		_mp::clibhid& mlibhid(_mp::clibhid::get_manual_instance());
 
 		std::string s_target_dev_path = _check_target_device_path_in_initial();
@@ -417,7 +417,7 @@ std::shared_ptr<ftxui::Component> cupdater::_create_sub_ui4_updating()
 					ftxui::text("Updating"),
 					ftxui::gauge(static_cast<float>(m_n_progress_cur - m_n_progress_min) / (m_n_progress_max - m_n_progress_min)) | ftxui::color(ftxui::Color::Blue),
 					ftxui::text(status),
-					ftxui::text(cshare::get_instance().get_rom_file_abs_full_path()),
+					ftxui::text(m_s_message_in_ing_state),
 					ftxui::emptyElement()
 			}) |
 			ftxui::border;
@@ -479,13 +479,13 @@ std::shared_ptr<ftxui::Component> cupdater::_create_sub_ui5_complete()
 	return ptr_component;
 }
 
-void cupdater::_push_message(const std::string& s_in_msg)
+void cupdater::_push_message(int n_in_data,const std::string& s_in_msg)
 {
 	std::lock_guard<std::mutex> lock(m_mutex);
-	m_q_messages.push(s_in_msg);
+	m_q_messages.push(std::make_pair(n_in_data,s_in_msg));
 }
 
-bool cupdater::_pop_message(std::string& s_out_msg, bool b_remove_after_pop/*=true*/)
+bool cupdater::_pop_message(int& n_out_data,std::string& s_out_msg, bool b_remove_after_pop/*=true*/)
 {
 	bool b_result(false);
 
@@ -497,7 +497,7 @@ bool cupdater::_pop_message(std::string& s_out_msg, bool b_remove_after_pop/*=tr
 			continue;
 		}
 
-		s_out_msg = m_q_messages.front();
+		std::tie(n_out_data,s_out_msg) = m_q_messages.front();
 		if (b_remove_after_pop) {
 			m_q_messages.pop();
 		}
@@ -616,6 +616,7 @@ std::string cupdater::_check_target_device_path_in_initial()
 
 	if (cshare::get_instance().get_start_from_bootloader()) {
 		cshare::get_instance().set_device_path(s_target_dev_path);// 시작 장비가 hidboot loader 로 장비가 설정됨
+		cshare::get_instance().set_bootloader_path(s_target_dev_path);
 		return s_target_dev_path;
 	}
 
@@ -982,17 +983,22 @@ void cupdater::ui_main_loop()
 #endif
 
 		do {
-			std::string msg;
-			if (!_pop_message(msg)) {
+			int n_msg(0);
+			std::string s_msg;
+			if (!_pop_message(n_msg, s_msg)) {
 				continue;
 			}
 
+			m_s_message_in_ing_state = std::to_string(n_msg);
+			m_s_message_in_ing_state += " step : ";
+			m_s_message_in_ing_state += s_msg;
+
 #ifdef _WIN32
-			if (msg.empty()) {
-				ATLTRACE("MSG - empty()\n");
+			if (s_msg.empty()) {
+				ATLTRACE("(INT,MSG) - (%d,empty)\n",n_msg);
 			}
 			else {
-				ATLTRACE("MSG - %s\n", msg.c_str());
+				ATLTRACE("(INT,MSG) - (%d,%s)\n", n_msg,s_msg.c_str());
 			}
 #endif //_WIN32
 			//
@@ -1013,6 +1019,9 @@ void cupdater::_updates_thread_function()
 	int n_cnt(0);
 	cshare& sh(cshare::get_instance());
 
+	bool b_need_close_lpu23x(false);
+	bool b_need_close_bootloader(false);
+
 	while (m_b_is_running){
 		std::this_thread::sleep_for(std::chrono::milliseconds(500)); // Sleep to avoid busy waiting
 
@@ -1028,7 +1037,7 @@ void cupdater::_updates_thread_function()
 			++n_cnt;
 			std::string s_msg("Updating...");
 			s_msg += std::to_string(n_cnt);
-			_push_message(s_msg);
+			_push_message(0,s_msg);
 			
 		}while (false);
 		*/
@@ -1036,30 +1045,53 @@ void cupdater::_updates_thread_function()
 		// 
 		
 		int n_step(0);
+		////////////////////////////////////////////////////
+		if (!_updates_sub_thread_backup_system_param(n_step)) {
+			break;//error
+		}
+		b_need_close_lpu23x = true;
 
-		_updates_sub_thread_backup_system_param(n_step);
 		if (!m_b_is_running)
 			break; // 종료 직전 체크
-		//
+
+		////////////////////////////////////////////////////
 		// 부트로더 실행
+		b_need_close_lpu23x = false; // _updates_sub_thread_run_bootloader 을 실행하면, 항상 내부에서, close 함.
 		if (!_updates_sub_thread_run_bootloader(n_step)) {
 			break; // error
 		}
 		if (!m_b_is_running)
 			break; // 종료 직전 체크
-		//
-		if (!_updates_sub_thread_wait_plugout_lpu23x(n_step)) {
+
+		////////////////////////////////////////////////////
+		auto pair_bout_bin = _updates_sub_thread_wait_plugout_lpu23x(n_step);
+		if (!pair_bout_bin.first) {
 			//error
 		}
 		if (!m_b_is_running)
 			break; // 종료 직전 체크
 		//
-		if (!_updates_sub_thread_wait_plugin_bootloader(n_step)) {
-			//error
+		if (pair_bout_bin.second) {
+			++n_step; // 이미 plugin detected
 		}
+		else {
+			if (!_updates_sub_thread_wait_plugin_bootloader(n_step)) {
+				//error
+			}
+			if (!m_b_is_running)
+				break; // 종료 직전 체크
+		}
+
+		////////////////////////////////////////////////////
+		// 부트로더 설정 실시.
+		if (!_updates_sub_thread_setup_bootloader(n_step)) {
+			break;
+		}
+		b_need_close_bootloader = true;
 		if (!m_b_is_running)
 			break; // 종료 직전 체크
 
+		////////////////////////////////////////////////////
 		// 섹터 삭제
 		if (!_updates_sub_thread_erase_sector(n_step)) {
 			break;
@@ -1068,7 +1100,7 @@ void cupdater::_updates_thread_function()
 			break; // 종료 직전 체크
 		//
 
-		// ..
+		////////////////////////////////////////////////////
 		// 데이터 읽기
 		if (!_updates_sub_thread_read_sector_from_file(n_step)) {
 			break;
@@ -1076,6 +1108,7 @@ void cupdater::_updates_thread_function()
 		if (!m_b_is_running)
 			break; // 종료 직전 체크
 
+		////////////////////////////////////////////////////
 		// 데이터 쓰시 및 확인
 		if (!_updates_sub_thread_write_sector(n_step)) {
 			break;
@@ -1083,35 +1116,47 @@ void cupdater::_updates_thread_function()
 		if (!m_b_is_running)
 			break; // 종료 직전 체크
 
-		// ..
+		////////////////////////////////////////////////////
 		// 앱실행
+		b_need_close_bootloader = false; // 아래 실행하면 무조건, bootloader 닫음.
 		if (!_updates_sub_thread_run_app(n_step)) {
 			break;
 		}
 		if (!m_b_is_running)
 			break; // 종료 직전 체크
 
+		////////////////////////////////////////////////////
 		if (!_updates_sub_thread_wait_plugout_bootloader(n_step)) {
 			break;
 		}
 		if (!m_b_is_running)
 			break; // 종료 직전 체크
 
+		////////////////////////////////////////////////////
 		if (!_updates_sub_thread_wait_plugin_lpu23x(n_step)) {
 			break;
 		}
 		if (!m_b_is_running)
 			break; // 종료 직전 체크
 
+		////////////////////////////////////////////////////
 		// 시스템 파라메터 복구.
 		if (!_updates_sub_thread_recover_system_param(n_step)) {
 			break;
 		}
+		b_need_close_lpu23x = true;
 		if (!m_b_is_running)
 			break; // 종료 직전 체크
 
 	}//running
 
+	if (b_need_close_lpu23x) {
+		_mp::clibhid_dev::type_ptr ptr_null;
+		cshare::get_instance().set_target_lpu23x(ptr_null); // clear dev
+	}
+	if (b_need_close_bootloader) {
+		m_p_mgmt->UnselectDevice(); 
+	}
 #ifdef _WIN32
 	ATLTRACE(L"Good bye\n");
 #endif
@@ -1142,9 +1187,10 @@ bool cupdater::_updates_sub_thread_backup_system_param(int& n_step)
 			std::tie(b_result, b_complete) = sh.io_save_all_variable_sys_parameter(b_first);
 			b_first = false;
 			if (b_result) {
-				_push_message(std::to_string(n_step));
+				_push_message(n_step,"backup system parameters");
 			}
 			else {
+				_push_message(n_step, "ERROR - backup system parameters");
 #ifdef _WIN32
 				ATLTRACE(L"ERROR : io_save_all_variable_sys_parameter().\n");
 #endif
@@ -1152,6 +1198,11 @@ bool cupdater::_updates_sub_thread_backup_system_param(int& n_step)
 		} while (!b_complete && m_b_is_running);
 
 	} while (false);
+
+	if (!b_result) { // 실패시 통신 채널 닫기.
+		_mp::clibhid_dev::type_ptr ptr_null;
+		cshare::get_instance().set_target_lpu23x(ptr_null); // clear dev
+	}
 	return b_result;
 }
 
@@ -1165,35 +1216,105 @@ bool cupdater::_updates_sub_thread_run_bootloader(int& n_step)
 	bool b_complete(false);
 	cshare& sh(cshare::get_instance());
 
+	if (sh.get_start_from_bootloader()) {
+		return true; // bootload 실행 필요 없음.
+	}
 	++n_step;
 
-	if (sh.get_start_from_bootloader()) {
-		return true; // botload 실행 필요 없음.
-	}
+	_mp::type_set_usb_filter set_usb_filter;
+	set_usb_filter.emplace(_mp::_elpusk::const_usb_vid, _mp::_elpusk::_lpu237::const_usb_pid, _mp::_elpusk::_lpu237::const_usb_inf_hid); //lpu237
+	set_usb_filter.emplace(_mp::_elpusk::const_usb_vid, _mp::_elpusk::_lpu238::const_usb_pid, _mp::_elpusk::_lpu238::const_usb_inf_hid); //lpu238
+	set_usb_filter.emplace(_mp::_elpusk::const_usb_vid, _mp::_elpusk::const_usb_pid_hidbl, _mp::_elpusk::const_usb_inf_hidbl); //hidbootloader
+
+	_mp::clibhid& mlibhid(_mp::clibhid::get_manual_instance());
+	mlibhid.set_usb_filter(set_usb_filter);
+
+	mlibhid.update_dev_set_in_manual();
+	//
 	b_result = sh.io_run_bootloader();
 	if (b_result) {
-		_push_message(std::to_string(n_step));
+		_push_message(n_step,"run bootloader.");
 	}
 	else {
+		_push_message(n_step, "ERROR - run bootloader.");
 #ifdef _WIN32
 		ATLTRACE(L"ERROR : io_run_bootloader().\n");
 #endif
 	}
+
+	_mp::clibhid_dev::type_ptr ptr_null;
+	cshare::get_instance().set_target_lpu23x(ptr_null); // clear dev
+
 	return b_result;
 }
 
-bool cupdater::_updates_sub_thread_wait_plugout_lpu23x(int& n_step)
+std::pair<bool, bool> cupdater::_updates_sub_thread_wait_plugout_lpu23x(int& n_step)
 {
 #ifdef _WIN32
 	ATLTRACE(L"_updates_sub_thread_wait_plugout_lpu23x()\n");
 #endif
 
 	bool b_result(false);
+	bool b_detect_plugin_hidboot(false);
+	cshare& sh(cshare::get_instance());
+
+	if (sh.get_start_from_bootloader()) {
+		return std::make_pair(true, false); // bootload 실행 필요 없음.
+	}
+	++n_step;
+
+	_mp::cwait w;
+	int n_w = w.generate_new_event();
+
+	bool b_wait(true);
+	int n_timeout_mm_unit = 300; //300msec
+	int n_total_timeout_unit = 3;
+	_mp::clibhid& mlibhid(_mp::clibhid::get_manual_instance());
+	_mp::clibhid_dev_info::type_set::iterator it_out, it_in;
+
+	_push_message(n_step, "waits plugout lpu23x.");
 
 	do {
+		mlibhid.update_dev_set_in_manual();
+		auto set_r = mlibhid.get_removed_device_set();
+		auto set_i = mlibhid.get_inserted_device_set();
 
-	} while (false);
-	return b_result;
+		it_out = _mp::clibhid_dev_info::find(set_r, sh.get_device_path());
+		if (it_out != std::end(set_r)) {
+			b_wait = false;
+			b_result = true; // plug out 검출.
+			_mp::clibhid_dev::type_ptr ptr_null;
+			cshare::get_instance().set_target_lpu23x(ptr_null); // clear dev
+			// plug in 도 검사.
+			it_in = _mp::clibhid_dev_info::find(set_i, _mp::_elpusk::const_usb_vid, _mp::_elpusk::const_usb_pid_hidbl);
+			if (it_in != std::end(set_i)) {
+				sh.set_bootloader_path(it_in->get_path_by_string());
+				b_detect_plugin_hidboot = true;
+			}
+			continue;
+		}
+
+		if (!m_b_is_running) {
+			break;// kill thread.
+		}
+		// more wait
+		w.wait_for_one_at_time(n_timeout_mm_unit);
+		--n_total_timeout_unit;
+		if (n_total_timeout_unit <= 0) {
+			break; //timeout : n_timeout_mm_unit * n_total_timeout_unit mm sec.
+		}
+
+	} while (b_wait);
+
+	if (!b_result) {
+		_push_message(n_step, "ERROR - detect plugout lpu23x.");
+	}
+	else {
+		if (b_detect_plugin_hidboot) {
+			_push_message(n_step, "detected plugout lpu23x and plugin bootloader.");
+		}
+	}
+	return std::make_pair(b_result, b_detect_plugin_hidboot);
 }
 
 bool cupdater::_updates_sub_thread_wait_plugin_bootloader(int& n_step)
@@ -1203,10 +1324,92 @@ bool cupdater::_updates_sub_thread_wait_plugin_bootloader(int& n_step)
 #endif
 
 	bool b_result(false);
+	cshare& sh(cshare::get_instance());
+
+	if (sh.get_start_from_bootloader()) {
+		return true; // bootload 실행 필요 없음.
+	}
+	++n_step;
+
+	_mp::cwait w;
+	int n_w = w.generate_new_event();
+
+	bool b_wait(true);
+	int n_timeout_mm_unit = 300; //300msec
+	int n_total_timeout_unit = 17;
+	_mp::clibhid& mlibhid(_mp::clibhid::get_manual_instance());
+	_mp::clibhid_dev_info::type_set::iterator it_in;
+
+	_push_message(n_step, "waits plugin bootloader.");
 
 	do {
+		mlibhid.update_dev_set_in_manual();
+		auto set_i = mlibhid.get_inserted_device_set();
 
+		it_in = _mp::clibhid_dev_info::find(set_i, _mp::_elpusk::const_usb_vid, _mp::_elpusk::const_usb_pid_hidbl);
+		if (it_in != std::end(set_i)) {
+			sh.set_bootloader_path(it_in->get_path_by_string());
+			b_wait = false;
+			b_result = true; // plug in 검출.
+			continue;
+		}
+
+		if (!m_b_is_running) {
+			break;// kill thread.
+		}
+		// more wait
+		w.wait_for_one_at_time(n_timeout_mm_unit);
+		--n_total_timeout_unit;
+		if (n_total_timeout_unit <= 0) {
+			break; //timeout : n_timeout_mm_unit * n_total_timeout_unit mm sec.
+		}
+
+	} while (b_wait);
+
+	if (!b_result) {
+		_push_message(n_step, "ERROR - detect plugin bootloader.");
+	}
+	return b_result;
+}
+
+bool cupdater::_updates_sub_thread_setup_bootloader(int& n_step)
+{
+	bool b_result(false);
+	cshare& sh(cshare::get_instance());
+	bool b_need_close(false);
+
+	do {
+		if (!m_p_mgmt) {
+			continue;
+		}
+
+		std::string s_path_boot = sh.get_bootloader_path();
+		if (s_path_boot.empty()) {
+			continue;
+		}
+
+		size_t n_fw_size = sh.get_selected_fw_size();
+
+		m_p_mgmt->GetDeviceList();
+		//open & get sector info. set setup read buffer.
+		if (!m_p_mgmt->SelectDevice(s_path_boot, n_fw_size)) {
+			b_need_close = true;
+			continue;
+		}
+		// 다음 작업을 위해 open 된 상태 유지 필요,
+		b_result = true;
 	} while (false);
+
+	if (b_need_close) {
+		m_p_mgmt->UnselectDevice();
+	}
+	if (!b_result) {
+		_push_message(n_step, "ERROR - setup bootloader.");
+	}
+	else {
+		_push_message(n_step, "setup bootloader.");
+	}
+
 	return b_result;
 }
 
@@ -1221,6 +1424,14 @@ bool cupdater::_updates_sub_thread_erase_sector(int& n_step)
 	do {
 
 	} while (false);
+
+	if (!b_result) {
+		_push_message(n_step, "ERROR - erase sector.");
+	}
+	else {
+		_push_message(n_step, "erase sector.");
+	}
+
 	return b_result;
 }
 
@@ -1235,6 +1446,14 @@ bool cupdater::_updates_sub_thread_read_sector_from_file(int& n_step)
 	do {
 
 	} while (false);
+
+	if (!b_result) {
+		_push_message(n_step, "ERROR - read new sector data from file.");
+	}
+	else {
+		_push_message(n_step, "read new sector data from file.");
+	}
+
 	return b_result;
 }
 
@@ -1249,6 +1468,14 @@ bool cupdater::_updates_sub_thread_write_sector(int& n_step)
 	do {
 
 	} while (false);
+
+	if (!b_result) {
+		_push_message(n_step, "ERROR - write & verify sector.");
+	}
+	else {
+		_push_message(n_step, "write & verify sector.");
+	}
+
 	return b_result;
 }
 
@@ -1263,6 +1490,14 @@ bool cupdater::_updates_sub_thread_run_app(int& n_step)
 	do {
 
 	} while (false);
+
+	if (!b_result) {
+		_push_message(n_step, "ERROR - run application.");
+	}
+	else {
+		_push_message(n_step, "run application.");
+	}
+
 	return b_result;
 }
 
@@ -1277,6 +1512,14 @@ bool cupdater::_updates_sub_thread_wait_plugout_bootloader(int& n_step)
 	do {
 
 	} while (false);
+
+	if (!b_result) {
+		_push_message(n_step, "ERROR - waiting plugout bootloader.");
+	}
+	else {
+		_push_message(n_step, "waiting plugout bootloader.");
+	}
+
 	return b_result;
 }
 
@@ -1291,6 +1534,14 @@ bool cupdater::_updates_sub_thread_wait_plugin_lpu23x(int& n_step)
 	do {
 
 	} while (false);
+
+	if (!b_result) {
+		_push_message(n_step, "ERROR - waiting plugin lpu23x.");
+	}
+	else {
+		_push_message(n_step, "waiting plugin lpu23x.");
+	}
+
 	return b_result;
 }
 
@@ -1305,5 +1556,13 @@ bool cupdater::_updates_sub_thread_recover_system_param(int& n_step)
 	do {
 
 	} while (false);
+
+	if (!b_result) {
+		_push_message(n_step, "ERROR - recover lpu23x system parameters.");
+	}
+	else {
+		_push_message(n_step, "recover lpu23x system parameters.");
+	}
+
 	return b_result;
 }

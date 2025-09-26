@@ -24,7 +24,7 @@ private:
 
 	typedef	std::mutex* (_CALLTYPE_* _type_dev_lib_get_mutex)();
 
-	typedef	void* (_CALLTYPE_* _type_dev_lib_constrcutor)();
+	typedef	void* (_CALLTYPE_* _type_dev_lib_constrcutor)(int);
 	typedef	void (_CALLTYPE_* _type_dev_lib_destructor)(void*);
 	typedef	int (_CALLTYPE_* _type_dev_lib_is_ini)(void*);
 
@@ -250,12 +250,18 @@ public:
 		return b_result;
 	}
 	///////////////////////////////////////////////////////////
-	void* constructor()
+	void* constructor(bool b_remove_all_zero_in_report)
 	{
 		void* p(NULL);
 		//std::lock_guard<std::mutex> lock(m_mutex);
-		if (m_dev_lib_constrcutor)
-			p = m_dev_lib_constrcutor();
+		if (m_dev_lib_constrcutor) {
+			if (b_remove_all_zero_in_report) {
+				p = m_dev_lib_constrcutor(1);
+			}
+			else {
+				p = m_dev_lib_constrcutor(0);
+			}
+		}
 		//
 		return p;
 	}

@@ -13,6 +13,8 @@
 #include <mp_csystem_.h>
 #include <mp_cwait.h>
 
+#include "cshare.h"
+
 // DONT INCLUDE cshare.h
 
 CHidBootManager::CHidBootManager(void) :
@@ -339,6 +341,9 @@ bool CHidBootManager::_doing_in_worker()
 
 		if (DS_READFILE == m_DoStatus) {
 			//all read file data
+			// 코드 가 변경 되어 작업 시작전 파일 크기를 알수 있게 됨. 따라서 
+			// 미리 SelectDevice() 하고, ajust 가능 여기 코드는 remark 됨.
+			/*
 			int n_fs(_get_firmware_size_at_file());
 			if (!m_RBuffer.set_file_size_and_adjust_erase_write_area(n_fs)) {
 				PostAnnounce(C_WP_READFILE, C_LP_ERROR);
@@ -353,6 +358,15 @@ bool CHidBootManager::_doing_in_worker()
 				PostAnnounce(C_WP_READFILE, C_LPSUCCESS);
 				m_DoStatus = DS_ERASE;//next step
 			}
+			*/
+			_reset_file_read_pos();
+			_load_one_sector_from_file();
+			//Deb_Printf(L".. Filled partial buffer.\n");
+			_post_progress_range();//set upate-range to file sizeof app.
+
+			PostAnnounce(C_WP_READFILE, C_LPSUCCESS);
+			m_DoStatus = DS_ERASE;//next step
+
 			continue;
 		}
 		//
@@ -601,7 +615,7 @@ void CHidBootManager::_woker_for_update()
 
 	}while( bRun );
 #ifdef _WIN32
-	ATLTRACE(L"Exit CHidBootManager::_woker_for_update().");
+	ATLTRACE(L"Exit CHidBootManager::_woker_for_update().\n");
 #endif
 	
 }
@@ -644,10 +658,19 @@ CHidBootManager::type_pair_handle CHidBootManager::_DDL_open(const std::wstring&
 			continue;
 		}
 		//
-		ptr_dev = std::make_shared<_mp::clibhid_dev>(item, mclibhid.get_briage().get());// create & open clibhid_dev.
-		ptr_info = std::make_shared<_mp::clibhid_dev_info>(item);
-		dev_ptrs = std::make_pair(ptr_dev, ptr_info);
-		pair_dev_ptrs = std::make_pair(item.get_path_by_string(), dev_ptrs);
+		bool b_lpu23x_specific_protocol(false), b_remove_all_zero_rx(true);
+		ptr_dev = std::make_shared<_mp::clibhid_dev>(
+			item
+			, mclibhid.get_briage().get()
+			, b_lpu23x_specific_protocol
+			, b_remove_all_zero_rx
+			);// create & open clibhid_dev.
+		if (ptr_dev->is_open()) {
+			ptr_info = std::make_shared<_mp::clibhid_dev_info>(item);
+			dev_ptrs = std::make_pair(ptr_dev, ptr_info);
+			pair_dev_ptrs = std::make_pair(item.get_path_by_string(), dev_ptrs);
+		}
+		break;
 	}//end for
 
 	return pair_dev_ptrs;
@@ -786,30 +809,25 @@ bool CHidBootManager::_DDL_TxRx(CHidBootManager::type_pair_handle hDev, unsigned
 			continue;
 		}
 
-		_mp::type_v_buffer v_tx(lpTxData[0], lpTxData[nTx]);
+		_mp::type_v_buffer v_tx(nOutReportSize, 0);
 		_mp::type_v_buffer v_rx;
-		_mp::cwait w;
-		int n_w = w.generate_new_event();
-		std::tuple<int, _mp::cwait*, _mp::type_v_buffer*> param(n_w, &w, &v_rx);
-		hDev.second.first->start_write_read(0, v_tx,
-			[](_mp::cqitem_dev& qi, void* p_user)->std::pair<bool, std::vector<size_t>> {
-				std::tuple<int, _mp::cwait*, _mp::type_v_buffer*>* p_param = (std::tuple<int, _mp::cwait*, _mp::type_v_buffer*>*)p_user;
 
-				if (qi.is_complete()) {
+		//std::copy(&lpTxData[0], &lpTxData[nTx], &v_tx[1]);
+		std::copy(&lpTxData[0], &lpTxData[nTx], &v_tx[0]);
 
-					int n = std::get<0>(*p_param);
-					_mp::cwait* p_w = std::get<1>(*p_param);
-					_mp::type_v_buffer* p_v_rx = std::get<2>(*p_param);
-					*p_v_rx = qi.get_rx();
-					p_w->set(n);//trigger
-				}
+		if (!cshare::io_write_read_sync(hDev.second.first, v_tx, v_rx, 64)) {
+			continue;
+		}
 
-				return std::make_pair(qi.is_complete(), std::vector<size_t>());
-			}
-		, &param);
+		/*
+		if (!cshare::io_write_sync(hDev.second.first, v_tx)) {
+			continue;
+		}
 
-		w.wait_for_one_at_time();
-
+		if (!cshare::io_read_sync(hDev.second.first, v_rx,64)) {
+			continue;
+		}
+		*/
 		n_data = v_rx.size();
 		if (*p_nRx >= v_rx.size()) {
 			memcpy(lpRxData, &v_rx[0], v_rx.size());
@@ -947,6 +965,38 @@ bool CHidBootManager::SelectDevice(const std::string& s_device_path)
 		}
 		break;
 	}//end for
+	return b_result;
+}
+
+bool CHidBootManager::SelectDevice(const std::string& s_device_path, size_t n_fw_size)
+{
+	bool b_result(false);
+
+	std::wstring s = _mp::cstring::get_unicode_from_mcsc(s_device_path);
+	std::list<std::wstring>::iterator iter = m_listDev.begin();
+
+	do {
+		if (iter == std::end(m_listDev)) {
+			continue;
+		}
+		//
+		m_pair_dev_ptrs = _DDL_open(s);
+		if (!m_pair_dev_ptrs.first.empty()) {
+			b_result = true;
+		}
+		auto result = _get_sector_info_from_device();
+		if (std::get<0>(result) && std::get<1>(result)) {
+			m_RBuffer.reset(std::get<2>(result), std::get<3>(result), true, false);
+			if (n_fw_size > 0) {
+				b_result = m_RBuffer.set_file_size_and_adjust_erase_write_area(n_fw_size); // 엄청 난 드레곤.
+			}
+		}
+		else {
+			m_RBuffer.reset();
+		}
+
+	} while (false);
+
 	return b_result;
 }
 

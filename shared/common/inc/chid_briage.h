@@ -15,7 +15,7 @@ public:
 public:
 	static std::mutex& get_mutex_for_hidapi();
 
-	chid_briage();
+	chid_briage(bool b_remove_all_zero_in_report);
 
 	virtual ~chid_briage();
 
@@ -71,6 +71,7 @@ private:
 	void* m_p_api_brage_instance;
 
 private:
+	chid_briage() = delete;
 	chid_briage(const chid_briage&) = delete;
 	chid_briage& operator=(const chid_briage&) = delete;
 };

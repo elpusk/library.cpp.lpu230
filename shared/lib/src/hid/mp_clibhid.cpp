@@ -51,7 +51,7 @@ namespace _mp{
         static clibhid::type_ptr ptr_obj;
         if (b_first) {
             b_first = false;
-            ptr_obj = std::shared_ptr<clibhid>(new clibhid(true));
+            ptr_obj = std::shared_ptr<clibhid>(new clibhid(true,true));
         }
 
         return *ptr_obj;
@@ -121,6 +121,19 @@ namespace _mp{
         return m_set_cur_dev_info;
     }
 
+    clibhid_dev_info::type_set clibhid::get_removed_device_set()
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        return m_set_removed_dev_info;
+    }
+
+    clibhid_dev_info::type_set clibhid::get_inserted_device_set()
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        return m_set_inserted_dev_info;
+    }
+
+
     clibhid_dev::type_wptr clibhid::get_device(const clibhid_dev_info & dev_info)
     {
         std::lock_guard<std::mutex> lock(m_mutex);
@@ -142,7 +155,7 @@ namespace _mp{
         //
         // for supporting, virtual device. code is create child of _hid_api_briage class.
         if (!ptr_briage) {
-            m_ptr_hid_api_briage = std::make_shared<chid_briage>();//create single instance of virtual hidapi library
+            m_ptr_hid_api_briage = std::make_shared<chid_briage>(m_b_remove_all_zero_in_report);//create single instance of virtual hidapi library
         }
         else {
             m_ptr_hid_api_briage = ptr_briage; // 이미 생성된 briage api 사용.
@@ -201,17 +214,18 @@ namespace _mp{
         return m_ptr_hid_api_briage;
     }
 
-    clibhid::clibhid() : clibhid(false)
+    clibhid::clibhid() : clibhid(false,false)
     {
     }
 
-    clibhid::clibhid(bool b_manual) :
+    clibhid::clibhid(bool b_manual,bool b_remove_all_zero_in_report) :
         m_b_ini(false)
         , m_b_run_th_pluginout(false)
         , m_p_user(NULL)
         , m_cb(nullptr)
         , m_atll_dev_pluginout_check_interval_mmsec(clibhid::_const_default_dev_pluginout_check_interval_mmsec)
         , m_b_manual(b_manual)
+        , m_b_remove_all_zero_in_report(b_remove_all_zero_in_report)
     {
         if (!b_manual) {
             // 기본 값은 자동 처리 모드.
@@ -225,7 +239,7 @@ namespace _mp{
             _ini(); //ptr_briage instance will ne created in _ini()
         }
         else{
-            m_ptr_hid_api_briage = std::make_shared<chid_briage>();//create single instance of virtual hidapi library
+            m_ptr_hid_api_briage = std::make_shared<chid_briage>(m_b_remove_all_zero_in_report);//create single instance of virtual hidapi library
 
             if (m_ptr_hid_api_briage->is_ini()) {
                 m_b_ini = true;

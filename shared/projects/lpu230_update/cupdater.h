@@ -125,8 +125,20 @@ private:
 	bool _updates_sub_thread_backup_system_param(int &n_step);
 	bool _updates_sub_thread_run_bootloader(int& n_step);
 
-	bool _updates_sub_thread_wait_plugout_lpu23x(int& n_step);
+	/**
+	* @return first - true : success plugout lpu23x.
+	* 
+	*	second - true : bootloader plugin detected also!.( if this is true, no need _updates_sub_thread_wait_plugin_bootloader() )
+	*/
+	std::pair<bool,bool> _updates_sub_thread_wait_plugout_lpu23x(int& n_step);
 	bool _updates_sub_thread_wait_plugin_bootloader(int& n_step);
+
+	/**
+	* @brief open bootloader and get sector information.
+	* 
+	* @return true : open & getting success.
+	*/
+	bool _updates_sub_thread_setup_bootloader(int& n_step);
 
 	bool _updates_sub_thread_erase_sector(int& n_step);
 	bool _updates_sub_thread_read_sector_from_file(int& n_step);
@@ -156,17 +168,19 @@ private:
 
 	/**
 	* @brief push message with thread safety
+	* @param n_in_data : int type pushed data.
 	* @param s_in_msg : pushed string
 	*/
-	void _push_message(const std::string& s_in_msg);
+	void _push_message(int n_in_data,const std::string& s_in_msg);
 
 	/**
 	* @brief pop message with thread safety
+	* @param n_out_data : poped ,int
 	* @param s_out_msg : poped string
 	* @param b_remove_after_pop  true : if a item is poped,remove item from q.
 	* @return true : pop OK. false : none item in the q.
 	*/
-	bool _pop_message(std::string& s_out_msg,bool b_remove_after_pop = true);
+	bool _pop_message(int &n_out_data, std::string& s_out_msg,bool b_remove_after_pop = true);
 
 	std::vector<std::filesystem::path> _find_rom_files();
 
@@ -208,6 +222,7 @@ private:
 
 	std::atomic<cupdater::AppState> m_state;
 
+	std::string m_s_message_in_ing_state;
 	int m_n_progress_cur, m_n_progress_min, m_n_progress_max;
 
 	ftxui::ScreenInteractive m_screen;
@@ -263,7 +278,7 @@ private:
 
 	// Mutex for thread safety
 	std::mutex m_mutex;
-	std::queue<std::string> m_q_messages; // Queue for messages from the update thread
+	std::queue<std::pair<int,std::string>> m_q_messages; // Queue for messages from the update thread
 
 	_mp::cwait m_wait; // Wait object for synchronization
 	int m_n_kill_signal; // Signal to stop the updater

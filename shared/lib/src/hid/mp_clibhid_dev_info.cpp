@@ -122,6 +122,18 @@ namespace _mp{
         return it;
     }
 
+    clibhid_dev_info::type_set::iterator clibhid_dev_info::find(clibhid_dev_info::type_set& in, int n_vid, int n_pid)
+    {
+        clibhid_dev_info::type_set::iterator it = std::begin(in);
+
+        for (; it != std::end(in); ++it) {
+            if (it->get_vendor_id() == (unsigned short)n_vid && it->get_product_id() == (unsigned short)n_pid) {
+                break; //found ok
+            }
+        }//end for
+        return it;
+    }
+
 
     clibhid_dev_info::clibhid_dev_info() :
         m_w_vid(0), m_w_pid(0), m_n_interface(-1),

@@ -16,17 +16,29 @@
 #endif
 
 namespace _mp {
-    clibhid_dev::clibhid_dev(const clibhid_dev_info & info, chid_briage* p_hid_api_briage) :
-		m_atll_rx_by_api_in_rx_worker_check_interval_mmsec(clibhid_dev::_const_dev_rx_by_api_in_rx_worker_check_interval_mmsec),
-		m_atll_rx_q_check_interval_mmsec(clibhid_dev::_const_dev_rx_q_check_interval_mmsec),
+    clibhid_dev::clibhid_dev(const clibhid_dev_info& info, chid_briage* p_hid_api_briage)
+        :clibhid_dev(info, p_hid_api_briage, true, false)
+    {
+    }
+
+    clibhid_dev::clibhid_dev(
+        const clibhid_dev_info& info
+        , chid_briage* p_hid_api_briage
+        , bool b_lpu23x_specific_protocol
+        , bool b_remove_all_zero_rx
+    ) :
+        m_atll_rx_by_api_in_rx_worker_check_interval_mmsec(clibhid_dev::_const_dev_rx_by_api_in_rx_worker_check_interval_mmsec),
+        m_atll_rx_q_check_interval_mmsec(clibhid_dev::_const_dev_rx_q_check_interval_mmsec),
         m_n_dev(-1),
         m_b_run_th_worker(false),
         m_dev_info(info),
         m_b_detect_replugin(false),
         m_p_hid_api_briage(p_hid_api_briage),
-        m_n_debug_line(0)
+        m_n_debug_line(0),
+        m_b_lpu23x_specific_protocol(b_lpu23x_specific_protocol),
+        m_b_remove_all_zero_rx(b_remove_all_zero_rx)
     {
-       if (!m_p_hid_api_briage) {
+        if (!m_p_hid_api_briage) {
             return;
         }
 
@@ -75,6 +87,7 @@ namespace _mp {
 #endif
         } while (false);
     }
+
 
     clibhid_dev::~clibhid_dev()
     {
@@ -685,23 +698,36 @@ namespace _mp {
             }
 
             if (v_rx.size() == 0) {
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+                ATLTRACE(L" =******= RX retry.\n");
+#endif
                 b_wait = true; // 에러는 아닌데 받은게 없어서 좀더 기다림.
                 continue;
             }
 
             //RX OK.
-            if (v_rx[0] != 'R') {//lpu237 specific protocol // ptr_req->get_request_type() == cqitem_dev::req_tx_rx 일때만 적용.
-                // very important code - fix miss-matching txrx protocol. 
-                // 펨웨어에서, msr 이나 ibutton 데이터를 보내려고, usb buffer 에 데이타를 쓰고 있는 때,
-                // tx 가 전송되면, api 는 tx 에 대한 응답으로 msr 이나 ibutton 데이터를 받을수 있다.
-                // 이러한 경우 프로토콜 미스로 문제가 생기므로, 이 msr 이나 ibutton 은 무시되어야 한다. 무조건 !
-                b_wait = true; // 다시 읽기 시도.
-                v_rx.resize(0);
-                //
-                clog::get_instance().trace(L"T[W] - %ls - the missed response is passed.\n", __WFUNCTION__);
-                clog::get_instance().log_fmt(L"[W] - %ls - the missed response is passed.\n", __WFUNCTION__);
-                //
-                continue; //and need re-read.
+            if (m_b_lpu23x_specific_protocol) {
+                if (v_rx[0] != 'R') {//lpu237 specific protocol // ptr_req->get_request_type() == cqitem_dev::req_tx_rx 일때만 적용.
+                    // very important code - fix miss-matching txrx protocol. 
+                    // 펨웨어에서, msr 이나 ibutton 데이터를 보내려고, usb buffer 에 데이타를 쓰고 있는 때,
+                    // tx 가 전송되면, api 는 tx 에 대한 응답으로 msr 이나 ibutton 데이터를 받을수 있다.
+                    // 이러한 경우 프로토콜 미스로 문제가 생기므로, 이 msr 이나 ibutton 은 무시되어야 한다. 무조건 !
+                    b_wait = true; // 다시 읽기 시도.
+                    v_rx.resize(0);
+                    //
+                    clog::get_instance().trace(L"T[W] - %ls - the missed response is passed.\n", __WFUNCTION__);
+                    clog::get_instance().log_fmt(L"[W] - %ls - the missed response is passed.\n", __WFUNCTION__);
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+                    ATLTRACE(L" =******= the missed response is passed.\n");
+#endif
+                    //
+                    continue; //and need re-read.
+                }
+            }
+            else {
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+                ATLTRACE(L" =some capture RX.\n");
+#endif
             }
 
         } while (b_wait);

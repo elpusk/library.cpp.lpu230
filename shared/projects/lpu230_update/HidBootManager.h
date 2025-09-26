@@ -112,6 +112,8 @@ public:
 	int GetDeviceList();
 	bool SelectDevice(int nSel);
 	bool SelectDevice(const std::string& s_device_path);
+	bool SelectDevice(const std::string& s_device_path, size_t n_fw_size);
+
 	bool UnselectDevice();
 
 	bool IsInitialOk() { return m_bIniOk; }
@@ -119,6 +121,11 @@ public:
 	unsigned long get_app_area_size() const
 	{
 		return m_RBuffer.get_app_area_size();
+	}
+
+	int get_the_number_of_app_sector() const
+	{
+		return m_RBuffer.get_the_number_of_app_sector();
 	}
 
 	static unsigned int get_firmware_size(const std::wstring& sRomfileName, int nIndex)

@@ -62,6 +62,9 @@ namespace _mp {
 		* @param p_vhid_api_briage - virtual HID API bridge
         */
         clibhid_dev(const clibhid_dev_info& info, chid_briage*p_hid_api_briage);
+
+        clibhid_dev(const clibhid_dev_info& info, chid_briage* p_hid_api_briage, bool b_lpu23x_specific_protocol, bool b_remove_all_zero_rx );
+
         ~clibhid_dev();
 
         void clear_api_briage();
@@ -262,6 +265,9 @@ namespace _mp {
 		_mp::clibhid_dev::_type_q_rx_ptr_v m_q_rx_ptr_v;//for rx worker, receive queue
 
 		std::atomic<bool> m_b_detect_replugin;// error status. if true, need to remove this instance.
+
+        bool m_b_lpu23x_specific_protocol;//default is true.
+        bool m_b_remove_all_zero_rx;//default is false.
 
         int m_n_debug_line; //for debugging
     private:

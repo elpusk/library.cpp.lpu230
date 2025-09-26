@@ -10,6 +10,10 @@
 
 class cshare {
 public:
+	enum : size_t {
+		const_size_max_firmware = 90 * 1024 * 1024
+	};
+
 	enum class Lpu237Interface {
 		nc = -1, //no consideration
 		usb_keyboard = 0,//0
@@ -32,8 +36,13 @@ public:
 	bool io_run_bootloader();
 
 	static bool io_write_sync(_mp::clibhid_dev::type_ptr & ptr_dev,const _mp::type_v_buffer& v_tx);
-	static bool io_read_sync(_mp::clibhid_dev::type_ptr& ptr_dev, _mp::type_v_buffer& v_rx);
-	static bool io_write_read_sync(_mp::clibhid_dev::type_ptr& ptr_dev, const _mp::type_v_buffer& v_tx, _mp::type_v_buffer& v_rx);
+	static bool io_read_sync(_mp::clibhid_dev::type_ptr& ptr_dev, _mp::type_v_buffer& v_rx, int n_report_size = -1);
+	static bool io_write_read_sync(
+		_mp::clibhid_dev::type_ptr& ptr_dev
+		, const _mp::type_v_buffer& v_tx
+		, _mp::type_v_buffer& v_rx
+		, int n_report_size = -1
+	);
 
 	static std::string get_string(cshare::Lpu237Interface inf);
 
@@ -51,6 +60,7 @@ public:
 
 	cshare& set_rom_file_abs_full_path(const std::string &s_abs_full_rom_file);
 	cshare& set_device_path(const std::string& s_device_path);
+	cshare& set_bootloader_path(const std::string& s_bootloader_path);
 	cshare& set_iso_mode_after_update(bool b_enable_iso_mode_after_update);
 	cshare& set_lpu23x_interface_change_after_update(cshare::Lpu237Interface inf_new);
 
@@ -70,6 +80,10 @@ public:
 	std::wstring get_rom_file_abs_full_wpath() const;
 	std::string get_device_path() const;
 	std::wstring get_device_wpath() const;
+
+	std::string get_bootloader_path() const;
+	std::wstring get_bootloader_wpath() const;
+
 	bool is_iso_mode_after_update() const;
 	cshare::Lpu237Interface get_lpu23x_interface_change_after_update() const;
 
@@ -80,6 +94,8 @@ public:
 	std::vector<std::string> get_vector_files_in_current_dir_except_dir() const;
 	std::vector<std::string> get_vector_rom_files_in_current_dir() const;
 	std::vector<std::string> get_vector_bin_files_in_current_dir() const;
+
+	size_t get_selected_fw_size() const;
 
 	/**
 	* 
@@ -122,9 +138,13 @@ public:
 
 	/**
 	* @brief calculate the number of update step.
+	* @param n_the_number_of_erase_sector : the numb of erase sector
+	* 
+	*	if int n_the_number_of_erase_sector  is negative, the number of erase sector is equal to writing it.
+	* 
 	* @return the number of update step.
 	*/
-	int calculate_update_step();
+	int calculate_update_step(int n_the_number_of_erase_sector = -1);
 
 private:
 	void _ini();
@@ -134,7 +154,8 @@ private:
 	bool m_b_run_by_cf; // this updater is run by coffee manager.
 	bool m_b_start_from_bootloader;
 	std::string m_s_rom_file_abs_full_path;//rom or bin file path.
-	std::string m_s_device_path;
+	std::string m_s_device_path;// if the given device is bootloader, then m_s_device_path can be eqaul to m_s_bootloader_path.
+	std::string m_s_bootloader_path;// if the given device is bootloader, then m_s_device_path can be eqaul to m_s_bootloader_path.
 
 	bool m_b_enable_iso_mode_after_update;
 	cshare::Lpu237Interface m_lpu23x_interface_after_update;
@@ -152,6 +173,8 @@ private:
 	int m_n_selected_fw_in_firmware_list;
 	int m_n_index_updatable_fw_in_firmware_list;
 	CRom::ROMFILE_HEAD m_rom_header;
+
+	size_t m_n_size_fw; // the selected firmware size or raw firmware file size
 
 	//target device section
 	cprotocol_lpu237 m_target_protocol_lpu237;

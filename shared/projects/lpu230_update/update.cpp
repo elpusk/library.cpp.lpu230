@@ -144,7 +144,7 @@ int update_main
 		}
 		else{
 			log.log_fmt(L"[I] target device : %s.\n",s_device_path.c_str());
-			cshare::get_instance().set_device_path(s_device_path);
+			cshare::get_instance().set_device_path(s_device_path);//사용자로 부터 받은 장비 경로 저장.
 		}
 
 		if (b_mmd1100_iso_mode) {

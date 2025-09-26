@@ -2,8 +2,10 @@
 #include <mp_cstring.h>
 #include <mp_cwait.h>
 
-#include "cshare.h"
 #include <tg_rom.h>
+
+#include "cshare.h"
+#include "HidBootBuffer.h"
 
 cshare& cshare::get_instance()
 {
@@ -11,7 +13,7 @@ cshare& cshare::get_instance()
 	return obj;
 }
 
-int cshare::calculate_update_step()
+int cshare::calculate_update_step(int n_the_number_of_erase_sector /*= -1*/)
 {
 	int n_step(0);
 
@@ -47,8 +49,23 @@ int cshare::calculate_update_step()
 		/////////////////////////////
 		// 공용 step 의 개수.
 
+		// firmware 크기로 부터 필요한 sector 의 개수를 얻는다. 
+		int n_sector_w = m_n_size_fw / CHidBootBuffer::C_SECTOR_SIZE;
+		if (m_n_size_fw % CHidBootBuffer::C_SECTOR_SIZE != 0) {
+			++n_sector_w;
+		}
+
 		// erase 수, 
+		if (n_the_number_of_erase_sector < 0) {
+			n_step += n_sector_w;
+		}
+		else {
+			n_step += n_the_number_of_erase_sector;
+		}
+
 		// write sector 의 수
+		n_step += n_sector_w;
+
 		n_step += 1;// run app
 		n_step += 1;// bootload plugout 기다림
 		n_step += 1;// lpu23x lpugin 기다림.
@@ -79,6 +96,8 @@ void cshare::_ini()
 	m_v_rom_files_in_current_dir.resize(0);
 	m_v_bin_files_in_current_dir.resize(0);
 	m_current_dir = std::filesystem::current_path();
+
+	m_n_size_fw = 0;
 }
 
 cshare::cshare()
@@ -112,13 +131,27 @@ cshare& cshare::set_rom_file_abs_full_path(const std::string& s_abs_full_rom_fil
 {
 	m_s_rom_file_abs_full_path = s_abs_full_rom_file;
 	if (!s_abs_full_rom_file.empty()) {
-		m_current_dir = std::filesystem::path(s_abs_full_rom_file).parent_path();
+		std::filesystem::path p(s_abs_full_rom_file);
+
+		m_current_dir = p.parent_path();
+		if (p.extension() != ".rom") {
+			m_n_size_fw = (size_t)std::filesystem::file_size(p);
+		}
+		else {
+			m_n_size_fw = 0;
+		}
 	}
 	return *this;
 }
 cshare& cshare::set_device_path(const std::string& s_device_path)
 {
 	m_s_device_path = s_device_path;
+	return *this;
+}
+
+cshare& cshare::set_bootloader_path(const std::string& s_bootloader_path)
+{
+	m_s_bootloader_path = s_bootloader_path;
 	return *this;
 }
 
@@ -138,6 +171,7 @@ cshare& cshare::set_firmware_list_of_rom_file(int n_fw_index, const std::vector<
 {
 	m_n_selected_fw_in_firmware_list = n_fw_index;
 	m_v_firmware_list = v_s_fw;
+	m_n_size_fw = m_rom_header.Item[n_fw_index].dwSize;
 	return *this;
 }
 
@@ -291,7 +325,7 @@ bool cshare::io_write_sync(_mp::clibhid_dev::type_ptr& ptr_dev,const _mp::type_v
 		&param
 	);
 
-	if (waiter.wait_for_one_at_time(1000) >= 0) {
+	if (waiter.wait_for_one_at_time(5000) >= 0) {
 		return true;
 	}
 	else {
@@ -300,12 +334,18 @@ bool cshare::io_write_sync(_mp::clibhid_dev::type_ptr& ptr_dev,const _mp::type_v
 
 }
 
-bool cshare::io_read_sync(_mp::clibhid_dev::type_ptr& ptr_dev,_mp::type_v_buffer& v_rx)
+bool cshare::io_read_sync(_mp::clibhid_dev::type_ptr& ptr_dev,_mp::type_v_buffer& v_rx, int n_report_size /*= -1*/)
 {
 	_mp::cwait waiter;
 	int n_w = waiter.generate_new_event();
 
-	v_rx.resize(220,0);
+	if (n_report_size < 0) {
+		v_rx.resize(220, 0);
+	}
+	else {
+		v_rx.resize(n_report_size, 0);
+	}
+
 	waiter.reset(n_w);
 	std::tuple<int, _mp::cwait*, _mp::type_v_buffer*> param_rx(n_w, &waiter, &v_rx);
 	ptr_dev->start_read(0,
@@ -317,15 +357,19 @@ bool cshare::io_read_sync(_mp::clibhid_dev::type_ptr& ptr_dev,_mp::type_v_buffer
 				int n = std::get<0>(*p_param);
 				_mp::cwait* p_w = std::get<1>(*p_param);
 				_mp::type_v_buffer* p_v_rx = std::get<2>(*p_param);
-				*p_v_rx = qi.get_rx();
-				p_w->set(n);//trigger
+				if (p_v_rx) {
+					*p_v_rx = qi.get_rx();
+				}
+				if (p_w) {
+					p_w->set(n);//trigger
+				}
 			}
 
 			return std::make_pair(qi.is_complete(), std::vector<size_t>());
 		}
 	, &param_rx);
 
-	if (waiter.wait_for_one_at_time(2000) >= 0) {
+	if (waiter.wait_for_one_at_time(5000) >= 0) {
 		return true;
 	}
 	else {
@@ -333,12 +377,22 @@ bool cshare::io_read_sync(_mp::clibhid_dev::type_ptr& ptr_dev,_mp::type_v_buffer
 	}
 }
 
-bool cshare::io_write_read_sync(_mp::clibhid_dev::type_ptr& ptr_dev, const _mp::type_v_buffer& v_tx, _mp::type_v_buffer& v_rx)
+bool cshare::io_write_read_sync(
+	_mp::clibhid_dev::type_ptr& ptr_dev
+	, const _mp::type_v_buffer& v_tx
+	, _mp::type_v_buffer& v_rx
+	, int n_report_size /*= -1*/
+)
 {
 	_mp::cwait waiter;
 	int n_w = waiter.generate_new_event();
 
-	v_rx.resize(220, 0);
+	if (n_report_size < 0) {
+		v_rx.resize(220, 0);
+	}
+	else {
+		v_rx.resize(n_report_size, 0);
+	}
 	waiter.reset(n_w);
 	std::tuple<int, _mp::cwait*, _mp::type_v_buffer*> param_rx(n_w, &waiter, &v_rx);
 	ptr_dev->start_write_read(0,v_tx,
@@ -350,15 +404,19 @@ bool cshare::io_write_read_sync(_mp::clibhid_dev::type_ptr& ptr_dev, const _mp::
 				int n = std::get<0>(*p_param);
 				_mp::cwait* p_w = std::get<1>(*p_param);
 				_mp::type_v_buffer* p_v_rx = std::get<2>(*p_param);
-				*p_v_rx = qi.get_rx();
-				p_w->set(n);//trigger
+				if (p_v_rx) {
+					*p_v_rx = qi.get_rx();
+				}
+				if (p_w) {
+					p_w->set(n);//trigger
+				}
 			}
 
 			return std::make_pair(qi.is_complete(), std::vector<size_t>());
 		}
 	, &param_rx);
 
-	if (waiter.wait_for_one_at_time(2000) >= 0) {
+	if (waiter.wait_for_one_at_time(5000) >= 0) {
 		return true;
 	}
 	else {
@@ -432,6 +490,16 @@ std::wstring cshare::get_device_wpath() const
 	return _mp::cstring::get_unicode_from_mcsc(m_s_device_path);
 }
 
+std::string cshare::get_bootloader_path() const
+{
+	return m_s_bootloader_path;
+}
+
+std::wstring cshare::get_bootloader_wpath() const
+{
+	return _mp::cstring::get_unicode_from_mcsc(m_s_bootloader_path);
+}
+
 bool cshare::is_iso_mode_after_update() const
 {
 	return m_b_enable_iso_mode_after_update;
@@ -470,6 +538,11 @@ std::vector<std::string> cshare::get_vector_rom_files_in_current_dir() const
 std::vector<std::string> cshare::get_vector_bin_files_in_current_dir() const
 {
 	return m_v_bin_files_in_current_dir;
+}
+
+size_t cshare::get_selected_fw_size() const
+{
+	return m_n_size_fw;
 }
 
 std::pair<int, std::vector<std::string>> cshare::get_firmware_list_of_rom_file() const
@@ -569,6 +642,7 @@ std::pair<int, int> cshare::update_fw_list_of_selected_rom(std::shared_ptr<CRom>
 	m_n_index_updatable_fw_in_firmware_list = n_updatable_fw_index;
 	if (n_updatable_fw_index >= 0) {
 		m_n_selected_fw_in_firmware_list = n_updatable_fw_index;
+		m_n_size_fw = m_rom_header.Item[n_updatable_fw_index].dwSize;
 	}
 
 	return std::make_pair(n_total_fw,n_updatable_fw_index);
