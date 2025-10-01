@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <functional>
 
-
 #ifdef	WIN32
 #include <atldef.h>
 #include <atltrace.h>
@@ -15,6 +14,7 @@
 
 #include "cshare.h"
 
+#define	__DISABLE_REAL_TXRX__
 // DONT INCLUDE cshare.h
 
 CHidBootManager::CHidBootManager(void) :
@@ -322,7 +322,7 @@ bool CHidBootManager::_doing_in_worker()
 		//
 		if (DS_ERASE == m_DoStatus) {
 			// erase the first sector.
-			bResult = _do_erase_in_worker(m_RBuffer.get_erasing_sector_number());
+			bResult = do_erase_in_worker(m_RBuffer.get_erasing_sector_number());
 			if (!bResult) {
 				PostAnnounce(C_WP_ERASE, C_LP_ERROR);
 				m_DoStatus = DS_IDLE;
@@ -481,7 +481,7 @@ bool CHidBootManager::_do_send_data_in_worker(bool b_resend_mode)
 		m_RBuffer.get_one_packet_data_from_buffer(n_index, pReq->sData);
 
 		//_tprintf( L" * sector = %d.\n",nSec );
-
+#ifndef __DISABLE_REAL_TXRX__
 		if( _DDL_write(m_pair_dev_ptrs, &vReq[0], 64, 64 ) ){
 
 			if( m_RBuffer.is_complete_get_one_sector_from_buffer()) {
@@ -506,8 +506,11 @@ bool CHidBootManager::_do_send_data_in_worker(bool b_resend_mode)
 		else{
 			bResult = false;
 		}
-	}
+#else
+		bResult = true;
+#endif //__DISABLE_REAL_TXRX__
 
+	}
 	if (bResult)
 		m_RBuffer.increase_offset_in_one_sector();
 	//
@@ -515,9 +518,9 @@ bool CHidBootManager::_do_send_data_in_worker(bool b_resend_mode)
 }
 
 
-bool CHidBootManager::_do_erase_in_worker(int n_sec)
+bool CHidBootManager::do_erase_in_worker(int n_sec)
 {
-	//Deb_Printf( L".._do_erase_in_worker.\n" );
+	//Deb_Printf( L"..do_erase_in_worker.\n" );
 
 	bool bResult = true;
 
@@ -539,7 +542,7 @@ bool CHidBootManager::_do_erase_in_worker(int n_sec)
 	pReq->dwPara = n_sec;
 
 	int nRx = 64;
-
+#ifndef __DISABLE_REAL_TXRX__
 	if( _DDL_TxRx(m_pair_dev_ptrs, &vReq[0], 64, 64, &vReplay[0], &nRx, 64 ) ){
 
 		while( _is_zero_packet( vReplay ) ){
@@ -568,6 +571,9 @@ bool CHidBootManager::_do_erase_in_worker(int n_sec)
 	}
 	else
 		bResult = false;
+#else
+	bResult = true;
+#endif // __DISABLE_REAL_TXRX__
 
 	return bResult;
 }
@@ -842,14 +848,14 @@ bool CHidBootManager::_DDL_TxRx(CHidBootManager::type_pair_handle hDev, unsigned
 
 
 
-std::tuple<bool, bool, unsigned long, unsigned long> CHidBootManager::_get_sector_info_from_device()
+std::tuple<bool, bool, uint32_t, uint32_t> CHidBootManager::_get_sector_info_from_device()
 {
 	//Deb_Printf(L".._get_sector_info_from_device.\n");
 
 	bool bResult = true;
 	bool b_exist(false);
-	unsigned long n_start_sec(0);
-	unsigned long n_sec_area(0);
+	uint32_t n_start_sec(0);
+	uint32_t n_sec_area(0);
 
 	HidBLRequest* pReq = NULL;
 	HidBLReplay* pReplay = NULL;
@@ -902,78 +908,20 @@ int CHidBootManager::GetDeviceList()
 	return nCnt;
 }
 
-bool CHidBootManager::SelectDevice( int nSel )
-{
-	bool bResult = true;
-	std::lock_guard<std::mutex> lock(m_mutex_main);
-
-	if( nSel < 0 )
-		bResult = false;
-	else{
-		if( m_listDev.size() <= nSel )
-			bResult = false;
-		else{
-
-			std::list<std::wstring>::iterator iter = m_listDev.begin();
-
-			for( ; iter != m_listDev.end(); ++iter ){
-				if( nSel == 0 )
-					break;
-				else
-					nSel--;
-			}
-
-			m_pair_dev_ptrs = _DDL_open( *iter );
-			if(m_pair_dev_ptrs.first.empty())
-				bResult = false;
-			//
-			auto result = _get_sector_info_from_device();
-			if (std::get<0>(result) && std::get<1>(result)) {
-				m_RBuffer.reset(std::get<2>(result), std::get<3>(result),true,false);
-			}
-			else {
-				m_RBuffer.reset();
-			}
-			
-		}
-	}
-
-	return bResult;
-}
-
-bool CHidBootManager::SelectDevice(const std::string& s_device_path)
-{
-	bool b_result(false);
-
-	std::wstring s = _mp::cstring::get_unicode_from_mcsc(s_device_path);
-	std::list<std::wstring>::iterator iter = m_listDev.begin();
-
-	for (auto item : m_listDev) {
-		if (s != item) {
-			continue;
-		}
-		m_pair_dev_ptrs = _DDL_open(item);
-		if (!m_pair_dev_ptrs.first.empty()) {
-			b_result = true;
-		}
-		auto result = _get_sector_info_from_device();
-		if (std::get<0>(result) && std::get<1>(result)) {
-			m_RBuffer.reset(std::get<2>(result), std::get<3>(result), true, false);
-		}
-		else {
-			m_RBuffer.reset();
-		}
-		break;
-	}//end for
-	return b_result;
-}
-
 bool CHidBootManager::SelectDevice(const std::string& s_device_path, size_t n_fw_size)
 {
 	bool b_result(false);
+	
+	cshare& sh(cshare::get_instance());
 
 	std::wstring s = _mp::cstring::get_unicode_from_mcsc(s_device_path);
 	std::list<std::wstring>::iterator iter = m_listDev.begin();
+
+	// LPC1343 를 위한 기본 값으로 지우는 섹터번호의 순서를 저장.
+	std::vector<int> v_erase_sec_index = {1,2,3,4,5,6,7}; //1~6 app area, 7 system variables
+
+	// LPC1343 를 위한 기본 값으로 기록하는 섹터번호의 순서를 저장.
+	std::vector<int> v_write_sec_index = {2,3,4,5,6,7,1}; // 복구 확률을 높이기 위해 마지막 첫 섹터를 마지막에 기록.
 
 	do {
 		if (iter == std::end(m_listDev)) {
@@ -984,12 +932,45 @@ bool CHidBootManager::SelectDevice(const std::string& s_device_path, size_t n_fw
 		if (!m_pair_dev_ptrs.first.empty()) {
 			b_result = true;
 		}
-		auto result = _get_sector_info_from_device();
-		if (std::get<0>(result) && std::get<1>(result)) {
-			m_RBuffer.reset(std::get<2>(result), std::get<3>(result), true, false);
+		bool b_exist_sec_info(false);
+		uint32_t n_sec_number_of_start_sec(0);
+		uint32_t n_the_number_of_sec_of_app_data;
+
+		std::tie(b_result, b_exist_sec_info, n_sec_number_of_start_sec, n_the_number_of_sec_of_app_data) = _get_sector_info_from_device();
+		if (b_result && b_exist_sec_info) {
+			//<== 이 코드 무시
+			m_RBuffer.reset(n_sec_number_of_start_sec, n_the_number_of_sec_of_app_data, true, false);
 			if (n_fw_size > 0) {
 				b_result = m_RBuffer.set_file_size_and_adjust_erase_write_area(n_fw_size); // 엄청 난 드레곤.
 			}
+			//==> 이 코드 무시
+			v_erase_sec_index.resize(0);
+			v_write_sec_index.resize(0);
+			uint32_t n_need_fw_sec = 0;//fw 를 저장하기 위해 필요한 sector 의 수 
+			n_need_fw_sec = n_fw_size / CHidBootBuffer::C_SECTOR_SIZE;
+			if (n_fw_size % CHidBootBuffer::C_SECTOR_SIZE != 0) {
+				++n_need_fw_sec;
+			}
+
+			if (n_need_fw_sec > 0) {
+				for (int ui = 0; ui < n_the_number_of_sec_of_app_data; ui++) {
+					if ((ui + 1) >= n_need_fw_sec) {
+						break;
+					}
+					v_erase_sec_index.push_back(n_sec_number_of_start_sec + ui);
+					v_write_sec_index.push_back(n_sec_number_of_start_sec + ui + 1);
+				}//end for
+				v_write_sec_index[v_write_sec_index.size() - 1] = n_sec_number_of_start_sec; // 복구 확률을 높이기 위해 마지막 첫 섹터를 마지막에 기록.
+
+				// system area
+				uint32_t n_sys_sec = 0xFF000 / CHidBootBuffer::C_SECTOR_SIZE; // for MH1902T 
+				v_erase_sec_index.push_back(n_sys_sec);
+				// system area 는 지우기만 하면, fw 가 실행 되면서 기본값을 기록하도록 되어 있어서, 기록 할 필요 없음.
+				// TODO . 여기부터 계속. 지우고 쓸 sector 정보를 설정. 더 할 갓 없으면 , 이 함수 리턴되는 곳에서 계속.
+
+			}
+			//
+
 		}
 		else {
 			m_RBuffer.reset();

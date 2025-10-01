@@ -150,6 +150,8 @@ private:
 	void _ini();
 	cshare();
 
+	void _set_firmware_size(size_t n_size_fw);
+
 private:
 	bool m_b_run_by_cf; // this updater is run by coffee manager.
 	bool m_b_start_from_bootloader;
@@ -174,11 +176,14 @@ private:
 	int m_n_index_updatable_fw_in_firmware_list;
 	CRom::ROMFILE_HEAD m_rom_header;
 
-	size_t m_n_size_fw; // the selected firmware size or raw firmware file size
-
 	//target device section
 	cprotocol_lpu237 m_target_protocol_lpu237;
 	_mp::clibhid_dev::type_ptr m_ptr_dev;
+
+	//erase / write section
+	size_t m_n_size_fw; // the selected firmware size or raw firmware file size
+	std::vector<int> m_v_erase_sec_index; //app area(erase sequence). except system variable , local storage control and area 
+	std::vector<int> m_v_write_sec_index; //write sequence
 
 private:
 	cshare(const cshare&) = delete;

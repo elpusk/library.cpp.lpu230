@@ -931,7 +931,7 @@ cupdater::~cupdater()
 	}
 
 	_mp::clibhid_dev::type_ptr ptr_null;
-	cshare::get_instance().set_target_lpu23x(ptr_null);
+	cshare::get_instance().set_target_lpu23x(ptr_null); // clear dev
 	m_ptr_hid_api_briage.reset();
 }
 
@@ -1090,6 +1090,44 @@ void cupdater::_updates_thread_function()
 		b_need_close_bootloader = true;
 		if (!m_b_is_running)
 			break; // 종료 직전 체크
+		//
+		/*
+		int n_firmware_index(0);
+		std::wstring s_firmware;
+		int u_msg_notify(0);
+
+		std::tie(n_firmware_index, std::ignore) = sh.get_firmware_list_of_rom_file();
+		s_firmware = sh.get_rom_file_abs_full_wpath();
+
+
+		m_p_mgmt->start_update(n_firmware_index, s_firmware, [](int n_msg, WPARAM wparam, LPARAM lparm) {
+#ifdef _WIN32
+			ATLTRACE(L":: callback msg(%d) wparm(%u) lparam(%ld)\n", n_msg, (unsigned int)wparam, (long)lparm);
+
+			switch (wparam) {
+				case CHidBootManager::C_WP_ERASE:
+					ATLTRACE(L":: C_WP_ERASE : \n");
+					break;
+				case CHidBootManager::C_WP_READFILE:
+					ATLTRACE(L":: C_WP_READFILE : \n");
+					break;
+				case CHidBootManager::C_WP_SENDDATA:
+					ATLTRACE(L":: C_WP_SENDDATA : \n");
+					break;
+				case CHidBootManager::C_WP_COMPLETE:
+					ATLTRACE(L":: C_WP_COMPLETE : \n");
+					break;
+				case CHidBootManager::C_WP_SET_PROGRESS_RANGE:
+					ATLTRACE(L":: C_WP_SET_PROGRESS_RANGE : \n");
+					break;
+				default:
+					break;
+			}//end switch
+
+#endif
+			},
+			u_msg_notify);
+		*/
 
 		////////////////////////////////////////////////////
 		// 섹터 삭제
@@ -1099,7 +1137,7 @@ void cupdater::_updates_thread_function()
 		if (!m_b_is_running)
 			break; // 종료 직전 체크
 		//
-
+		
 		////////////////////////////////////////////////////
 		// 데이터 읽기
 		if (!_updates_sub_thread_read_sector_from_file(n_step)) {
@@ -1124,7 +1162,7 @@ void cupdater::_updates_thread_function()
 		}
 		if (!m_b_is_running)
 			break; // 종료 직전 체크
-
+		
 		////////////////////////////////////////////////////
 		if (!_updates_sub_thread_wait_plugout_bootloader(n_step)) {
 			break;
@@ -1407,6 +1445,7 @@ bool cupdater::_updates_sub_thread_setup_bootloader(int& n_step)
 		_push_message(n_step, "ERROR - setup bootloader.");
 	}
 	else {
+		//
 		_push_message(n_step, "setup bootloader.");
 	}
 

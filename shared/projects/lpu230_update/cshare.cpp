@@ -104,6 +104,11 @@ cshare::cshare()
 {
 	_ini();
 }
+void cshare::_set_firmware_size(size_t n_size_fw)
+{
+	m_n_size_fw = n_size_fw;
+}
+
 cshare::~cshare()
 {
 
@@ -135,10 +140,10 @@ cshare& cshare::set_rom_file_abs_full_path(const std::string& s_abs_full_rom_fil
 
 		m_current_dir = p.parent_path();
 		if (p.extension() != ".rom") {
-			m_n_size_fw = (size_t)std::filesystem::file_size(p);
+			_set_firmware_size((size_t)std::filesystem::file_size(p));
 		}
 		else {
-			m_n_size_fw = 0;
+			_set_firmware_size(0);
 		}
 	}
 	return *this;
@@ -171,7 +176,7 @@ cshare& cshare::set_firmware_list_of_rom_file(int n_fw_index, const std::vector<
 {
 	m_n_selected_fw_in_firmware_list = n_fw_index;
 	m_v_firmware_list = v_s_fw;
-	m_n_size_fw = m_rom_header.Item[n_fw_index].dwSize;
+	_set_firmware_size(m_rom_header.Item[n_fw_index].dwSize);
 	return *this;
 }
 
@@ -642,7 +647,7 @@ std::pair<int, int> cshare::update_fw_list_of_selected_rom(std::shared_ptr<CRom>
 	m_n_index_updatable_fw_in_firmware_list = n_updatable_fw_index;
 	if (n_updatable_fw_index >= 0) {
 		m_n_selected_fw_in_firmware_list = n_updatable_fw_index;
-		m_n_size_fw = m_rom_header.Item[n_updatable_fw_index].dwSize;
+		_set_firmware_size(m_rom_header.Item[n_updatable_fw_index].dwSize);
 	}
 
 	return std::make_pair(n_total_fw,n_updatable_fw_index);

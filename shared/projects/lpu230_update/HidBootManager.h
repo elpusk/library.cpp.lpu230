@@ -12,6 +12,7 @@
 #include <filesystem>
 #include <atomic>
 #include <queue>
+#include <cstdint>
 
 #include <mp_type.h>
 #include <mp_cwait.h>
@@ -110,15 +111,13 @@ public:
 	bool GotoApp();
 
 	int GetDeviceList();
-	bool SelectDevice(int nSel);
-	bool SelectDevice(const std::string& s_device_path);
 	bool SelectDevice(const std::string& s_device_path, size_t n_fw_size);
 
 	bool UnselectDevice();
 
 	bool IsInitialOk() { return m_bIniOk; }
 
-	unsigned long get_app_area_size() const
+	uint32_t get_app_area_size() const
 	{
 		return m_RBuffer.get_app_area_size();
 	}
@@ -147,7 +146,7 @@ public:
 				return n_size;
 		}
 
-		if (header.dwItem <= (unsigned long)nIndex)
+		if (header.dwItem <= (uint32_t)nIndex)
 			return n_size;
 		//
 		n_size = header.Item[nIndex].dwSize;
@@ -176,7 +175,7 @@ private:
 	bool _kill_worker();
 
 	bool _doing_in_worker();
-	bool _do_erase_in_worker(int n_sec);
+	bool do_erase_in_worker(int n_sec);
 	bool _do_send_data_in_worker(bool b_resend_mode);
 
 	void _reset_file_read_pos()
@@ -223,7 +222,7 @@ private:
 	* third the sector number of starting app area.
 	* forth the number of sector of app area.
 	*/
-	std::tuple<bool, bool, unsigned long, unsigned long> _get_sector_info_from_device();
+	std::tuple<bool, bool, uint32_t, uint32_t> _get_sector_info_from_device();
 
 	void _woker_for_update();
 
