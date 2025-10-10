@@ -154,6 +154,13 @@ public:
 		return n_size;
 	}
 
+public:
+	bool do_erase_in_worker(int n_sec);
+	bool do_write_sector(
+		int n_sec
+		,const std::vector<unsigned char>& v_sector
+	);
+
 private:
 	CHidBootManager(void);
 	//
@@ -175,7 +182,6 @@ private:
 	bool _kill_worker();
 
 	bool _doing_in_worker();
-	bool do_erase_in_worker(int n_sec);
 	bool _do_send_data_in_worker(bool b_resend_mode);
 
 	void _reset_file_read_pos()
@@ -226,6 +232,7 @@ private:
 
 	void _woker_for_update();
 
+private:
 	//
 	std::mutex m_mutex_main;
 

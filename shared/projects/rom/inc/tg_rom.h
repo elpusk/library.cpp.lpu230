@@ -160,7 +160,7 @@ private:
 	typedef	type_result(_CALLTYPE_* type_tg_rom_load_header)(const wchar_t*, PROMFILE_HEAD);
 	typedef	int (_CALLTYPE_* type_tg_rom_get_updatable_item_index)(const PROMFILE_HEAD, const uint8_t*, uint8_t, uint8_t, uint8_t, uint8_t);
 	typedef	type_result(_CALLTYPE_* type_tg_rom_get_item)(const PROMFILE_HEAD, int, PROMFILE_HEAD_ITEAM);
-	typedef	unsigned int (_CALLTYPE_* type_tg_rom_readBinary_of_item)(unsigned char* sRead, unsigned int dwRead, unsigned int dwOffset, const CRom::PROMFILE_HEAD_ITEAM pItem, const wchar_t* lpctRomFile);
+	typedef	uint32_t(_CALLTYPE_* type_tg_rom_readBinary_of_item)(unsigned char* sRead, uint32_t dwRead, uint32_t dwOffset, const CRom::PROMFILE_HEAD_ITEAM pItem, const wchar_t* lpctRomFile);
 
 	typedef	type_result(_CALLTYPE_* type_tg_rom_create_header)(const wchar_t* lpctRomFile);
 	typedef	type_result(_CALLTYPE_* type_tg_rom_add_item)(
@@ -351,7 +351,7 @@ private:
 			return result_error_not_loaded_dll;
 	}
 
-	static unsigned int readBinary_of_item(unsigned char* sRead, unsigned int dwRead, unsigned int dwOffset, const CRom::PROMFILE_HEAD_ITEAM pItem, const wchar_t* lpctRomFile, const wchar_t* lpctDllFile = NULL)
+	static uint32_t readBinary_of_item(unsigned char* sRead, uint32_t dwRead, uint32_t dwOffset, const CRom::PROMFILE_HEAD_ITEAM pItem, const wchar_t* lpctRomFile, const wchar_t* lpctDllFile = NULL)
 	{
 		static type_tg_rom_readBinary_of_item m_cb_tg_rom_readBinary_of_item = NULL;
 
@@ -447,7 +447,7 @@ public:
 		return CRom::get_item(&m_Header, nIndex, pItem);
 	}
 
-	unsigned int ReadBinaryOfItem(unsigned char* sRead, unsigned int dwRead, unsigned int dwOffset, const CRom::PROMFILE_HEAD_ITEAM pItem)
+	uint32_t ReadBinaryOfItem(unsigned char* sRead, uint32_t dwRead, uint32_t dwOffset, const CRom::PROMFILE_HEAD_ITEAM pItem)
 	{
 		return CRom::readBinary_of_item(sRead, dwRead, dwOffset, pItem, m_sRomFileName.c_str());
 	}

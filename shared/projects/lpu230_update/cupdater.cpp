@@ -96,6 +96,7 @@ cupdater::cupdater(_mp::clog& log,bool b_disaplay, bool b_log) :
 				if (!m_b_display && b_file_is_rom_type) {
 					// UI 가 숨겨져 있고, 선택파일이 rom type 일때만 자동 선택 저장.
 					cshare::get_instance().set_rom_file_abs_full_path(s_target_rom_file);
+					m_n_progress_max = cshare::get_instance().calculate_update_step();
 				}
 			}
 		}
@@ -285,10 +286,12 @@ std::shared_ptr<ftxui::Component> cupdater::_create_sub_ui1_select_file()
 		}
 
 		cshare::get_instance().set_rom_file_abs_full_path(selected_path.string());// UI 에 선택 변경을 저장.
+		m_n_progress_max = cshare::get_instance().calculate_update_step();
 
 		if (std::filesystem::path(selected_path).extension() == ".rom") {
 			// rom 파일 선택 후, OK
 			cshare::get_instance().update_fw_list_of_selected_rom(CHidBootManager::GetInstance()->get_rom_library());
+			m_n_progress_max = cshare::get_instance().calculate_update_step();
 			std::tie(m_n_selected_fw_for_ui, m_v_firmware_list_for_ui) = cshare::get_instance().get_firmware_list_of_rom_file();
 
 			_update_state(cupdater::AppEvent::e_sfile_or, selected_path.string());
@@ -329,6 +332,7 @@ std::shared_ptr<ftxui::Component> cupdater::_create_sub_ui2_select_firmware()
 	m_ptr_fw_menu = std::make_shared<ftxui::Component>(ftxui::Menu(&m_v_firmware_list_for_ui, &m_n_selected_fw_for_ui));
 	m_ptr_ok_fw_button = std::make_shared<ftxui::Component>(ftxui::Button("OK", [&]() {
 		cshare::get_instance().set_firmware_list_of_rom_file(m_n_selected_fw_for_ui, m_v_firmware_list_for_ui);
+		m_n_progress_max = cshare::get_instance().calculate_update_step();
 		_update_state(cupdater::AppEvent::e_sfirm_o);
 		}));
 	m_ptr_cancel_fw_button = std::make_shared<ftxui::Component>(ftxui::Button("Cancel", [&]() {
@@ -972,6 +976,8 @@ int cupdater::get_pos_of_progress() const
 
 void cupdater::ui_main_loop()
 {
+	int n_progress_cur(0),n_progress_min(0),n_progress_max(0);
+
 	ftxui::Loop loop(&m_screen, *m_ptr_final_root);
 
 	while (!loop.HasQuitted()) {
@@ -988,8 +994,22 @@ void cupdater::ui_main_loop()
 			if (!_pop_message(n_msg, s_msg)) {
 				continue;
 			}
+			else {
+				// get progress pos
+				n_progress_cur = m_n_progress_cur;
+				n_progress_min = m_n_progress_min;
+				n_progress_max = m_n_progress_max;
+			}
 
 			m_s_message_in_ing_state = std::to_string(n_msg);
+			m_s_message_in_ing_state += " [";
+			m_s_message_in_ing_state += std::to_string(n_progress_min);
+			m_s_message_in_ing_state += ".";
+			m_s_message_in_ing_state += std::to_string(n_progress_cur);
+			m_s_message_in_ing_state += ".";
+			m_s_message_in_ing_state += std::to_string(n_progress_max);
+			m_s_message_in_ing_state += "]";
+
 			m_s_message_in_ing_state += " step : ";
 			m_s_message_in_ing_state += s_msg;
 
@@ -1137,22 +1157,44 @@ void cupdater::_updates_thread_function()
 		if (!m_b_is_running)
 			break; // 종료 직전 체크
 		//
-		
-		////////////////////////////////////////////////////
-		// 데이터 읽기
-		if (!_updates_sub_thread_read_sector_from_file(n_step)) {
-			break;
-		}
-		if (!m_b_is_running)
-			break; // 종료 직전 체크
 
-		////////////////////////////////////////////////////
-		// 데이터 쓰시 및 확인
-		if (!_updates_sub_thread_write_sector(n_step)) {
-			break;
+		bool b_result(false), b_complete(false);
+		_mp::type_v_buffer v_sector;
+		bool b_first_read(true);
+		int n_out_zero_base_sector_number(0);
+
+		do {
+			////////////////////////////////////////////////////
+			// 데이터 읽기
+			std::tie(b_result, b_complete) = _updates_sub_thread_read_one_sector_from_file(
+				n_step
+				, b_first_read
+				, v_sector
+				, n_out_zero_base_sector_number
+			);
+			b_first_read = false;
+			if (!b_result) {
+				break;
+			}
+			if (!m_b_is_running) {
+				continue; // 종료 직전 체크
+			}
+			// 읽은 하나의 sector 를 write & verify.
+			b_result = _updates_sub_thread_write_one_sector(n_step, v_sector, n_out_zero_base_sector_number);
+			if (!b_result) {
+				break;
+			}
+			if (!m_b_is_running) {
+				continue; // 종료 직전 체크
+			}
+
+		} while (!b_complete && m_b_is_running);
+		if (!b_result) {
+			break; // error exit
 		}
-		if (!m_b_is_running)
+		if (!m_b_is_running) {
 			break; // 종료 직전 체크
+		}
 
 		////////////////////////////////////////////////////
 		// 앱실행
@@ -1458,61 +1500,110 @@ bool cupdater::_updates_sub_thread_erase_sector(int& n_step)
 	ATLTRACE(L"_updates_sub_thread_erase_sector()\n");
 #endif
 
-	bool b_result(false);
+	bool b_result(true);
+	cshare& sh(cshare::get_instance());
+	std::string s_msg;
 
 	do {
+		// 이미 fw 크기에 맞게 erase_sec_index 가 설정되어 있음.
+		auto v_sec_index = sh.get_erase_sec_index();
+
+		for (auto n_sec : v_sec_index) {
+			++n_step;
+			if (!m_p_mgmt->do_erase_in_worker(n_sec)) {
+				s_msg = "ERROR - erase sector ";
+				s_msg += std::to_string(n_sec);
+				s_msg += ".";
+				_push_message(n_step, s_msg);
+				b_result = false;
+				break;//exit for
+			}
+			else {
+				s_msg = "erase sector ";
+				s_msg += std::to_string(n_sec);
+				s_msg += ".";
+				_push_message(n_step, s_msg);
+				std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+			}
+		}//end for
 
 	} while (false);
-
-	if (!b_result) {
-		_push_message(n_step, "ERROR - erase sector.");
-	}
-	else {
-		_push_message(n_step, "erase sector.");
-	}
 
 	return b_result;
 }
 
-bool cupdater::_updates_sub_thread_read_sector_from_file(int& n_step)
+_mp::type_pair_bool_result_bool_complete cupdater::_updates_sub_thread_read_one_sector_from_file(
+	int& n_step
+	, bool b_first_read
+	,_mp::type_v_buffer& v_out_sector
+	,int & n_out_zero_base_sector_number
+)
 {
 #ifdef _WIN32
-	ATLTRACE(L"_updates_sub_thread_read_sector_from_file()\n");
+	ATLTRACE(L"_updates_sub_thread_read_one_sector_from_file()\n");
 #endif
 
 	bool b_result(false);
+	bool b_complete(false);
+	cshare& sh(cshare::get_instance());
+	std::string s_msg;
 
 	do {
+		++n_step;
+		std::tie(b_result, b_complete) = sh.get_one_sector_fw_data(
+			CHidBootManager::GetInstance()->get_rom_library()
+			, v_out_sector
+			, n_out_zero_base_sector_number
+			,b_first_read
+		
+		);
+		if (!b_result) {
+			s_msg = "ERROR - read sector ";
+			s_msg += ".";
+			_push_message(n_step, s_msg);
+			continue;
+		}
+		else {
+			_push_message(n_step, "read new sector data from file.");
+		}
 
 	} while (false);
 
-	if (!b_result) {
-		_push_message(n_step, "ERROR - read new sector data from file.");
-	}
-	else {
-		_push_message(n_step, "read new sector data from file.");
-	}
-
-	return b_result;
+	return std::make_pair(b_result,b_complete);
 }
 
-bool cupdater::_updates_sub_thread_write_sector(int& n_step)
+bool cupdater::_updates_sub_thread_write_one_sector(
+	int& n_step
+	, const _mp::type_v_buffer& v_sector
+	, int n_zero_base_sector_number
+)
 {
 #ifdef _WIN32
-	ATLTRACE(L"_updates_sub_thread_write_sector\n");
+	ATLTRACE(L"_updates_sub_thread_write_one_sector\n");
 #endif
 
-	bool b_result(false);
+	bool b_result(true);
+	std::string s_msg;
 
-	do {
-
-	} while (false);
+	++n_step;
+	// 하나의 sector 를 모두 쓴다. verify 는 fw 를 받은 마이컴에서 write 한 후 읽어서 비교해서 verify 한다.
+	b_result = m_p_mgmt->do_write_sector(n_zero_base_sector_number, v_sector);
+	std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
 	if (!b_result) {
-		_push_message(n_step, "ERROR - write & verify sector.");
+		s_msg = "ERROR - write & verify sector ";
+		s_msg += ".";
+		s_msg += std::to_string(n_zero_base_sector_number);
+		s_msg += ".";
+		_push_message(n_step, s_msg);
+
 	}
 	else {
-		_push_message(n_step, "write & verify sector.");
+		s_msg = "write & verify sector ";
+		s_msg += ".";
+		s_msg += std::to_string(n_zero_base_sector_number);
+		s_msg += ".";
+		_push_message(n_step, s_msg);
 	}
 
 	return b_result;
@@ -1525,6 +1616,9 @@ bool cupdater::_updates_sub_thread_run_app(int& n_step)
 #endif
 
 	bool b_result(false);
+	cshare& sh(cshare::get_instance());
+	std::string s_msg;
+
 
 	do {
 

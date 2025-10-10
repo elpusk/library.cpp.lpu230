@@ -141,8 +141,18 @@ private:
 	bool _updates_sub_thread_setup_bootloader(int& n_step);
 
 	bool _updates_sub_thread_erase_sector(int& n_step);
-	bool _updates_sub_thread_read_sector_from_file(int& n_step);
-	bool _updates_sub_thread_write_sector(int& n_step);
+	
+	_mp::type_pair_bool_result_bool_complete _updates_sub_thread_read_one_sector_from_file(
+		int& n_step
+		, bool b_first_read
+		,_mp::type_v_buffer& v_out_sector
+		, int& n_out_zero_base_sector_number
+	);
+	bool _updates_sub_thread_write_one_sector(
+		int& n_step
+		,const _mp::type_v_buffer& v_sector
+		, int n_zero_base_sector_number
+	);
 	bool _updates_sub_thread_run_app(int& n_step);
 
 	bool _updates_sub_thread_wait_plugout_bootloader(int& n_step);

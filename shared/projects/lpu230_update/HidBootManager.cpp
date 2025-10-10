@@ -578,6 +578,94 @@ bool CHidBootManager::do_erase_in_worker(int n_sec)
 	return bResult;
 }
 
+bool CHidBootManager::do_write_sector(
+	int n_sec
+	, const std::vector<unsigned char>& v_sector
+)
+{
+	cshare& sh(cshare::get_instance());
+	bool bResult = true;
+
+	size_t n_offset = 0;
+	size_t n_loop = CHidBootBuffer::C_SECTOR_SIZE / CHidBootBuffer::C_DATA_SIZE_OF_ONE_PACKET;
+	if (CHidBootBuffer::C_SECTOR_SIZE % CHidBootBuffer::C_DATA_SIZE_OF_ONE_PACKET != 0) {
+		n_loop += 1;
+	}
+
+	int n_copy = 0;
+	HidBLRequest* pReq = NULL;
+	HidBLReplay* pReplay = NULL;
+
+	std::vector<unsigned char> vReq(CHidBootBuffer::C_PACKET_SIZE);
+	std::vector<unsigned char> vReplay(CHidBootBuffer::C_PACKET_SIZE);
+
+	vReq.resize(CHidBootBuffer::C_PACKET_SIZE,0);
+	vReplay.resize(CHidBootBuffer::C_PACKET_SIZE,0);
+
+	//
+	pReq = reinterpret_cast<HidBLRequest*>(&vReq[0]);
+	pReplay = reinterpret_cast<HidBLReplay*>(&vReplay[0]);
+
+	//build request packet
+	pReq->cCmd = HIDB_REQ_CMD_WRITE;
+	pReq->wLen = CHidBootBuffer::C_SECTOR_SIZE;
+	pReq->dwPara = n_sec;
+
+	for (uint16_t w_chain = 0; w_chain < (uint16_t)(n_loop - 1); w_chain++) {
+		pReq->wChain = w_chain;
+		memset(&pReq->sData[0], 0xff, CHidBootBuffer::C_DATA_SIZE_OF_ONE_PACKET);
+
+		if ((CHidBootBuffer::C_SECTOR_SIZE - n_offset) >= CHidBootBuffer::C_DATA_SIZE_OF_ONE_PACKET) {
+			n_copy = CHidBootBuffer::C_DATA_SIZE_OF_ONE_PACKET;
+		}
+		else{
+			n_copy = (int)(CHidBootBuffer::C_SECTOR_SIZE - n_offset);
+		}
+		memcpy(pReq->sData, &v_sector[n_offset], n_copy);
+		n_offset += n_copy;
+
+		//
+#ifndef __DISABLE_REAL_TXRX__
+		if (_DDL_write(m_pair_dev_ptrs, &vReq[0], 64, 64)) {
+
+			if (w_chain == (uint16_t)(n_loop - 1)) {
+
+				int nRx;
+				do {
+					nRx = _DDL_read(m_pair_dev_ptrs, &vReplay[0], 64, 64);
+					if (nRx != 64) {
+						bResult = false;
+						break;// exit break
+					}
+
+				} while (_is_zero_packet(vReplay));
+
+				if (bResult) {
+					if (pReplay->cResult != HIDB_REP_RESULT_SUCCESS) {
+						bResult = false;
+						break; //exit for
+					}
+				}
+			}
+		}
+		else {
+			bResult = false;
+			break; //exit for
+		}
+#else
+		bResult = true;
+#endif //__DISABLE_REAL_TXRX__
+
+	}//end for
+
+	//////////////////////////////////////
+
+
+	//_tprintf( L" * sector = %d.\n",nSec );
+	//
+	return bResult;
+}
+
 void CHidBootManager::_woker_for_update()
 {
 	int  n_Result = 0;
@@ -937,46 +1025,47 @@ bool CHidBootManager::SelectDevice(const std::string& s_device_path, size_t n_fw
 		uint32_t n_the_number_of_sec_of_app_data;
 
 		std::tie(b_result, b_exist_sec_info, n_sec_number_of_start_sec, n_the_number_of_sec_of_app_data) = _get_sector_info_from_device();
-		if (b_result && b_exist_sec_info) {
-			//<== 이 코드 무시
-			m_RBuffer.reset(n_sec_number_of_start_sec, n_the_number_of_sec_of_app_data, true, false);
-			if (n_fw_size > 0) {
-				b_result = m_RBuffer.set_file_size_and_adjust_erase_write_area(n_fw_size); // 엄청 난 드레곤.
-			}
-			//==> 이 코드 무시
-			v_erase_sec_index.resize(0);
-			v_write_sec_index.resize(0);
-			uint32_t n_need_fw_sec = 0;//fw 를 저장하기 위해 필요한 sector 의 수 
-			n_need_fw_sec = n_fw_size / CHidBootBuffer::C_SECTOR_SIZE;
-			if (n_fw_size % CHidBootBuffer::C_SECTOR_SIZE != 0) {
-				++n_need_fw_sec;
-			}
-
-			if (n_need_fw_sec > 0) {
-				for (int ui = 0; ui < n_the_number_of_sec_of_app_data; ui++) {
-					if ((ui + 1) >= n_need_fw_sec) {
-						break;
-					}
-					v_erase_sec_index.push_back(n_sec_number_of_start_sec + ui);
-					v_write_sec_index.push_back(n_sec_number_of_start_sec + ui + 1);
-				}//end for
-				v_write_sec_index[v_write_sec_index.size() - 1] = n_sec_number_of_start_sec; // 복구 확률을 높이기 위해 마지막 첫 섹터를 마지막에 기록.
-
-				// system area
-				uint32_t n_sys_sec = 0xFF000 / CHidBootBuffer::C_SECTOR_SIZE; // for MH1902T 
-				v_erase_sec_index.push_back(n_sys_sec);
-				// system area 는 지우기만 하면, fw 가 실행 되면서 기본값을 기록하도록 되어 있어서, 기록 할 필요 없음.
-				// TODO . 여기부터 계속. 지우고 쓸 sector 정보를 설정. 더 할 갓 없으면 , 이 함수 리턴되는 곳에서 계속.
-
-			}
-			//
-
+		if (!b_result) {
+			continue;
 		}
-		else {
-			m_RBuffer.reset();
+		if (!b_exist_sec_info) {
+			continue;
+		}
+		v_erase_sec_index.resize(0);
+		v_write_sec_index.resize(0);
+		uint32_t n_need_fw_sec = 0;//fw 를 저장하기 위해 필요한 sector 의 수 
+		n_need_fw_sec = n_fw_size / CHidBootBuffer::C_SECTOR_SIZE;
+		if (n_fw_size % CHidBootBuffer::C_SECTOR_SIZE != 0) {
+			++n_need_fw_sec;
 		}
 
+		if (n_need_fw_sec == 0) {
+			continue;
+		}
+
+		// 주어진 fw 를 쓰기 위해 실제 필요한 섹터의 수만 처리하며, 퍼리 속도를 높이기 위해 필요한 계산.
+		for (int ui = 0; ui < n_the_number_of_sec_of_app_data; ui++) {
+			if ((ui + 1) >= n_need_fw_sec) {
+				break;
+			}
+			v_erase_sec_index.push_back(n_sec_number_of_start_sec + ui);
+			v_write_sec_index.push_back(n_sec_number_of_start_sec + ui + 1);
+		}//end for
+		v_write_sec_index[v_write_sec_index.size() - 1] = n_sec_number_of_start_sec; // 복구 확률을 높이기 위해 마지막 첫 섹터를 마지막에 기록.
+
+		// system area
+		uint32_t n_sys_sec = 0xFF000 / CHidBootBuffer::C_SECTOR_SIZE; // for MH1902T 
+		v_erase_sec_index.push_back(n_sys_sec);
+		// system area 는 지우기만 하면, fw 가 실행 되면서 기본값을 기록하도록 되어 있어서, 기록 할 필요 없음.
 	} while (false);
+
+	if (b_result) {
+		sh.set_erase_sec_index(v_erase_sec_index).set_write_sec_index(v_write_sec_index);
+	}
+	else {
+		//reset secter index vextor.
+		sh.set_erase_sec_index().set_write_sec_index();
+	}
 
 	return b_result;
 }

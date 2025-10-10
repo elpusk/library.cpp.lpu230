@@ -1879,7 +1879,7 @@ private:
 			_type_response* p_response = (_type_response*)&v_response[0];
 			if (p_response->c_size != sizeofstructmember(SYSINFO, ContainerInfoMsrObj.nGlobalTagCondition))
 				continue;
-			unsigned int n_condition(0);
+			uint32_t n_condition(0);
 			std::copy(&p_response->s_data[0], &p_response->s_data[p_response->c_size], (unsigned char*)&n_condition);
 
 			if (n_condition)
@@ -1918,7 +1918,7 @@ private:
 			_type_response* p_response = (_type_response*)&v_response[0];
 			if (p_response->c_size != sizeofstructmember(SYSINFO, ContainerInfoMsrObj.KeyMap.nMappingTableIndex))
 				continue;
-			unsigned int n_interface(0);
+			uint32_t n_interface(0);
 			std::copy(&p_response->s_data[0], &p_response->s_data[p_response->c_size], (unsigned char*)&n_interface);
 
 			m_interface = (type_system_interface)n_interface;

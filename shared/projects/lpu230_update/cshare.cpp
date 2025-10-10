@@ -1,4 +1,9 @@
 
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <string>
+
 #include <mp_cstring.h>
 #include <mp_cwait.h>
 
@@ -75,6 +80,23 @@ int cshare::calculate_update_step(int n_the_number_of_erase_sector /*= -1*/)
 	return n_step;
 }
 
+int cshare::get_app_area_zero_based_start_sector_from_sector_number(int n_sector_number) const
+{
+	int n_zero_base_sector_number(-1);
+
+	do {
+		if(n_sector_number < 0)
+			continue;
+		//
+		if(m_v_write_sec_index.empty())
+			continue;
+		// 에러 확률를 높이기 위해 app area 첫 sector 번호를 wrtite 순서를 나타내는 m_v_write_sec_index 의
+		// 가장 마지막에 저장하므로, 마지막 값이 곧 app area 첫 sector 번호가 된다.
+		n_zero_base_sector_number = n_sector_number - *m_v_write_sec_index.end();
+	} while (false);
+	return n_zero_base_sector_number;
+}
+
 void cshare::_ini()
 {
 	m_b_run_by_cf = false;
@@ -98,6 +120,8 @@ void cshare::_ini()
 	m_current_dir = std::filesystem::current_path();
 
 	m_n_size_fw = 0;
+	m_v_erase_sec_index.resize(0);
+	m_v_write_sec_index.resize(0);
 }
 
 cshare::cshare()
@@ -177,6 +201,18 @@ cshare& cshare::set_firmware_list_of_rom_file(int n_fw_index, const std::vector<
 	m_n_selected_fw_in_firmware_list = n_fw_index;
 	m_v_firmware_list = v_s_fw;
 	_set_firmware_size(m_rom_header.Item[n_fw_index].dwSize);
+	return *this;
+}
+
+cshare& cshare::set_erase_sec_index(const std::vector<int>& v_sec_index/* = std::vector<int>(0) */)
+{
+	m_v_erase_sec_index = v_sec_index;
+	return *this;
+}
+
+cshare& cshare::set_write_sec_index(const std::vector<int>& v_sec_index /* = std::vector<int>(0) */)
+{
+	m_v_write_sec_index = v_sec_index;
 	return *this;
 }
 
@@ -548,6 +584,94 @@ std::vector<std::string> cshare::get_vector_bin_files_in_current_dir() const
 size_t cshare::get_selected_fw_size() const
 {
 	return m_n_size_fw;
+}
+
+std::vector<int> cshare::get_erase_sec_index() const
+{
+	return m_v_erase_sec_index;
+}
+
+std::vector<int> cshare::get_write_sec_index() const
+{
+	return m_v_write_sec_index;
+}
+
+_mp::type_pair_bool_result_bool_complete cshare::get_one_sector_fw_data
+(
+	std::shared_ptr<CRom> ptr_rom_dll
+	, _mp::type_v_buffer& v_out_sector
+	, int& n_out_zero_base_sector_number
+	,bool b_first_read /*=false*/
+)
+{
+	bool b_result(false), b_complete(true);
+
+	uint32_t dw_read(CHidBootBuffer::C_SECTOR_SIZE);
+	static uint32_t dw_offset(0);
+	static int n_write_sector_index(0);
+	std::size_t bytesRead(0);
+	int n_write_sector(0);
+
+	do {
+		if (!ptr_rom_dll) {
+			continue;
+		}
+		if (m_s_rom_file_abs_full_path.empty()) {
+			continue;
+		}
+		if (m_v_write_sec_index.empty()) {
+			continue;
+		}
+
+		if (b_first_read) {
+			dw_offset = 0;
+			n_write_sector_index = 0;
+		}
+		if (n_write_sector_index >= m_v_write_sec_index.size()) {
+			continue;//모두 읽음.
+		}
+
+		// sector 번호
+		n_out_zero_base_sector_number = n_write_sector = m_v_write_sec_index[n_write_sector_index];
+		dw_offset = n_write_sector * CHidBootBuffer::C_SECTOR_SIZE;
+
+		v_out_sector.resize(dw_read, 0xFF);
+
+		if (m_n_selected_fw_in_firmware_list < 0) {
+			// 순수 raw binary file 인 경우.
+			std::ifstream file_raw(m_s_rom_file_abs_full_path, std::ios::binary);
+			if(!file_raw){
+				continue; //error
+			}
+
+			file_raw.seekg(dw_offset, std::ios::beg);
+			if (!file_raw) {
+				continue; //error
+			}
+			file_raw.read(reinterpret_cast<char*>(v_out_sector.data()), v_out_sector.size());
+			//실제 읽은 바이트 수
+			bytesRead = file_raw.gcount();
+			if (bytesRead == 0) {
+				continue; //error
+			}
+		}
+		else {
+			// rom file 인 경우.
+			bytesRead = ptr_rom_dll->ReadBinaryOfItem(v_out_sector.data(), dw_read, dw_offset, &m_rom_header.Item[m_n_selected_fw_in_firmware_list]);
+			if (bytesRead ==0) {
+				continue; //error
+			}
+		}
+
+		++n_write_sector_index;
+		if(n_write_sector_index < m_v_write_sec_index.size()){
+			b_complete = false;
+		}
+		
+		b_result = true;
+	} while (false);
+
+	return std::make_pair(b_result,b_complete);
 }
 
 std::pair<int, std::vector<std::string>> cshare::get_firmware_list_of_rom_file() const

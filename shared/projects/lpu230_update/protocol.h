@@ -3,6 +3,7 @@
 #define		 __PROTOCOL__H__
 
 #include <mp_type.h>
+#include <cstdint>
 
 // Command or cReplay items
 #define	HIDB_REQ_CMD_WRITE		10	//write sector
@@ -27,7 +28,7 @@ typedef struct tagHidBLRequest {
 	union {
 		unsigned char sTag[5];
 		unsigned short wPara;
-		unsigned int dwPara;
+		uint32_t dwPara;
 	};
 
 	unsigned short wChain;	//from zero
@@ -69,7 +70,7 @@ typedef struct tagHidBLIOTran {
 	union {
 		unsigned char sTag[5];
 		unsigned short wPara;
-		unsigned int dwPara;
+		uint32_t dwPara;
 	};
 
 	unsigned short wChain;	//from zero

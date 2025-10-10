@@ -66,6 +66,8 @@ public:
 
 	cshare& set_firmware_list_of_rom_file(int n_fw_index, const std::vector<std::string>& v_s_fw);
 
+	cshare& set_erase_sec_index(const std::vector<int>& v_sec_index = std::vector<int>(0));
+	cshare& set_write_sec_index(const std::vector<int>& v_sec_index = std::vector<int>(0));
 
 	std::string get_target_device_model_name_by_string() const;
 	std::string get_target_device_version_by_string() const;
@@ -96,6 +98,27 @@ public:
 	std::vector<std::string> get_vector_bin_files_in_current_dir() const;
 
 	size_t get_selected_fw_size() const;
+
+	std::vector<int> get_erase_sec_index() const;
+	std::vector<int> get_write_sec_index() const;
+
+	/**
+	* @brief get one sector fw data from the selected firmware of the selected rom file. or raw bin file.
+	* @param ptr_rom_dll - the instance of CRom.
+	* @param v_out_sector - the output sector data buffer. the size of this buffer will be resize to sector size(4K).
+	* @param n_out_zero_base_sector_number - the output zero based sector number of the selected firmware.
+	* @param b_first_read - if true, the read pointer of the selected firmware is set to the first sector.
+	* @return first - true : read OK, false : read error.
+	* 
+	*	second - true : all read done, false : remain more data.
+	* 
+	*/
+	_mp::type_pair_bool_result_bool_complete get_one_sector_fw_data(
+		std::shared_ptr<CRom> ptr_rom_dll
+		, _mp::type_v_buffer& v_out_sector
+		, int& n_out_zero_base_sector_number
+		,bool b_first_read = false
+	);
 
 	/**
 	* 
@@ -146,6 +169,12 @@ public:
 	*/
 	int calculate_update_step(int n_the_number_of_erase_sector = -1);
 
+	/**
+	* @brief convert sector number to app area zero based sector number.
+	* @param n_sector_number - sector number.
+	* @return -1 : error, 0>= : app area zero based sector number.
+	*/
+	int get_app_area_zero_based_start_sector_from_sector_number( int n_sector_number) const;
 private:
 	void _ini();
 	cshare();
