@@ -1,5 +1,9 @@
 #include "cupdater.h" // ftxui 에 min 조건부 정의가 있어서 ftxui/component/loop.hpp 보다 먼저 정의해야 함.
 #include <algorithm>
+#include <fstream>
+#include <vector>
+#include <string>
+#include <cstdint>
 
 #include <ftxui/component/loop.hpp>
 
@@ -1163,6 +1167,10 @@ void cupdater::_updates_thread_function()
 		bool b_first_read(true);
 		int n_out_zero_base_sector_number(0);
 
+#if defined(_WIN32) && defined(_DEBUG)
+		std::ofstream _ofs("deb_file_dump.bin", std::ios::binary | std::ios::out | std::ios::trunc);
+#endif
+
 		do {
 			////////////////////////////////////////////////////
 			// 데이터 읽기
@@ -1179,6 +1187,12 @@ void cupdater::_updates_thread_function()
 			if (!m_b_is_running) {
 				continue; // 종료 직전 체크
 			}
+
+#if defined(_WIN32) && defined(_DEBUG)
+			if(_ofs.is_open()) {
+				_ofs.write(reinterpret_cast<const char*>(v_sector.data()), v_sector.size());
+			}
+#endif
 			// 읽은 하나의 sector 를 write & verify.
 			b_result = _updates_sub_thread_write_one_sector(n_step, v_sector, n_out_zero_base_sector_number);
 			if (!b_result) {
@@ -1189,6 +1203,12 @@ void cupdater::_updates_thread_function()
 			}
 
 		} while (!b_complete && m_b_is_running);
+#if defined(_WIN32) && defined(_DEBUG)
+		if (_ofs) {
+			_ofs.close();
+		}
+#endif
+
 		if (!b_result) {
 			break; // error exit
 		}
@@ -1579,7 +1599,7 @@ bool cupdater::_updates_sub_thread_write_one_sector(
 )
 {
 #ifdef _WIN32
-	ATLTRACE(L"_updates_sub_thread_write_one_sector\n");
+	ATLTRACE(L"_updates_sub_thread_write_one_sector : %d sec.\n",n_zero_base_sector_number);
 #endif
 
 	bool b_result(true);

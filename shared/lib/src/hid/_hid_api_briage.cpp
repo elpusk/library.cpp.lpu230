@@ -841,7 +841,7 @@ int _hid_api_briage::api_read(int n_primitive_map_index, unsigned char* data, si
             woss << L'.';
         }//end for
 
-        ATLTRACE(L" !!!!! %ls.\n", woss.str().c_str());
+        //ATLTRACE(L" !!!!! %ls.\n", woss.str().c_str());
     }
 #endif
 

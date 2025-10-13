@@ -12,6 +12,11 @@
 #include "cshare.h"
 #include "HidBootBuffer.h"
 
+#ifdef _WIN32
+#include <atltrace.h>
+#endif
+
+
 cshare& cshare::get_instance()
 {
 	static cshare obj;
@@ -92,7 +97,7 @@ int cshare::get_app_area_zero_based_start_sector_from_sector_number(int n_sector
 			continue;
 		// 에러 확률를 높이기 위해 app area 첫 sector 번호를 wrtite 순서를 나타내는 m_v_write_sec_index 의
 		// 가장 마지막에 저장하므로, 마지막 값이 곧 app area 첫 sector 번호가 된다.
-		n_zero_base_sector_number = n_sector_number - *m_v_write_sec_index.end();
+		n_zero_base_sector_number = n_sector_number - m_v_write_sec_index[m_v_write_sec_index.size()-1];
 	} while (false);
 	return n_zero_base_sector_number;
 }
@@ -604,12 +609,14 @@ _mp::type_pair_bool_result_bool_complete cshare::get_one_sector_fw_data
 	,bool b_first_read /*=false*/
 )
 {
-	bool b_result(false), b_complete(true);
-
-	uint32_t dw_read(CHidBootBuffer::C_SECTOR_SIZE);
 	static uint32_t dw_offset(0);
 	static int n_write_sector_index(0);
-	std::size_t bytesRead(0);
+	static uint32_t dw_last_readdone(CHidBootBuffer::C_SECTOR_SIZE);
+
+	bool b_result(false), b_complete(true);
+
+	
+	uint32_t dw_read(CHidBootBuffer::C_SECTOR_SIZE);
 	int n_write_sector(0);
 
 	do {
@@ -626,19 +633,44 @@ _mp::type_pair_bool_result_bool_complete cshare::get_one_sector_fw_data
 		if (b_first_read) {
 			dw_offset = 0;
 			n_write_sector_index = 0;
+			dw_last_readdone = CHidBootBuffer::C_SECTOR_SIZE;
 		}
 		if (n_write_sector_index >= m_v_write_sec_index.size()) {
 			continue;//모두 읽음.
 		}
 
 		// sector 번호
-		n_out_zero_base_sector_number = n_write_sector = m_v_write_sec_index[n_write_sector_index];
-		dw_offset = n_write_sector * CHidBootBuffer::C_SECTOR_SIZE;
+		n_out_zero_base_sector_number = m_v_write_sec_index[n_write_sector_index];
+		v_out_sector.resize(CHidBootBuffer::C_SECTOR_SIZE);
+		v_out_sector.assign(CHidBootBuffer::C_SECTOR_SIZE, 0xff);
 
-		v_out_sector.resize(dw_read, 0xFF);
+		if (m_v_write_sec_index.size() > 1) {
+			if (n_write_sector_index == (m_v_write_sec_index.size() - 2)) {
+				// 마지막 sector 는 app area 첫 sector 번호이므로,
+				// 마지막 전 sector 는 진짜 마지막 secotor 이어서, 4096 byte 보다 작을 수 있다.
+				dw_read = (uint32_t)(m_n_size_fw - ((m_v_write_sec_index.size()-1)*CHidBootBuffer::C_SECTOR_SIZE));
+			}
+			else {
+				dw_read = (uint32_t)(CHidBootBuffer::C_SECTOR_SIZE);
+			}
+			
+		}
+		else {
+			dw_read = (uint32_t)m_n_size_fw;
+		}
+
+		
 
 		if (m_n_selected_fw_in_firmware_list < 0) {
 			// 순수 raw binary file 인 경우.
+			n_write_sector = m_v_write_sec_index[n_write_sector_index];
+			if (dw_last_readdone < CHidBootBuffer::C_SECTOR_SIZE) {
+				dw_offset = 0;
+			}
+			else {
+				dw_offset = n_write_sector * CHidBootBuffer::C_SECTOR_SIZE;
+			}
+
 			std::ifstream file_raw(m_s_rom_file_abs_full_path, std::ios::binary);
 			if(!file_raw){
 				continue; //error
@@ -648,23 +680,40 @@ _mp::type_pair_bool_result_bool_complete cshare::get_one_sector_fw_data
 			if (!file_raw) {
 				continue; //error
 			}
-			file_raw.read(reinterpret_cast<char*>(v_out_sector.data()), v_out_sector.size());
+
+			file_raw.read(reinterpret_cast<char*>(v_out_sector.data()), dw_read);
 			//실제 읽은 바이트 수
-			bytesRead = file_raw.gcount();
-			if (bytesRead == 0) {
+			dw_last_readdone = (uint32_t)file_raw.gcount();
+#if defined(_WIN32) && defined(_DEBUG)
+			ATLTRACE(" :::::::: %u = file_raw.read([%x,%x,%x,%x],%u[read],%u[offset],item)", dw_last_readdone,v_out_sector[0], v_out_sector[1], v_out_sector[2], v_out_sector[3], dw_read, dw_offset);
+#endif
+			if (dw_last_readdone == 0) {
 				continue; //error
 			}
 		}
 		else {
 			// rom file 인 경우.
-			bytesRead = ptr_rom_dll->ReadBinaryOfItem(v_out_sector.data(), dw_read, dw_offset, &m_rom_header.Item[m_n_selected_fw_in_firmware_list]);
-			if (bytesRead ==0) {
+			// 실제 sector 번호에서 app area 첫 sector 번호를 0 으로 가정한 상대 sector 번호를 얻음.
+			n_write_sector = m_v_write_sec_index[n_write_sector_index]- m_v_write_sec_index[m_v_write_sec_index.size() - 1];
+			if (dw_last_readdone < CHidBootBuffer::C_SECTOR_SIZE) {
+				dw_offset = 0;
+			}
+			else {
+				dw_offset = n_write_sector * CHidBootBuffer::C_SECTOR_SIZE;
+			}
+
+			dw_last_readdone = (uint32_t)ptr_rom_dll->ReadBinaryOfItem(v_out_sector.data(), dw_read, dw_offset, &m_rom_header.Item[m_n_selected_fw_in_firmware_list]);
+#if defined(_WIN32) && defined(_DEBUG)
+			ATLTRACE(" :::::::: %u = ReadBinaryOfItem([%x,%x,%x,%x],%u[read],%u[offset],item)", dw_last_readdone,v_out_sector[0], v_out_sector[1], v_out_sector[2], v_out_sector[3], dw_read, dw_offset);
+#endif
+			if (dw_last_readdone ==0) {
 				continue; //error
 			}
 		}
 
 		++n_write_sector_index;
 		if(n_write_sector_index < m_v_write_sec_index.size()){
+
 			b_complete = false;
 		}
 		

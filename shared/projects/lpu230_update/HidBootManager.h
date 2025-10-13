@@ -223,10 +223,14 @@ private:
 
 
 	/**
-	* return first - processing result
-	* second  true - exist sector info
-	* third the sector number of starting app area.
-	* forth the number of sector of app area.
+	* @return 
+	* first - processing result
+	* 
+	* second - true : exist sector info
+	* 
+	* third - the sector number of starting app area.(0 based sector number)
+	* 
+	* forth - the number of sector of app area.( the number of total sector - the number of bootloader area sector )
 	*/
 	std::tuple<bool, bool, uint32_t, uint32_t> _get_sector_info_from_device();
 

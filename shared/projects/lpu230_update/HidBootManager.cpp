@@ -1005,11 +1005,9 @@ bool CHidBootManager::SelectDevice(const std::string& s_device_path, size_t n_fw
 	std::wstring s = _mp::cstring::get_unicode_from_mcsc(s_device_path);
 	std::list<std::wstring>::iterator iter = m_listDev.begin();
 
-	// LPC1343 를 위한 기본 값으로 지우는 섹터번호의 순서를 저장.
-	std::vector<int> v_erase_sec_index = {1,2,3,4,5,6,7}; //1~6 app area, 7 system variables
-
-	// LPC1343 를 위한 기본 값으로 기록하는 섹터번호의 순서를 저장.
-	std::vector<int> v_write_sec_index = {2,3,4,5,6,7,1}; // 복구 확률을 높이기 위해 마지막 첫 섹터를 마지막에 기록.
+	
+	std::vector<int> v_erase_sec_index;
+	std::vector<int> v_write_sec_index;
 
 	do {
 		if (iter == std::end(m_listDev)) {
@@ -1021,42 +1019,59 @@ bool CHidBootManager::SelectDevice(const std::string& s_device_path, size_t n_fw
 			b_result = true;
 		}
 		bool b_exist_sec_info(false);
-		uint32_t n_sec_number_of_start_sec(0);
-		uint32_t n_the_number_of_sec_of_app_data;
+		uint32_t n_sec_number_of_start_sec(1); // bootloader 끝난 다음 섹터 번호.
+
+		// app area 의 섹터의 수.(flash sector 수 - bootloader sector 수)
+		// fw 의 크기에 맞게 조정됨.
+		uint32_t n_the_number_of_sec_of_app_data(7); 
+		uint32_t n_need_fw_sec = 0;//fw 를 저장하기 위해 필요한 sector 의 수 
 
 		std::tie(b_result, b_exist_sec_info, n_sec_number_of_start_sec, n_the_number_of_sec_of_app_data) = _get_sector_info_from_device();
 		if (!b_result) {
 			continue;
 		}
-		if (!b_exist_sec_info) {
-			continue;
-		}
-		v_erase_sec_index.resize(0);
-		v_write_sec_index.resize(0);
-		uint32_t n_need_fw_sec = 0;//fw 를 저장하기 위해 필요한 sector 의 수 
+
 		n_need_fw_sec = n_fw_size / CHidBootBuffer::C_SECTOR_SIZE;
 		if (n_fw_size % CHidBootBuffer::C_SECTOR_SIZE != 0) {
 			++n_need_fw_sec;
 		}
-
 		if (n_need_fw_sec == 0) {
 			continue;
 		}
 
-		// 주어진 fw 를 쓰기 위해 실제 필요한 섹터의 수만 처리하며, 퍼리 속도를 높이기 위해 필요한 계산.
-		for (int ui = 0; ui < n_the_number_of_sec_of_app_data; ui++) {
-			if ((ui + 1) >= n_need_fw_sec) {
-				break;
-			}
+		if (!b_exist_sec_info) {
+			// 기본값 사용.
+			n_sec_number_of_start_sec = 1;
+			n_the_number_of_sec_of_app_data = 7;
+
+			// fw size 에 맞게 아레 에서 조정되므로 아래 코드 remark 됨. 그러나 돌아가는 설명을 위해 지우지는 않음.
+			// LPC1343 를 위한 기본 값으로 지우는 섹터번호의 순서를 저장.
+			//v_erase_sec_index = { 1,2,3,4,5,6,7 }; //1~6 app area, 7 system variables
+
+			// LPC1343 를 위한 기본 값으로 기록하는 섹터번호의 순서를 저장.
+			// 복구 확률을 높이기 위해 마지막 첫 섹터를 마지막에 기록.
+			// 7 sector(마지막 섹터) 는 지우기만하면, fw 가 실행 되면서 기본값을 기록하도록 되어 있어서, 기록 할 필요 없음.
+			//v_write_sec_index = { 2,3,4,5,6,1 }; 
+		}
+
+		if (n_need_fw_sec > (n_the_number_of_sec_of_app_data-1)) {
+			// flash memory sector 중 마지막 sector 는 항상 system area 로 사용됨.
+			// app area 의 섹터 수 보다 더 많은 fw 를 기록할 수 없음.
+			continue;
+		}
+
+		// 지우기 위한 섹터 번호와 기록하기 위한 섹터 번호를 설정.
+		for (int ui = 0; ui < n_need_fw_sec; ui++) {
 			v_erase_sec_index.push_back(n_sec_number_of_start_sec + ui);
+		}//end for
+		v_erase_sec_index.push_back(n_sec_number_of_start_sec + n_the_number_of_sec_of_app_data - 1); // system area(항상 마지막 섹터) 도 지우기 위해 추가.
+
+		// 주어진 fw 를 쓰기 위해 실제 필요한 섹터의 수만 처리하며, 처리 속도를 높이기 위해 필요한 계산.
+		for (int ui = 0; ui < n_need_fw_sec-1; ui++) {
 			v_write_sec_index.push_back(n_sec_number_of_start_sec + ui + 1);
 		}//end for
-		v_write_sec_index[v_write_sec_index.size() - 1] = n_sec_number_of_start_sec; // 복구 확률을 높이기 위해 마지막 첫 섹터를 마지막에 기록.
+		v_write_sec_index.push_back( n_sec_number_of_start_sec ); // 복구 확률을 높이기 위해 마지막 첫 섹터를 마지막에 기록.
 
-		// system area
-		uint32_t n_sys_sec = 0xFF000 / CHidBootBuffer::C_SECTOR_SIZE; // for MH1902T 
-		v_erase_sec_index.push_back(n_sys_sec);
-		// system area 는 지우기만 하면, fw 가 실행 되면서 기본값을 기록하도록 되어 있어서, 기록 할 필요 없음.
 	} while (false);
 
 	if (b_result) {
