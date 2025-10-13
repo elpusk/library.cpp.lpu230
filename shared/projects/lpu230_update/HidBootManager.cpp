@@ -624,6 +624,11 @@ bool CHidBootManager::do_write_sector(
 		memcpy(pReq->sData, &v_sector[n_offset], n_copy);
 		n_offset += n_copy;
 
+#if defined(_WIN32) && defined(_DEBUG)
+		// 하나의 packet 의 데이터 필드 크기는 54 byte 이므로, 4096 크기의 sector 하나를
+		// 전송하기 위해서는 76 번의 packet 전송이 필요하다.
+#endif
+
 		//
 #ifndef __DISABLE_REAL_TXRX__
 		if (_DDL_write(m_pair_dev_ptrs, &vReq[0], 64, 64)) {
@@ -806,19 +811,14 @@ int CHidBootManager::_DDL_write(CHidBootManager::type_pair_handle hDev, unsigned
 			continue;
 		}
 
-		_mp::cwait w;
-		int n_w = w.generate_new_event();
-		_mp::type_v_buffer v_tx(lpData[0], lpData[nTx]);
-		std::pair<int, _mp::cwait*> param(n_w, &w);
-		hDev.second.first->start_write(0, v_tx,
-			[](_mp::cqitem_dev& qi, void* p_user)->std::pair<bool, std::vector<size_t> > {
-				std::pair<int, _mp::cwait*>* p_param = (std::pair<int, _mp::cwait*>*)p_user;
-				p_param->second->set(p_param->first);//trigger
-				return std::make_pair(qi.is_complete(), std::vector<size_t>());
-		}
-		, &param);
+		_mp::type_v_buffer v_tx(nOutReportSize, 0);
+		_mp::type_v_buffer v_rx;
 
-		w.wait_for_one_at_time();
+		std::copy(&lpData[0], &lpData[nTx], &v_tx[0]);
+
+		if (!cshare::io_write_sync(hDev.second.first, v_tx)) {
+			continue;
+		}
 
 		n_data = nTx;
 	} while (false);

@@ -704,7 +704,7 @@ _mp::type_pair_bool_result_bool_complete cshare::get_one_sector_fw_data
 
 			dw_last_readdone = (uint32_t)ptr_rom_dll->ReadBinaryOfItem(v_out_sector.data(), dw_read, dw_offset, &m_rom_header.Item[m_n_selected_fw_in_firmware_list]);
 #if defined(_WIN32) && defined(_DEBUG)
-			ATLTRACE(" :::::::: %u = ReadBinaryOfItem([%x,%x,%x,%x],%u[read],%u[offset],item)", dw_last_readdone,v_out_sector[0], v_out_sector[1], v_out_sector[2], v_out_sector[3], dw_read, dw_offset);
+			//ATLTRACE(" :::::::: %u = ReadBinaryOfItem([%x,%x,%x,%x],%u[read],%u[offset],item)", dw_last_readdone,v_out_sector[0], v_out_sector[1], v_out_sector[2], v_out_sector[3], dw_read, dw_offset);
 #endif
 			if (dw_last_readdone ==0) {
 				continue; //error
