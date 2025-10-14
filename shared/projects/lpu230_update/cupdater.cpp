@@ -1523,6 +1523,12 @@ _mp::type_pair_bool_result_bool_complete cupdater::_updates_sub_thread_read_one_
 
 	do {
 		++n_step;
+
+		s_msg = "read sector ";
+		s_msg += std::to_string(n_out_zero_base_sector_number);
+		s_msg += " from file.";
+		_push_message(n_step, s_msg);
+
 		std::tie(b_result, b_complete) = sh.get_one_sector_fw_data(
 			CHidBootManager::GetInstance()->get_rom_library()
 			, v_out_sector
@@ -1532,12 +1538,10 @@ _mp::type_pair_bool_result_bool_complete cupdater::_updates_sub_thread_read_one_
 		);
 		if (!b_result) {
 			s_msg = "ERROR - read sector ";
-			s_msg += ".";
+			s_msg += std::to_string(n_out_zero_base_sector_number);
+			s_msg += " from file.";
 			_push_message(n_step, s_msg);
 			continue;
-		}
-		else {
-			_push_message(n_step, "read new sector data from file.");
 		}
 
 	} while (false);
@@ -1559,23 +1563,21 @@ bool cupdater::_updates_sub_thread_write_one_sector(
 	std::string s_msg;
 
 	++n_step;
+
+	s_msg = "write & verify sector ";
+	s_msg += std::to_string(n_zero_base_sector_number);
+	s_msg += ".";
+	_push_message(n_step, s_msg);
+
 	// 하나의 sector 를 모두 쓴다. verify 는 fw 를 받은 마이컴에서 write 한 후 읽어서 비교해서 verify 한다.
 	b_result = m_p_mgmt->do_write_sector(n_zero_base_sector_number, v_sector);
 
 	if (!b_result) {
 		s_msg = "ERROR - write & verify sector ";
-		s_msg += ".";
 		s_msg += std::to_string(n_zero_base_sector_number);
 		s_msg += ".";
 		_push_message(n_step, s_msg);
 
-	}
-	else {
-		s_msg = "write & verify sector ";
-		s_msg += ".";
-		s_msg += std::to_string(n_zero_base_sector_number);
-		s_msg += ".";
-		_push_message(n_step, s_msg);
 	}
 
 	return b_result;

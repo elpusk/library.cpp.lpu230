@@ -14,11 +14,13 @@
 
 #include "cshare.h"
 
-#define	__DISABLE_REAL_TXRX__
+//#define	__DISABLE_REAL_TXRX__
+#undef	__DISABLE_REAL_TXRX__
 // DONT INCLUDE cshare.h
 
 CHidBootManager::CHidBootManager(void) :
 	m_bIniOk(true)
+	, m_b_exist_sec_info(false) //default LPC1343
 {
 	_create_cb_worker();
 	//
@@ -182,6 +184,14 @@ bool CHidBootManager::do_erase_in_worker(int n_sec)
 	//Deb_Printf( L"..do_erase_in_worker.\n" );
 
 	bool bResult = true;
+
+	if (!m_b_exist_sec_info) {
+		if (n_sec != 1) {
+			//lpc1343 을 사용하는 firmware 는 1 sector 를 지우라는 명령을 받으면, 1~7 sector 를 지우도록 설계되어 있음.
+			// 나머지는 에러 이지만 코드 호환성을 생각해서 성공으로 리턴함.
+			return bResult;
+		}
+	}
 
 	HidBLRequest* pReq = NULL;
 	HidBLReplay* pReplay = NULL;
@@ -460,35 +470,19 @@ int CHidBootManager::_DDL_read(CHidBootManager::type_pair_handle hDev, unsigned 
 		}
 
 		_mp::type_v_buffer v_rx;
-		_mp::cwait w;
-		int n_w = w.generate_new_event();
-		std::tuple<int, _mp::cwait*, _mp::type_v_buffer*> param(n_w, &w,&v_rx);
-		hDev.second.first->start_read(0, 
-			[](_mp::cqitem_dev& qi, void* p_user)->std::pair<bool, std::vector<size_t>> {
-				std::tuple<int, _mp::cwait*, _mp::type_v_buffer*>* p_param = (std::tuple<int, _mp::cwait*, _mp::type_v_buffer*>*)p_user;
 
-				if (qi.is_complete()) {
-					
-					int n = std::get<0>(*p_param);
-					_mp::cwait* p_w = std::get<1>(*p_param);
-					_mp::type_v_buffer* p_v_rx = std::get<2>(*p_param);
-					*p_v_rx = qi.get_rx();
-					p_w->set(n);//trigger
-				}
-				
-				return std::make_pair(qi.is_complete(), std::vector<size_t>());
-			}
-		, &param);
-
-		w.wait_for_one_at_time();
+		if (!cshare::io_read_sync(hDev.second.first, v_rx, 64)) {
+			continue;
+		}
 
 		n_data = v_rx.size();
-		if(nRx>= v_rx.size()){
+		if (nRx >= v_rx.size()) {
 			memcpy(lpData, &v_rx[0], v_rx.size());
 		}
 		else {
 			memcpy(lpData, &v_rx[0], nRx);
 		}
+
 	} while (false);
 	return n_data;
 }
@@ -528,15 +522,6 @@ bool CHidBootManager::_DDL_TxRx(CHidBootManager::type_pair_handle hDev, unsigned
 			continue;
 		}
 
-		/*
-		if (!cshare::io_write_sync(hDev.second.first, v_tx)) {
-			continue;
-		}
-
-		if (!cshare::io_read_sync(hDev.second.first, v_rx,64)) {
-			continue;
-		}
-		*/
 		n_data = v_rx.size();
 		if (*p_nRx >= v_rx.size()) {
 			memcpy(lpRxData, &v_rx[0], v_rx.size());
@@ -629,11 +614,12 @@ bool CHidBootManager::SelectDevice(const std::string& s_device_path, size_t n_fw
 			continue;
 		}
 		//
+		m_b_exist_sec_info = false;
+
 		m_pair_dev_ptrs = _DDL_open(s);
 		if (!m_pair_dev_ptrs.first.empty()) {
 			b_result = true;
 		}
-		bool b_exist_sec_info(false);
 		uint32_t n_sec_number_of_start_sec(1); // bootloader 끝난 다음 섹터 번호.
 
 		// app area 의 섹터의 수.(flash sector 수 - bootloader sector 수)
@@ -641,7 +627,7 @@ bool CHidBootManager::SelectDevice(const std::string& s_device_path, size_t n_fw
 		uint32_t n_the_number_of_sec_of_app_data(7); 
 		uint32_t n_need_fw_sec = 0;//fw 를 저장하기 위해 필요한 sector 의 수 
 
-		std::tie(b_result, b_exist_sec_info, n_sec_number_of_start_sec, n_the_number_of_sec_of_app_data) = _get_sector_info_from_device();
+		std::tie(b_result, m_b_exist_sec_info, n_sec_number_of_start_sec, n_the_number_of_sec_of_app_data) = _get_sector_info_from_device();
 		if (!b_result) {
 			continue;
 		}
@@ -654,7 +640,7 @@ bool CHidBootManager::SelectDevice(const std::string& s_device_path, size_t n_fw
 			continue;
 		}
 
-		if (!b_exist_sec_info) {
+		if (!m_b_exist_sec_info) {
 			// 기본값 사용.
 			n_sec_number_of_start_sec = 1;
 			n_the_number_of_sec_of_app_data = 7;

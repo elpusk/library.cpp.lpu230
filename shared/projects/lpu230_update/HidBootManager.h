@@ -174,6 +174,8 @@ private:
 	int m_n_evt_cb_kill_woker;
 	std::shared_ptr<std::thread> m_ptr_worker_cb;
 
+	bool m_b_exist_sec_info;
+
 private://don;t call these methods.
 	CHidBootManager(const CHidBootManager&);	//disable copy constructure.
 	CHidBootManager& operator=(const CHidBootManager&);
