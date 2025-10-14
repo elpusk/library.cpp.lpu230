@@ -1627,18 +1627,56 @@ bool cupdater::_updates_sub_thread_wait_plugout_bootloader(int& n_step)
 #endif
 
 	bool b_result(false);
+	cshare& sh(cshare::get_instance());
+
+	++n_step;
+
+	_mp::cwait w;
+	int n_w = w.generate_new_event();
+
+	bool b_wait(true);
+	int n_timeout_mm_unit = 300; //300msec
+	int n_total_timeout_unit = 17;
+
+	_mp::type_set_usb_filter set_usb_filter;
+	set_usb_filter.emplace(_mp::_elpusk::const_usb_vid, _mp::_elpusk::_lpu237::const_usb_pid, _mp::_elpusk::_lpu237::const_usb_inf_hid); //lpu237
+	set_usb_filter.emplace(_mp::_elpusk::const_usb_vid, _mp::_elpusk::_lpu238::const_usb_pid, _mp::_elpusk::_lpu238::const_usb_inf_hid); //lpu238
+	set_usb_filter.emplace(_mp::_elpusk::const_usb_vid, _mp::_elpusk::_lpu237::const_usb_pid, _mp::_elpusk::const_usb_pid_hidbl); //hidboot
+
+	_mp::clibhid& mlibhid(_mp::clibhid::get_manual_instance());
+	mlibhid.set_usb_filter(set_usb_filter);
+
+	_mp::clibhid_dev_info::type_set::iterator it_rm;
+
+	_push_message(n_step, "waits plugout bootloader.");
 
 	do {
+		mlibhid.update_dev_set_in_manual();
+		auto set_r = mlibhid.get_removed_device_set();
+		
+		it_rm = _mp::clibhid_dev_info::find(set_r, sh.get_bootloader_path());
+		if (it_rm != std::end(set_r)) {
+			sh.set_bootloader_path(""); // clear bootloader path
+			b_wait = false;
+			b_result = true; // plug in 검출.
+			continue;
+		}
 
-	} while (false);
+		if (!m_b_is_running) {
+			break;// kill thread.
+		}
+		// more wait
+		w.wait_for_one_at_time(n_timeout_mm_unit);
+		--n_total_timeout_unit;
+		if (n_total_timeout_unit <= 0) {
+			break; //timeout : n_timeout_mm_unit * n_total_timeout_unit mm sec.
+		}
+
+	} while (b_wait);
 
 	if (!b_result) {
-		_push_message(n_step, "ERROR - waiting plugout bootloader.");
+		_push_message(n_step, "ERROR - detect plugout bootloader.");
 	}
-	else {
-		_push_message(n_step, "waiting plugout bootloader.");
-	}
-
 	return b_result;
 }
 
@@ -1649,18 +1687,56 @@ bool cupdater::_updates_sub_thread_wait_plugin_lpu23x(int& n_step)
 #endif
 
 	bool b_result(false);
+	cshare& sh(cshare::get_instance());
+
+	++n_step;
+
+	_mp::cwait w;
+	int n_w = w.generate_new_event();
+
+	bool b_wait(true);
+	int n_timeout_mm_unit = 300; //300msec
+	int n_total_timeout_unit = 30;
+	_mp::clibhid& mlibhid(_mp::clibhid::get_manual_instance());
+	_mp::clibhid_dev_info::type_set::iterator it_in;
+
+	_push_message(n_step, "waits plugin lpu23x.");
 
 	do {
+		mlibhid.update_dev_set_in_manual();
+		auto set_i = mlibhid.get_inserted_device_set();
 
-	} while (false);
+		it_in = _mp::clibhid_dev_info::find(set_i, _mp::_elpusk::const_usb_vid, _mp::_elpusk::_lpu237::const_usb_pid);
+		if (it_in != std::end(set_i)) {
+			b_wait = false;
+			b_result = true; // lpu237 plug in 검출.
+			continue;
+		}
+		it_in = _mp::clibhid_dev_info::find(set_i, _mp::_elpusk::const_usb_vid, _mp::_elpusk::_lpu238::const_usb_pid);
+		if (it_in != std::end(set_i)) {
+			b_wait = false;
+			b_result = true; // lpu238 plug in 검출.
+			continue;
+		}
+
+		if (!m_b_is_running) {
+			break;// kill thread.
+		}
+		// more wait
+		w.wait_for_one_at_time(n_timeout_mm_unit);
+		--n_total_timeout_unit;
+		if (n_total_timeout_unit <= 0) {
+			break; //timeout : n_timeout_mm_unit * n_total_timeout_unit mm sec.
+		}
+
+	} while (b_wait);
 
 	if (!b_result) {
-		_push_message(n_step, "ERROR - waiting plugin lpu23x.");
+		_push_message(n_step, "ERROR - detect plugin lpu23x.");
 	}
 	else {
-		_push_message(n_step, "waiting plugin lpu23x.");
+		_push_message(n_step, "detected plugin lpu23x.");
 	}
-
 	return b_result;
 }
 
@@ -1671,8 +1747,12 @@ bool cupdater::_updates_sub_thread_recover_system_param(int& n_step)
 #endif
 
 	bool b_result(false);
+	cshare& sh(cshare::get_instance());
+
+	_push_message(n_step, "recovering system parameters.");
 
 	do {
+		std::this_thread::sleep_for(std::chrono::milliseconds(1000*5));
 
 	} while (false);
 
