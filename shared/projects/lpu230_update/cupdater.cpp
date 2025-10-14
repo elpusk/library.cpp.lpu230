@@ -1055,18 +1055,6 @@ void cupdater::_updates_thread_function()
 
 		if (!m_b_is_running)
 			break; // 종료 직전 체크
-
-		/*
-		do {
-			++n_cnt;
-			std::string s_msg("Updating...");
-			s_msg += std::to_string(n_cnt);
-			_push_message(0,s_msg);
-			
-		}while (false);
-		*/
-		//
-		// 
 		
 		int n_step(0);
 		////////////////////////////////////////////////////
@@ -1195,7 +1183,9 @@ void cupdater::_updates_thread_function()
 			break; // 종료 직전 체크
 
 		////////////////////////////////////////////////////
-		if (!_updates_sub_thread_wait_plugin_lpu23x(n_step)) {
+		_mp::clibhid_dev_info dev_info_after_update;
+		std::tie(b_result, dev_info_after_update) = _updates_sub_thread_wait_plugin_lpu23x(n_step);
+		if (!b_result) {
 			break;
 		}
 		if (!m_b_is_running)
@@ -1203,13 +1193,15 @@ void cupdater::_updates_thread_function()
 
 		////////////////////////////////////////////////////
 		// 시스템 파라메터 복구.
-		if (!_updates_sub_thread_recover_system_param(n_step)) {
+		if (!_updates_sub_thread_recover_system_param(n_step, dev_info_after_update)) {
 			break;
 		}
 		b_need_close_lpu23x = true;
 		if (!m_b_is_running)
 			break; // 종료 직전 체크
 
+		m_b_is_running = false; // 정상 종료
+		_push_message(n_step, " * Firmware update complete.");
 	}//running
 
 	if (b_need_close_lpu23x) {
@@ -1505,7 +1497,6 @@ bool cupdater::_updates_sub_thread_erase_sector(int& n_step)
 				s_msg += std::to_string(n_sec);
 				s_msg += ".";
 				_push_message(n_step, s_msg);
-				std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 			}
 		}//end for
 
@@ -1570,7 +1561,6 @@ bool cupdater::_updates_sub_thread_write_one_sector(
 	++n_step;
 	// 하나의 sector 를 모두 쓴다. verify 는 fw 를 받은 마이컴에서 write 한 후 읽어서 비교해서 verify 한다.
 	b_result = m_p_mgmt->do_write_sector(n_zero_base_sector_number, v_sector);
-	std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
 	if (!b_result) {
 		s_msg = "ERROR - write & verify sector ";
@@ -1680,13 +1670,15 @@ bool cupdater::_updates_sub_thread_wait_plugout_bootloader(int& n_step)
 	return b_result;
 }
 
-bool cupdater::_updates_sub_thread_wait_plugin_lpu23x(int& n_step)
+std::pair<bool, _mp::clibhid_dev_info> cupdater::_updates_sub_thread_wait_plugin_lpu23x(int& n_step)
 {
 #ifdef _WIN32
 	ATLTRACE(L"_updates_sub_thread_wait_plugin_lpu23x\n");
 #endif
 
 	bool b_result(false);
+	_mp::clibhid_dev_info dev_plug_in;
+
 	cshare& sh(cshare::get_instance());
 
 	++n_step;
@@ -1708,12 +1700,14 @@ bool cupdater::_updates_sub_thread_wait_plugin_lpu23x(int& n_step)
 
 		it_in = _mp::clibhid_dev_info::find(set_i, _mp::_elpusk::const_usb_vid, _mp::_elpusk::_lpu237::const_usb_pid);
 		if (it_in != std::end(set_i)) {
+			dev_plug_in = *it_in;
 			b_wait = false;
 			b_result = true; // lpu237 plug in 검출.
 			continue;
 		}
 		it_in = _mp::clibhid_dev_info::find(set_i, _mp::_elpusk::const_usb_vid, _mp::_elpusk::_lpu238::const_usb_pid);
 		if (it_in != std::end(set_i)) {
+			dev_plug_in = *it_in;
 			b_wait = false;
 			b_result = true; // lpu238 plug in 검출.
 			continue;
@@ -1737,30 +1731,66 @@ bool cupdater::_updates_sub_thread_wait_plugin_lpu23x(int& n_step)
 	else {
 		_push_message(n_step, "detected plugin lpu23x.");
 	}
-	return b_result;
+	return std::make_pair(b_result, dev_plug_in);
 }
 
-bool cupdater::_updates_sub_thread_recover_system_param(int& n_step)
+bool cupdater::_updates_sub_thread_recover_system_param(int& n_step, const _mp::clibhid_dev_info& dev_info_after_update)
 {
 #ifdef _WIN32
 	ATLTRACE(L"_updates_sub_thread_recover_system_param\n");
 #endif
 
 	bool b_result(false);
+	bool b_complete(false);
+
 	cshare& sh(cshare::get_instance());
+	std::string s_msg_success = "the system parameters has been recovered.";
+	std::string s_msg_error = "ERROR - recover lpu23x system parameters.";
 
 	_push_message(n_step, "recovering system parameters.");
 
 	do {
-		std::this_thread::sleep_for(std::chrono::milliseconds(1000*5));
+		if (sh.get_start_from_bootloader()) {
+			s_msg_success = "No recovery of system parameters is needed.";
+			b_result = true;
+			continue; // bootloader 에서 시작했으므로 system parameter 를 복구 불요.
+		}
+		
+		// create & open clibhid_dev.
+		_mp::clibhid_dev::type_ptr ptr_dev = std::make_shared<_mp::clibhid_dev>(dev_info_after_update, m_ptr_hid_api_briage.get());
+		if (!ptr_dev->is_open()) {
+			s_msg_error = "ERROR - open lpu23x for recover system parameters.";
+			continue;
+		}
+
+		if (!sh.io_load_basic_sys_parameter(ptr_dev) ){
+			s_msg_error = "ERROR - loading the updated lpu23x info.";
+			continue;
+		}
+		bool b_first(true);
+
+		do {
+			++n_step;
+			std::tie(b_result, b_complete) = sh.io_recover_all_variable_sys_parameter(b_first, ptr_dev);
+			b_first = false;
+			if (b_result) {
+				_push_message(n_step, "recovering system parameters");
+			}
+			else {
+				_push_message(n_step, "ERROR - recovering system parameters");
+#ifdef _WIN32
+				ATLTRACE(L"ERROR : io_recover_all_variable_sys_parameter().\n");
+#endif
+			}
+		} while (!b_complete && m_b_is_running);
 
 	} while (false);
 
 	if (!b_result) {
-		_push_message(n_step, "ERROR - recover lpu23x system parameters.");
+		_push_message(n_step, s_msg_error);
 	}
 	else {
-		_push_message(n_step, "recover lpu23x system parameters.");
+		_push_message(n_step, s_msg_success);
 	}
 
 	return b_result;

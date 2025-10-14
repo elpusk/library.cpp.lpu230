@@ -26,6 +26,8 @@ public:
 
 public:
 	_mp::type_pair_bool_result_bool_complete io_save_all_variable_sys_parameter(bool b_first);
+	bool io_load_basic_sys_parameter(_mp::clibhid_dev::type_ptr& ptr_recoverd_dev);
+	_mp::type_pair_bool_result_bool_complete io_recover_all_variable_sys_parameter(bool b_first, _mp::clibhid_dev::type_ptr & ptr_recoverd_dev);
 
 	/**
 	* @brief from ptr_dev, get system information( name, version, type , and so on )

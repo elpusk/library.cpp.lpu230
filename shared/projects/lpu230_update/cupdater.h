@@ -156,9 +156,9 @@ private:
 	bool _updates_sub_thread_run_app(int& n_step);
 
 	bool _updates_sub_thread_wait_plugout_bootloader(int& n_step);
-	bool _updates_sub_thread_wait_plugin_lpu23x(int& n_step);
+	std::pair<bool, _mp::clibhid_dev_info> _updates_sub_thread_wait_plugin_lpu23x(int& n_step);
 
-	bool _updates_sub_thread_recover_system_param(int& n_step);
+	bool _updates_sub_thread_recover_system_param(int& n_step, const _mp::clibhid_dev_info &dev_info_after_update);
 
 	std::shared_ptr<ftxui::Component> _create_sub_ui0_ini();
 	std::shared_ptr<ftxui::Component> _create_sub_ui1_select_file();

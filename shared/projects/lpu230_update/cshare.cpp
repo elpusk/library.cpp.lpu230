@@ -31,7 +31,7 @@ int cshare::calculate_update_step(int n_the_number_of_erase_sector /*= -1*/)
 		if (!m_b_start_from_bootloader) {
 			//lpu23x 로 부터 시작
 			if (!m_ptr_dev) {
-				// lpu23x 로 부터 시작하자만 선태괸 장비가 없어 에러.
+				// lpu23x 로 부터 시작하자만 선태된 장비가 없어 에러.
 				continue;
 			}
 
@@ -47,14 +47,13 @@ int cshare::calculate_update_step(int n_the_number_of_erase_sector /*= -1*/)
 
 			// system parameter 복원을 위한 step 개수를 더함.
 			m_target_protocol_lpu237.set_all_parameter_to_changed();
-			m_target_protocol_lpu237.generate_set_parameters();
+			m_target_protocol_lpu237.generate_set_parameters(); // apply 포함됨.
 			n_step += (int)m_target_protocol_lpu237.get_generated_the_number_of_tx();
 			m_target_protocol_lpu237.clear_transaction();
 
 			n_step += 1;// run boot loader
 			n_step += 1;// lpu23x plugout 기다림
 			n_step += 1;// bootloader plugin 기다림.
-			n_step += 1;// apply step.
 		}
 		/////////////////////////////
 		// 공용 step 의 개수.
@@ -65,9 +64,13 @@ int cshare::calculate_update_step(int n_the_number_of_erase_sector /*= -1*/)
 			++n_sector_w;
 		}
 
+		// fw 를 sector 단위로 읽기 때문에 파일에서 읽는 회수도 추가.
+		n_step += n_sector_w;
+
 		// erase 수, 
 		if (n_the_number_of_erase_sector < 0) {
 			n_step += n_sector_w;
+			n_step += 1; // system parameter area 를 위한 sector 1개 추가.
 		}
 		else {
 			n_step += n_the_number_of_erase_sector;
@@ -79,6 +82,13 @@ int cshare::calculate_update_step(int n_the_number_of_erase_sector /*= -1*/)
 		n_step += 1;// run app
 		n_step += 1;// bootload plugout 기다림
 		n_step += 1;// lpu23x lpugin 기다림.
+
+		if(m_b_enable_iso_mode_after_update) {
+			n_step += 1; // iso mode 로 변경.
+		}
+		if (m_lpu23x_interface_after_update != cshare::Lpu237Interface::nc) {
+			n_step += 1; // interface 변경.
+		}
 
 	} while (false);
 
@@ -260,6 +270,109 @@ _mp::type_pair_bool_result_bool_complete cshare::io_save_all_variable_sys_parame
 			b_result = false;
 			break;
 		}
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+	} while (false);
+
+	if (n_remainder_transaction <= 0) {
+		m_target_protocol_lpu237.clear_transaction();
+	}
+
+	if (b_result && n_remainder_transaction > 0) {
+		b_complete = false;
+	}
+	return std::make_pair(b_result, b_complete);
+}
+
+bool cshare::io_load_basic_sys_parameter(_mp::clibhid_dev::type_ptr& ptr_recoverd_dev)
+{
+	bool b_result(false);
+	bool b_complete(false);
+
+	if (!ptr_recoverd_dev) {
+		return b_result;
+	}
+	//
+	m_target_protocol_lpu237.clear_transaction();
+	m_target_protocol_lpu237.generate_get_system_information_with_name();
+
+	_mp::type_v_buffer v_tx;
+	_mp::type_v_buffer v_rx;
+	size_t n_remainder_transaction(0);
+
+	b_result = true;
+
+	do {
+		n_remainder_transaction = m_target_protocol_lpu237.get_tx_transaction(v_tx);
+		if (v_tx.size() == 0) {
+			b_complete = true;
+			continue;
+		}
+		//
+		if (!cshare::get_instance().io_write_read_sync(ptr_recoverd_dev, v_tx, v_rx)) {
+			b_result = false;
+			break;
+		}
+
+		//waits the complete of tx.
+		if (!m_target_protocol_lpu237.set_rx_transaction(v_rx)) {
+			b_result = false;
+			break;
+		}
+		if (!m_target_protocol_lpu237.set_from_rx()) {
+			b_result = false;
+			break;
+		}
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+	} while (!b_complete);
+
+	if (n_remainder_transaction <= 0) {
+		m_target_protocol_lpu237.clear_transaction();
+	}
+
+	return b_result;
+}
+
+_mp::type_pair_bool_result_bool_complete cshare::io_recover_all_variable_sys_parameter(bool b_first, _mp::clibhid_dev::type_ptr& ptr_recoverd_dev)
+{
+	bool b_result(false);
+	bool b_complete(true);
+
+	if (!ptr_recoverd_dev) {
+		return std::make_pair(b_result, b_complete);
+	}
+	//
+	if (b_first) {
+		m_target_protocol_lpu237.clear_transaction();
+		m_target_protocol_lpu237.set_all_parameter_to_changed();
+		m_target_protocol_lpu237.generate_set_parameters();
+	}
+
+	_mp::type_v_buffer v_tx;
+	_mp::type_v_buffer v_rx;
+	size_t n_remainder_transaction(0);
+
+	do {
+		b_result = true;
+
+		n_remainder_transaction = m_target_protocol_lpu237.get_tx_transaction(v_tx);
+		if (v_tx.size() == 0)
+			continue;
+		//
+		if (!cshare::get_instance().io_write_read_sync(ptr_recoverd_dev, v_tx, v_rx)) {
+			b_result = false;
+			break;
+		}
+
+		//waits the complete of tx.
+		if (!m_target_protocol_lpu237.set_rx_transaction(v_rx)) {
+			b_result = false;
+			break;
+		}
+		if (!m_target_protocol_lpu237.is_success_rx()) {
+			b_result = false;
+			break;
+		}
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 	} while (false);
 
 	if (n_remainder_transaction <= 0) {
@@ -307,6 +420,7 @@ bool cshare::io_get_system_info_and_set_name_version()
 			b_result = false;
 			break;
 		}
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 	} while (n_remainder_transaction > 0);
 
 	m_target_protocol_lpu237.clear_transaction();

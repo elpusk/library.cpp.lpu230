@@ -103,11 +103,6 @@ public:
 	size_t add_notify_cb(CHidBootManager::type_cb cb, int uNotifyMsg);
 
 	//
-	bool start_update(int nFirmwareIndex, const std::wstring& sFirmware, CHidBootManager::type_cb cb, int uNotifyMsg);
-	bool Stop();
-	bool Pause();
-	bool Resume();
-
 	bool GotoApp();
 
 	int GetDeviceList();
@@ -116,43 +111,6 @@ public:
 	bool UnselectDevice();
 
 	bool IsInitialOk() { return m_bIniOk; }
-
-	uint32_t get_app_area_size() const
-	{
-		return m_RBuffer.get_app_area_size();
-	}
-
-	int get_the_number_of_app_sector() const
-	{
-		return m_RBuffer.get_the_number_of_app_sector();
-	}
-
-	static unsigned int get_firmware_size(const std::wstring& sRomfileName, int nIndex)
-	{
-		unsigned int n_size = 0;
-
-		if (sRomfileName.empty())
-			return n_size;
-		if (nIndex < 0) {
-			return (unsigned int)std::filesystem::file_size(std::filesystem::path(sRomfileName));
-		}
-		//
-		CRom rom(sRomfileName.c_str());
-		CRom::ROMFILE_HEAD header;
-
-			::memset(&header, 0, sizeof header);
-		if (CRom::result_success != rom.LoadHeader(sRomfileName.c_str(), &header)) {
-				//fail load Header of rom
-				return n_size;
-		}
-
-		if (header.dwItem <= (uint32_t)nIndex)
-			return n_size;
-		//
-		n_size = header.Item[nIndex].dwSize;
-
-		return n_size;
-	}
 
 public:
 	bool do_erase_in_worker(int n_sec);
@@ -171,48 +129,9 @@ private:
 	void _push_cb(CHidBootManager::type_cb cb, int n_msg, WPARAM wparam, LPARAM lparam);
 	CHidBootManager::_type_tupel_cb pop_cb();
 
-	void PostAnnounce(WPARAM wParam, LPARAM lParam = 0);
-
-	void _post_progress_range();
 	bool _is_zero_packet(std::vector<unsigned char>& vPacket);
-	
 
 	//
-	bool _create_worker();
-	bool _kill_worker();
-
-	bool _doing_in_worker();
-	bool _do_send_data_in_worker(bool b_resend_mode);
-
-	void _reset_file_read_pos()
-	{
-		if (m_nRomItemIndex > -1)
-			m_nCurRomReadOffset = 0;
-		else
-			m_Firmware.seekg(0);
-	}
-	int _get_firmware_size_at_file()
-	{
-		int n_fs(0);
-		if (m_nRomItemIndex > -1)
-			n_fs = m_Header.Item[m_nRomItemIndex].dwSize;
-		else {
-			m_Firmware.seekg(0, std::ios::end);
-			n_fs = m_Firmware.tellg();//distance( istreambuf_iterator<char>(m_Firmware), istreambuf_iterator<char>() );
-		}
-		return n_fs;
-	}
-
-	void _load_one_sector_from_file()
-	{
-		if (m_nRomItemIndex > -1) {
-			m_nCurRomReadOffset = m_RBuffer.load_to_buffer_from_file_current_pos(*m_ptr_rom, m_Header, m_nRomItemIndex, m_nCurRomReadOffset);
-		}
-		else {
-			m_RBuffer.load_to_buffer_from_file_current_pos(m_Firmware);
-		}
-	}
-
 private:
 	static int _DDL_GetList(std::list<std::wstring>& ListDev, int nVid, int nPid, int nInf);
 	static CHidBootManager::type_pair_handle _DDL_open(const std::wstring & szDevicePath);
@@ -234,37 +153,15 @@ private:
 	*/
 	std::tuple<bool, bool, uint32_t, uint32_t> _get_sector_info_from_device();
 
-	void _woker_for_update();
-
 private:
 	//
 	std::mutex m_mutex_main;
 
 	CHidBootManager::type_v_pair_cb m_v_pair_cb;
 
-	std::shared_ptr<std::thread> m_ptr_worker;
-
-	_mp::cwait m_waiter;
-
-	int m_n_evt_Kill;
-	int m_n_evt_Do;
-	int m_n_evt_Stop;
-	int m_n_evt_Pause;
-	int m_n_evt_Resume;
-
 	bool m_bIniOk;
 
-	CRom::ROMFILE_HEAD m_Header;
 	std::shared_ptr<CRom> m_ptr_rom;
-	int m_nRomItemIndex;
-	unsigned int m_nCurRomReadOffset;
-
-	std::ifstream m_Firmware;
-	std::wstring m_sFirmware;
-
-	CHidBootBuffer m_RBuffer;
-
-	Do_Status m_DoStatus;
 
 	std::list<std::wstring> m_listDev;
 

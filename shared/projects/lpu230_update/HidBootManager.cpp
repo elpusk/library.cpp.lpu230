@@ -18,25 +18,12 @@
 // DONT INCLUDE cshare.h
 
 CHidBootManager::CHidBootManager(void) :
-	m_bIniOk(true),
-	m_n_evt_Kill(-1), m_n_evt_Do(-1), m_n_evt_Stop(-1), m_n_evt_Pause(-1), m_n_evt_Resume(-1),
-	m_DoStatus(DS_IDLE),
-	m_nRomItemIndex(-1),
-	m_nCurRomReadOffset(0)
+	m_bIniOk(true)
 {
-	::memset( &m_Header, 0, sizeof m_Header );
-	//
-	m_n_evt_Kill = m_waiter.generate_new_event();
-	m_n_evt_Do = m_waiter.generate_new_event();
-	m_n_evt_Stop = m_waiter.generate_new_event();
-	m_n_evt_Pause = m_waiter.generate_new_event();
-	m_n_evt_Resume = m_waiter.generate_new_event();
-
 	_create_cb_worker();
 	//
 	m_n_evt_cb_kill_woker = m_waiter_cb.generate_new_event();
 	m_n_evt_cb_push = m_waiter_cb.generate_new_event();
-	_create_worker();
 }
 
 bool CHidBootManager::_create_cb_worker()
@@ -125,7 +112,6 @@ CHidBootManager::_type_tupel_cb CHidBootManager::pop_cb()
 
 CHidBootManager::~CHidBootManager(void)
 {
-	_kill_worker();
 	_kill_cb_worker();
 }
 
@@ -175,251 +161,6 @@ size_t CHidBootManager::add_notify_cb(CHidBootManager::type_cb cb, int uNotifyMs
 	return m_v_pair_cb.size()-1;
 }
 
-
-bool CHidBootManager::start_update( int nFirmwareIndex, const std::wstring & sFirmware, CHidBootManager::type_cb cb, int uNotifyMsg)
-{
-	bool bResult = true;
-	std::lock_guard<std::mutex> lock(m_mutex_main);
-
-	if( sFirmware.empty() || !m_ptr_rom)
-		bResult = false;
-	else{
-		//setting parameters
-		m_sFirmware = sFirmware;
-
-		add_notify_cb(cb, uNotifyMsg);
-		m_nRomItemIndex = nFirmwareIndex;
-
-		if( m_nRomItemIndex > -1 ){
-			if(m_ptr_rom->LoadHeader( sFirmware.c_str(), &m_Header ) != CRom::result_success ){
-				m_sFirmware = L"";
-				bResult = false;
-			}
-			else{
-				if( m_ptr_worker ){
-					m_nCurRomReadOffset = CHidBootBuffer::C_SECTOR_SIZE;
-					m_DoStatus = DS_READFILE;
-					m_waiter.set(m_n_evt_Do);
-				}
-				else
-					bResult = false;
-			}
-		}
-		else{
-			if( m_Firmware.is_open() )
-				m_Firmware.close();
-			//
-			std::string s_firm(_mp::cstring::get_mcsc_from_unicode(sFirmware));
-			m_Firmware.open(s_firm, std::ios::binary );
-			if( !(m_Firmware) ){
-				m_sFirmware = L"";
-				bResult = false;
-			}
-			else{
-				if( m_ptr_worker ){
-
-					m_Firmware.seekg(CHidBootBuffer::C_SECTOR_SIZE );
-					m_DoStatus = DS_READFILE;
-					m_waiter.set(m_n_evt_Do);
-				}
-				else
-					bResult = false;
-			}
-		}
-	}
-
-	return bResult;
-}
-
-bool CHidBootManager::Stop()
-{
-	bool bResult = true;
-	std::lock_guard<std::mutex> lock(m_mutex_main);
-
-	if( m_ptr_worker ){
-		m_waiter.set(m_n_evt_Stop );
-	}
-	else
-		bResult = false;
-
-	return bResult;
-}
-
-bool CHidBootManager::Pause()
-{
-	bool bResult = true;
-	std::lock_guard<std::mutex> lock(m_mutex_main);
-
-	if( m_ptr_worker ){
-		m_waiter.set(m_n_evt_Pause );
-	}
-	else
-		bResult = false;
-
-	return bResult;
-}
-
-bool CHidBootManager::Resume()
-{
-	bool bResult = true;
-	std::lock_guard<std::mutex> lock(m_mutex_main);
-
-	if(m_ptr_worker){
-		m_waiter.set(m_n_evt_Resume );
-	}
-	else
-		bResult = false;
-
-	return bResult;
-}
-
-bool CHidBootManager::_create_worker()
-{
-	bool bResult = true;
-
-	if(m_ptr_worker)
-		return bResult;
-
-	m_ptr_worker = std::make_shared<std::thread>(&CHidBootManager::_woker_for_update, this);
-	if( !m_ptr_worker)
-		bResult = false;
-	//
-
-	return bResult;
-}
-
-bool CHidBootManager::_kill_worker()
-{
-	bool bResult = true;
-
-	if(m_ptr_worker){
-
-		m_waiter.set(m_n_evt_Kill );
-
-		if (m_ptr_worker->joinable()) {
-			m_ptr_worker->join();
-		}
-	}
-
-	return bResult;
-}
-
-//////////////////////////////////////////////
-//repeatdly called by worker.......
-bool CHidBootManager::_doing_in_worker()
-{
-	bool bResult = true;
-	std::lock_guard<std::mutex> lock(m_mutex_main);
-
-	do {
-		if (m_DoStatus == DS_IDLE)
-			continue;
-		//
-		if (m_sFirmware.empty()) {
-			bResult = false;
-			continue;
-		}
-		//
-		if (DS_ERASE == m_DoStatus) {
-			// erase the first sector.
-			bResult = do_erase_in_worker(m_RBuffer.get_erasing_sector_number());
-			if (!bResult) {
-				PostAnnounce(C_WP_ERASE, C_LP_ERROR);
-				m_DoStatus = DS_IDLE;
-				continue;
-			}
-			//
-			if (m_RBuffer.is_complete_erase()) {
-				PostAnnounce(C_WP_ERASE, C_LPSUCCESS);
-				m_DoStatus = DS_SENDDATA;//next step
-				continue;
-			}
-			//
-			PostAnnounce(C_WP_ERASE, C_LPSUCCESS+ m_RBuffer.increase_erasing_sector_number());
-			continue;
-		}
-
-		if (DS_READFILE == m_DoStatus) {
-			//all read file data
-			// 코드 가 변경 되어 작업 시작전 파일 크기를 알수 있게 됨. 따라서 
-			// 미리 SelectDevice() 하고, ajust 가능 여기 코드는 remark 됨.
-			/*
-			int n_fs(_get_firmware_size_at_file());
-			if (!m_RBuffer.set_file_size_and_adjust_erase_write_area(n_fs)) {
-				PostAnnounce(C_WP_READFILE, C_LP_ERROR);
-				m_DoStatus = DS_IDLE;
-			}
-			else {
-				_reset_file_read_pos();
-				_load_one_sector_from_file();
-				//Deb_Printf(L".. Filled partial buffer.\n");
-				_post_progress_range();//set upate-range to file sizeof app.
-
-				PostAnnounce(C_WP_READFILE, C_LPSUCCESS);
-				m_DoStatus = DS_ERASE;//next step
-			}
-			*/
-			_reset_file_read_pos();
-			_load_one_sector_from_file();
-			//Deb_Printf(L".. Filled partial buffer.\n");
-			_post_progress_range();//set upate-range to file sizeof app.
-
-			PostAnnounce(C_WP_READFILE, C_LPSUCCESS);
-			m_DoStatus = DS_ERASE;//next step
-
-			continue;
-		}
-		//
-		if (DS_SENDDATA == m_DoStatus) {
-			//send data
-
-			if (_do_send_data_in_worker(false)) {
-
-				if (!m_RBuffer.is_complete_send()) {
-					PostAnnounce(C_WP_SENDDATA, C_LPSUCCESS + m_RBuffer.get_sending_sector_number());
-				}
-				else {
-					m_DoStatus = DS_IDLE;
-					PostAnnounce(C_WP_COMPLETE, C_LPSUCCESS + m_RBuffer.get_sending_sector_number());
-				}
-			}
-			else {//error
-
-				//retry
-				if (_do_send_data_in_worker(true)) {
-					if (!m_RBuffer.is_complete_send()) {
-						PostAnnounce(C_WP_SENDDATA, C_LPSUCCESS + m_RBuffer.get_sending_sector_number());
-					}
-					else {
-						m_DoStatus = DS_IDLE;
-						PostAnnounce(C_WP_COMPLETE, C_LPSUCCESS + m_RBuffer.get_sending_sector_number());
-					}
-				}
-				else {
-					PostAnnounce(C_WP_SENDDATA, C_LP_ERROR);
-					m_DoStatus = DS_IDLE;//next step
-				}
-			}
-		}
-	} while (false);
-
-	return bResult;
-}
-
-void CHidBootManager::PostAnnounce( WPARAM wParam, LPARAM lParam /*=0*/ )
-{
-	if (!m_v_pair_cb.empty()) {
-		_push_cb(m_v_pair_cb[0].first, m_v_pair_cb[0].second, wParam, lParam);
-	}
-}
-
-void CHidBootManager::_post_progress_range()
-{
-	if (!m_v_pair_cb.empty()) {
-		LPARAM n_max_value = m_RBuffer.get_the_number_of_packet_for_app();
-		m_v_pair_cb[0].first(m_v_pair_cb[0].second, CHidBootManager::C_WP_SET_PROGRESS_RANGE, n_max_value);
-	}
-}
 bool CHidBootManager::_is_zero_packet(std::vector<unsigned char> & vPacket )
 {
 	bool bResult = true;
@@ -435,88 +176,6 @@ bool CHidBootManager::_is_zero_packet(std::vector<unsigned char> & vPacket )
 
 	return bResult;
 }
-
-bool CHidBootManager::_do_send_data_in_worker(bool b_resend_mode)
-{
-	if (b_resend_mode) {
-		//Deb_Printf(L"..ReDoSendData.\n");
-	}
-	else {
-		//Deb_Printf(L".._do_send_data_in_worker.\n");
-	}
-
-	bool bResult = true;
-
-	HidBLRequest* pReq = NULL;
-	HidBLReplay* pReplay = NULL;
-
-	std::vector<unsigned char> vReq(CHidBootBuffer::C_PACKET_SIZE);
-	std::vector<unsigned char> vReplay(CHidBootBuffer::C_PACKET_SIZE);
-
-	vReq.resize(CHidBootBuffer::C_PACKET_SIZE);
-	vReplay.resize(CHidBootBuffer::C_PACKET_SIZE);
-
-	//
-	pReq = reinterpret_cast<HidBLRequest*>( &vReq[0] );
-	pReplay = reinterpret_cast<HidBLReplay*>( &vReplay[0] );
-
-	//build request packet
-	int nSec;
-	pReq->cCmd = HIDB_REQ_CMD_WRITE;
-	pReq->wLen = CHidBootBuffer::C_SECTOR_SIZE;
-	//////////////////////////////////////
-	if (!b_resend_mode) {
-		//in resend mode, No need these settings.
-		m_RBuffer.move_read_buffer_position_to_next();
-	}
-	///////////////////////////////////////
-
-	nSec = m_RBuffer.get_next_send_sector_number();
-	if(nSec>=0){
-		pReq->wChain = m_RBuffer.get_packet_chain();
-		pReq->dwPara = nSec;
-
-		int n_index = m_RBuffer.get_zero_base_index_of_sector(nSec);
-
-		m_RBuffer.get_one_packet_data_from_buffer(n_index, pReq->sData);
-
-		//_tprintf( L" * sector = %d.\n",nSec );
-#ifndef __DISABLE_REAL_TXRX__
-		if( _DDL_write(m_pair_dev_ptrs, &vReq[0], 64, 64 ) ){
-
-			if( m_RBuffer.is_complete_get_one_sector_from_buffer()) {
-				
-				int nRx;
-				do{
-					nRx = _DDL_read(m_pair_dev_ptrs, &vReplay[0], 64, 64 );
-					if( nRx != 64 ){
-						bResult = false;
-						break;// exit break
-					}
-
-				}while( _is_zero_packet( vReplay ) );
-
-				if( bResult ){
-					if( pReplay->cResult != HIDB_REP_RESULT_SUCCESS ){
-							bResult = false;
-					}
-				}
-			}
-		}
-		else{
-			bResult = false;
-		}
-#else
-		bResult = true;
-#endif //__DISABLE_REAL_TXRX__
-
-	}
-	if (bResult)
-		m_RBuffer.increase_offset_in_one_sector();
-	//
-	return bResult;
-}
-
 
 bool CHidBootManager::do_erase_in_worker(int n_sec)
 {
@@ -542,11 +201,13 @@ bool CHidBootManager::do_erase_in_worker(int n_sec)
 	pReq->dwPara = n_sec;
 
 	int nRx = 64;
+	std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
 #ifndef __DISABLE_REAL_TXRX__
 	if( _DDL_TxRx(m_pair_dev_ptrs, &vReq[0], 64, 64, &vReplay[0], &nRx, 64 ) ){
 
 		while( _is_zero_packet( vReplay ) ){
-
+			std::this_thread::sleep_for(std::chrono::milliseconds(10));
 			nRx = _DDL_read(m_pair_dev_ptrs, &vReplay[0], 64, 64 );
 
 			if( nRx != 64 ){
@@ -559,6 +220,7 @@ bool CHidBootManager::do_erase_in_worker(int n_sec)
 			if( pReplay->cResult != HIDB_REP_RESULT_SUCCESS ){
 
 				//retry
+				std::this_thread::sleep_for(std::chrono::milliseconds(10));
 				nRx = _DDL_read(m_pair_dev_ptrs, &vReplay[0], 64, 64 );
 
 				if( nRx == 64 ){
@@ -628,7 +290,7 @@ bool CHidBootManager::do_write_sector(
 		// 하나의 packet 의 데이터 필드 크기는 54 byte 이므로, 4096 크기의 sector 하나를
 		// 전송하기 위해서는 76 번의 packet 전송이 필요하다.
 #endif
-
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		//
 #ifndef __DISABLE_REAL_TXRX__
 		if (_DDL_write(m_pair_dev_ptrs, &vReq[0], 64, 64)) {
@@ -637,6 +299,7 @@ bool CHidBootManager::do_write_sector(
 
 				int nRx;
 				do {
+					std::this_thread::sleep_for(std::chrono::milliseconds(10));
 					nRx = _DDL_read(m_pair_dev_ptrs, &vReplay[0], 64, 64);
 					if (nRx != 64) {
 						bResult = false;
@@ -669,54 +332,6 @@ bool CHidBootManager::do_write_sector(
 	//_tprintf( L" * sector = %d.\n",nSec );
 	//
 	return bResult;
-}
-
-void CHidBootManager::_woker_for_update()
-{
-	int  n_Result = 0;
-	bool bRun = true;
-	bool bDo = false;
-
-	do{
-		n_Result = m_waiter.wait_for_one_at_time(C_WAIT_IDLE);
-
-		if (n_Result == m_n_evt_Kill) {
-			m_waiter.reset(n_Result);
-			bRun = false;
-		}
-		else if (n_Result == m_n_evt_Do) {
-			m_waiter.reset(n_Result);
-			// Do code
-			bDo = true;
-		}
-		else if (n_Result == m_n_evt_Stop) {
-			m_waiter.reset(n_Result);
-			// Do code
-			bDo = false;
-		}
-		else if (n_Result == m_n_evt_Pause) {
-			m_waiter.reset(n_Result);
-			// Do code
-			bDo = false;
-		}
-		else if (n_Result == m_n_evt_Resume) {
-			m_waiter.reset(n_Result);
-			// Do code
-			bDo = true;
-		}
-		else {
-			if (bDo) {
-				if (!_doing_in_worker()) {
-
-				}
-			}
-		}
-
-	}while( bRun );
-#ifdef _WIN32
-	ATLTRACE(L"Exit CHidBootManager::_woker_for_update().\n");
-#endif
-	
 }
 
 int CHidBootManager::_DDL_GetList(std::list<std::wstring>& ListDev, int nVid, int nPid, int nInf)
