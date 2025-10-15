@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <set>
 #include <list>
+#include <cstdint>
 
 #include <mp_type.h>
 #include <mp_cstring.h>
@@ -413,16 +414,16 @@ namespace _mp{
 			return ss_out.str();
 		}
 
-		static std::wstring get_string(unsigned long dw_src, int n_base, const std::wstring& s_prefix = L"")
+		static std::wstring get_string(uint32_t dw_src, int n_base, const std::wstring& s_prefix = L"")
 		{
 			std::wostringstream ss_out;
 			do {
 				switch (n_base) {
 				case 10:
-					ss_out << s_prefix << std::dec << (unsigned long)dw_src;
+					ss_out << s_prefix << std::dec << (uint32_t)dw_src;
 					break;
 				case 16:
-					ss_out << s_prefix << std::hex << (unsigned long)dw_src;
+					ss_out << s_prefix << std::hex << (uint32_t)dw_src;
 					break;
 				default:
 					continue;
@@ -441,7 +442,7 @@ namespace _mp{
 			}
 		}
 
-		static bool get_value(unsigned long& dw_out, const std::wstring& s_src, int n_base)
+		static bool get_value(uint32_t& dw_out, const std::wstring& s_src, int n_base)
 		{
 			bool b_result(false);
 			do {
@@ -458,9 +459,9 @@ namespace _mp{
 						return std::isspace(static_cast<std::wstring::value_type>(c));
 					}), std::end(s_char));
 
-				unsigned long l_value(0);
+				uint32_t l_value(0);
 				try {
-					l_value = std::stoul(s_char, nullptr, n_base);
+					l_value = (uint32_t)std::stoul(s_char, nullptr, n_base);
 					b_result = true;
 				}
 				catch (...) {
@@ -524,9 +525,9 @@ namespace _mp{
 					}), std::end(s_char));
 
 
-				unsigned long l_value(0);
+				uint32_t l_value(0);
 				try {
-					l_value = std::stoul(s_char, nullptr, n_base);
+					l_value = (uint32_t)std::stoul(s_char, nullptr, n_base);
 					b_result = true;
 				}
 				catch (...) {
@@ -543,7 +544,7 @@ namespace _mp{
 			return b_result;
 		}
 
-		static bool get_value(unsigned long& dw_out, const std::wstring& s_src)
+		static bool get_value(uint32_t& dw_out, const std::wstring& s_src)
 		{
 			bool b_result(false);
 			do {
@@ -754,7 +755,7 @@ namespace _mp{
 			return (std::make_pair(b_result, v_bcd_result));
 		}
 
-		static std::pair<bool, type_v_buffer> get_bcd_code(unsigned long n_in, size_t n_bcd_size_by_byte_unit = 0, bool b_left_zero_padding = true)
+		static std::pair<bool, type_v_buffer> get_bcd_code(uint32_t n_in, size_t n_bcd_size_by_byte_unit = 0, bool b_left_zero_padding = true)
 		{
 			std::string s_in(std::to_string(n_in));
 			type_v_buffer v_bcd(0), v_bcd_result(0);
@@ -840,11 +841,11 @@ namespace _mp{
 		}
 
 
-		static bool get_value_from_bcd_code(unsigned long& dw_out, const unsigned char* ps_bcd, unsigned long n_bcd)
+		static bool get_value_from_bcd_code(uint32_t& dw_out, const unsigned char* ps_bcd, uint32_t n_bcd)
 		{
 			//18446744073709551615	- the maximum value for an unsigned long.
 			bool b_result(false);
-			unsigned long l_out = 0;
+			uint32_t l_out = 0;
 			unsigned char hi, low;
 
 			do {
@@ -853,8 +854,8 @@ namespace _mp{
 				//
 				b_result = true;
 
-				for (unsigned long i = 0; i < n_bcd; i++) {
-					if (l_out > (ULONG_MAX / 100)) {
+				for (uint32_t i = 0; i < n_bcd; i++) {
+					if (l_out > (0xffffffffUL / 100)) {
 						b_result = false;
 						break;
 					}
@@ -881,9 +882,9 @@ namespace _mp{
 			return b_result;
 		}
 
-		static bool get_value_from_bcd_code(unsigned long& dw_out, const type_v_buffer& v_bcd)
+		static bool get_value_from_bcd_code(uint32_t& dw_out, const type_v_buffer& v_bcd)
 		{
-			return get_value_from_bcd_code(dw_out, &v_bcd[0], (unsigned long)v_bcd.size());
+			return get_value_from_bcd_code(dw_out, &v_bcd[0], (uint32_t)v_bcd.size());
 		}
 
 		static bool get_data(type_v_buffer& vOut, const std::string& s_src, bool b_insert_null_to_tail = true)
@@ -959,7 +960,7 @@ namespace _mp{
 			return b_result;
 		}
 
-		static bool get_data(unsigned long& n_data, const std::wstring& s_src, const type_value_type type)
+		static bool get_data(uint32_t& n_data, const std::wstring& s_src, const type_value_type type)
 		{
 			bool b_result(false);
 
@@ -977,7 +978,7 @@ namespace _mp{
 				switch (type) {
 				case cconvert::value_type_int:
 				case cconvert::value_type_bcd:
-					n_data = (unsigned long)std::wcstol(s_src.c_str(), &end, 10);
+					n_data = (uint32_t)std::wcstol(s_src.c_str(), &end, 10);
 					if (errno == ERANGE)
 						continue;
 					break;
@@ -1015,7 +1016,7 @@ namespace _mp{
 				switch (type) {
 				case cconvert::value_type_int:
 				case cconvert::value_type_bcd:
-					n_data = (unsigned long)std::wcstol(s_src.c_str(), &end, 10);
+					n_data = (uint32_t)std::wcstol(s_src.c_str(), &end, 10);
 					if (errno == ERANGE)
 						continue;
 					break;
@@ -1178,7 +1179,7 @@ namespace _mp{
 
 				type_list_wstring list_s_token;
 				type_list_wstring::iterator it_token;
-				unsigned long n_data(0);
+				uint32_t n_data(0);
 
 				switch (type) {
 				case cconvert::value_type_multi_hex_string:

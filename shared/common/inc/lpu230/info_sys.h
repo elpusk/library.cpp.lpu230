@@ -74,8 +74,8 @@ enum SYSTEM_INTERFACE		//declare system interface.
  */
 typedef	struct tagUARTINFO{
 
-	unsigned long nCom;	//the com-port number
-	unsigned long nBaud;	//uart baud rate
+	uint32_t nCom;	//the com-port number
+	uint32_t nBaud;	//uart baud rate
 
 }COMPILER_ATTRIBUTE_BYTE_ALIGNMENT UARTINFO, *PUARTINFO, *LPUARTINFO;
 
@@ -146,7 +146,7 @@ typedef struct tagSYSINFO_STD{
 
 	unsigned char cBlank[SYSTEM_SIZE_BLANK];	//Don't use this member
 
-	unsigned long dwSize;		//the size of this structure = sizeof(SYSINFO)
+	uint32_t dwSize;		//the size of this structure = sizeof(SYSINFO)
 
 	unsigned char sStrucVer[SYSTEM_SIZE_STRUCTVER];	//	 	: the version of structure 4.0.0.0
 								//    	  sVersion[0]-marjor version (4)
@@ -181,10 +181,10 @@ typedef struct tagSYSINFO_STD{
 	enum SYSTEM_INTERFACE Interface;	//the current active interface.
 #endif	//WIN32
 
-	unsigned long nBuzzerFrequency;		//buzzer frequency(Hz)
+	uint32_t nBuzzerFrequency;		//buzzer frequency(Hz)
 
-	unsigned long nNormalWDT;			//the watch-dog timeout value unit : 10msec
-	unsigned long nBootRunTime;			//the bootload running time by bootload run command
+	uint32_t nNormalWDT;			//the watch-dog timeout value unit : 10msec
+	uint32_t nBootRunTime;			//the bootload running time by bootload run command
 
 	UARTINFO Uart;				//the current uart set
 
@@ -206,7 +206,7 @@ typedef struct tagSYSINFO{
 
 	unsigned char cBlank[SYSTEM_SIZE_BLANK];	//Don't use this member
 
-	unsigned long dwSize;		//the size of this structure = sizeof(SYSINFO)
+	uint32_t dwSize;		//the size of this structure = sizeof(SYSINFO)
 
 	unsigned char sStrucVer[SYSTEM_SIZE_STRUCTVER];	//	 	: the version of structure 2.0.0.0
 								//    	  sVersion[0]-marjor version (2)
@@ -241,10 +241,10 @@ typedef struct tagSYSINFO{
 	enum SYSTEM_INTERFACE Interface;	//the current active interface.
 #endif	//WIN32
 
-	unsigned long nBuzzerFrequency;		//buzzer frequency(Hz)
+	uint32_t nBuzzerFrequency;		//buzzer frequency(Hz)
 
-	unsigned long nNormalWDT;			//the watch-dog timeout value unit : 10msec
-	unsigned long nBootRunTime;			//the bootload running time by bootload run command
+	uint32_t nNormalWDT;			//the watch-dog timeout value unit : 10msec
+	uint32_t nBootRunTime;			//the bootload running time by bootload run command
 
 	UARTINFO Uart;				//the current uart set
 
@@ -258,7 +258,7 @@ typedef struct tagSYSINFO_OLD{
 
 	unsigned char cBlank[SYSTEM_SIZE_BLANK];	//Don't use this member
 
-	unsigned long dwSize;		//the size of this structure = sizeof(SYSINFO)
+	uint32_t dwSize;		//the size of this structure = sizeof(SYSINFO)
 
 	unsigned char sStrucVer[SYSTEM_SIZE_STRUCTVER];	//	 	: the version of structure 2.0.0.0
 								//    	  sVersion[0]-marjor version (2)
@@ -293,10 +293,10 @@ typedef struct tagSYSINFO_OLD{
 	enum SYSTEM_INTERFACE Interface;	//the current active interface.
 #endif	//WIN32
 
-	unsigned long nBuzzerFrequency;		//buzzer frequency(Hz)
+	uint32_t nBuzzerFrequency;		//buzzer frequency(Hz)
 
-	unsigned long nNormalWDT;			//the watch-dog timeout value unit : 10msec
-	unsigned long nBootRunTime;			//the bootload running time by bootload run command
+	uint32_t nNormalWDT;			//the watch-dog timeout value unit : 10msec
+	uint32_t nBootRunTime;			//the bootload running time by bootload run command
 
 	UARTINFO Uart;				//the current uart set
 

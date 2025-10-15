@@ -7,6 +7,7 @@
 #include <atomic>
 #include <filesystem>
 #include <queue>
+#include <fstream>
 
 #include <ftxui/component/component.hpp>
 #include <ftxui/component/screen_interactive.hpp>
@@ -152,6 +153,7 @@ private:
 		int& n_step
 		,const _mp::type_v_buffer& v_sector
 		, int n_zero_base_sector_number
+		, std::ofstream& opened_debug_file // only for debugging
 	);
 	bool _updates_sub_thread_run_app(int& n_step);
 

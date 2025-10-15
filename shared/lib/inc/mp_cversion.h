@@ -1,6 +1,8 @@
 #pragma once
 
 #include <array>
+#include <cstdint>
+
 #include <mp_type.h>
 #include <mp_cconvert.h>
 
@@ -255,7 +257,7 @@ namespace _mp
 					array_version[n_index] = s;
 				}
 
-				unsigned long n_data(0);
+				uint32_t n_data(0);
 				std::array<T_EACH_VERSION_ITEM , 4> ref_array = { m_major ,m_minor ,m_fix ,m_build };
 				
 				for (size_t i = 0; i < array_version.size(); i++) {

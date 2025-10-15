@@ -4,6 +4,7 @@
 #include <utility>
 #include <map>
 #include <array>
+#include <cstdint>
 #include <mp_type.h>
 #include <mp_elpusk.h>
 #include <hid/_vhid_info.h>
@@ -32,7 +33,7 @@ public:
 	enum : unsigned char {
 		const_msr_extension = 0xe6 //(-26) msr data format is extension format(0xe6)
 	};
-	enum : unsigned long
+	enum : uint32_t
 	{
 		const_size_min_ms_extension_response = 3 + 4, //triple prefix(3 bytes)  + data field length(4 bytes - hex string of unsigned shotr little-endian.
 		const_size_min_ms_extension_response_of_data_field = 4

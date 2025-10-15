@@ -1081,6 +1081,12 @@ void _vhid_api_briage::_q_worker::_save_rx_to_msr_or_ibutton_buffer_in_single_or
 #if defined(_WIN32) && defined(_DEBUG)
         if (ptr_req) {
             ATLTRACE(L" MSR [0x%08X] : pushed rx.(q size = %u)\n", ptr_req->get_map_index(), m_q_result_msr.size() + 1);
+            if (ptr_v_rx) {
+                ATLTRACE(L" MSR [0x%08X] : rx.size = %u\n", ptr_req->get_map_index(), ptr_v_rx->size());
+                if (ptr_v_rx->size() > 1) {
+                    ATLTRACE(L" MSR [0x%08X] : rx[0..1] = [0x%x..0x%x]\n", ptr_req->get_map_index(), (*ptr_v_rx)[0], (*ptr_v_rx)[1]);
+                }
+            }
         }
         else {
             ATLTRACE(L" MSR [none] : pushed rx.(q size = %u)\n", m_q_result_msr.size() + 1);

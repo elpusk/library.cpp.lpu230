@@ -1119,6 +1119,9 @@ void cupdater::_updates_thread_function()
 
 #if defined(_WIN32) && defined(_DEBUG)
 		std::ofstream _ofs("deb_file_dump.bin", std::ios::binary | std::ios::out | std::ios::trunc);
+		std::ofstream _ofs_tx("deb_file_tx_dump.bin", std::ios::binary | std::ios::out | std::ios::trunc);
+#else
+		std::ofstream _ofs_tx;
 #endif
 
 		do {
@@ -1144,7 +1147,7 @@ void cupdater::_updates_thread_function()
 			}
 #endif
 			// 읽은 하나의 sector 를 write & verify.
-			b_result = _updates_sub_thread_write_one_sector(n_step, v_sector, n_out_zero_base_sector_number);
+			b_result = _updates_sub_thread_write_one_sector(n_step, v_sector, n_out_zero_base_sector_number, _ofs_tx);
 			if (!b_result) {
 				break;
 			}
@@ -1156,6 +1159,9 @@ void cupdater::_updates_thread_function()
 #if defined(_WIN32) && defined(_DEBUG)
 		if (_ofs) {
 			_ofs.close();
+		}
+		if (_ofs_tx) {
+			_ofs_tx.close();
 		}
 #endif
 
@@ -1553,6 +1559,7 @@ bool cupdater::_updates_sub_thread_write_one_sector(
 	int& n_step
 	, const _mp::type_v_buffer& v_sector
 	, int n_zero_base_sector_number
+	, std::ofstream& opened_debug_file
 )
 {
 #ifdef _WIN32
@@ -1570,7 +1577,7 @@ bool cupdater::_updates_sub_thread_write_one_sector(
 	_push_message(n_step, s_msg);
 
 	// 하나의 sector 를 모두 쓴다. verify 는 fw 를 받은 마이컴에서 write 한 후 읽어서 비교해서 verify 한다.
-	b_result = m_p_mgmt->do_write_sector(n_zero_base_sector_number, v_sector);
+	b_result = m_p_mgmt->do_write_sector(n_zero_base_sector_number, v_sector, opened_debug_file);
 
 	if (!b_result) {
 		s_msg = "ERROR - write & verify sector ";

@@ -7,6 +7,7 @@
 #if !defined( _INFO_MSR_HEADER_201007260001_ )
 #define _INFO_MSR_HEADER_201007260001_
 
+#include <cstdint>
 #include "compiler.h"
 #include "config/cfg_msrlib.h"
 
@@ -71,9 +72,9 @@
 typedef struct tagMSR_MAP_TABLE{
 
 	//the index of key Mapping table' l'st index gASCToHIDKeyMap or gASCToPS2KeyMap
-	unsigned long nMappingTableIndex;
+	uint32_t nMappingTableIndex;
 
-	unsigned long nNumMapTableItem;	//the numnber of pMappingTable' item
+	uint32_t nNumMapTableItem;	//the numnber of pMappingTable' item
 									//default: nNumMapTableItem[x] = 0
 }COMPILER_ATTRIBUTE_BYTE_ALIGNMENT MSR_MAP_TABLE, *PMSR_MAP_TABLE,*LPMSR_MAP_TABLE;
 
@@ -163,7 +164,7 @@ typedef struct tagINFO_MSR_OBJ{
 									//16(188):reading direction
 									//default:	RDirect[x]=RDirectBoth
 
-	unsigned long nBufSize;
+	uint32_t nBufSize;
 									//4(204): raw data buffer size.
 									//default:	cBufSize=C_MSR_ISO2_RAW_BUF_SIZE
 
@@ -201,25 +202,28 @@ typedef struct tagINFO_MSR_OBJ{
 typedef struct tagCONTAINER_INFO_MSR_OBJ{
 
 	// Info msr object' pointer arrary
+	uint32_t pInfoMsrObj[MSROBJ_INFO_NUM];
+	/*
 #ifdef	_WIN64
 	unsigned long pInfoMsrObj[MSROBJ_INFO_NUM];
 #else
 	PINFO_MSR_OBJ pInfoMsrObj[MSROBJ_INFO_NUM];
 #endif	//_WIN64
+	*/
 
-	unsigned long nCpdSysTickMin;	//the minimum system tick value of CPD low status
-	unsigned long nCpdSysTickMax;	//the maximum system tick value of CPD low status
+	uint32_t nCpdSysTickMin;	//the minimum system tick value of CPD low status
+	uint32_t nCpdSysTickMax;	//the maximum system tick value of CPD low status
 
 	// Global pre/postfix sending condition.
-	unsigned long nGlobalTagCondition;
+	uint32_t nGlobalTagCondition;
 							//default:	0 - any track is good & good track' length of data. > 0
 							//			1 - all track is good & any track' length of data. > 0
 
 	//the number of contained info object.
-	unsigned long nNumItem;	//nNumItem = MSROBJ_INFO_NUM
+	uint32_t nNumItem;	//nNumItem = MSROBJ_INFO_NUM
 
 	//the processing order of info object in InfoMsrObj members.
-	unsigned long nOrderObject[MSROBJ_INFO_NUM];
+	uint32_t nOrderObject[MSROBJ_INFO_NUM];
 							//default:	OrderObject[0] = 0
 							//			OrderObject[1] = 1
 							//			OrderObject[2] = 2
@@ -252,7 +256,7 @@ typedef struct tagMSR_MAP_TABLE_OLD{
 	const unsigned char *pMappingTable;
 									//default:  pMappingTable[x] = NULL
 
-	unsigned long nNumMapTableItem;	//the numnber of pMappingTable' item
+	uint32_t nNumMapTableItem;	//the numnber of pMappingTable' item
 									//default: nNumMapTableItem[x] = 0
 }COMPILER_ATTRIBUTE_BYTE_ALIGNMENT MSR_MAP_TABLE_OLD, *PMSR_MAP_TABLE_OLD,*LPMSR_MAP_TABLE_OLD;
 
@@ -317,7 +321,7 @@ typedef struct tagINFO_MSR_OBJ_OLD{
 									//16(188):reading direction
 									//default:	RDirect[x]=RDirectBoth
 
-	unsigned long nBufSize;
+	uint32_t nBufSize;
 									//4(204): raw data buffer size.
 									//default:	cBufSize=C_MSR_ISO2_RAW_BUF_SIZE
 
@@ -355,25 +359,28 @@ typedef struct tagINFO_MSR_OBJ_OLD{
 typedef struct tagCONTAINER_INFO_MSR_OBJ_OLD{
 
 	// Info msr object' pointer arrary
+	uint32_t pInfoMsrObj[MSROBJ_INFO_NUM];
+	/*
 #ifdef	_WIN64
 	unsigned long pInfoMsrObj[MSROBJ_INFO_NUM];
 #else
 	PINFO_MSR_OBJ pInfoMsrObj[MSROBJ_INFO_NUM];
 #endif	//_WIN64
+	*/
 
-	unsigned long nCpdSysTickMin;	//the minimum system tick value of CPD low status
-	unsigned long nCpdSysTickMax;	//the maximum system tick value of CPD low status
+	uint32_t nCpdSysTickMin;	//the minimum system tick value of CPD low status
+	uint32_t nCpdSysTickMax;	//the maximum system tick value of CPD low status
 
 	// Global pre/postfix sending condition.
-	unsigned long nGlobalTagCondition;
+	uint32_t nGlobalTagCondition;
 							//default:	0 - any track is good & good track' length of data. > 0
 							//			1 - all track is good & any track' length of data. > 0
 
 	//the number of contained info object.
-	unsigned long nNumItem;	//nNumItem = MSROBJ_INFO_NUM
+	uint32_t nNumItem;	//nNumItem = MSROBJ_INFO_NUM
 
 	//the processing order of info object in InfoMsrObj members.
-	unsigned long nOrderObject[MSROBJ_INFO_NUM];
+	uint32_t nOrderObject[MSROBJ_INFO_NUM];
 							//default:	OrderObject[0] = 0
 							//			OrderObject[1] = 1
 							//			OrderObject[2] = 2

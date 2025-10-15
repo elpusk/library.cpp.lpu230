@@ -253,6 +253,7 @@ bool CHidBootManager::do_erase_in_worker(int n_sec)
 bool CHidBootManager::do_write_sector(
 	int n_sec
 	, const std::vector<unsigned char>& v_sector
+	, std::ofstream& opened_debug_file //for debugging
 )
 {
 	cshare& sh(cshare::get_instance());
@@ -283,7 +284,7 @@ bool CHidBootManager::do_write_sector(
 	pReq->wLen = CHidBootBuffer::C_SECTOR_SIZE;
 	pReq->dwPara = n_sec;
 
-	for (uint16_t w_chain = 0; w_chain < (uint16_t)(n_loop - 1); w_chain++) {
+	for (uint16_t w_chain = 0; w_chain < (uint16_t)(n_loop); w_chain++) {
 		pReq->wChain = w_chain;
 		memset(&pReq->sData[0], 0xff, CHidBootBuffer::C_DATA_SIZE_OF_ONE_PACKET);
 
@@ -294,29 +295,34 @@ bool CHidBootManager::do_write_sector(
 			n_copy = (int)(CHidBootBuffer::C_SECTOR_SIZE - n_offset);
 		}
 		memcpy(pReq->sData, &v_sector[n_offset], n_copy);
-		n_offset += n_copy;
 
 #if defined(_WIN32) && defined(_DEBUG)
 		// 하나의 packet 의 데이터 필드 크기는 54 byte 이므로, 4096 크기의 sector 하나를
 		// 전송하기 위해서는 76 번의 packet 전송이 필요하다.
+		if(opened_debug_file.is_open()) {
+			opened_debug_file.seekp(n_sec* CHidBootBuffer::C_SECTOR_SIZE+n_offset, std::ios::beg);
+			opened_debug_file.write(reinterpret_cast<const char*>(pReq->sData), n_copy);
+		}
 #endif
+		n_offset += n_copy;
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		//
 #ifndef __DISABLE_REAL_TXRX__
-		if (_DDL_write(m_pair_dev_ptrs, &vReq[0], 64, 64)) {
-
-			if (w_chain == (uint16_t)(n_loop - 1)) {
-
-				int nRx;
-				do {
+		if (w_chain == (uint16_t)(n_loop - 1)) {
+			// 마지막 loop 에서는 write + read 조합 대신 txrx 로 처리 해야함. 
+			// 이 코드가 사용하는 dev_lib 라이브러리에서 write + read 조합의 read 는 msr 이나 ibutton read 로 간주 하므로
+			// 딴데로 빠져 버린다. 따라서 항상 일반 command 의 경우, txrx 로 처리 해야함.
+			int nRx = 64;
+			if (_DDL_TxRx(m_pair_dev_ptrs, &vReq[0], 64, 64, &vReplay[0], &nRx, 64)) {
+				while (_is_zero_packet(vReplay)) {
 					std::this_thread::sleep_for(std::chrono::milliseconds(10));
 					nRx = _DDL_read(m_pair_dev_ptrs, &vReplay[0], 64, 64);
+
 					if (nRx != 64) {
 						bResult = false;
 						break;// exit break
 					}
-
-				} while (_is_zero_packet(vReplay));
+				}//end while
 
 				if (bResult) {
 					if (pReplay->cResult != HIDB_REP_RESULT_SUCCESS) {
@@ -327,8 +333,10 @@ bool CHidBootManager::do_write_sector(
 			}
 		}
 		else {
-			bResult = false;
-			break; //exit for
+			if (!_DDL_write(m_pair_dev_ptrs, &vReq[0], 64, 64)) {
+				bResult = false;
+				break; //exit for
+			}
 		}
 #else
 		bResult = true;

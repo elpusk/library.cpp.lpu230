@@ -117,6 +117,7 @@ public:
 	bool do_write_sector(
 		int n_sec
 		,const std::vector<unsigned char>& v_sector
+		, std::ofstream& opened_debug_file //for debugging
 	);
 
 private:
