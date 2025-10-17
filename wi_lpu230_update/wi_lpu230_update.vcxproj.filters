@@ -170,6 +170,9 @@
     <ClInclude Include="..\shared\projects\lpu230_update\cshare.h">
       <Filter>common</Filter>
     </ClInclude>
+    <ClInclude Include="..\shared\common\inc\cfun_lpu237.h">
+      <Filter>common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="wi_lpu230_update.rc">

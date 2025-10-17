@@ -74,7 +74,7 @@ namespace _mp
 			return *this;
 		}
 
-		bool operator > (const cversion& rhs)
+		bool operator > (const cversion& rhs) const
 		{
 			bool b_result(false);
 
@@ -109,7 +109,7 @@ namespace _mp
 			return b_result;
 		}
 
-		bool operator == (const cversion& rhs)
+		bool operator == (const cversion& rhs) const
 		{
 			bool b_result(false);
 			do {
@@ -127,7 +127,7 @@ namespace _mp
 			return b_result;
 		}
 
-		bool operator < (const cversion& rhs)
+		bool operator < (const cversion& rhs) const
 		{
 			bool b_result(false);
 			do {
@@ -141,7 +141,7 @@ namespace _mp
 			return b_result;
 		}
 
-		bool operator >= (const cversion& rhs)
+		bool operator >= (const cversion& rhs) const
 		{
 			bool b_result(true);
 			do {
@@ -154,7 +154,7 @@ namespace _mp
 			return b_result;
 		}
 
-		bool operator <= (const cversion& rhs)
+		bool operator <= (const cversion& rhs) const
 		{
 			bool b_result(true);
 			do {

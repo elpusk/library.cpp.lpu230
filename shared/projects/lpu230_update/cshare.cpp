@@ -36,7 +36,7 @@ int cshare::calculate_update_step(int n_the_number_of_erase_sector /*= -1*/)
 			}
 
 			// generate_get_parameters() 전에
-			// generate_get_system_information() ,generate_get_system_information_with() 
+			// generate_get_system_information_with() 
 			// 로 장비로 부터 데이터를 얻어 왔어야 함.
 
 			// system parameter 저장을 위한 step 개수를 더함.

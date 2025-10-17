@@ -126,6 +126,9 @@
     <ClInclude Include="..\shared\common\inc\lpu230\config\cfg_msrlib.h">
       <Filter>common\lpu230\config</Filter>
     </ClInclude>
+    <ClInclude Include="..\shared\common\inc\cfun_lpu237.h">
+      <Filter>common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\shared\lib\inc\mp_cnamed_pipe_.cpp">

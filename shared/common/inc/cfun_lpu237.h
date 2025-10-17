@@ -18,13 +18,25 @@ public:
 public:    
     cfun_lpu237() : m_version(0,0,0,0)
     {}
-    cfun_lpu237(const std::wstring & s_name,const type_version& version) : m_s_name(s_name),(version)
+    cfun_lpu237(const std::wstring & s_name,const type_version& version) : m_s_name(s_name), m_version(version)
     {}
+
+    cfun_lpu237(const _mp::type_v_buffer& v_name, const type_version& version) : m_version(version)
+    {
+        for (auto item : v_name) {
+            if(item == ' ' || item == 0) {
+                break;
+			}
+			m_s_name.push_back(static_cast<wchar_t>(item));
+        }//end for
+    }
+
     cfun_lpu237(const std::wstring & s_name,unsigned char major, unsigned char minor, unsigned char revision, unsigned char build)
         : m_s_name(s_name),m_version(major, minor, revision, build)
     {}
     cfun_lpu237(const cfun_lpu237& other) : m_s_name(other.m_s_name),m_version(other.m_version)
     {}
+
     cfun_lpu237& operator=(const cfun_lpu237& other)
     {
         if (this != &other) {
@@ -53,10 +65,11 @@ public:
             }
             m_s_name.clear();
 
-            char *ps_temp = ps_name;
-            while(*ps_temp!=NULL && *ps_temp!=' ' && n_name > 0) {
-                m_s_name.push_back(static_cast<wchar_t>(*ps_temp));
-                ps_temp++;
+			int n_offset = 0;
+
+            while(ps_name[n_offset] !=NULL && ps_name[n_offset] !=' ' && n_name > 0) {
+                m_s_name.push_back(static_cast<wchar_t>(ps_name[n_offset]));
+                ++n_offset;
                 n_name--;
             }
         }while(false);
@@ -303,7 +316,7 @@ public:
 
         do{
             std::wstring s_n;
-            cfun_lpu237::type_version v;
+            cfun_lpu237::type_version v,v1;
             //
             s_n = L"ganymede";
             v = cfun_lpu237::type_version(5,0,0,0);
@@ -768,6 +781,15 @@ public:
         return b_support;
     }
 
+    bool is_support_ibutton_only_device_command() const
+    {
+        cfun_lpu237::type_version v = cfun_lpu237::type_version(3, 6, 0, 4);
+        if (v < m_version) {
+            return true;
+        }
+        return false;
+	}
+
     bool is_support_ibutton_in_kb_interface_prepost_tag() const
     {
         return is_support_ibutton();
@@ -893,7 +915,7 @@ public:
         return b_support;
     }    
 
-    bool is_support_ibutton_in_kb_interface_remove_code_f12() const
+    bool is_support_ibutton_in_kb_interface_remove_code_none() const
     {
         bool b_support(true);
         do{
@@ -1137,4 +1159,4 @@ public:
 private:
     cfun_lpu237::type_version m_version; // system version
     std::wstring m_s_name; // system name, space is not allowed, max size is SYSTEM_SIZE_NAME
-}
+};
