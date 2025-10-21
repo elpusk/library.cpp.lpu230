@@ -36,7 +36,9 @@
     <ClInclude Include="..\shared\3thpart\inc\hidapi.h" />
     <ClInclude Include="..\shared\3thpart\src\win\hidapi_winapi.h" />
     <ClInclude Include="..\shared\common\inc\cdev_lib.h" />
+    <ClInclude Include="..\shared\common\inc\cfun_lpu237.h" />
     <ClInclude Include="..\shared\common\inc\chid_briage.h" />
+    <ClInclude Include="..\shared\common\inc\cprotocol_lpu237.h" />
     <ClInclude Include="..\shared\lib\inc\cert\mp_ccertificate_.h" />
     <ClInclude Include="..\shared\lib\inc\cert\mp_ccoffee_hlp_cert_.h" />
     <ClInclude Include="..\shared\lib\inc\hid\mp_clibhid.h" />

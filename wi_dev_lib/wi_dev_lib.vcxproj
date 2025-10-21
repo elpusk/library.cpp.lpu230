@@ -182,6 +182,7 @@
     <ClInclude Include="..\..\..\local\libusb\out\include\libusb-1.0\libusb.h" />
     <ClInclude Include="..\shared\3thpart\inc\hidapi.h" />
     <ClInclude Include="..\shared\3thpart\src\win\hidapi_winapi.h" />
+    <ClInclude Include="..\shared\common\inc\cfun_lpu237.h" />
     <ClInclude Include="..\shared\common\inc\ckey_map.h" />
     <ClInclude Include="..\shared\common\inc\cprotocol_lpu237.h" />
     <ClInclude Include="..\shared\common\inc\lpu230\compiler.h" />

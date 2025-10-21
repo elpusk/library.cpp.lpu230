@@ -335,6 +335,9 @@
     <ClInclude Include="..\shared\projects\dev_lib\inc\dev_lib.h">
       <Filter>common</Filter>
     </ClInclude>
+    <ClInclude Include="..\shared\common\inc\cfun_lpu237.h">
+      <Filter>common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="elpusk-hid-d.service">

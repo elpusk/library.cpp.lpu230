@@ -1573,7 +1573,7 @@ bool cupdater::_updates_sub_thread_write_one_sector(
 
 	s_msg = "write & verify sector ";
 	s_msg += std::to_string(n_zero_base_sector_number);
-	s_msg += ".";
+	s_msg += "(7 seconds).";
 	_push_message(n_step, s_msg);
 
 	// 하나의 sector 를 모두 쓴다. verify 는 fw 를 받은 마이컴에서 write 한 후 읽어서 비교해서 verify 한다.

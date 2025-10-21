@@ -14,8 +14,8 @@ public:
 		const_size_max_firmware = 90 * 1024 * 1024
 	};
 
-	enum class Lpu237Interface {
-		nc = -1, //no consideration
+	enum class Lpu237Interface : unsigned char {
+		nc = 0xFF, //no consideration
 		usb_keyboard = 0,//0
 		usb_hid = 1,//1
 		usb_vcom = 2,//2

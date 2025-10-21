@@ -293,5 +293,8 @@
     <ClInclude Include="..\shared\common\inc\chid_briage.h">
       <Filter>common</Filter>
     </ClInclude>
+    <ClInclude Include="..\shared\common\inc\cfun_lpu237.h">
+      <Filter>common</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

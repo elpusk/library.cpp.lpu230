@@ -323,6 +323,11 @@ namespace _mp {
 #ifdef _WIN32
             ++n_report;//for report ID
             n_start = 1;
+            //
+            std::string s_deb;
+            if (v_tx.size() > 130) {
+                std::string s_deb = "good";
+            }
 #endif  
             _mp::type_v_buffer v_report(n_report, 0);
 
@@ -367,7 +372,7 @@ namespace _mp {
 
                 _mp::clog::get_instance().log_fmt_in_debug_mode(L"[D] (n_result : n_offset : v_tx.size()) = (%d,%d,%u).\n", n_result, n_offset, v_tx.size());
 
-                n_offset += n_result;
+                n_offset += (n_result- n_start);// report ID 는 사용자 데이터가 아니므로 증가에서 제외.
 
             }//end for
                 

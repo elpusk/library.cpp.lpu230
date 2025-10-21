@@ -57,7 +57,7 @@ public:
 
 		for (int i = 0; i < n_number_of_app_sector; i++) {
 			m_v_send_orders[i] = (n_app_start_sector + 1) + i;
-			m_v_buffer.push_back(CHidBootBuffer::type_sector(new std::vector<char>(CHidBootBuffer::C_SECTOR_BUFFER_SIZE, 0xFF)));
+			m_v_buffer.push_back(CHidBootBuffer::type_sector(new std::vector<char>(CHidBootBuffer::C_SECTOR_BUFFER_SIZE, (char)0xFF)));
 		}//end for
 
 		*(m_v_send_orders.end() - 1) = n_app_start_sector;

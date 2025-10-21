@@ -56,6 +56,7 @@
     <ClInclude Include="..\shared\3thpart\src\win\hidapi_winapi.h" />
     <ClInclude Include="..\shared\common\inc\cbootloader_lpu237.h" />
     <ClInclude Include="..\shared\common\inc\cdev_lib.h" />
+    <ClInclude Include="..\shared\common\inc\cfun_lpu237.h" />
     <ClInclude Include="..\shared\common\inc\chid_briage.h" />
     <ClInclude Include="..\shared\common\inc\ckey_map.h" />
     <ClInclude Include="..\shared\common\inc\lpu230\info_sys.h" />

@@ -2,6 +2,8 @@
 
 #include <cstdint>
 #include <unordered_set>
+#include <array>
+#include <vector>
 
 #include <mp_type.h>
 #include <mp_cversion.h>
@@ -175,7 +177,7 @@ public:
 		m_dw_boot_run_time = 15000;
 		m_language_index = language_map_index_english;
 
-		for (int i = 0; i < the_number_of_reack; i++ ) {
+		for (int i = 0; i < cprotocol_lpu237::the_number_of_track; i++ ) {
 			m_b_enable_iso[i] = true;
 			m_direction[i] = dir_bidectional;
 			m_n_order_of_track[i] = (uint32_t)i;
@@ -225,7 +227,7 @@ public:
 		m_v_global_prefix.resize(0);
 		m_v_global_postfix.resize(0);
 
-		for (int i = 0; i < the_number_of_reack; i++) {
+		for (int i = 0; i < cprotocol_lpu237::the_number_of_track; i++) {
 			for (int j = 0; j < 3; j++) {
 				m_v_private_prefix[i][j].resize(0);
 				m_v_private_postfix[i][j].resize(0);
@@ -424,7 +426,7 @@ public:
 	}type_function;
 
 	enum {
-		the_number_of_reack = 3,
+		the_number_of_track = 3,
 		the_size_of_uid = 4 * 4
 	};
 	enum {
@@ -434,7 +436,7 @@ public:
 		the_size_of_in_report_except_id = 220,
 	};
 
-	typedef enum{
+	typedef enum : unsigned char {
 
 		system_interface_usb_keyboard = 0,	//system interface is USB keyboard.
 		system_interface_usb_msr = 1,	//system interface is USB MSR(generic HID interface).
@@ -444,7 +446,7 @@ public:
 		system_interface_by_hw_setting = 100,	//system interface is determined by HW Dip switch
 	}type_system_interface;
 
-	typedef enum{
+	typedef enum : unsigned char {
 		language_map_index_english = 0,//U.S English
 		language_map_index_spanish = 1,
 		language_map_index_danish = 2,
@@ -859,6 +861,235 @@ public:
 		}
 	}
 
+	void set_order_of_track(const uint32_t n_order_of_track[cprotocol_lpu237::the_number_of_track])
+	{
+		for (auto i = 0; i < cprotocol_lpu237::the_number_of_track; i++) {
+			if (m_n_order_of_track[i] != n_order_of_track[i]) {
+				m_n_order_of_track[i] = n_order_of_track[i];
+				_set_insert_change_set(cp_TrackOrders);
+			}
+		}//end for
+	}
+	void set_order_of_track(type_msr_track_Numer n_1st_track, type_msr_track_Numer n_2nd_track, type_msr_track_Numer n_3th_track)
+	{
+		uint32_t n_orders[] = {
+			(uint32_t)n_1st_track
+			,(uint32_t)n_2nd_track
+			,(uint32_t)n_3th_track
+		};
+		set_order_of_track(n_orders);
+	}
+	void set_combination(type_msr_track_Numer track, uint32_t n_combi)
+	{
+		if (m_n_combination[track] != n_combi) {
+			m_n_combination[track] = n_combi;
+
+			int n_d = (int)(track - iso1_track);
+			_change_parameter c = (_change_parameter)(cp_Combination1 + n_d);
+			_set_insert_change_set(c);
+		}
+	}
+
+	void set_msr_max_size(type_msr_track_Numer track, uint32_t n_combi,uint32_t n_value)
+	{
+		do {
+			if (track < iso1_track || track > iso3_track) {
+				continue;
+			}
+			if (n_combi < 0 || n_combi > 2) {
+				continue;
+			}
+			if (m_n_msr_max_size[track][n_combi] == n_value) {
+				continue;
+			}
+			m_n_msr_max_size[track][n_combi] = n_value;
+
+			int n_d = (int)((track - iso1_track) * 3 + n_combi);
+			_change_parameter c = (_change_parameter)(cp_MaxSize10 + n_d);
+			_set_insert_change_set(c);
+		} while (false);
+	}
+
+	void set_msr_bit_size(type_msr_track_Numer track, uint32_t n_combi, uint32_t n_value)
+	{
+		do {
+			if (track < iso1_track || track > iso3_track) {
+				continue;
+			}
+			if (n_combi < 0 || n_combi > 2) {
+				continue;
+			}
+			if (m_n_msr_bit_size[track][n_combi] == n_value) {
+				continue;
+			}
+			m_n_msr_bit_size[track][n_combi] = n_value;
+
+			int n_d = (int)((track - iso1_track) * 3 + n_combi);
+			_change_parameter c = (_change_parameter)(cp_BitSize10 + n_d);
+			_set_insert_change_set(c);
+		} while (false);
+	}
+
+	void set_msr_data_mask(type_msr_track_Numer track, uint32_t n_combi, uint8_t c_value)
+	{
+		do {
+			if (track < iso1_track || track > iso3_track) {
+				continue;
+			}
+			if (n_combi < 0 || n_combi > 2) {
+				continue;
+			}
+			if (m_n_msr_data_mask[track][n_combi] == c_value) {
+				continue;
+			}
+			m_n_msr_data_mask[track][n_combi] = c_value;
+
+			int n_d = (int)((track - iso1_track) * 3 + n_combi);
+			_change_parameter c = (_change_parameter)(cp_DataMask10 + n_d);
+			_set_insert_change_set(c);
+		} while (false);
+	}
+
+	void set_msr_use_parity(type_msr_track_Numer track, uint32_t n_combi, bool b_value)
+	{
+		do {
+			if (track < iso1_track || track > iso3_track) {
+				continue;
+			}
+			if (n_combi < 0 || n_combi > 2) {
+				continue;
+			}
+			if (m_b_msr_use_parity[track][n_combi] == b_value) {
+				continue;
+			}
+			m_b_msr_use_parity[track][n_combi] = b_value;
+
+			int n_d = (int)((track - iso1_track) * 3 + n_combi);
+			_change_parameter c = (_change_parameter)(cp_UseParity10 + n_d);
+			_set_insert_change_set(c);
+		} while (false);
+	}
+
+	void set_msr_parity_type(type_msr_track_Numer track, uint32_t n_combi, uint8_t c_value)
+	{
+		do {
+			if (track < iso1_track || track > iso3_track) {
+				continue;
+			}
+			if (n_combi < 0 || n_combi > 2) {
+				continue;
+			}
+			if (m_c_msr_parity_type[track][n_combi] == c_value) {
+				continue;
+			}
+			m_c_msr_parity_type[track][n_combi] = c_value;
+
+			int n_d = (int)((track - iso1_track) * 3 + n_combi);
+			_change_parameter c = (_change_parameter)(cp_ParityType10 + n_d);
+			_set_insert_change_set(c);
+		} while (false);
+	}
+
+	void set_msr_stxl(type_msr_track_Numer track, uint32_t n_combi, uint8_t c_value)
+	{
+		do {
+			if (track < iso1_track || track > iso3_track) {
+				continue;
+			}
+			if (n_combi < 0 || n_combi > 2) {
+				continue;
+			}
+			if (m_c_msr_stxl[track][n_combi] == c_value) {
+				continue;
+			}
+			m_c_msr_stxl[track][n_combi] = c_value;
+
+			int n_d = (int)((track - iso1_track) * 3 + n_combi);
+			_change_parameter c = (_change_parameter)(cp_STX_L10 + n_d);
+			_set_insert_change_set(c);
+		} while (false);
+	}
+
+	void set_msr_etxl(type_msr_track_Numer track, uint32_t n_combi, uint8_t c_value)
+	{
+		do {
+			if (track < iso1_track || track > iso3_track) {
+				continue;
+			}
+			if (n_combi < 0 || n_combi > 2) {
+				continue;
+			}
+			if (m_c_msr_etxl[track][n_combi] == c_value) {
+				continue;
+			}
+			m_c_msr_etxl[track][n_combi] = c_value;
+
+			int n_d = (int)((track - iso1_track) * 3 + n_combi);
+			_change_parameter c = (_change_parameter)(cp_ETX_L10 + n_d);
+			_set_insert_change_set(c);
+		} while (false);
+	}
+
+	void set_msr_use_error_correct(type_msr_track_Numer track, uint32_t n_combi, bool b_value)
+	{
+		do {
+			if (track < iso1_track || track > iso3_track) {
+				continue;
+			}
+			if (n_combi < 0 || n_combi > 2) {
+				continue;
+			}
+			if (m_b_msr_use_error_correct[track][n_combi] == b_value) {
+				continue;
+			}
+			m_b_msr_use_error_correct[track][n_combi] = b_value;
+
+			int n_d = (int)((track - iso1_track) * 3 + n_combi);
+			_change_parameter c = (_change_parameter)(cp_UseErrorCorrect10 + n_d);
+			_set_insert_change_set(c);
+		} while (false);
+	}
+
+	void set_msr_ecm_type(type_msr_track_Numer track, uint32_t n_combi, uint8_t c_value)
+	{
+		do {
+			if (track < iso1_track || track > iso3_track) {
+				continue;
+			}
+			if (n_combi < 0 || n_combi > 2) {
+				continue;
+			}
+			if (m_c_msr_ecm_type[track][n_combi] == c_value) {
+				continue;
+			}
+			m_c_msr_ecm_type[track][n_combi] = c_value;
+
+			int n_d = (int)((track - iso1_track) * 3 + n_combi);
+			_change_parameter c = (_change_parameter)(cp_ECMType10 + n_d);
+			_set_insert_change_set(c);
+		} while (false);
+	}
+
+	void set_msr_add_value(type_msr_track_Numer track, uint32_t n_combi, uint32_t n_value)
+	{
+		do {
+			if (track < iso1_track || track > iso3_track) {
+				continue;
+			}
+			if (n_combi < 0 || n_combi > 2) {
+				continue;
+			}
+			if (m_n_msr_add_value[track][n_combi] == n_value) {
+				continue;
+			}
+			m_n_msr_add_value[track][n_combi] = n_value;
+
+			int n_d = (int)((track - iso1_track) * 3 + n_combi);
+			_change_parameter c = (_change_parameter)(cp_AddValue10 + n_d);
+			_set_insert_change_set(c);
+		} while (false);
+	}
+
 	void set_global_postfix(const type_tag& fix)
 	{
 		if (m_v_global_postfix != fix) {
@@ -1103,11 +1334,85 @@ public:
 		}
 	}
 
-	//setter m_b_indicate_success_if_any_trace_ok; //cBlank[1]' 0 bit set - If any track is normal reading done, indicates success.
-	//setter m_b_ignore_1track_if_12_is_equal;//cBlank[1]' 1 bit set - If 1 & 2 track data is equal, send 2 track data only.
-	//setter m_b_ignore_3track_if_12_is_equal;//cBlank[1]' 2 bit set - If 2 & 3 track data is equal, send 2 track data only.
-	//setter m_b_ignore_colron;//cBlank[1]' 3 bit set - If a track ETXL is 0xe0 and the first data is ASCII ':', then  track's ':' isn't sent.
+	void set_indicate_success_if_any_trace_ok(bool b_any_track_ok)
+	{
+		uint8_t c_bit = 0x01;
+		uint8_t c_cur = m_c_blank[1] & c_bit;
+		uint8_t c_new = 0x00;
+		if (b_any_track_ok) {
+			c_new = c_bit;
+		}
+		//
+		if (c_new != c_cur) {
+			m_b_indicate_success_if_any_trace_ok = b_any_track_ok;
+			if (b_any_track_ok) {
+				m_c_blank[1] = m_c_blank[1] | c_bit;
+			}
+			else {
+				m_c_blank[1] = m_c_blank[1] & ~c_bit;
+			}
+		}
+	}
 
+	void set_ignore_1track_if_12_is_equal(bool b_ignore)
+	{
+		uint8_t c_bit = 0x02;
+		uint8_t c_cur = m_c_blank[1] & c_bit;
+		uint8_t c_new = 0x00;
+		if (b_ignore) {
+			c_new = c_bit;
+		}
+		//
+		if (c_new != c_cur) {
+			m_b_ignore_1track_if_12_is_equal = b_ignore;
+			if (b_ignore) {
+				m_c_blank[1] = m_c_blank[1] | c_bit;
+			}
+			else {
+				m_c_blank[1] = m_c_blank[1] & ~c_bit;
+			}
+		}
+	}
+
+	void set_ignore_3track_if_12_is_equal(bool b_ignore)
+	{
+		uint8_t c_bit = 0x04;
+		uint8_t c_cur = m_c_blank[1] & c_bit;
+		uint8_t c_new = 0x00;
+		if (b_ignore) {
+			c_new = c_bit;
+		}
+		//
+		if (c_new != c_cur) {
+			m_b_ignore_3track_if_12_is_equal = b_ignore;
+			if (b_ignore) {
+				m_c_blank[1] = m_c_blank[1] | c_bit;
+			}
+			else {
+				m_c_blank[1] = m_c_blank[1] & ~c_bit;
+			}
+		}
+	}
+
+	void set_ignore_colron(bool b_ignore)
+	{
+		uint8_t c_bit = 0x08;
+		uint8_t c_cur = m_c_blank[1] & c_bit;
+		uint8_t c_new = 0x00;
+		if (b_ignore) {
+			c_new = c_bit;
+		}
+		//
+		if (c_new != c_cur) {
+			m_b_ignore_colron = b_ignore;
+			if (b_ignore) {
+				m_c_blank[1] = m_c_blank[1] | c_bit;
+			}
+			else {
+				m_c_blank[1] = m_c_blank[1] & ~c_bit;
+			}
+		}
+	}
 	
 	void set_ibutton_remove(const type_tag& fix)
 	{
@@ -1139,6 +1444,18 @@ public:
 		return v_name;
 	}
 
+	std::string get_name_by_string() const
+	{
+		std::string s;
+		for (auto item : m_v_name) {
+			if (item == ' ' || item == 0) {
+				break;
+			}
+			s.push_back((char)item);
+		}//end for
+		return s;
+	}
+
 	bool get_global_pre_postfix_send_condition() const { return m_b_global_pre_postfix_send_condition; }
 	bool get_device_is_mmd1000() const { return m_b_device_is_mmd1000; }
 
@@ -1150,7 +1467,10 @@ public:
 
 	bool get_device_is_ibutton_only() const { return m_b_device_is_ibutton_only; }
 	bool get_device_is_standard() { return m_b_device_is_standard; }
-	type_system_interface get_interface() const { return m_interface; }
+	type_system_interface get_interface() const 
+	{ 
+		return m_interface;
+	}
 	uint32_t get_buzzer_frequency() const { return m_dw_buzzer_frequency; }
 	uint32_t get_boot_run_time() const { return m_dw_boot_run_time; }
 	type_keyboard_language_index get_language() const { return m_language_index; }
@@ -1170,6 +1490,48 @@ public:
 
 	const type_direction get_direction(type_msr_track_Numer track) const { return m_direction[track]; }
 	const type_direction get_direction() const { return m_direction[0]; }
+
+	/**
+	* @brief get the sent track of order.
+	* @return 3 item uint32_t arrary. item is type_msr_track_Numer(iso1_track~iso3_track)
+	*/
+	const uint32_t* get_order_of_track() const
+	{
+		return m_n_order_of_track;
+	}
+
+	const std::array< cprotocol_lpu237::type_msr_track_Numer, cprotocol_lpu237::the_number_of_track> get_order_of_track_by_array() const
+	{
+		std::array< cprotocol_lpu237::type_msr_track_Numer, cprotocol_lpu237::the_number_of_track> a{
+			(cprotocol_lpu237::type_msr_track_Numer)m_n_order_of_track[0]
+			,(cprotocol_lpu237::type_msr_track_Numer)m_n_order_of_track[1]
+			,(cprotocol_lpu237::type_msr_track_Numer)m_n_order_of_track[2]
+		};
+		return a;
+	}
+
+	const std::vector<cprotocol_lpu237::type_msr_track_Numer> get_order_of_track_by_vector() const
+	{
+		std::vector< cprotocol_lpu237::type_msr_track_Numer> v{
+			(cprotocol_lpu237::type_msr_track_Numer)m_n_order_of_track[0]
+			,(cprotocol_lpu237::type_msr_track_Numer)m_n_order_of_track[1]
+			,(cprotocol_lpu237::type_msr_track_Numer)m_n_order_of_track[2]
+		};
+		return v;
+	}
+
+	const uint32_t get_combination(type_msr_track_Numer track) const { return m_n_combination[track]; }
+
+	const uint32_t get_msr_max_size(type_msr_track_Numer track, uint32_t n_combi) const { return m_n_msr_max_size[track][n_combi]; }
+	const uint32_t get_msr_bit_size(type_msr_track_Numer track, uint32_t n_combi) const { return m_n_msr_bit_size[track][n_combi]; }
+	const uint8_t get_msr_data_mask(type_msr_track_Numer track, uint32_t n_combi) const { return m_n_msr_data_mask[track][n_combi]; }
+	const bool get_msr_use_parity(type_msr_track_Numer track, uint32_t n_combi) const { return m_b_msr_use_parity[track][n_combi]; }
+	const uint8_t get_msr_parity_type(type_msr_track_Numer track, uint32_t n_combi) const { return m_c_msr_parity_type[track][n_combi]; }
+	const uint8_t get_msr_stxl(type_msr_track_Numer track, uint32_t n_combi) const { return m_c_msr_stxl[track][n_combi]; }
+	const uint8_t get_msr_etxl(type_msr_track_Numer track, uint32_t n_combi) const { return m_c_msr_etxl[track][n_combi]; }
+	const bool get_msr_use_error_correct(type_msr_track_Numer track, uint32_t n_combi) const { return m_b_msr_use_error_correct[track][n_combi]; }
+	const uint8_t get_msr_ecm_type(type_msr_track_Numer track, uint32_t n_combi) const { return m_c_msr_ecm_type[track][n_combi]; }
+	const uint32_t get_msr_add_value(type_msr_track_Numer track, uint32_t n_combi) const { return m_n_msr_add_value[track][n_combi]; }
 
 	const type_tag& get_global_prefix() const { return m_v_global_prefix; }
 	const type_tag& get_global_postfix() const { return m_v_global_postfix; }
@@ -1191,6 +1553,11 @@ public:
 
 	uint8_t get_ibutton_start_code_zero_base_index() const { return m_c_ibutton_start_code_zero_base_index; }
 	uint8_t get_ibutton_stop_code_zero_base_index() const { return m_c_ibutton_stop_code_zero_base_index; }
+
+	bool get_indicate_success_if_any_trace_ok() const { return m_b_indicate_success_if_any_trace_ok; }
+	bool get_ignore_1track_if_12_is_equal() const { return m_b_ignore_1track_if_12_is_equal; }
+	bool get_ignore_3track_if_12_is_equal() const { return m_b_ignore_3track_if_12_is_equal; }
+	bool get_ignore_colron() const { return m_b_ignore_colron; }
 
 	const type_tag& get_ibutton_remove() const { return m_v_ibutton_remove; }
 
@@ -1624,23 +1991,25 @@ public:
 			}
 
 			if (m_set_change_parameter.find(cp_Blanks) != m_set_change_parameter.end()) {
-				_generate_set_blanks();
-				continue;
+				if(!_generate_set_blanks())
+					continue;
 			}
 			if (m_set_change_parameter.find(cp_TrackOrders) != m_set_change_parameter.end()) {
-				_generate_set_track_orders();
-				continue;
+				if (!_generate_set_order_of_track())
+					continue;
 			}
 
 			//. set globalPrePostfixSendCondition
-			if (m_set_change_parameter.find(cp_GlobalPrePostfixSendCondition) != m_set_change_parameter.end())
+			if (m_set_change_parameter.find(cp_GlobalPrePostfixSendCondition) != m_set_change_parameter.end()) {
 				if (!_generate_set_global_pre_postfix_send_condition())
 					continue;
+			}
 
 			// . set interface
-			if (m_set_change_parameter.find(cp_Interface) != m_set_change_parameter.end())
+			if (m_set_change_parameter.find(cp_Interface) != m_set_change_parameter.end()) {
 				if (!_generate_set_interface())
 					continue;
+			}
 
 			// . get language
 			if (m_set_change_parameter.find(cp_Language) != m_set_change_parameter.end()) {
@@ -1727,19 +2096,19 @@ public:
 							}
 						//
 						if (m_set_change_parameter.find((_change_parameter)(cp_UseErrorCorrect10 + 3 * track + j)) != m_set_change_parameter.end())
-							if (!_generate_set_use_correct((type_msr_track_Numer)(iso1_track + track), j)) {
+							if (!_generate_set_msr_use_error_correct((type_msr_track_Numer)(iso1_track + track), j)) {
 								b_result = false;
 								break;
 							}
 						//
 						if (m_set_change_parameter.find((_change_parameter)(cp_ECMType10 + 3 * track + j)) != m_set_change_parameter.end())
-							if (!_generate_set_ecm_type((type_msr_track_Numer)(iso1_track + track), j)) {
+							if (!_generate_set_msr_ecm_type((type_msr_track_Numer)(iso1_track + track), j)) {
 								b_result = false;
 								break;
 							}
 						//
 						if (m_set_change_parameter.find((_change_parameter)(cp_AddValue10 + 3 * track + j)) != m_set_change_parameter.end())
-							if (!_generate_set_add_value((type_msr_track_Numer)(iso1_track + track), j)) {
+							if (!_generate_set_msr_add_value((type_msr_track_Numer)(iso1_track + track), j)) {
 								b_result = false;
 								break;
 							}
@@ -2590,7 +2959,7 @@ private:
 			uint32_t n_interface(0);
 			std::copy(&p_response->s_data[0], &p_response->s_data[p_response->c_size], (unsigned char*)&n_interface);
 
-			m_interface = (type_system_interface)n_interface;
+			m_language_index = (type_keyboard_language_index)n_interface;
 			b_result = true;
 		} while (false);
 		return b_result;
@@ -3024,7 +3393,7 @@ private:
 				continue;
 
 			size_t n_offset(0);
-			for (int i = 0; i < the_number_of_reack; i++) {
+			for (int i = 0; i < cprotocol_lpu237::the_number_of_track; i++) {
 				memcpy(&m_n_order_of_track[i], &(p_response->s_data[n_offset]), sizeof(uint32_t));
 				n_offset += sizeof(uint32_t);
 			}//end for
@@ -3784,7 +4153,7 @@ private:
 			_type_response* p_response = (_type_response*)&v_response[0];
 			if (p_response->c_size != sizeofstructmember(SYSINFO_STD, RemoveItemTag))
 				continue;
-			PMSR_TAG p_tag = (PMSR_TAG)p_response->s_data;
+			PREMOVE_IBUTTON_TAG p_tag = (PREMOVE_IBUTTON_TAG)p_response->s_data;
 			m_v_ibutton_remove.resize(p_tag->cSize, 0); m_v_ibutton_remove.assign(m_v_ibutton_remove.size(), 0);
 			std::copy(&p_tag->sTag[0], &p_tag->sTag[p_tag->cSize], std::begin(m_v_ibutton_remove));
 			b_result = true;
@@ -3839,10 +4208,6 @@ private:
 
 		do {
 			_mp::type_v_buffer v_tx(0);
-
-			uint32_t nOffset = 0;
-			_mp::type_v_buffer v_packet(65, 0);
-				
 			if (dw_data > 0 && s_data == nullptr)
 				continue;
 
@@ -5752,7 +6117,7 @@ private:
 			);
 			if (!b_result)
 				continue;
-
+			//combi 0
 			b_result = _generate_config_set(
 				offsetof(SYSINFO, InfoMsr[0].KeyMap[0].nMappingTableIndex),
 				sizeofstructmember(SYSINFO, InfoMsr[0].KeyMap[0].nMappingTableIndex),
@@ -5777,6 +6142,63 @@ private:
 				reinterpret_cast<unsigned char*>(&n_mapping_table_index),
 				__func__
 			);
+			if (!b_result)
+				continue;
+			//combi 1
+			b_result = _generate_config_set(
+				offsetof(SYSINFO, InfoMsr[0].KeyMap[1].nMappingTableIndex),
+				sizeofstructmember(SYSINFO, InfoMsr[0].KeyMap[1].nMappingTableIndex),
+				reinterpret_cast<unsigned char*>(&n_mapping_table_index),
+				__func__
+			);
+			if (!b_result)
+				continue;
+
+			b_result = _generate_config_set(
+				offsetof(SYSINFO, InfoMsr[1].KeyMap[1].nMappingTableIndex),
+				sizeofstructmember(SYSINFO, InfoMsr[1].KeyMap[1].nMappingTableIndex),
+				reinterpret_cast<unsigned char*>(&n_mapping_table_index),
+				__func__
+			);
+			if (!b_result)
+				continue;
+
+			b_result = _generate_config_set(
+				offsetof(SYSINFO, InfoMsr[2].KeyMap[1].nMappingTableIndex),
+				sizeofstructmember(SYSINFO, InfoMsr[2].KeyMap[1].nMappingTableIndex),
+				reinterpret_cast<unsigned char*>(&n_mapping_table_index),
+				__func__
+			);
+			if (!b_result)
+				continue;
+			//combi 2
+			b_result = _generate_config_set(
+				offsetof(SYSINFO, InfoMsr[0].KeyMap[2].nMappingTableIndex),
+				sizeofstructmember(SYSINFO, InfoMsr[0].KeyMap[2].nMappingTableIndex),
+				reinterpret_cast<unsigned char*>(&n_mapping_table_index),
+				__func__
+			);
+			if (!b_result)
+				continue;
+
+			b_result = _generate_config_set(
+				offsetof(SYSINFO, InfoMsr[1].KeyMap[2].nMappingTableIndex),
+				sizeofstructmember(SYSINFO, InfoMsr[1].KeyMap[2].nMappingTableIndex),
+				reinterpret_cast<unsigned char*>(&n_mapping_table_index),
+				__func__
+			);
+			if (!b_result)
+				continue;
+
+			b_result = _generate_config_set(
+				offsetof(SYSINFO, InfoMsr[2].KeyMap[2].nMappingTableIndex),
+				sizeofstructmember(SYSINFO, InfoMsr[2].KeyMap[2].nMappingTableIndex),
+				reinterpret_cast<unsigned char*>(&n_mapping_table_index),
+				__func__
+			);
+			if (!b_result)
+				continue;
+
 		} while (false);
 		return b_result;
 	}
@@ -5839,16 +6261,16 @@ private:
 		} while (false);
 		return b_result;
 	}
+
 	bool _generate_set_direction(type_msr_track_Numer track)
 	{
 		bool b_result(false);
 
 		do {
 			uint32_t dw_offset, dw_size;
-			unsigned char c_track(0);
+			uint8_t data(0);
 
-			if (get_enable_iso(track))
-				c_track = 1;
+			data = (uint8_t)get_direction(track);
 
 			switch (track) {
 			case iso1_track:
@@ -5870,8 +6292,849 @@ private:
 			b_result = _generate_config_set(
 				dw_offset,
 				dw_size,
-				&c_track
+				&data
 				, std::string(__func__) + std::to_string((int)track)
+			);
+		} while (false);
+		return b_result;
+	}
+
+	bool _generate_set_order_of_track()
+	{
+		bool b_result(false);
+		uint32_t dw_offset, dw_size;
+		uint8_t data[3] = { 0, };
+
+		dw_offset = offsetof(SYSINFO, ContainerInfoMsrObj.nOrderObject);
+		dw_size = sizeofstructmember(SYSINFO, ContainerInfoMsrObj.nOrderObject);
+		
+		auto v = get_order_of_track_by_vector();
+		b_result = _generate_config_set(
+			dw_offset,
+			dw_size,
+			(uint8_t*) &v[0]
+			, std::string(__func__)
+		);
+
+		return b_result;
+	}
+
+	bool _generate_set_combination(type_msr_track_Numer track)
+	{
+		bool b_result(false);
+
+		do {
+			uint32_t dw_offset, dw_size;
+			uint8_t data(0);
+
+			data = (uint8_t)get_combination(track);
+
+			switch (track) {
+			case iso1_track:
+				dw_offset = offsetof(SYSINFO, InfoMsr[0].cSupportNum);
+				dw_size = sizeofstructmember(SYSINFO, InfoMsr[0].cSupportNum);
+				break;
+			case iso2_track:
+				dw_offset = offsetof(SYSINFO, InfoMsr[1].cSupportNum);
+				dw_size = sizeofstructmember(SYSINFO, InfoMsr[1].cSupportNum);
+				break;
+			case iso3_track:
+				dw_offset = offsetof(SYSINFO, InfoMsr[2].cSupportNum);
+				dw_size = sizeofstructmember(SYSINFO, InfoMsr[2].cSupportNum);
+				break;
+			default:
+				continue;
+			}//end switch
+
+			b_result = _generate_config_set(
+				dw_offset,
+				dw_size,
+				&data
+				, std::string(__func__) + std::to_string((int)track)
+			);
+		} while (false);
+		return b_result;
+	}
+
+	bool _generate_set_msr_max_size(type_msr_track_Numer track,int n_combi)
+	{
+		bool b_result(false);
+
+		do {
+			if (n_combi < 0 || n_combi>2) {
+				continue;
+			}
+			uint32_t dw_offset, dw_size;
+			uint8_t data(0);
+
+			data = (uint8_t)get_msr_max_size(track,n_combi);
+
+			if (n_combi == 0) {
+				switch (track) {
+				case iso1_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[0].cMaxSize[0]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[0].cMaxSize[0]);
+					break;
+				case iso2_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[1].cMaxSize[0]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[1].cMaxSize[0]);
+					break;
+				case iso3_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[2].cMaxSize[0]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[2].cMaxSize[0]);
+					break;
+				default:
+					continue;
+				}//end switch
+			}
+			else if (n_combi == 1) {
+				switch (track) {
+				case iso1_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[0].cMaxSize[1]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[0].cMaxSize[1]);
+					break;
+				case iso2_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[1].cMaxSize[1]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[1].cMaxSize[1]);
+					break;
+				case iso3_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[2].cMaxSize[1]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[2].cMaxSize[1]);
+					break;
+				default:
+					continue;
+				}//end switch
+			}
+			else {
+				switch (track) {
+				case iso1_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[0].cMaxSize[2]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[0].cMaxSize[2]);
+					break;
+				case iso2_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[1].cMaxSize[2]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[1].cMaxSize[2]);
+					break;
+				case iso3_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[2].cMaxSize[0]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[2].cMaxSize[2]);
+					break;
+				default:
+					continue;
+				}//end switch
+			}
+
+			b_result = _generate_config_set(
+				dw_offset,
+				dw_size,
+				&data
+				, std::string(__func__) + std::to_string((int)track) + std::string("-") + std::to_string((int)n_combi)
+			);
+		} while (false);
+		return b_result;
+	}
+
+	bool _generate_set_msr_bit_size(type_msr_track_Numer track, int n_combi)
+	{
+		bool b_result(false);
+
+		do {
+			if (n_combi < 0 || n_combi>2) {
+				continue;
+			}
+			uint32_t dw_offset, dw_size;
+			uint8_t data(0);
+
+			data = (uint8_t)get_msr_bit_size(track, n_combi);
+
+			if (n_combi == 0) {
+				switch (track) {
+				case iso1_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[0].cBitSize[0]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[0].cBitSize[0]);
+					break;
+				case iso2_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[1].cBitSize[0]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[1].cBitSize[0]);
+					break;
+				case iso3_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[2].cBitSize[0]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[2].cBitSize[0]);
+					break;
+				default:
+					continue;
+				}//end switch
+			}
+			else if (n_combi == 1) {
+				switch (track) {
+				case iso1_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[0].cBitSize[1]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[0].cBitSize[1]);
+					break;
+				case iso2_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[1].cBitSize[1]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[1].cBitSize[1]);
+					break;
+				case iso3_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[2].cBitSize[1]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[2].cBitSize[1]);
+					break;
+				default:
+					continue;
+				}//end switch
+			}
+			else {
+				switch (track) {
+				case iso1_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[0].cBitSize[2]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[0].cBitSize[2]);
+					break;
+				case iso2_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[1].cBitSize[2]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[1].cBitSize[2]);
+					break;
+				case iso3_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[2].cBitSize[0]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[2].cBitSize[2]);
+					break;
+				default:
+					continue;
+				}//end switch
+			}
+
+			b_result = _generate_config_set(
+				dw_offset,
+				dw_size,
+				&data
+				, std::string(__func__) + std::to_string((int)track) + std::string("-") + std::to_string((int)n_combi)
+			);
+		} while (false);
+		return b_result;
+	}
+
+	bool _generate_set_msr_data_mask(type_msr_track_Numer track, int n_combi)
+	{
+		bool b_result(false);
+
+		do {
+			if (n_combi < 0 || n_combi>2) {
+				continue;
+			}
+			uint32_t dw_offset, dw_size;
+			uint8_t data(0);
+
+			data = (uint8_t)get_msr_data_mask(track, n_combi);
+
+			if (n_combi == 0) {
+				switch (track) {
+				case iso1_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[0].cDataMask[0]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[0].cDataMask[0]);
+					break;
+				case iso2_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[1].cDataMask[0]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[1].cDataMask[0]);
+					break;
+				case iso3_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[2].cDataMask[0]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[2].cDataMask[0]);
+					break;
+				default:
+					continue;
+				}//end switch
+			}
+			else if (n_combi == 1) {
+				switch (track) {
+				case iso1_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[0].cDataMask[1]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[0].cDataMask[1]);
+					break;
+				case iso2_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[1].cDataMask[1]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[1].cDataMask[1]);
+					break;
+				case iso3_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[2].cDataMask[1]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[2].cDataMask[1]);
+					break;
+				default:
+					continue;
+				}//end switch
+			}
+			else {
+				switch (track) {
+				case iso1_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[0].cDataMask[2]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[0].cDataMask[2]);
+					break;
+				case iso2_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[1].cDataMask[2]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[1].cDataMask[2]);
+					break;
+				case iso3_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[2].cDataMask[0]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[2].cDataMask[2]);
+					break;
+				default:
+					continue;
+				}//end switch
+			}
+
+			b_result = _generate_config_set(
+				dw_offset,
+				dw_size,
+				&data
+				, std::string(__func__) + std::to_string((int)track) + std::string("-") + std::to_string((int)n_combi)
+			);
+		} while (false);
+		return b_result;
+	}
+
+	bool _generate_set_msr_use_parity(type_msr_track_Numer track, int n_combi)
+	{
+		bool b_result(false);
+
+		do {
+			if (n_combi < 0 || n_combi>2) {
+				continue;
+			}
+			uint32_t dw_offset, dw_size;
+			uint8_t data(0);
+
+			if (get_msr_use_parity(track, n_combi)) {
+				data = 1;
+			}
+
+			if (n_combi == 0) {
+				switch (track) {
+				case iso1_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[0].bUseParity[0]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[0].bUseParity[0]);
+					break;
+				case iso2_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[1].bUseParity[0]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[1].bUseParity[0]);
+					break;
+				case iso3_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[2].bUseParity[0]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[2].bUseParity[0]);
+					break;
+				default:
+					continue;
+				}//end switch
+			}
+			else if (n_combi == 1) {
+				switch (track) {
+				case iso1_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[0].bUseParity[1]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[0].bUseParity[1]);
+					break;
+				case iso2_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[1].bUseParity[1]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[1].bUseParity[1]);
+					break;
+				case iso3_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[2].bUseParity[1]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[2].bUseParity[1]);
+					break;
+				default:
+					continue;
+				}//end switch
+			}
+			else {
+				switch (track) {
+				case iso1_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[0].bUseParity[2]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[0].bUseParity[2]);
+					break;
+				case iso2_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[1].bUseParity[2]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[1].bUseParity[2]);
+					break;
+				case iso3_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[2].bUseParity[0]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[2].bUseParity[2]);
+					break;
+				default:
+					continue;
+				}//end switch
+			}
+
+			b_result = _generate_config_set(
+				dw_offset,
+				dw_size,
+				&data
+				, std::string(__func__) + std::to_string((int)track) + std::string("-") + std::to_string((int)n_combi)
+			);
+		} while (false);
+		return b_result;
+	}
+
+	bool _generate_set_msr_parity_type(type_msr_track_Numer track, int n_combi)
+	{
+		bool b_result(false);
+
+		do {
+			if (n_combi < 0 || n_combi>2) {
+				continue;
+			}
+			uint32_t dw_offset, dw_size;
+			uint8_t data(0);
+
+			data = (uint8_t)get_msr_parity_type(track, n_combi);
+
+			if (n_combi == 0) {
+				switch (track) {
+				case iso1_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[0].cParityType[0]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[0].cParityType[0]);
+					break;
+				case iso2_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[1].cParityType[0]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[1].cParityType[0]);
+					break;
+				case iso3_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[2].cParityType[0]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[2].cParityType[0]);
+					break;
+				default:
+					continue;
+				}//end switch
+			}
+			else if (n_combi == 1) {
+				switch (track) {
+				case iso1_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[0].cParityType[1]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[0].cParityType[1]);
+					break;
+				case iso2_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[1].cParityType[1]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[1].cParityType[1]);
+					break;
+				case iso3_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[2].cParityType[1]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[2].cParityType[1]);
+					break;
+				default:
+					continue;
+				}//end switch
+			}
+			else {
+				switch (track) {
+				case iso1_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[0].cParityType[2]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[0].cParityType[2]);
+					break;
+				case iso2_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[1].cParityType[2]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[1].cParityType[2]);
+					break;
+				case iso3_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[2].cParityType[0]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[2].cParityType[2]);
+					break;
+				default:
+					continue;
+				}//end switch
+			}
+
+			b_result = _generate_config_set(
+				dw_offset,
+				dw_size,
+				&data
+				, std::string(__func__) + std::to_string((int)track) + std::string("-") + std::to_string((int)n_combi)
+			);
+		} while (false);
+		return b_result;
+	}
+
+	bool _generate_set_msr_stxl(type_msr_track_Numer track, int n_combi)
+	{
+		bool b_result(false);
+
+		do {
+			if (n_combi < 0 || n_combi>2) {
+				continue;
+			}
+			uint32_t dw_offset, dw_size;
+			uint8_t data(0);
+
+			data = (uint8_t)get_msr_stxl(track, n_combi);
+
+			if (n_combi == 0) {
+				switch (track) {
+				case iso1_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[0].cSTX_L[0]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[0].cSTX_L[0]);
+					break;
+				case iso2_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[1].cSTX_L[0]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[1].cSTX_L[0]);
+					break;
+				case iso3_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[2].cSTX_L[0]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[2].cSTX_L[0]);
+					break;
+				default:
+					continue;
+				}//end switch
+			}
+			else if (n_combi == 1) {
+				switch (track) {
+				case iso1_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[0].cSTX_L[1]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[0].cSTX_L[1]);
+					break;
+				case iso2_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[1].cSTX_L[1]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[1].cSTX_L[1]);
+					break;
+				case iso3_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[2].cSTX_L[1]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[2].cSTX_L[1]);
+					break;
+				default:
+					continue;
+				}//end switch
+			}
+			else {
+				switch (track) {
+				case iso1_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[0].cSTX_L[2]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[0].cSTX_L[2]);
+					break;
+				case iso2_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[1].cSTX_L[2]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[1].cSTX_L[2]);
+					break;
+				case iso3_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[2].cSTX_L[0]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[2].cSTX_L[2]);
+					break;
+				default:
+					continue;
+				}//end switch
+			}
+
+			b_result = _generate_config_set(
+				dw_offset,
+				dw_size,
+				&data
+				, std::string(__func__) + std::to_string((int)track) + std::string("-") + std::to_string((int)n_combi)
+			);
+		} while (false);
+		return b_result;
+	}
+
+	bool _generate_set_msr_etxl(type_msr_track_Numer track, int n_combi)
+	{
+		bool b_result(false);
+
+		do {
+			if (n_combi < 0 || n_combi>2) {
+				continue;
+			}
+			uint32_t dw_offset, dw_size;
+			uint8_t data(0);
+
+			data = (uint8_t)get_msr_etxl(track, n_combi);
+
+			if (n_combi == 0) {
+				switch (track) {
+				case iso1_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[0].cETX_L[0]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[0].cETX_L[0]);
+					break;
+				case iso2_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[1].cETX_L[0]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[1].cETX_L[0]);
+					break;
+				case iso3_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[2].cETX_L[0]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[2].cETX_L[0]);
+					break;
+				default:
+					continue;
+				}//end switch
+			}
+			else if (n_combi == 1) {
+				switch (track) {
+				case iso1_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[0].cETX_L[1]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[0].cETX_L[1]);
+					break;
+				case iso2_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[1].cETX_L[1]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[1].cETX_L[1]);
+					break;
+				case iso3_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[2].cETX_L[1]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[2].cETX_L[1]);
+					break;
+				default:
+					continue;
+				}//end switch
+			}
+			else {
+				switch (track) {
+				case iso1_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[0].cETX_L[2]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[0].cETX_L[2]);
+					break;
+				case iso2_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[1].cETX_L[2]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[1].cETX_L[2]);
+					break;
+				case iso3_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[2].cETX_L[0]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[2].cETX_L[2]);
+					break;
+				default:
+					continue;
+				}//end switch
+			}
+
+			b_result = _generate_config_set(
+				dw_offset,
+				dw_size,
+				&data
+				, std::string(__func__) + std::to_string((int)track) + std::string("-") + std::to_string((int)n_combi)
+			);
+		} while (false);
+		return b_result;
+	}
+
+	bool _generate_set_msr_use_error_correct(type_msr_track_Numer track, int n_combi)
+	{
+		bool b_result(false);
+
+		do {
+			if (n_combi < 0 || n_combi>2) {
+				continue;
+			}
+			uint32_t dw_offset, dw_size;
+			uint8_t data(0);
+
+			if (get_msr_use_error_correct(track, n_combi)) {
+				data = 1;
+			}
+
+			if (n_combi == 0) {
+				switch (track) {
+				case iso1_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[0].bUseErrorCorrect[0]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[0].bUseErrorCorrect[0]);
+					break;
+				case iso2_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[1].bUseErrorCorrect[0]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[1].bUseErrorCorrect[0]);
+					break;
+				case iso3_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[2].bUseErrorCorrect[0]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[2].bUseErrorCorrect[0]);
+					break;
+				default:
+					continue;
+				}//end switch
+			}
+			else if (n_combi == 1) {
+				switch (track) {
+				case iso1_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[0].bUseErrorCorrect[1]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[0].bUseErrorCorrect[1]);
+					break;
+				case iso2_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[1].bUseErrorCorrect[1]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[1].bUseErrorCorrect[1]);
+					break;
+				case iso3_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[2].bUseErrorCorrect[1]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[2].bUseErrorCorrect[1]);
+					break;
+				default:
+					continue;
+				}//end switch
+			}
+			else {
+				switch (track) {
+				case iso1_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[0].bUseErrorCorrect[2]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[0].bUseErrorCorrect[2]);
+					break;
+				case iso2_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[1].bUseErrorCorrect[2]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[1].bUseErrorCorrect[2]);
+					break;
+				case iso3_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[2].bUseErrorCorrect[0]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[2].bUseErrorCorrect[2]);
+					break;
+				default:
+					continue;
+				}//end switch
+			}
+
+			b_result = _generate_config_set(
+				dw_offset,
+				dw_size,
+				&data
+				, std::string(__func__) + std::to_string((int)track) + std::string("-") + std::to_string((int)n_combi)
+			);
+		} while (false);
+		return b_result;
+	}
+
+	bool _generate_set_msr_ecm_type(type_msr_track_Numer track, int n_combi)
+	{
+		bool b_result(false);
+
+		do {
+			if (n_combi < 0 || n_combi>2) {
+				continue;
+			}
+			uint32_t dw_offset, dw_size;
+			uint8_t data(0);
+
+			data = (uint8_t)get_msr_ecm_type(track, n_combi);
+
+			if (n_combi == 0) {
+				switch (track) {
+				case iso1_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[0].cECMType[0]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[0].cECMType[0]);
+					break;
+				case iso2_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[1].cECMType[0]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[1].cECMType[0]);
+					break;
+				case iso3_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[2].cECMType[0]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[2].cECMType[0]);
+					break;
+				default:
+					continue;
+				}//end switch
+			}
+			else if (n_combi == 1) {
+				switch (track) {
+				case iso1_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[0].cECMType[1]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[0].cECMType[1]);
+					break;
+				case iso2_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[1].cECMType[1]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[1].cECMType[1]);
+					break;
+				case iso3_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[2].cECMType[1]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[2].cECMType[1]);
+					break;
+				default:
+					continue;
+				}//end switch
+			}
+			else {
+				switch (track) {
+				case iso1_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[0].cECMType[2]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[0].cECMType[2]);
+					break;
+				case iso2_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[1].cECMType[2]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[1].cECMType[2]);
+					break;
+				case iso3_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[2].cECMType[0]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[2].cECMType[2]);
+					break;
+				default:
+					continue;
+				}//end switch
+			}
+
+			b_result = _generate_config_set(
+				dw_offset,
+				dw_size,
+				&data
+				, std::string(__func__) + std::to_string((int)track) + std::string("-") + std::to_string((int)n_combi)
+			);
+		} while (false);
+		return b_result;
+	}
+
+	bool _generate_set_msr_add_value(type_msr_track_Numer track, int n_combi)
+	{
+		bool b_result(false);
+
+		do {
+			if (n_combi < 0 || n_combi>2) {
+				continue;
+			}
+			uint32_t dw_offset, dw_size;
+			uint8_t data(0);
+
+			data = (uint8_t)get_msr_add_value(track, n_combi);
+
+			if (n_combi == 0) {
+				switch (track) {
+				case iso1_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[0].cAddValue[0]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[0].cAddValue[0]);
+					break;
+				case iso2_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[1].cAddValue[0]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[1].cAddValue[0]);
+					break;
+				case iso3_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[2].cAddValue[0]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[2].cAddValue[0]);
+					break;
+				default:
+					continue;
+				}//end switch
+			}
+			else if (n_combi == 1) {
+				switch (track) {
+				case iso1_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[0].cAddValue[1]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[0].cAddValue[1]);
+					break;
+				case iso2_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[1].cAddValue[1]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[1].cAddValue[1]);
+					break;
+				case iso3_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[2].cAddValue[1]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[2].cAddValue[1]);
+					break;
+				default:
+					continue;
+				}//end switch
+			}
+			else {
+				switch (track) {
+				case iso1_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[0].cAddValue[2]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[0].cAddValue[2]);
+					break;
+				case iso2_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[1].cAddValue[2]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[1].cAddValue[2]);
+					break;
+				case iso3_track:
+					dw_offset = offsetof(SYSINFO, InfoMsr[2].cAddValue[0]);
+					dw_size = sizeofstructmember(SYSINFO, InfoMsr[2].cAddValue[2]);
+					break;
+				default:
+					continue;
+				}//end switch
+			}
+
+			b_result = _generate_config_set(
+				dw_offset,
+				dw_size,
+				&data
+				, std::string(__func__) + std::to_string((int)track) + std::string("-") + std::to_string((int)n_combi)
 			);
 		} while (false);
 		return b_result;
@@ -6083,17 +7346,19 @@ private:
 			dw_size = FOR_CVT_MAX_ASCII_CODE;
 			p_data = (unsigned char*)(ckey_map::get_ascii_to_hid_key_map(n_mapping_table_index,FOR_CVT_MAX_ASCII_CODE / 2));
 			b_result = _generate_config_set(dw_offset, dw_size, p_data, __func__);
+			//
+			if (get_name_by_string().compare("europa") != 0) {
+				//PS2 map
+				dw_offset = address_system_ps2_key_map_offset;
+				dw_size = FOR_CVT_MAX_ASCII_CODE;
+				p_data = (unsigned char*)(ckey_map::get_ascii_to_ps2_key_map(n_mapping_table_index));
+				b_result = _generate_config_set(dw_offset, dw_size, p_data, __func__);
 
-			//PS2 map
-			dw_offset = address_system_ps2_key_map_offset;
-			dw_size = FOR_CVT_MAX_ASCII_CODE;
-			p_data = (unsigned char*)(ckey_map::get_ascii_to_ps2_key_map(n_mapping_table_index));
-			b_result = _generate_config_set(dw_offset, dw_size, p_data, __func__);
-
-			dw_offset = address_system_ps2_key_map_offset + FOR_CVT_MAX_ASCII_CODE;
-			dw_size = FOR_CVT_MAX_ASCII_CODE;
-			p_data = (unsigned char*)(ckey_map::get_ascii_to_ps2_key_map(n_mapping_table_index, FOR_CVT_MAX_ASCII_CODE / 2));
-			b_result = _generate_config_set(dw_offset, dw_size, p_data, __func__);
+				dw_offset = address_system_ps2_key_map_offset + FOR_CVT_MAX_ASCII_CODE;
+				dw_size = FOR_CVT_MAX_ASCII_CODE;
+				p_data = (unsigned char*)(ckey_map::get_ascii_to_ps2_key_map(n_mapping_table_index, FOR_CVT_MAX_ASCII_CODE / 2));
+				b_result = _generate_config_set(dw_offset, dw_size, p_data, __func__);
+			}
 		} while (false);
 		return b_result;
 	}
@@ -6173,9 +7438,9 @@ private:
 
 	bool _generate_set_ibutton_remove()
 	{
-		MSR_TAG Tag;
+		REMOVE_IBUTTON_TAG Tag;
 
-		memset(&Tag, 0, sizeof(MSR_TAG));
+		memset(&Tag, 0, sizeof(REMOVE_IBUTTON_TAG));
 
 		_get_tag_from_type_tag(Tag, get_ibutton_remove());
 
@@ -6267,6 +7532,54 @@ private:
 		} while (false);
 		return b_result;
 	}
+	bool _get_tag_from_string(REMOVE_IBUTTON_TAG& out_tag, const std::wstring& s_src)
+	{
+		bool b_result(false);
+		do {
+			if (s_src.empty())
+				continue;
+
+			//fill m_vKey vector from m_sKey
+			_mp::type_list_wstring list_s_token;
+			_mp::cconvert::tokenizer(list_s_token, s_src, std::wstring(L" "));
+			int n_val(0);
+			out_tag.cSize = 0;
+
+			b_result = true;
+			for (auto s_token : list_s_token) {
+				if (_is_avalied_format(s_token)) {
+					b_result = false;
+					break;
+				}
+				n_val = _get_byte_from_token(s_token);
+				if (m_token_format != ef_heximal) {
+					b_result = false;
+					break;
+				}
+				out_tag.sTag[out_tag.cSize++] = static_cast<unsigned char>(n_val);
+			}//end for
+		} while (false);
+		return b_result;
+	}
+	bool _get_tag_from_type_tag(REMOVE_IBUTTON_TAG& out_tag, const type_tag& v_in_tag)
+	{
+		bool b_result(false);
+
+		do {
+			if (v_in_tag.empty())
+				continue;
+			//
+			out_tag.cSize = 0;
+
+			for (type_tag::const_iterator iter = v_in_tag.begin(); iter != v_in_tag.end(); ++iter) {
+				out_tag.sTag[out_tag.cSize++] = *iter;
+			}//end for
+			b_result = true;
+		} while (false);
+		return b_result;
+	}
+
+
 	bool _is_avalied_format(const std::wstring& sToken)
 	{
 		bool b_result(false);
@@ -6404,28 +7717,28 @@ private:
 	uint32_t m_dw_boot_run_time;
 	type_keyboard_language_index m_language_index;
 
-	bool m_b_enable_iso[the_number_of_reack];
+	bool m_b_enable_iso[cprotocol_lpu237::the_number_of_track];
 
-	type_direction m_direction[the_number_of_reack];
+	type_direction m_direction[cprotocol_lpu237::the_number_of_track];
 
-	uint32_t m_n_order_of_track[the_number_of_reack];//new
-	uint32_t m_n_combination[the_number_of_reack];//new
-	uint32_t m_n_msr_max_size[the_number_of_reack][3]; //new
-	uint32_t m_n_msr_bit_size[the_number_of_reack][3]; //new
-	uint8_t m_n_msr_data_mask[the_number_of_reack][3]; //new
-	bool m_b_msr_use_parity[the_number_of_reack][3]; //new
-	uint8_t m_c_msr_parity_type[the_number_of_reack][3]; //new
-	uint8_t m_c_msr_stxl[the_number_of_reack][3]; //new
-	uint8_t m_c_msr_etxl[the_number_of_reack][3]; //new
-	bool m_b_msr_use_error_correct[the_number_of_reack][3]; //new
-	uint8_t m_c_msr_ecm_type[the_number_of_reack][3]; //new
-	uint32_t m_n_msr_add_value[the_number_of_reack][3]; //new
+	uint32_t m_n_order_of_track[cprotocol_lpu237::the_number_of_track];//new
+	uint32_t m_n_combination[cprotocol_lpu237::the_number_of_track];//new
+	uint32_t m_n_msr_max_size[cprotocol_lpu237::the_number_of_track][3]; //new
+	uint32_t m_n_msr_bit_size[cprotocol_lpu237::the_number_of_track][3]; //new
+	uint8_t m_n_msr_data_mask[cprotocol_lpu237::the_number_of_track][3]; //new
+	bool m_b_msr_use_parity[cprotocol_lpu237::the_number_of_track][3]; //new
+	uint8_t m_c_msr_parity_type[cprotocol_lpu237::the_number_of_track][3]; //new
+	uint8_t m_c_msr_stxl[cprotocol_lpu237::the_number_of_track][3]; //new
+	uint8_t m_c_msr_etxl[cprotocol_lpu237::the_number_of_track][3]; //new
+	bool m_b_msr_use_error_correct[cprotocol_lpu237::the_number_of_track][3]; //new
+	uint8_t m_c_msr_ecm_type[cprotocol_lpu237::the_number_of_track][3]; //new
+	uint32_t m_n_msr_add_value[cprotocol_lpu237::the_number_of_track][3]; //new
 
 	type_tag m_v_global_prefix;
 	type_tag m_v_global_postfix;
 
-	type_tag m_v_private_prefix[the_number_of_reack][3];//extended 3 combinational prefix
-	type_tag m_v_private_postfix[the_number_of_reack][3];//extended 3 combinational prefix
+	type_tag m_v_private_prefix[cprotocol_lpu237::the_number_of_track][3];//extended 3 combinational prefix
+	type_tag m_v_private_postfix[cprotocol_lpu237::the_number_of_track][3];//extended 3 combinational prefix
 
 	//i-button
 	type_tag m_v_prefix_ibutton;

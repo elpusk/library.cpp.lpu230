@@ -22,9 +22,9 @@
 
 #define	SYSTEM_STATUS_NUMBER		4	//the number of system status
 
-enum SYSTEM_STATUS		//Declare system status( SystemStatusNoChange isn't invalid event )
+enum SYSTEM_STATUS : unsigned char 	//Declare system status( SystemStatusNoChange isn't invalid event )
 {
-	SystemStatusNoChange	= -1,	//don't change system status
+	SystemStatusNoChange	= (unsigned char)(-1),	//don't change system status
 	SystemStatusNotReady	= 0,	//system is waiting the end of setup.
 	SystemStatusNormal		= 1,	//system normal(idle - setup ok & waits request )
 	SystemStatusConfig		= 2,	//system is configuration mode.
@@ -34,7 +34,7 @@ enum SYSTEM_STATUS		//Declare system status( SystemStatusNoChange isn't invalid 
 #define	SYSTEM_EVENT_NUMER			6	//the number of event( None isn't invalid event )
 
 /* 'SYSTEM_EVENT': redefinition; different basic types, C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\um\tpcshrd.h(80): message : see declaration of 'SYSTEM_EVENT'
-enum SYSTEM_EVENT		//Declare system events
+enum SYSTEM_EVENT : unsigned char 		//Declare system events
 {
 	SystemEventNone				= -1,	//none event
 	SystemEventSetupComplete	= 0,	//setup complete
@@ -51,7 +51,7 @@ enum SYSTEM_EVENT		//Declare system events
  * the low nibble is boot-loader mode.
  */
 
-enum SYSTEM_MODE	// Declare system mode
+enum SYSTEM_MODE : unsigned char 	// Declare system mode
 {
 	SystemModeEmpty		= 0xff,	//dummy : No program
 	SystemModeFirst 	= 0,	//the first execution program
@@ -62,7 +62,7 @@ enum SYSTEM_MODE	// Declare system mode
 };
 
 
-enum SYSTEM_INTERFACE		//declare system interface.
+enum SYSTEM_INTERFACE : unsigned char 	//declare system interface.
 {
 	SystemInterfaceUsbKB	= 0,	//system interface is USB keyboard.
 	SystemInterfaceUsbMsr	= 1,	//system interface is USB MSR(generic HID interface).

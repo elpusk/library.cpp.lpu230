@@ -371,7 +371,7 @@ int CHidBootManager::_DDL_GetList(std::list<std::wstring>& ListDev, int nVid, in
 		);
 	}//end for
 
-	return ListDev.size();
+	return (int)ListDev.size();
 }
 
 CHidBootManager::type_pair_handle CHidBootManager::_DDL_open(const std::wstring& szDevicePath)
@@ -483,7 +483,7 @@ int CHidBootManager::_DDL_read(CHidBootManager::type_pair_handle hDev, unsigned 
 			continue;
 		}
 
-		n_data = v_rx.size();
+		n_data = (int)v_rx.size();
 		if (nRx >= v_rx.size()) {
 			memcpy(lpData, &v_rx[0], v_rx.size());
 		}
@@ -530,7 +530,7 @@ bool CHidBootManager::_DDL_TxRx(CHidBootManager::type_pair_handle hDev, unsigned
 			continue;
 		}
 
-		n_data = v_rx.size();
+		n_data = (int)v_rx.size();
 		if (*p_nRx >= v_rx.size()) {
 			memcpy(lpRxData, &v_rx[0], v_rx.size());
 		}
@@ -640,7 +640,7 @@ bool CHidBootManager::SelectDevice(const std::string& s_device_path, size_t n_fw
 			continue;
 		}
 
-		n_need_fw_sec = n_fw_size / CHidBootBuffer::C_SECTOR_SIZE;
+		n_need_fw_sec = (uint32_t)(n_fw_size / CHidBootBuffer::C_SECTOR_SIZE);
 		if (n_fw_size % CHidBootBuffer::C_SECTOR_SIZE != 0) {
 			++n_need_fw_sec;
 		}

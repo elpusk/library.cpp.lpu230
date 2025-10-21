@@ -344,7 +344,9 @@ _mp::type_pair_bool_result_bool_complete cshare::io_recover_all_variable_sys_par
 	if (b_first) {
 		m_target_protocol_lpu237.clear_transaction();
 		m_target_protocol_lpu237.set_all_parameter_to_changed();
-		m_target_protocol_lpu237.generate_set_parameters();
+		if (!m_target_protocol_lpu237.generate_set_parameters()) {
+			return std::make_pair(b_result, b_complete);
+		}
 	}
 
 	_mp::type_v_buffer v_tx;
