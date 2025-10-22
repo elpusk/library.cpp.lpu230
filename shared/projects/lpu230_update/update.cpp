@@ -43,14 +43,14 @@ static void setup_log(bool b_run_by_coffee_manager, bool b_enable);
 *
 * @return first - true : success processing, second - error code. if first is true, second must be EXIT_SUCCESS.
 */
-static std::pair<bool, int> setup_dev_io_dll(_mp::clog& log);
+static std::pair<bool, int> setup_dev_io_dll(bool b_run_by_coffee_manager, _mp::clog& log);
 
 
 /**
 *
 * @return first - true : success processing, second - error code. if first is true, second must be EXIT_SUCCESS.
 */
-static std::pair<bool, int> setup_rom_dll(_mp::clog& log);
+static std::pair<bool, int> setup_rom_dll(bool b_run_by_coffee_manager,_mp::clog& log);
 
 /**
 * @brief 사용자로 부터 받은 command option 울 받아.
@@ -82,14 +82,14 @@ int update_main
 
 		_mp::clog& log(_mp::clog::get_instance());
 
-		auto result_dev_io_dll = setup_dev_io_dll(log);
+		auto result_dev_io_dll = setup_dev_io_dll(b_run_by_cf, log);
 		if (!result_dev_io_dll.first) {
 			n_result = result_dev_io_dll.second;
 			continue;
 		}
 		// from this line, cdev_lib::get_instance() can be used. 
 
-		auto result_rom_dll = setup_rom_dll(log);
+		auto result_rom_dll = setup_rom_dll(b_run_by_cf, log);
 		if (!result_rom_dll.first) {
 			n_result = result_rom_dll.second;
 			continue;
@@ -281,19 +281,45 @@ void setup_log(bool b_run_by_coffee_manager, bool b_enable)
 *
 * @return first - true : success processing, second - error code. if first is true, second must be EXIT_SUCCESS.
 */
-std::pair<bool, int> setup_dev_io_dll(_mp::clog& log)
+std::pair<bool, int> setup_dev_io_dll(bool b_run_by_coffee_manager,_mp::clog& log)
 {
 	bool b_result(false);
 	int n_error_code(EXIT_SUCCESS);
+
+	std::filesystem::path path_cur_exe = _mp::cfile::get_cur_exe_abs_path();
+	std::filesystem::path path_cur = path_cur_exe.parent_path();
+
 	do {
 		// load dev_lib.dll(.so)
-		std::wstring s_dev_lib_dll_abs_full_path(_mp::ccoffee_path::get_abs_full_path_of_dev_lib_dll());
+		std::wstring s_dev_lib_dll_abs_full_path;
+		if (b_run_by_coffee_manager) {
+			s_dev_lib_dll_abs_full_path = _mp::ccoffee_path::get_abs_full_path_of_dev_lib_dll();
+		}
+		else {//단독 실행의 경우
+			s_dev_lib_dll_abs_full_path = path_cur.wstring();
+#ifdef _WIN32
+			s_dev_lib_dll_abs_full_path += L"\\dev_lib.dll";
+#else
+			s_dev_lib_dll_abs_full_path += L"/libdev_lib.so";
+#endif
+		}
 
 		if (!cdev_lib::get_instance().load(s_dev_lib_dll_abs_full_path, &log)) {
-			log.log_fmt(L"[E] %ls | load dev_lib.dll(.so) | %ls.\n", __WFUNCTION__, s_dev_lib_dll_abs_full_path.c_str());
-			log.trace(L"[E] %ls | load dev_lib.dll(.so) | %ls.\n", __WFUNCTION__, s_dev_lib_dll_abs_full_path.c_str());
-			n_error_code = _mp::exit_error_load_dev_lib;
-			continue;
+			if (b_run_by_coffee_manager) {
+				log.log_fmt(L"[E] %ls | load dev_lib.dll(.so) | %ls.\n", __WFUNCTION__, s_dev_lib_dll_abs_full_path.c_str());
+				log.trace(L"[E] %ls | load dev_lib.dll(.so) | %ls.\n", __WFUNCTION__, s_dev_lib_dll_abs_full_path.c_str());
+				n_error_code = _mp::exit_error_load_dev_lib;
+				continue;
+			}
+			//단독 실행의 경우.
+			//현재 디렉토리에서 라이브러리 못찾으면, 기본path 에서 찾기.
+			s_dev_lib_dll_abs_full_path = _mp::ccoffee_path::get_abs_full_path_of_dev_lib_dll();
+			if (!cdev_lib::get_instance().load(s_dev_lib_dll_abs_full_path, &log)) {
+				log.log_fmt(L"[E] %ls | load dev_lib.dll(.so) | %ls.\n", __WFUNCTION__, s_dev_lib_dll_abs_full_path.c_str());
+				log.trace(L"[E] %ls | load dev_lib.dll(.so) | %ls.\n", __WFUNCTION__, s_dev_lib_dll_abs_full_path.c_str());
+				n_error_code = _mp::exit_error_load_dev_lib;
+				continue;
+			}
 		}
 
 		b_result = true;
@@ -306,16 +332,44 @@ std::pair<bool, int> setup_dev_io_dll(_mp::clog& log)
 *
 * @return first - true : success processing, second - error code. if first is true, second must be EXIT_SUCCESS.
 */
-std::pair<bool, int> setup_rom_dll(_mp::clog& log)
+std::pair<bool, int> setup_rom_dll(bool b_run_by_coffee_manager,_mp::clog& log)
 {
 	bool b_result(false);
 	int n_error_code(EXIT_SUCCESS);
+
+	std::filesystem::path path_cur_exe = _mp::cfile::get_cur_exe_abs_path();
+	std::filesystem::path path_cur = path_cur_exe.parent_path();
+
 	do {
-		std::filesystem::path path_rom_dll_full = _mp::ccoffee_path::get_abs_full_path_of_rom_dll();
+		std::filesystem::path path_rom_dll_full;
+		if (b_run_by_coffee_manager) {
+			path_rom_dll_full = _mp::ccoffee_path::get_abs_full_path_of_rom_dll();
+		}
+		else {//단독 실행의 경우
+			path_rom_dll_full = path_cur.wstring();
+#ifdef _WIN32
+			path_rom_dll_full += L"\\tg_rom.dll";
+#else
+			path_rom_dll_full += L"/libtg_rom.so";
+#endif
+		}
+
 		if (!CHidBootManager::GetInstance()->load_rom_library(path_rom_dll_full)) {
-			log.log_fmt(L"[E] setup rom library(%ls).\n", path_rom_dll_full.wstring().c_str());
-			n_error_code = _mp::exit_error_load_rom_lib;
-			continue;
+			if (b_run_by_coffee_manager) {
+				log.log_fmt(L"[E] setup rom library(%ls).\n", path_rom_dll_full.wstring().c_str());
+				log.trace(L"[E] setup rom library(%ls).\n", path_rom_dll_full.wstring().c_str());
+				n_error_code = _mp::exit_error_load_rom_lib;
+				continue;
+			}
+			//단독 실행의 경우.
+			//현재 디렉토리에서 라이브러리 못찾으면, 기본path 에서 찾기.
+			path_rom_dll_full = _mp::ccoffee_path::get_abs_full_path_of_rom_dll();
+			if (!CHidBootManager::GetInstance()->load_rom_library(path_rom_dll_full)) {
+				log.log_fmt(L"[E] setup rom library(%ls).\n", path_rom_dll_full.wstring().c_str());
+				log.trace(L"[E] setup rom library(%ls).\n", path_rom_dll_full.wstring().c_str());
+				n_error_code = _mp::exit_error_load_rom_lib;
+				continue;
+			}
 		}
 
 		b_result = true;

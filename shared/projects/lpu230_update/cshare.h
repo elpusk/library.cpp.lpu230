@@ -27,6 +27,9 @@ public:
 public:
 	_mp::type_pair_bool_result_bool_complete io_save_all_variable_sys_parameter(bool b_first);
 	bool io_load_basic_sys_parameter(_mp::clibhid_dev::type_ptr& ptr_recoverd_dev);
+	bool io_set_interface(_mp::clibhid_dev::type_ptr& ptr_recoverd_dev);
+	bool io_set_mmd1100_to_iso_mode(_mp::clibhid_dev::type_ptr& ptr_recoverd_dev);
+
 	_mp::type_pair_bool_result_bool_complete io_recover_all_variable_sys_parameter(bool b_first, _mp::clibhid_dev::type_ptr & ptr_recoverd_dev);
 
 	/**
@@ -93,6 +96,7 @@ public:
 
 	_mp::type_v_buffer get_target_device_model_name() const;
 	cshare::type_version get_target_device_version() const;
+	bool get_target_device_mmd1100_is_iso_mode() const;
 	
 	std::vector<std::string> get_vector_files_in_current_dir() const;
 	std::vector<std::string> get_vector_files_in_current_dir_except_dir() const;

@@ -95,6 +95,75 @@ public:
     // supports functions
 
     /**
+    * @brief support or not system interface.
+    *
+    */
+    bool is_support_interface(unsigned char c_interface,bool b_standard_type)
+    {
+        bool b_support(false);
+
+        SYSTEM_INTERFACE inf((SYSTEM_INTERFACE)c_interface);
+        do {
+            switch (inf)
+            {
+            case SystemInterfaceUsbKB:
+                if (is_support_vcom_port()) {
+                    continue;// not support keyboard interface.
+                }
+                // support keyboard interface by history doc.
+                break;
+            case SystemInterfaceUsbMsr:
+                b_support = is_support_msr_hid_interface();
+                continue;
+            case SystemInterfaceUsbVcom:
+                b_support = is_support_vcom_port();
+                continue;
+            case SystemInterfaceUart:
+                if (!b_standard_type) {
+                    continue;//not support in compact type
+                }
+                break;
+            default:
+                continue;//not support
+            }
+
+            b_support = true;
+        } while (false);
+
+        return b_support;
+    }
+
+    /**
+    * @brief support or not mmd1100 iso mode change.
+    * 
+    *   support from 5.22.0.1
+    * 
+    *   the build version 1 mean "support!".
+    */
+    bool is_support_mmd1100_iso_mode_change()
+    {
+        bool b_support(true);
+
+        do {
+            if (!is_suport_msr_mmd1100()) {
+                continue;
+            }
+
+            cfun_lpu237::type_version v;
+            v = cfun_lpu237::type_version(5, 22, 0, 0);
+            if (m_version <= v) {
+                continue;
+            }
+
+            if (m_version.get_build() != 1) {
+                continue;
+            }
+
+            b_support = true;
+        } while (false);
+        return b_support;
+    }
+    /**
      * @brief support or not hidboot loader.abort
      * @return true - support. false - not support
      */

@@ -162,6 +162,10 @@ private:
 
 	bool _updates_sub_thread_recover_system_param(int& n_step, const _mp::clibhid_dev_info &dev_info_after_update);
 
+	bool _updates_sub_thread_change_interface_after_update(int& n_step, const _mp::clibhid_dev_info& dev_info_after_update);
+
+	bool _updates_sub_thread_set_iso_mode_after_update(int& n_step, const _mp::clibhid_dev_info& dev_info_after_update);
+
 	std::shared_ptr<ftxui::Component> _create_sub_ui0_ini();
 	std::shared_ptr<ftxui::Component> _create_sub_ui1_select_file();
 	std::shared_ptr<ftxui::Component> _create_sub_ui2_select_firmware();

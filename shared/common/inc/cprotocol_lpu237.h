@@ -249,6 +249,7 @@ public:
 
 		m_c_ibutton_start_code_zero_base_index = 0;
 		m_c_ibutton_stop_code_zero_base_index = 15;
+		m_b_mmd1100_is_iso_mode = false;
 		m_c_mmd1100_reset_interval = 0;//default value
 		m_b_indicate_success_if_any_trace_ok = false;
 		m_b_ignore_1track_if_12_is_equal = false;
@@ -440,6 +441,7 @@ public:
 
 		system_interface_usb_keyboard = 0,	//system interface is USB keyboard.
 		system_interface_usb_msr = 1,	//system interface is USB MSR(generic HID interface).
+		System_interface_usb_vcom = 2,	//system interface is USB virtual Com port (CCD).	
 		system_interface_uart = 10,	//system interface is uart.
 		system_interface_ps2_stand_alone = 20,	//system interface is PS2 stand along mode.
 		system_interface_ps2_bypass = 21,	//system interface is bypass mode.
@@ -601,7 +603,7 @@ private:
 		gt_stop_ibutton,//
 		gt_support_mmd1000,//
 		gt_bypass_uart,
-		gt_type_ibutton_ony,//  //gt_type_ibutton, // i-button only device.
+		gt_type_ibutton_only,//  //gt_type_ibutton, // i-button only device.
 		gt_type_device,//
 
 		gt_set_config,
@@ -1308,6 +1310,24 @@ public:
 		}
 	}
 
+	void set_enable_mmd1100_iso_mode(bool b_enable)
+	{
+		uint8_t c_cur = m_c_blank[3] & 0x08;
+		uint8_t c_new(0);
+
+		if (b_enable) {
+			c_new = c_new | 0x08;
+		}
+
+		if (c_new != c_cur) {
+			m_b_mmd1100_is_iso_mode = b_enable;
+
+			m_c_blank[3] = m_c_blank[3] & 0xF7;
+			m_c_blank[3] = m_c_blank[3] | c_new;
+
+			_set_insert_change_set(cp_Blanks);
+		}
+	}
 	/**
 	* @param c_interval : 0~15
 	*/
@@ -1549,6 +1569,7 @@ public:
 	bool get_enable_zeros_ibutton() const { return m_b_zeros_ibutton; }
 	bool get_enable_zeros_7times_ibutton() const { return m_b_zeros_7times_ibutton; }
 	bool get_enable_addmit_code_stick_ibutton() const { return m_b_addmit_code_stick_ibutton; }
+	bool get_enable_mmd1100_is_iso_mode() const {	return m_b_mmd1100_is_iso_mode;	}
 	uint8_t get_mmd1100_reset_interval() const { return m_c_mmd1100_reset_interval; }
 
 	uint8_t get_ibutton_start_code_zero_base_index() const { return m_c_ibutton_start_code_zero_base_index; }
@@ -1728,6 +1749,7 @@ public:
 		bool b_result(false);
 
 		do {
+			//uid command do not need enter config/leave config command.
 			if (!_generate_get_uid())//must be second
 				continue;
 			b_result = true;
@@ -1752,6 +1774,61 @@ public:
 				continue;
 			if (!generate_leave_config_mode())//must be last.
 				continue;
+			b_result = true;
+		} while (false);
+		return b_result;
+	}
+
+	bool generate_set_interface()
+	{
+		bool b_result(false);
+
+		do {
+			cfun_lpu237 tools(m_v_name, m_version);
+
+			if (!tools.is_support_interface((unsigned char)m_interface,m_b_device_is_standard)) {
+				continue;
+			}
+			if (!generate_enter_config_mode())//must be first
+				continue;
+			if (!_generate_set_interface())
+				continue;
+			if (!generate_apply_config_mode())
+				continue;
+			if (!generate_leave_config_mode())//must be last.
+				continue;
+			b_result = true;
+		} while (false);
+		return b_result;
+	}
+
+	bool generate_mmd1100_to_iso_mode()
+	{
+		bool b_result(false);
+
+		do {
+			cfun_lpu237 tools(m_v_name, m_version);
+
+			if (!tools.is_suport_msr_mmd1100_iso_mode())
+				continue;
+
+			if (!generate_enter_config_mode())//must be first
+				continue;
+			// v5.22.0.1 add . cBlank[3]' 3 bit set - try to change mmd1100 to iso mode.
+			if (!_generate_set_blanks()) {
+				continue;
+			}
+			if (!generate_apply_config_mode())
+				continue;
+			if (!generate_leave_config_mode())//must be last.
+				continue;
+
+			// to apply which mmd1100 decoder mode is changed. (enter cs & leave cs)
+			if (!generate_enter_config_mode())
+				continue;
+			if (!generate_leave_config_mode())
+				continue;
+
 			b_result = true;
 		} while (false);
 		return b_result;
@@ -2308,7 +2385,7 @@ public:
 				}
 				_set_device_function(type_function::fun_msr_ibutton);//standard model
 				break;
-			case gt_type_ibutton_ony://the third setting for coding rule.
+			case gt_type_ibutton_only://the third setting for coding rule.
 				b_result = _set_device_ibutton_type_by_rx();
 				if (!b_result)
 					break;
@@ -3322,6 +3399,13 @@ private:
 			if (p_response->c_size != sizeofstructmember(SYSINFO, cBlank))
 				continue;
 			std::copy(&p_response->s_data[0], &p_response->s_data[p_response->c_size], (unsigned char*)&m_c_blank[0]);
+
+			if (m_c_blank[3] & 0x08)
+				m_b_mmd1100_is_iso_mode = true;
+			else
+				m_b_mmd1100_is_iso_mode = false;
+			//
+
 			if (m_c_blank[2] & 0x01)
 				m_b_f12_ibutton = true;
 			else
@@ -4291,7 +4375,7 @@ private:
 	bool _generate_get_device_ibutton_type()
 	{
 		if( _generate_request(cmd_hw_is_only_ibutton, 0, 0, nullptr)) {
-			m_deque_generated_tx.push_back(gt_type_ibutton_ony);
+			m_deque_generated_tx.push_back(gt_type_ibutton_only);
 			return true;
 		}
 		return false;
@@ -7751,6 +7835,7 @@ private:
 	uint8_t m_c_ibutton_start_code_zero_base_index; // set by m_c_blank,cBlank[0]' high nibble i-button send data starting zero base index 0~7
 	uint8_t m_c_ibutton_stop_code_zero_base_index;// set by m_c_blank,cBlank[0]' low nibble i-button send data ending zero base index 0~7
 
+	bool m_b_mmd1100_is_iso_mode;// v5.22.0.1 add . cBlank[3]' 3 bit set - try to change mmd1100 to iso mode.
 	uint8_t m_c_mmd1100_reset_interval; //cBlank[1]' 4 bit ~ 7 bit - MMD1100 reset interval.(Tr)
 	bool m_b_indicate_success_if_any_trace_ok; //cBlank[1]' 0 bit set - If any track is normal reading done, indicates success.
 	bool m_b_ignore_1track_if_12_is_equal;//cBlank[1]' 1 bit set - If 1 & 2 track data is equal, send 2 track data only.

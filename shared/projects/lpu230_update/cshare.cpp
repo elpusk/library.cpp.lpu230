@@ -84,10 +84,10 @@ int cshare::calculate_update_step(int n_the_number_of_erase_sector /*= -1*/)
 		n_step += 1;// lpu23x lpugin 기다림.
 
 		if(m_b_enable_iso_mode_after_update) {
-			n_step += 1; // iso mode 로 변경.
+			n_step += 1; // iso mode 로 변경.(enter-config, set iso mode, leave-config)
 		}
 		if (m_lpu23x_interface_after_update != cshare::Lpu237Interface::nc) {
-			n_step += 1; // interface 변경.
+			n_step += 1; // interface 변경.(enter-config, set interface, leave-config)
 		}
 
 	} while (false);
@@ -294,6 +294,110 @@ bool cshare::io_load_basic_sys_parameter(_mp::clibhid_dev::type_ptr& ptr_recover
 	//
 	m_target_protocol_lpu237.clear_transaction();
 	m_target_protocol_lpu237.generate_get_system_information_with_name();
+
+	_mp::type_v_buffer v_tx;
+	_mp::type_v_buffer v_rx;
+	size_t n_remainder_transaction(0);
+
+	b_result = true;
+
+	do {
+		n_remainder_transaction = m_target_protocol_lpu237.get_tx_transaction(v_tx);
+		if (v_tx.size() == 0) {
+			b_complete = true;
+			continue;
+		}
+		//
+		if (!cshare::get_instance().io_write_read_sync(ptr_recoverd_dev, v_tx, v_rx)) {
+			b_result = false;
+			break;
+		}
+
+		//waits the complete of tx.
+		if (!m_target_protocol_lpu237.set_rx_transaction(v_rx)) {
+			b_result = false;
+			break;
+		}
+		if (!m_target_protocol_lpu237.set_from_rx()) {
+			b_result = false;
+			break;
+		}
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+	} while (!b_complete);
+
+	if (n_remainder_transaction <= 0) {
+		m_target_protocol_lpu237.clear_transaction();
+	}
+
+	return b_result;
+}
+
+bool cshare::io_set_interface(_mp::clibhid_dev::type_ptr& ptr_recoverd_dev)
+{
+	bool b_result(false);
+	bool b_complete(false);
+
+	if (!ptr_recoverd_dev) {
+		return b_result;
+	}
+	//
+	m_target_protocol_lpu237.set_interface((cprotocol_lpu237::type_system_interface)m_lpu23x_interface_after_update);
+	m_target_protocol_lpu237.clear_transaction();
+	if (!m_target_protocol_lpu237.generate_set_interface()) {
+		return b_result;
+	}
+
+	_mp::type_v_buffer v_tx;
+	_mp::type_v_buffer v_rx;
+	size_t n_remainder_transaction(0);
+
+	b_result = true;
+
+	do {
+		n_remainder_transaction = m_target_protocol_lpu237.get_tx_transaction(v_tx);
+		if (v_tx.size() == 0) {
+			b_complete = true;
+			continue;
+		}
+		//
+		if (!cshare::get_instance().io_write_read_sync(ptr_recoverd_dev, v_tx, v_rx)) {
+			b_result = false;
+			break;
+		}
+
+		//waits the complete of tx.
+		if (!m_target_protocol_lpu237.set_rx_transaction(v_rx)) {
+			b_result = false;
+			break;
+		}
+		if (!m_target_protocol_lpu237.set_from_rx()) {
+			b_result = false;
+			break;
+		}
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+	} while (!b_complete);
+
+	if (n_remainder_transaction <= 0) {
+		m_target_protocol_lpu237.clear_transaction();
+	}
+
+	return b_result;
+}
+
+bool cshare::io_set_mmd1100_to_iso_mode(_mp::clibhid_dev::type_ptr& ptr_recoverd_dev)
+{
+	bool b_result(false);
+	bool b_complete(false);
+
+	if (!ptr_recoverd_dev) {
+		return b_result;
+	}
+	//
+	m_target_protocol_lpu237.set_enable_mmd1100_iso_mode(true);
+	m_target_protocol_lpu237.clear_transaction();
+	if (!m_target_protocol_lpu237.generate_mmd1100_to_iso_mode()) {
+		return b_result;//not support iso mode change
+	}
 
 	_mp::type_v_buffer v_tx;
 	_mp::type_v_buffer v_rx;
@@ -680,6 +784,11 @@ _mp::type_v_buffer cshare::get_target_device_model_name() const
 cshare::type_version cshare::get_target_device_version() const
 {
 	return m_target_protocol_lpu237.get_system_version();
+}
+
+bool cshare::get_target_device_mmd1100_is_iso_mode() const
+{
+	return m_target_protocol_lpu237.get_enable_mmd1100_is_iso_mode();
 }
 
 std::vector<std::string> cshare::get_vector_files_in_current_dir() const

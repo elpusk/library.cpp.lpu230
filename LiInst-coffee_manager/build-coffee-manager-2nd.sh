@@ -4,7 +4,7 @@
 
 # 패키지 정보 설정
 PACKAGE_NAME="coffee-manager-2nd"
-VERSION="2.0"
+VERSION="2.1"
 ARCH="amd64" # 또는 'arm64', 'i386' 등 실제 아키텍처에 맞게 수정
 DEB_PACKAGE_NAME="${PACKAGE_NAME}_${VERSION}_${ARCH}.deb"
 INSTALL_ROOT="opt/${PACKAGE_NAME}" # 패키지 내부의 임시 설치 경로
@@ -21,6 +21,7 @@ ORIGIN_LIBTG_LPU237_IBUTTON_XYZ="/home/tester/projects/li_lpu237_ibutton/bin/x64
 ORIGIN_ELPUSK_HID_D_JSON="/home/tester/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/projects/ElpuskHidDaemon/elpusk-hid-d.json"
 ORIGIN_TG_LPU237_DLL_INI="/home/tester/projects/li_lpu237_dll/shared/projects/lpu237_dll/tg_lpu237_dll.ini"
 ORIGIN_TG_LPU237_IBUTTON_INI="/home/tester/projects/li_lpu237_ibutton/shared/projects/lpu237_ibutton/tg_lpu237_ibutton.ini"
+ORIGIN_LPU230_UPDATE="/home/tester/projects/li_lpu230_update/bin/x64//Release/lpu230_update.out"
 
 # 임시 빌드 디렉토리 생성
 DEB_DIR="./${PACKAGE_NAME}-${VERSION}"
@@ -46,6 +47,7 @@ cp "${ORIGIN_ELPUSK_HID_D}" "${DEB_DIR}/usr/share/elpusk/program/00000006/coffee
 cp "${ORIGIN_LIBDEV_LIB_XYZ}" "${DEB_DIR}/usr/share/elpusk/program/00000006/coffee_manager/so/"
 cp "${ORIGIN_LIBTG_LPU237_DLL_XYZ}" "${DEB_DIR}/usr/share/elpusk/program/00000006/coffee_manager/so/"
 cp "${ORIGIN_LIBTG_LPU237_IBUTTON_XYZ}" "${DEB_DIR}/usr/share/elpusk/program/00000006/coffee_manager/so/"
+cp "${ORIGIN_LPU230_UPDATE}" "${DEB_DIR}/usr/share/elpusk/program/00000006/coffee_manager/bin/"
 
 # dpkg 빌드 시에는 심볼릭 링크를 직접 생성하지 않습니다.
 # 대신, postinst 스크립트에서 생성하도록 처리합니다.
@@ -58,8 +60,8 @@ Version: ${VERSION}
 Architecture: ${ARCH}
 Pre-Depends: libnss3-tools
 Maintainer: Elpusk<elpusk@naver.com>
-Description: Coffee Manager 2nd Daemon 2.0
- Provides the necessary daemon and libraries for the coffee manager 2nd system.
+Description: Coffee Manager 2nd Daemon 2.1
+ Provides the necessary daemon, libraries and fw-updater, for the coffee manager 2nd system.
 EOF
 
 
@@ -124,6 +126,7 @@ chmod 644 /usr/share/elpusk/programdata/00000006/coffee_manager/elpusk-hid-d/elp
 chmod 644 /usr/share/elpusk/programdata/00000006/coffee_manager/tg_lpu237_dll/tg_lpu237_dll.ini
 chmod 644 /usr/share/elpusk/programdata/00000006/coffee_manager/tg_lpu237_ibutton/tg_lpu237_ibutton.ini
 chmod 755 /var/log/elpusk/00000006/coffee_manager -R
+chmod 755 /usr/share/elpusk/program/00000006/coffee_manager/bin/lpu230_update.out
 
 # 서비스 심볼릭 링크 업데이트 및 데몬 리로드
 

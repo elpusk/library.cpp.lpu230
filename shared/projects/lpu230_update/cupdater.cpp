@@ -473,8 +473,8 @@ std::shared_ptr<ftxui::Component> cupdater::_create_sub_ui5_complete()
 	//m_ptr_exit_button->TakeFocus(); // 포커스 설정
 	m_ptr_exit_container = std::make_shared<ftxui::Component>(
 		ftxui::Container::Vertical({
-		ftxui::Renderer([] { return ftxui::text("SUCCESS"); }),
-		ftxui::Renderer([] { return ftxui::text("The parameter has been recovered. all complete."); }),
+		ftxui::Renderer([] { return ftxui::text("THE END"); }),
+		ftxui::Renderer([&] { return ftxui::text(m_s_message_in_ing_state); }),
 		ftxui::Renderer([this] { return ftxui::text(cshare::get_instance().get_rom_file_abs_full_path()); }),
 		*m_ptr_exit_button
 		})
@@ -1005,8 +1005,9 @@ void cupdater::ui_main_loop()
 				n_progress_max = m_n_progress_max;
 			}
 
-			m_s_message_in_ing_state = std::to_string(n_msg);
-			m_s_message_in_ing_state += " [";
+			m_s_message_in_ing_state.clear();
+			
+			m_s_message_in_ing_state += "[";
 			m_s_message_in_ing_state += std::to_string(n_progress_min);
 			m_s_message_in_ing_state += ".";
 			m_s_message_in_ing_state += std::to_string(n_progress_cur);
@@ -1014,7 +1015,9 @@ void cupdater::ui_main_loop()
 			m_s_message_in_ing_state += std::to_string(n_progress_max);
 			m_s_message_in_ing_state += "]";
 
-			m_s_message_in_ing_state += " step : ";
+			m_s_message_in_ing_state += " step";
+			m_s_message_in_ing_state += std::to_string(n_msg);
+			m_s_message_in_ing_state += " : ";
 			m_s_message_in_ing_state += s_msg;
 
 #ifdef _WIN32
@@ -1206,8 +1209,25 @@ void cupdater::_updates_thread_function()
 		if (!m_b_is_running)
 			break; // 종료 직전 체크
 
+		////////////////////////////////////////////////////
+		// 업데이트 후 인터페이스 변경.
+		if (!_updates_sub_thread_change_interface_after_update(n_step, dev_info_after_update)) {
+			break;
+		}
+		if (!m_b_is_running)
+			break; // 종료 직전 체크
+
+		////////////////////////////////////////////////////
+		// 업데이트 후 iso mode 로.
+		if (!_updates_sub_thread_set_iso_mode_after_update(n_step, dev_info_after_update)) {
+			break;
+		}
+		if (!m_b_is_running)
+			break; // 종료 직전 체크
+
+		///////////////////////////////////////////////////
 		m_b_is_running = false; // 정상 종료
-		_push_message(n_step, " * Firmware update complete.");
+		_push_message(n_step, " * Firmware update complete. *");
 	}//running
 
 	if (b_need_close_lpu23x) {
@@ -1801,6 +1821,119 @@ bool cupdater::_updates_sub_thread_recover_system_param(int& n_step, const _mp::
 	else {
 		_push_message(n_step, s_msg_success);
 	}
+
+	return b_result;
+}
+
+bool cupdater::_updates_sub_thread_change_interface_after_update(int& n_step, const _mp::clibhid_dev_info& dev_info_after_update)
+{
+#ifdef _WIN32
+	ATLTRACE(L"_updates_sub_thread_change_interface_after_update\n");
+#endif
+	cshare& sh(cshare::get_instance());
+	if (sh.get_lpu23x_interface_change_after_update() == cshare::Lpu237Interface::nc) {
+		return true;//bypass
+	}
+
+	bool b_result(false);
+
+	std::string s_new_inf = sh.get_string(sh.get_lpu23x_interface_change_after_update());
+
+	std::string s_msg_success = "the interface is changed to " + s_new_inf + ".";
+	std::string s_msg_error = "ERROR - change interface(" + s_new_inf + ").";
+
+	_push_message(n_step, "changing interface(" + s_new_inf + ").");
+
+	do {
+		++n_step;
+
+		// create & open clibhid_dev.
+		_mp::clibhid_dev::type_ptr ptr_dev = std::make_shared<_mp::clibhid_dev>(dev_info_after_update, m_ptr_hid_api_briage.get());
+		if (!ptr_dev->is_open()) {
+			s_msg_error = "ERROR - open lpu23x for chaning interface.";
+			continue;
+		}
+
+		if (!sh.io_load_basic_sys_parameter(ptr_dev)) {
+			s_msg_error = "ERROR - loading the updated lpu23x info.";
+			continue;
+		}
+
+		if (!sh.io_set_interface(ptr_dev)) {
+			s_msg_error = "ERROR - change interface(" + s_new_inf + ").";
+			continue;
+		}
+
+		b_result = true;
+
+	} while (false);
+
+	if (!b_result) {
+		_push_message(n_step, s_msg_error);
+	}
+	else {
+		_push_message(n_step, s_msg_success);
+	}
+
+	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+	return b_result;
+}
+
+bool cupdater::_updates_sub_thread_set_iso_mode_after_update(int& n_step, const _mp::clibhid_dev_info& dev_info_after_update)
+{
+#ifdef _WIN32
+	ATLTRACE(L"_updates_sub_thread_set_iso_mode_after_update\n");
+#endif
+	cshare& sh(cshare::get_instance());
+	if (!sh.is_iso_mode_after_update()) {
+		return true;//bypass
+	}
+
+	bool b_result(false);
+
+	std::string s_msg_success = "mmd1100 mode have been changed to iso mode.";
+	std::string s_msg_error = "ERROR - mmd1100 mode change to iso mode.";
+
+	_push_message(n_step, "mmd1100 iso mode.");
+
+	do {
+		++n_step;
+
+		// create & open clibhid_dev.
+		_mp::clibhid_dev::type_ptr ptr_dev = std::make_shared<_mp::clibhid_dev>(dev_info_after_update, m_ptr_hid_api_briage.get());
+		if (!ptr_dev->is_open()) {
+			s_msg_error = "ERROR - open lpu23x for mmd1100 iso mode change.";
+			continue;
+		}
+
+		if (!sh.io_load_basic_sys_parameter(ptr_dev)) {
+			s_msg_error = "ERROR - loading the updated lpu23x info.";
+			continue;
+		}
+
+		if (sh.get_target_device_mmd1100_is_iso_mode()) {
+			s_msg_success = "already mmd1100 mode is iso mode.";
+			b_result = true;
+			continue;
+		}
+
+		if (!sh.io_set_mmd1100_to_iso_mode(ptr_dev)) {
+			s_msg_error = "ERROR - mmd1100 mode change to iso mode.";
+			continue;
+		}
+
+		b_result = true;
+
+	} while (false);
+
+	if (!b_result) {
+		_push_message(n_step, s_msg_error);
+	}
+	else {
+		_push_message(n_step, s_msg_success);
+	}
+
+	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
 	return b_result;
 }

@@ -30,6 +30,8 @@ static void _print_help(const std::string& program_name);
 
 /**
 * @brief command option 유효성 검사. ONLY
+*   
+*   dev_lib.dll(libdev_dll.so) 와 tg_rom.dll(libtg_rom.dll) 를 사용.
 */
 int main(int argc, char** argv)
 {

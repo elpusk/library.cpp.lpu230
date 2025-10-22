@@ -66,6 +66,7 @@ enum SYSTEM_INTERFACE : unsigned char 	//declare system interface.
 {
 	SystemInterfaceUsbKB	= 0,	//system interface is USB keyboard.
 	SystemInterfaceUsbMsr	= 1,	//system interface is USB MSR(generic HID interface).
+	SystemInterfaceUsbVcom = 2,	//system interface is USB virtual Com port (CCD).	
 	SystemInterfaceUart		= 10	//system interface is uart.
 };
 

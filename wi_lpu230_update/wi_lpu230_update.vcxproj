@@ -48,6 +48,7 @@
     <ClInclude Include="..\shared\lib\inc\hid\_vhid_info.h" />
     <ClInclude Include="..\shared\lib\inc\hid\_vhid_info_lpu237.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cconvert.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_cfile.h" />
     <ClInclude Include="..\shared\lib\inc\mp_clog.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cnamed_pipe_.h" />
     <ClInclude Include="..\shared\lib\inc\mp_coffee.h" />
