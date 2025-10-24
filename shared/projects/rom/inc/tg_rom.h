@@ -31,9 +31,9 @@ public:
 		condition_lt = 0x00000008	//less then
 	};
 
-#pragma pack(push,1)
+#pragma pack(push,1) //GCC 4.0 (since 2005)
 
-	enum {
+	enum : uint32_t {
 		MAX_ROMFILE_HEAD_ITEAM = 45,
 		MAX_MODEL_NAME_SIZE = 30,
 		MAX_RFU_SIZE = 128,

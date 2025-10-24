@@ -196,38 +196,39 @@ namespace _mp{
 		{
 			std::wstring s;
 			
-#if defined(_WIN32) && !defined(_DEBUG)
-			//win release
-			s = _mp::cfile::get_path_ProgramFiles();
-			s += L"\\elpusk\\00000006\\coffee_manager\\dll";
-#else
-			s = _mp::_coffee::CONST_S_DIR_DLL_EXCEPT_BACKSLASH; // win debug & linux
-
-#endif //_WIN32
-#ifdef _DEBUG
 #ifdef _WIN32
-				//debug win
+			//windows///////////////
+#ifdef _WIN64
+			//win64
+#ifdef _DEBUG
+			//win64 + debug
+			s = _mp::_coffee::CONST_S_DIR_DLL_EXCEPT_BACKSLASH;
 			s += L"\\tg_rom.dll";
 #else
-				//debug linux 64
+			//win64 + release
+			s = _mp::cfile::get_path_ProgramFiles();
+			s += L"\\elpusk\\00000006\\coffee_manager\\dll";
+			s += L"\\x64\\tg_rom.dll";
+#endif
+#elif defined(_M_IX86)
+			//winx86
+#ifdef _DEBUG
+			//winx86 + debug
+			s = _mp::_coffee::CONST_S_DIR_DLL_EXCEPT_BACKSLASH;
+			s += L"\\tg_rom.dll";
+#else
+			//winx86 + release
+			s = _mp::cfile::get_path_ProgramFiles();
+			s += L"\\elpusk\\00000006\\coffee_manager\\dll";
+			s += L"\\x86\\tg_rom.dll";
+#endif
+#else
+			//NON support arm
+#endif
+#else
+			//linux x64////////////////////
 			s = _mp::_coffee::CONST_S_DIR_DLL_ROM_SO;
 #endif
-#else
-#ifdef _WIN32
-				//release win
-#ifdef _WIN64
-				// x64 Windows
-				s += L"\\x64\\tg_rom.dll";
-#elif defined(_M_IX86)
-				// x86 32 bits Win
-				s += L"\\x86\\tg_rom.dll";
-#else
-#endif
-#else
-				//release linux 64
-				s += L"/libtg_rom.so";
-#endif //_WIN32
-#endif //_DEBUG
 			return s;
 		}
 
@@ -235,38 +236,39 @@ namespace _mp{
 		{
 			std::wstring s;
 
-#if defined(_WIN32) && !defined(_DEBUG)
-			//win release
-			s = _mp::cfile::get_path_ProgramFiles();
-			s += L"\\elpusk\\00000006\\coffee_manager\\dll";
-#else
-			s = _mp::_coffee::CONST_S_DIR_DLL_EXCEPT_BACKSLASH; // win debug & linux
-
-#endif //_WIN32
-#ifdef _DEBUG
 #ifdef _WIN32
-			//debug win
+			//windows///////////////
+#ifdef _WIN64
+			//win64
+#ifdef _DEBUG
+			//win64 + debug
+			s = _mp::_coffee::CONST_S_DIR_DLL_EXCEPT_BACKSLASH;
 			s += L"\\dev_lib.dll";
 #else
-			//debug linux 64
+			//win64 + release
+			s = _mp::cfile::get_path_ProgramFiles();
+			s += L"\\elpusk\\00000006\\coffee_manager\\dll";
+			s += L"\\x64\\dev_lib.dll";
+#endif
+#elif defined(_M_IX86)
+			//winx86
+#ifdef _DEBUG
+			//winx86 + debug
+			s = _mp::_coffee::CONST_S_DIR_DLL_EXCEPT_BACKSLASH;
+			s += L"\\dev_lib.dll";
+#else
+			//winx86 + release
+			s = _mp::cfile::get_path_ProgramFiles();
+			s += L"\\elpusk\\00000006\\coffee_manager\\dll";
+			s += L"\\x86\\dev_lib.dll";
+#endif
+#else
+			//NON support arm
+#endif
+#else
+			//linux x64////////////////////
 			s = _mp::_coffee::CONST_S_DIR_DLL_DEV_LIB_SO;
 #endif
-#else
-#ifdef _WIN32
-			//release win
-#ifdef _WIN64
-				// x64 Windows
-			s += L"\\x64\\dev_lib.dll";
-#elif defined(_M_IX86)
-				// x86 32 bits Win
-			s += L"\\x86\\dev_lib.dll";
-#else
-#endif
-#else
-			//release linux 64
-			s += L"/libdev_lib.so";
-#endif //_WIN32
-#endif //_DEBUG
 			return s;
 		}
 	};

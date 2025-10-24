@@ -43,9 +43,17 @@ namespace _mp{
         constexpr const wchar_t* CONST_S_COFFEE_LPU237_MSR_DLL_INI_DIR_EXCEPT_BACKSLASH = L"C:\\job\\library.cpp.lpu230\\shared\\projects\\lpu237_dll";
         constexpr const wchar_t* CONST_S_COFFEE_LPU237_IBUTTON_DLL_INI_DIR_EXCEPT_BACKSLASH = L"C:\\job\\library.cpp.lpu230\\shared\\projects\\lpu237_ibutton";
 
+#ifdef _M_IX86
+        //WIN x86
+        constexpr const wchar_t* CONST_S_MGMT_ABS_FULL_PATH = L"C:\\job\\library.cpp.lpu230\\Debug\\elpusk-hid-d.exe";
+        constexpr const wchar_t* CONST_S_DIR_MGMT_EXCEPT_BACKSLASH = L"C:\\job\\library.cpp.lpu230\\Debug";
+        constexpr const wchar_t* CONST_S_DIR_DLL_EXCEPT_BACKSLASH = L"C:\\job\\library.cpp.lpu230\\Debug";
+#else
+        //WIN x64
         constexpr const wchar_t* CONST_S_MGMT_ABS_FULL_PATH = L"C:\\job\\library.cpp.lpu230\\x64\\Debug\\elpusk-hid-d.exe";
         constexpr const wchar_t* CONST_S_DIR_MGMT_EXCEPT_BACKSLASH = L"C:\\job\\library.cpp.lpu230\\x64\\Debug";
         constexpr const wchar_t* CONST_S_DIR_DLL_EXCEPT_BACKSLASH = L"C:\\job\\library.cpp.lpu230\\x64\\Debug";
+#endif
 #else
 		// release win case - defined in mp_coffee_path.h!
         //constexpr const wchar_t* CONST_S_CERT_ABS_FULL_PATH = L"%ProgramData%\\elpusk\\00000006\\coffee_manager\\data\\server\\coffee_server.crt";
@@ -101,6 +109,8 @@ namespace _mp{
         constexpr const wchar_t* CONST_S_MGMT_ABS_FULL_PATH = L"/usr/share/elpusk/program/00000006/coffee_manager/bin/elpusk-hid-d";
         constexpr const wchar_t* CONST_S_DIR_MGMT_EXCEPT_BACKSLASH = L"/usr/share/elpusk/program/00000006/coffee_manager/bin";
         constexpr const wchar_t* CONST_S_DIR_DLL_EXCEPT_BACKSLASH = L"/usr/share/elpusk/program/00000006/coffee_manager/so";
+        constexpr const wchar_t* CONST_S_DIR_DLL_ROM_SO = L"/usr/share/elpusk/program/00000006/coffee_manager/so/libtg_rom.so";
+        constexpr const wchar_t* CONST_S_DIR_DLL_DEV_LIB_SO = L"/usr/share/elpusk/program/00000006/coffee_manager/so/libdev_lib.so";
 #endif //_DEBUG
 #endif //_WIN32
 

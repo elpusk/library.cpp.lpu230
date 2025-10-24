@@ -113,8 +113,19 @@ public:
 	bool IsInitialOk() { return m_bIniOk; }
 
 public:
-	bool do_erase_in_worker(int n_sec);
-	bool do_write_sector(
+	/**
+	* @return first - true : success processing
+	*
+	*	second - error information.
+	*/
+	std::pair<bool, std::string> do_erase_in_worker(int n_sec);
+
+	/**
+	* @return first - true : success processing
+	* 
+	*	second - error information.
+	*/
+	std::pair<bool,std::string> do_write_sector(
 		int n_sec
 		,const std::vector<unsigned char>& v_sector
 		, std::ofstream& opened_debug_file //for debugging

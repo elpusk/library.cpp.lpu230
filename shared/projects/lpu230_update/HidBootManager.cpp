@@ -179,17 +179,18 @@ bool CHidBootManager::_is_zero_packet(std::vector<unsigned char> & vPacket )
 	return bResult;
 }
 
-bool CHidBootManager::do_erase_in_worker(int n_sec)
+std::pair<bool, std::string> CHidBootManager::do_erase_in_worker(int n_sec)
 {
 	//Deb_Printf( L"..do_erase_in_worker.\n" );
 
 	bool bResult = true;
+	std::string s_error_msg;
 
 	if (!m_b_exist_sec_info) {
 		if (n_sec != 1) {
 			//lpc1343 을 사용하는 firmware 는 1 sector 를 지우라는 명령을 받으면, 1~7 sector 를 지우도록 설계되어 있음.
 			// 나머지는 에러 이지만 코드 호환성을 생각해서 성공으로 리턴함.
-			return bResult;
+			return std::make_pair(bResult, s_error_msg);
 		}
 	}
 
@@ -221,36 +222,51 @@ bool CHidBootManager::do_erase_in_worker(int n_sec)
 			nRx = _DDL_read(m_pair_dev_ptrs, &vReplay[0], 64, 64 );
 
 			if( nRx != 64 ){
+				s_error_msg = "rx size is " + std::to_string(nRx);
 				bResult = false;
-				break;// exit break
+				break;// exit wile
 			}
 		}//end while
 
 		if( bResult ){
+			//64 받음
 			if( pReplay->cResult != HIDB_REP_RESULT_SUCCESS ){
-
 				//retry
 				std::this_thread::sleep_for(std::chrono::milliseconds(10));
 				nRx = _DDL_read(m_pair_dev_ptrs, &vReplay[0], 64, 64 );
 
-				if( nRx == 64 ){
-					bResult = true;
-				}
-				else
+				if( nRx != 64 ){
+					s_error_msg = "rerx size is " + std::to_string(nRx);
 					bResult = false;
+				}
+				else {
+					if (pReplay->cResult != HIDB_REP_RESULT_SUCCESS) {
+						s_error_msg = "rep(req,result,chain)=(";
+						s_error_msg += std::to_string(pReplay->cReplay);
+						s_error_msg += ",";
+						s_error_msg += std::to_string(pReplay->cResult);
+						s_error_msg += ",";
+						s_error_msg += std::to_string(pReplay->wChain);
+						s_error_msg += ")";
+						bResult = false;
+					}
+				}
 			}
 		}
 	}
-	else
+	else {
+		s_error_msg = "write-read io failure";
 		bResult = false;
+	}
+		
 #else
 	bResult = true;
 #endif // __DISABLE_REAL_TXRX__
 
-	return bResult;
+	return std::make_pair(bResult, s_error_msg);;
 }
 
-bool CHidBootManager::do_write_sector(
+std::pair<bool, std::string> CHidBootManager::do_write_sector(
 	int n_sec
 	, const std::vector<unsigned char>& v_sector
 	, std::ofstream& opened_debug_file //for debugging
@@ -258,6 +274,7 @@ bool CHidBootManager::do_write_sector(
 {
 	cshare& sh(cshare::get_instance());
 	bool bResult = true;
+	std::string s_error_msg;
 
 	size_t n_offset = 0;
 	size_t n_loop = CHidBootBuffer::C_SECTOR_SIZE / CHidBootBuffer::C_DATA_SIZE_OF_ONE_PACKET;
@@ -313,12 +330,15 @@ bool CHidBootManager::do_write_sector(
 			// 이 코드가 사용하는 dev_lib 라이브러리에서 write + read 조합의 read 는 msr 이나 ibutton read 로 간주 하므로
 			// 딴데로 빠져 버린다. 따라서 항상 일반 command 의 경우, txrx 로 처리 해야함.
 			int nRx = 64;
-			if (_DDL_TxRx(m_pair_dev_ptrs, &vReq[0], 64, 64, &vReplay[0], &nRx, 64)) {
+
+			if (_DDL_TxRx(m_pair_dev_ptrs, &vReq[0], vReq.size(), 64, &vReplay[0], &nRx, 64)) {
 				while (_is_zero_packet(vReplay)) {
+
 					std::this_thread::sleep_for(std::chrono::milliseconds(10));
 					nRx = _DDL_read(m_pair_dev_ptrs, &vReplay[0], 64, 64);
 
 					if (nRx != 64) {
+						s_error_msg = "rx size is "+std::to_string(nRx);
 						bResult = false;
 						break;// exit break
 					}
@@ -326,14 +346,30 @@ bool CHidBootManager::do_write_sector(
 
 				if (bResult) {
 					if (pReplay->cResult != HIDB_REP_RESULT_SUCCESS) {
+						s_error_msg += "rep(req,result,chain)=(";
+						s_error_msg += std::to_string(pReplay->cReplay);
+						s_error_msg += ",";
+						s_error_msg += std::to_string(pReplay->cResult);
+						s_error_msg += ",";
+						s_error_msg += std::to_string(pReplay->wChain);
+						s_error_msg += ")";
 						bResult = false;
 						break; //exit for
 					}
 				}
+				else {
+					break; //exit for : error
+				}
+			}
+			else {
+				s_error_msg = "write-read io failure";
+				bResult = false;
+				break; //exit for
 			}
 		}
 		else {
 			if (!_DDL_write(m_pair_dev_ptrs, &vReq[0], 64, 64)) {
+				s_error_msg = "write io failure";
 				bResult = false;
 				break; //exit for
 			}
@@ -349,7 +385,7 @@ bool CHidBootManager::do_write_sector(
 
 	//_tprintf( L" * sector = %d.\n",nSec );
 	//
-	return bResult;
+	return std::make_pair(bResult,s_error_msg);
 }
 
 int CHidBootManager::_DDL_GetList(std::list<std::wstring>& ListDev, int nVid, int nPid, int nInf)
@@ -520,10 +556,11 @@ bool CHidBootManager::_DDL_TxRx(CHidBootManager::type_pair_handle hDev, unsigned
 			continue;
 		}
 
-		_mp::type_v_buffer v_tx(nOutReportSize, 0);
+		
 		_mp::type_v_buffer v_rx;
 
-		//std::copy(&lpTxData[0], &lpTxData[nTx], &v_tx[1]);
+		//
+		_mp::type_v_buffer v_tx(nOutReportSize, 0);
 		std::copy(&lpTxData[0], &lpTxData[nTx], &v_tx[0]);
 
 		if (!cshare::io_write_read_sync(hDev.second.first, v_tx, v_rx, 64)) {

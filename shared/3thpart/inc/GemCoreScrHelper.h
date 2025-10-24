@@ -77,7 +77,7 @@ namespace gemcore_scr_interface
 #define ICC_CHANGE                             0x02
 #define ICC_INSERTED_EVENT                     (ICC_PRESENT+ICC_CHANGE)
 */
-#pragma pack(push,1)
+#pragma pack(push,1) //GCC 4.0 (since 2005)
 
 // ccid message format SPEC .P27
 typedef	struct tag_ccid_pc_to_rdr_header{

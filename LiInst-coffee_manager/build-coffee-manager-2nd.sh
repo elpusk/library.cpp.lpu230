@@ -2,26 +2,41 @@
 
 # this scripter format must be Unix/Linux LF format.
 
+set -e # Exit immediately if a command exits with a non-zero status.
+
 # 패키지 정보 설정
 PACKAGE_NAME="coffee-manager-2nd"
 VERSION="2.1"
 ARCH="amd64" # 또는 'arm64', 'i386' 등 실제 아키텍처에 맞게 수정
 DEB_PACKAGE_NAME="${PACKAGE_NAME}_${VERSION}_${ARCH}.deb"
-INSTALL_ROOT="opt/${PACKAGE_NAME}" # 패키지 내부의 임시 설치 경로
 
 # setting variables
 gCA_CERT_FILE="/usr/local/share/ca-certificates/ca-coffee_server.crt"
 gCA_CERT_ALIAS="ca-coffee_server"
 
-# 원본 파일 경로 (사용자 환경에 맞게 수정 필요)
-ORIGIN_ELPUSK_HID_D="/home/tester/projects/LiElpuskHidDaemon/bin/x64/Release/elpusk-hid-d"
-ORIGIN_LIBDEV_LIB_XYZ="/home/tester/projects/li_dev_lib/bin/x64/Release/libdev_lib.so.1.0.0" # <-- x.y.z 실제 버전으로 변경
-ORIGIN_LIBTG_LPU237_DLL_XYZ="/home/tester/projects/li_lpu237_dll/bin/x64/Release/libtg_lpu237_dll.so.6.0.0" # <-- x.y.z 실제 버전으로 변경
-ORIGIN_LIBTG_LPU237_IBUTTON_XYZ="/home/tester/projects/li_lpu237_ibutton/bin/x64/Release/libtg_lpu237_ibutton.so.6.0.0" # <-- x.y.z 실제 버전으로 변경
-ORIGIN_ELPUSK_HID_D_JSON="/home/tester/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/projects/ElpuskHidDaemon/elpusk-hid-d.json"
-ORIGIN_TG_LPU237_DLL_INI="/home/tester/projects/li_lpu237_dll/shared/projects/lpu237_dll/tg_lpu237_dll.ini"
-ORIGIN_TG_LPU237_IBUTTON_INI="/home/tester/projects/li_lpu237_ibutton/shared/projects/lpu237_ibutton/tg_lpu237_ibutton.ini"
-ORIGIN_LPU230_UPDATE="/home/tester/projects/li_lpu230_update/bin/x64//Release/lpu230_update.out"
+### --- 설정 변수 --- ###
+# 원본 파일이 있는 최상위 프로젝트 경로
+SRC_BASE_DIR="/home/tester/projects"
+
+# 라이브러리 버전 정보
+LIBDEV_LIB_VERSION="1.0.0"
+LIBTG_LPU237_DLL_VERSION="6.0.0"
+LIBTG_LPU237_IBUTTON_VERSION="6.0.0"
+LIBTG_ROM_VERSION="1.2.0"
+
+# 원본 파일 전체 경로
+ORIGIN_ELPUSK_HID_D="${SRC_BASE_DIR}/LiElpuskHidDaemon/bin/x64/Release/elpusk-hid-d"
+ORIGIN_LPU230_UPDATE="${SRC_BASE_DIR}/li_lpu230_update/bin/x64/Release/lpu230_update.out"
+ORIGIN_ELPUSK_HID_D_JSON="${SRC_BASE_DIR}/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/projects/ElpuskHidDaemon/elpusk-hid-d.json"
+
+ORIGIN_LIBDEV_LIB_XYZ="${SRC_BASE_DIR}/li_dev_lib/bin/x64/Release/libdev_lib.so.${LIBDEV_LIB_VERSION}"
+ORIGIN_LIBTG_LPU237_DLL_XYZ="${SRC_BASE_DIR}/li_lpu237_dll/bin/x64/Release/libtg_lpu237_dll.so.${LIBTG_LPU237_DLL_VERSION}"
+ORIGIN_LIBTG_LPU237_IBUTTON_XYZ="${SRC_BASE_DIR}/li_lpu237_ibutton/bin/x64/Release/libtg_lpu237_ibutton.so.${LIBTG_LPU237_IBUTTON_VERSION}"
+ORIGIN_LIBTG_ROM_XYZ="${SRC_BASE_DIR}/li_rom/bin/x64/Release/libtg_rom.so.${LIBTG_ROM_VERSION}"
+
+ORIGIN_TG_LPU237_DLL_INI="${SRC_BASE_DIR}/li_lpu237_dll/shared/projects/lpu237_dll/tg_lpu237_dll.ini"
+ORIGIN_TG_LPU237_IBUTTON_INI="${SRC_BASE_DIR}/li_lpu237_ibutton/shared/projects/lpu237_ibutton/tg_lpu237_ibutton.ini"
+### --- 설정 변수 끝 --- ###
 
 # 임시 빌드 디렉토리 생성
 DEB_DIR="./${PACKAGE_NAME}-${VERSION}"
@@ -44,10 +59,12 @@ cp "${ORIGIN_ELPUSK_HID_D_JSON}" "${DEB_DIR}/usr/share/elpusk/programdata/000000
 cp "${ORIGIN_TG_LPU237_DLL_INI}" "${DEB_DIR}/usr/share/elpusk/programdata/00000006/coffee_manager/tg_lpu237_dll/"
 cp "${ORIGIN_TG_LPU237_IBUTTON_INI}" "${DEB_DIR}/usr/share/elpusk/programdata/00000006/coffee_manager/tg_lpu237_ibutton/"
 cp "${ORIGIN_ELPUSK_HID_D}" "${DEB_DIR}/usr/share/elpusk/program/00000006/coffee_manager/bin/"
+cp "${ORIGIN_LPU230_UPDATE}" "${DEB_DIR}/usr/share/elpusk/program/00000006/coffee_manager/bin/lpu230_update"
 cp "${ORIGIN_LIBDEV_LIB_XYZ}" "${DEB_DIR}/usr/share/elpusk/program/00000006/coffee_manager/so/"
 cp "${ORIGIN_LIBTG_LPU237_DLL_XYZ}" "${DEB_DIR}/usr/share/elpusk/program/00000006/coffee_manager/so/"
 cp "${ORIGIN_LIBTG_LPU237_IBUTTON_XYZ}" "${DEB_DIR}/usr/share/elpusk/program/00000006/coffee_manager/so/"
-cp "${ORIGIN_LPU230_UPDATE}" "${DEB_DIR}/usr/share/elpusk/program/00000006/coffee_manager/bin/"
+cp "${ORIGIN_LIBTG_ROM_XYZ}" "${DEB_DIR}/usr/share/elpusk/program/00000006/coffee_manager/so/"
+
 
 # dpkg 빌드 시에는 심볼릭 링크를 직접 생성하지 않습니다.
 # 대신, postinst 스크립트에서 생성하도록 처리합니다.
@@ -89,8 +106,7 @@ EOF
 # DEBIAN/preinst 파일 생성 (설치 전 실행)
 echo "DEBIAN/preinst 파일 생성 중..."
 cat <<EOF > "${DEB_DIR}/DEBIAN/preinst"
-#!/bin/bash
-set -e
+#!/bin/sh
 
 # 기존 서비스 중지 및 등록 말소 (업그레이드 시)
 if systemctl is-active --quiet coffee-manager-2nd.service; then
@@ -113,8 +129,8 @@ chmod 755 "${DEB_DIR}/DEBIAN/preinst"
 # DEBIAN/postinst 파일 생성 (설치 후 실행)
 echo "DEBIAN/postinst 파일 생성 중..."
 cat <<EOF > "${DEB_DIR}/DEBIAN/postinst"
-#!/bin/bash
-set -e
+#!/bin/sh
+
 
 # 설치된 파일/폴더 소유자와 권한 설정
 chown -R root:root /usr/share/elpusk/program/00000006/coffee_manager
@@ -122,40 +138,35 @@ chown -R root:root /usr/share/elpusk/programdata/00000006/coffee_manager
 chown -R root:root /var/log/elpusk/00000006/coffee_manager
 
 chmod 755 /usr/share/elpusk/program/00000006/coffee_manager/bin/elpusk-hid-d
+chmod 755 /usr/share/elpusk/program/00000006/coffee_manager/bin/lpu230_update
 chmod 644 /usr/share/elpusk/programdata/00000006/coffee_manager/elpusk-hid-d/elpusk-hid-d.json
 chmod 644 /usr/share/elpusk/programdata/00000006/coffee_manager/tg_lpu237_dll/tg_lpu237_dll.ini
 chmod 644 /usr/share/elpusk/programdata/00000006/coffee_manager/tg_lpu237_ibutton/tg_lpu237_ibutton.ini
 chmod 755 /var/log/elpusk/00000006/coffee_manager -R
-chmod 755 /usr/share/elpusk/program/00000006/coffee_manager/bin/lpu230_update.out
+
 
 # 서비스 심볼릭 링크 업데이트 및 데몬 리로드
 
 # 심볼릭 링크 생성
 SO_DIR="/usr/share/elpusk/program/00000006/coffee_manager/so"
-LIBDEV_LIB_XYZ="libdev_lib.so.1.0.0" # <-- x.y.z 실제 버전으로 변경
-LIBTG_LPU237_DLL_XYZ="libtg_lpu237_dll.so.6.0.0" # <-- x.y.z 실제 버전으로 변경
-LIBTG_LPU237_IBUTTON_XYZ="libtg_lpu237_ibutton.so.6.0.0" # <-- x.y.z 실제 버전으로 변경
 
-# libdev_lib.so.x.y.z -> libdev_lib.so.x
-if [ -f "\$SO_DIR/\$LIBDEV_LIB_XYZ" ]; then
-    VERSION_DLL=\$(echo "\$LIBDEV_LIB_XYZ" | sed -E 's/libdev_lib.so.([0-9]+).([0-9]+).([0-9]+)/\1/')
-    ln -sf "\$SO_DIR/\$LIBDEV_LIB_XYZ" "\$SO_DIR/libdev_lib.so.\$VERSION_DLL"
-    ln -sf "\$SO_DIR/libdev_lib.so.\$VERSION_DLL" "\$SO_DIR/libdev_lib.so"
-fi
+create_symlinks() {
+    local lib_name="\$1"
+    local full_version="\$2"
+    
+    if [ -f "\$SO_DIR/\${lib_name}.so.\${full_version}" ]; then
+        major_version=\$(echo "\$full_version" | cut -d. -f1)
+        # libname.so.x.y.z -> libname.so.x
+        ln -sf "\$SO_DIR/\${lib_name}.so.\${full_version}" "\$SO_DIR/\${lib_name}.so.\${major_version}"
+        # libname.so.x -> libname.so
+        ln -sf "\$SO_DIR/\${lib_name}.so.\${major_version}" "\$SO_DIR/\${lib_name}.so"
+    fi
+}
 
-# libtg_lpu237_dll.so.x.y.z -> libtg_lpu237_dll.so.x
-if [ -f "\$SO_DIR/\$LIBTG_LPU237_DLL_XYZ" ]; then
-    VERSION_DLL=\$(echo "\$LIBTG_LPU237_DLL_XYZ" | sed -E 's/libtg_lpu237_dll.so.([0-9]+).([0-9]+).([0-9]+)/\1/')
-    ln -sf "\$SO_DIR/\$LIBTG_LPU237_DLL_XYZ" "\$SO_DIR/libtg_lpu237_dll.so.\$VERSION_DLL"
-    ln -sf "\$SO_DIR/libtg_lpu237_dll.so.\$VERSION_DLL" "\$SO_DIR/libtg_lpu237_dll.so"
-fi
-
-# libtg_lpu237_ibutton.so.x.y.z -> libtg_lpu237_ibutton.so.x
-if [ -f "\$SO_DIR/\$LIBTG_LPU237_IBUTTON_XYZ" ]; then
-    VERSION_IBUTTON=\$(echo "\$LIBTG_LPU237_IBUTTON_XYZ" | sed -E 's/libtg_lpu237_ibutton.so.([0-9]+).([0-9]+).([0-9]+)/\1/')
-    ln -sf "\$SO_DIR/\$LIBTG_LPU237_IBUTTON_XYZ" "\$SO_DIR/libtg_lpu237_ibutton.so.\$VERSION_IBUTTON"
-    ln -sf "\$SO_DIR/libtg_lpu237_ibutton.so.\$VERSION_IBUTTON" "\$SO_DIR/libtg_lpu237_ibutton.so"
-fi
+create_symlinks "libdev_lib" "${LIBDEV_LIB_VERSION}"
+create_symlinks "libtg_lpu237_dll" "${LIBTG_LPU237_DLL_VERSION}"
+create_symlinks "libtg_lpu237_ibutton" "${LIBTG_LPU237_IBUTTON_VERSION}"
+create_symlinks "libtg_rom" "${LIBTG_ROM_VERSION}"
 
 
 # elpusk-hid-d /cert 실행
@@ -214,8 +225,8 @@ chmod 755 "${DEB_DIR}/DEBIAN/postinst"
 # DEBIAN/prerm 파일 생성 (제거 전 실행)
 echo "DEBIAN/prerm 파일 생성 중..."
 cat <<EOF > "${DEB_DIR}/DEBIAN/prerm"
-#!/bin/bash
-set -e
+#!/bin/sh
+
 
 # 서비스 중지 및 등록 말소
 if systemctl is-active --quiet coffee-manager-2nd.service; then
@@ -279,8 +290,8 @@ chmod 755 "${DEB_DIR}/DEBIAN/prerm"
 # DEBIAN/postrm 파일 생성 (제거 후 실행)
 echo "DEBIAN/postrm 파일 생성 중..."
 cat <<EOF > "${DEB_DIR}/DEBIAN/postrm"
-#!/bin/bash
-set -e
+#!/bin/sh
+
 
 # 완전 제거 시에만 추가 정리 작업 수행
 # 일반 사용자 계정으로 실행해서 만든 log 파일도 제거.
@@ -366,4 +377,4 @@ echo "설치 명령어: sudo dpkg -i ${DEB_PACKAGE_NAME}"
 # echo "제거 명령어: sudo dpkg -r ${PACKAGE_NAME}"
 echo "완전 제거 명령어: sudo dpkg -P ${PACKAGE_NAME}"
 echo ""
-echo "!!! 중요: 'libdev_lib.so.x.y.x, libtg_lpu237_dll.so.x.y.z'와 'libtg_lpu237_ibutton.so.x.y.z'의 'x.y.z' 부분을 실제 파일 버전에 맞게 수정해야 합니다."
+echo "스크립트 상단의 '설정 변수' 섹션에서 경로와 버전이 올바른지 확인하세요."

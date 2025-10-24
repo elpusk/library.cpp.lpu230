@@ -274,9 +274,9 @@ CRom::type_result _CALLTYPE_ tg_rom_add_item(
 		return CRom::result_error_not_found;
 
 	rRom.seekg(0, rRom.end);
-	unsigned long nLen = rRom.tellg();
+	uint32_t nLen = (uint32_t)rRom.tellg();
 
-	if (nLen < (unsigned long)sizeof(CRom::ROMFILE_HEAD)) {
+	if (nLen < (uint32_t)sizeof(CRom::ROMFILE_HEAD)) {
 		rRom.close();
 		return CRom::result_error_shorter_then_expected;
 	}

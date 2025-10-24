@@ -29,7 +29,7 @@ typedef struct tagHidBLRequest {
 		unsigned char sTag[5];
 		unsigned short wPara;
 		uint32_t dwPara;
-	};
+	}_PACK_BYTE;
 
 	unsigned short wChain;	//from zero
 	unsigned short wLen;
@@ -71,7 +71,7 @@ typedef struct tagHidBLIOTran {
 		unsigned char sTag[5];
 		unsigned short wPara;
 		uint32_t dwPara;
-	};
+	}_PACK_BYTE;
 
 	unsigned short wChain;	//from zero
 	unsigned short wLen;	// total size

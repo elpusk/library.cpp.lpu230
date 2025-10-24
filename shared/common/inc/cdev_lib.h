@@ -168,74 +168,76 @@ public:
 		//
 		if (!b_result) {
 			if (m_p_clog) {
-				m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_on = 0x%x.\n", (void*)m_dev_lib_on);
-				m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_on = 0x%x.\n", (void*)m_dev_lib_on);
+				if (m_hMode != NULL) {
+					m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_on = 0x%x.\n", (void*)m_dev_lib_on);
+					m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_on = 0x%x.\n", (void*)m_dev_lib_on);
 
-				m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_off = 0x%x.\n", (void*)m_dev_lib_off);
-				m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_off = 0x%x.\n", (void*)m_dev_lib_off);
+					m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_off = 0x%x.\n", (void*)m_dev_lib_off);
+					m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_off = 0x%x.\n", (void*)m_dev_lib_off);
 
-				m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_get_mutex = 0x%x.\n", (void*)m_dev_lib_get_mutex);
-				m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_get_mutex = 0x%x.\n", (void*)m_dev_lib_get_mutex);
+					m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_get_mutex = 0x%x.\n", (void*)m_dev_lib_get_mutex);
+					m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_get_mutex = 0x%x.\n", (void*)m_dev_lib_get_mutex);
 
-				m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_constrcutor = 0x%x.\n", (void*)m_dev_lib_constrcutor);
-				m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_constrcutor = 0x%x.\n", (void*)m_dev_lib_constrcutor);
+					m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_constrcutor = 0x%x.\n", (void*)m_dev_lib_constrcutor);
+					m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_constrcutor = 0x%x.\n", (void*)m_dev_lib_constrcutor);
 
-				m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_destructor = 0x%x.\n", (void*)m_dev_lib_destructor);
-				m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_destructor = 0x%x.\n", (void*)m_dev_lib_destructor);
+					m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_destructor = 0x%x.\n", (void*)m_dev_lib_destructor);
+					m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_destructor = 0x%x.\n", (void*)m_dev_lib_destructor);
 
-				m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_is_ini = 0x%x.\n", (void*)m_dev_lib_is_ini);
-				m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_is_ini = 0x%x.\n", (void*)m_dev_lib_is_ini);
+					m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_is_ini = 0x%x.\n", (void*)m_dev_lib_is_ini);
+					m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_is_ini = 0x%x.\n", (void*)m_dev_lib_is_ini);
 
-				m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_hid_enumerate = 0x%x.\n", (void*)m_dev_lib_hid_enumerate);
-				m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_hid_enumerate = 0x%x.\n", (void*)m_dev_lib_hid_enumerate);
+					m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_hid_enumerate = 0x%x.\n", (void*)m_dev_lib_hid_enumerate);
+					m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_hid_enumerate = 0x%x.\n", (void*)m_dev_lib_hid_enumerate);
 
-				m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_hid_enumerate_free = 0x%x.\n", (void*)m_dev_lib_hid_enumerate_free);
-				m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_hid_enumerate_free = 0x%x.\n", (void*)m_dev_lib_hid_enumerate_free);
+					m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_hid_enumerate_free = 0x%x.\n", (void*)m_dev_lib_hid_enumerate_free);
+					m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_hid_enumerate_free = 0x%x.\n", (void*)m_dev_lib_hid_enumerate_free);
 
-				m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_is_open = 0x%x.\n", (void*)m_dev_lib_is_open);
-				m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_is_open = 0x%x.\n", (void*)m_dev_lib_is_open);
+					m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_is_open = 0x%x.\n", (void*)m_dev_lib_is_open);
+					m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_is_open = 0x%x.\n", (void*)m_dev_lib_is_open);
 
-				m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_is_open_free = 0x%x.\n", (void*)m_dev_lib_is_open_free);
-				m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_is_open_free = 0x%x.\n", (void*)m_dev_lib_is_open_free);
+					m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_is_open_free = 0x%x.\n", (void*)m_dev_lib_is_open_free);
+					m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_is_open_free = 0x%x.\n", (void*)m_dev_lib_is_open_free);
 
-				m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_api_open_path = 0x%x.\n", (void*)m_dev_lib_api_open_path);
-				m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_api_open_path = 0x%x.\n", (void*)m_dev_lib_api_open_path);
+					m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_api_open_path = 0x%x.\n", (void*)m_dev_lib_api_open_path);
+					m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_api_open_path = 0x%x.\n", (void*)m_dev_lib_api_open_path);
 
-				m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_api_close = 0x%x.\n", (void*)m_dev_lib_api_close);
-				m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_api_close = 0x%x.\n", (void*)m_dev_lib_api_close);
+					m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_api_close = 0x%x.\n", (void*)m_dev_lib_api_close);
+					m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_api_close = 0x%x.\n", (void*)m_dev_lib_api_close);
 
-				m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_api_set_nonblocking = 0x%x.\n", (void*)m_dev_lib_api_set_nonblocking);
-				m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_api_set_nonblocking = 0x%x.\n", (void*)m_dev_lib_api_set_nonblocking);
+					m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_api_set_nonblocking = 0x%x.\n", (void*)m_dev_lib_api_set_nonblocking);
+					m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_api_set_nonblocking = 0x%x.\n", (void*)m_dev_lib_api_set_nonblocking);
 
-				m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_api_get_report_descriptor = 0x%x.\n", (void*)m_dev_lib_api_get_report_descriptor);
-				m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_api_get_report_descriptor = 0x%x.\n", (void*)m_dev_lib_api_get_report_descriptor);
+					m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_api_get_report_descriptor = 0x%x.\n", (void*)m_dev_lib_api_get_report_descriptor);
+					m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_api_get_report_descriptor = 0x%x.\n", (void*)m_dev_lib_api_get_report_descriptor);
 
-				m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_api_write = 0x%x.\n", (void*)m_dev_lib_api_write);
-				m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_api_write = 0x%x.\n", (void*)m_dev_lib_api_write);
+					m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_api_write = 0x%x.\n", (void*)m_dev_lib_api_write);
+					m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_api_write = 0x%x.\n", (void*)m_dev_lib_api_write);
 
-				m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_api_read = 0x%x.\n", (void*)m_dev_lib_api_read);
-				m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_api_read = 0x%x.\n", (void*)m_dev_lib_api_read);
+					m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_api_read = 0x%x.\n", (void*)m_dev_lib_api_read);
+					m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_api_read = 0x%x.\n", (void*)m_dev_lib_api_read);
 
-				m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_api_error = 0x%x.\n", (void*)m_dev_lib_api_error);
-				m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_api_error = 0x%x.\n", (void*)m_dev_lib_api_error);
+					m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_api_error = 0x%x.\n", (void*)m_dev_lib_api_error);
+					m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_api_error = 0x%x.\n", (void*)m_dev_lib_api_error);
 
-				m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_set_req_q_check_interval_in_child = 0x%x.\n", (void*)m_dev_lib_set_req_q_check_interval_in_child);
-				m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_set_req_q_check_interval_in_child = 0x%x.\n", (void*)m_dev_lib_set_req_q_check_interval_in_child);
+					m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_set_req_q_check_interval_in_child = 0x%x.\n", (void*)m_dev_lib_set_req_q_check_interval_in_child);
+					m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_set_req_q_check_interval_in_child = 0x%x.\n", (void*)m_dev_lib_set_req_q_check_interval_in_child);
 
-				m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_set_hid_write_interval_in_child = 0x%x.\n", (void*)m_dev_lib_set_hid_write_interval_in_child);
-				m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_set_hid_write_interval_in_child = 0x%x.\n", (void*)m_dev_lib_set_hid_write_interval_in_child);
+					m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_set_hid_write_interval_in_child = 0x%x.\n", (void*)m_dev_lib_set_hid_write_interval_in_child);
+					m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_set_hid_write_interval_in_child = 0x%x.\n", (void*)m_dev_lib_set_hid_write_interval_in_child);
 
-				m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_set_hid_read_interval_in_child = 0x%x.\n", (void*)m_dev_lib_set_hid_read_interval_in_child);
-				m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_set_hid_read_interval_in_child = 0x%x.\n", (void*)m_dev_lib_set_hid_read_interval_in_child);
+					m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_set_hid_read_interval_in_child = 0x%x.\n", (void*)m_dev_lib_set_hid_read_interval_in_child);
+					m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_set_hid_read_interval_in_child = 0x%x.\n", (void*)m_dev_lib_set_hid_read_interval_in_child);
 
-				m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_get_req_q_check_interval_in_child = 0x%x.\n", (void*)m_dev_lib_get_req_q_check_interval_in_child);
-				m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_get_req_q_check_interval_in_child = 0x%x.\n", (void*)m_dev_lib_get_req_q_check_interval_in_child);
+					m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_get_req_q_check_interval_in_child = 0x%x.\n", (void*)m_dev_lib_get_req_q_check_interval_in_child);
+					m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_get_req_q_check_interval_in_child = 0x%x.\n", (void*)m_dev_lib_get_req_q_check_interval_in_child);
 
-				m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_get_hid_write_interval_in_child = 0x%x.\n", (void*)m_dev_lib_get_hid_write_interval_in_child);
-				m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_get_hid_write_interval_in_child = 0x%x.\n", (void*)m_dev_lib_get_hid_write_interval_in_child);
+					m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_get_hid_write_interval_in_child = 0x%x.\n", (void*)m_dev_lib_get_hid_write_interval_in_child);
+					m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_get_hid_write_interval_in_child = 0x%x.\n", (void*)m_dev_lib_get_hid_write_interval_in_child);
 
-				m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_get_hid_read_interval_in_child = 0x%x.\n", (void*)m_dev_lib_get_hid_read_interval_in_child);
-				m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_get_hid_read_interval_in_child = 0x%x.\n", (void*)m_dev_lib_get_hid_read_interval_in_child);
+					m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_get_hid_read_interval_in_child = 0x%x.\n", (void*)m_dev_lib_get_hid_read_interval_in_child);
+					m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_get_hid_read_interval_in_child = 0x%x.\n", (void*)m_dev_lib_get_hid_read_interval_in_child);
+				}
 			}
 
 			_ini();

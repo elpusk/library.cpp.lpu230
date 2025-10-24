@@ -652,7 +652,7 @@ std::string cupdater::_check_target_device_path_in_initial()
 			m_log_ref.log_fmt("[I] get system data : %s : (name,version) = (%s,%s).\n"
 				, s_target_dev_path.c_str()
 				, cshare::get_instance().get_target_device_model_name_by_string().c_str()
-				, cshare::get_instance().get_target_device_model_name_by_string().c_str()
+				, cshare::get_instance().get_target_device_version_by_string().c_str()
 			);
 			cshare::get_instance().set_device_path(s_target_dev_path);// 시작 장비가 lpu23x 로 장비가 설정됨
 		}
@@ -1020,14 +1020,18 @@ void cupdater::ui_main_loop()
 			m_s_message_in_ing_state += " : ";
 			m_s_message_in_ing_state += s_msg;
 
-#ifdef _WIN32
 			if (s_msg.empty()) {
+				m_log_ref.log_fmt("[I] ui_main_loop : (%d,empty)\n", n_msg);
+#ifdef _WIN32
 				ATLTRACE("(INT,MSG) - (%d,empty)\n",n_msg);
+#endif
 			}
 			else {
+				m_log_ref.log_fmt("[I] ui_main_loop : (%d,%s)\n", n_msg, s_msg.c_str());
+#ifdef _WIN32
 				ATLTRACE("(INT,MSG) - (%d,%s)\n", n_msg,s_msg.c_str());
+#endif
 			}
-#endif //_WIN32
 			//
 			try {
 				m_screen.PostEvent(ftxui::Event::Custom);
@@ -1505,17 +1509,21 @@ bool cupdater::_updates_sub_thread_erase_sector(int& n_step)
 	std::string s_msg;
 
 	do {
+		std::string s_error;
+
 		// 이미 fw 크기에 맞게 erase_sec_index 가 설정되어 있음.
 		auto v_sec_index = sh.get_erase_sec_index();
 
 		for (auto n_sec : v_sec_index) {
 			++n_step;
-			if (!m_p_mgmt->do_erase_in_worker(n_sec)) {
+			std::tie(b_result, s_error) = m_p_mgmt->do_erase_in_worker(n_sec);
+			if (!b_result) {
 				s_msg = "ERROR - erase sector ";
 				s_msg += std::to_string(n_sec);
-				s_msg += ".";
+				s_msg += "(";
+				s_msg += s_error;
+				s_msg += ").";
 				_push_message(n_step, s_msg);
-				b_result = false;
 				break;//exit for
 			}
 			else {
@@ -1524,6 +1532,8 @@ bool cupdater::_updates_sub_thread_erase_sector(int& n_step)
 				s_msg += ".";
 				_push_message(n_step, s_msg);
 			}
+
+			std::this_thread::sleep_for(std::chrono::milliseconds(500));
 		}//end for
 
 	} while (false);
@@ -1596,13 +1606,16 @@ bool cupdater::_updates_sub_thread_write_one_sector(
 	s_msg += "(7 seconds).";
 	_push_message(n_step, s_msg);
 
+	std::string s_error;
 	// 하나의 sector 를 모두 쓴다. verify 는 fw 를 받은 마이컴에서 write 한 후 읽어서 비교해서 verify 한다.
-	b_result = m_p_mgmt->do_write_sector(n_zero_base_sector_number, v_sector, opened_debug_file);
+	std::tie(b_result, s_error) = m_p_mgmt->do_write_sector(n_zero_base_sector_number, v_sector, opened_debug_file);
 
 	if (!b_result) {
 		s_msg = "ERROR - write & verify sector ";
 		s_msg += std::to_string(n_zero_base_sector_number);
-		s_msg += ".";
+		s_msg += "(";
+		s_msg += s_error;
+		s_msg += ").";
 		_push_message(n_step, s_msg);
 
 	}
