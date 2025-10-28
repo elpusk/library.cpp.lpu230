@@ -214,6 +214,30 @@ namespace _mp{
         return m_ptr_hid_api_briage;
     }
 
+    bool clibhid::consider_to_be_removed(int n_vid, int n_pid)
+    {
+        bool b_result(false);
+        std::lock_guard<std::mutex> lock(m_mutex);
+        std::tie(std::ignore,b_result) = m_set_usb_id_considerated_to_remove.insert(std::make_pair(n_vid, n_pid));
+        return b_result;
+    }
+
+    bool clibhid::cancel_considering_dev_as_removed(int n_vid, int n_pid)
+    {
+        bool b_result(false);
+        std::lock_guard<std::mutex> lock(m_mutex);
+        if (n_vid == -1 || n_pid == -1) {
+            m_set_usb_id_considerated_to_remove.clear();
+            b_result = true;
+        }
+        else {
+            if (m_set_usb_id_considerated_to_remove.erase(std::make_pair(n_vid, n_pid)) > 0) {
+                b_result = true;
+            }
+        }
+        return b_result;
+    }
+
     clibhid::clibhid() : clibhid(false,false)
     {
     }
@@ -425,38 +449,80 @@ namespace _mp{
             return st;
         }
 
+        //get<0> - std::string, device path,
+        //get<1> - unsigned short, usb vendor id,
+        //get<2> - unsigned short, usb product id,
+        //get<3> - int, usb interface number,
+        //get<4> - std::string, extra data
         std::set< std::tuple<std::string, unsigned short, unsigned short, int, std::string> > set_dev;
         set_dev = m_ptr_hid_api_briage->hid_enumerate();
 
+        int n_v(-1), n_p(-1);
+
+        // set 을 clibhid_dev_info set 으로 변경.
         for (auto item : set_dev) {
-            st.emplace(
-                std::get<0>(item).c_str(),
-                std::get<1>(item),
-                std::get<2>(item),
-                std::get<3>(item),
-                std::get<4>(item)
-            );
+            n_v = (int)std::get<1>(item);
+            n_p = (int)std::get<2>(item);
+
+            _mp::type_set_usb_id::iterator it_c_remove = m_set_usb_id_considerated_to_remove.find(std::make_pair(n_v, n_p));
+            if (it_c_remove == std::end(m_set_usb_id_considerated_to_remove)) {
+                st.emplace(
+                    std::get<0>(item).c_str(),
+                    std::get<1>(item),
+                    std::get<2>(item),
+                    std::get<3>(item),
+                    std::get<4>(item)
+                );
+            }
+            else {
+                // 제거된 것으로 간주하는 것은 없는 것으로 평가.
+            }
+
         }//end for
 
         // checks the device critial error 
         clibhid_dev_info::type_set st_must_be_removed;
+        bool b_remove(false);
         for (auto item : m_map_pair_ptrs) {
+            b_remove = false;
+
             if (!item.second.first) {
                 continue;
             }
-            if (!item.second.first->is_detect_replugin()) {
-                continue;
+            if (item.second.first->is_detect_replugin()) {
+                b_remove = true;
             }
-            //critical error .. remove device forcelly
-            if (item.second.second) {
-				m_map_pair_ptrs_lpu237.erase(item.first);
-                st_must_be_removed.insert(*item.second.second);
+            else {
+                if (!item.second.second) {
+                    continue;
+                }
+                n_v = (int)item.second.second->get_vendor_id();
+                n_p = (int)item.second.second->get_product_id();
+
+                _mp::type_set_usb_id::iterator it_c_remove = m_set_usb_id_considerated_to_remove.find(std::make_pair(n_v, n_p));
+                if (it_c_remove != std::end(m_set_usb_id_considerated_to_remove)) {
+                    // 제거된 것으로 간주하는 것은 remove 된 것으로 하자.
+                    b_remove = true;
+                }
+            }
+
+            //m_set_usb_id_considerated_to_remove is protected by m_mutex.
+
+            if (b_remove) {
+                //critical error .. remove device forcelly
+                // IO 중 removed 로 추정되는 에러가 발생한 장비
+                if (item.second.second) {
+                    m_map_pair_ptrs_lpu237.erase(item.first);//관리 장비에서 제거.
+                    st_must_be_removed.insert(*item.second.second);//제가될 장비 set에 추가.
+                }
             }
         }//end for
 
+
+        // 현재 연결로 확인된 장비 set(st) 에 대한 제거될 장비 set(st_must_be_removed) 의 차집합을 구함.
         clibhid_dev_info::type_set st_after_removed = coperation::subtract<clibhid_dev_info>(st, st_must_be_removed);
         //
-        if (!m_set_usb_filter.empty()) {
+        if (!m_set_usb_filter.empty() && !st_after_removed.empty()) {
             //filtering.. 
             clibhid_dev_info::type_set set_union_found;
             std::for_each(std::begin(m_set_usb_filter), std::end(m_set_usb_filter), [&](const type_tuple_usb_filter& filter) {

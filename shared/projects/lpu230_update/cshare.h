@@ -58,6 +58,9 @@ public:
 	cshare& set_target_lpu23x(_mp::clibhid_dev::type_ptr& ptr_dev);
 	cshare &set_start_from_bootloader(bool b_start_from_bootloader);
 
+	cshare& set_executed_server_stop_use_target_dev(bool b_executed, int n_vid, int n_pid);
+	void clear_executed_server_stop_use_target_dev();
+
 	/**
 	* @brief this updater is run by coffee manager 2nd.
 	*/
@@ -73,6 +76,13 @@ public:
 
 	cshare& set_erase_sec_index(const std::vector<int>& v_sec_index = std::vector<int>(0));
 	cshare& set_write_sec_index(const std::vector<int>& v_sec_index = std::vector<int>(0));
+
+	/**
+	* @return get<0> - trure : executed stop_use_target_dev- request.
+	* @return get<1> - stopped usb vid
+	* @return get<2> - stopped usb pid
+	*/
+	std::tuple<bool,int,int> is_executed_server_stop_use_target_dev() const;
 
 	std::string get_target_device_model_name_by_string() const;
 	std::string get_target_device_version_by_string() const;
@@ -188,6 +198,13 @@ private:
 	void _set_firmware_size(size_t n_size_fw);
 
 private:
+
+	// Indicate that a stop request for device usage has been sent to the server.
+	// If this value is true, request to resume usage once the update is completed.
+	bool m_b_executed_server_stop_use_target_dev;
+	int m_n_stopped_usb_vid; // stopped usb vid by m_b_executed_server_stop_use_target_dev flag
+	int m_n_stopped_usb_pid; // stopped usb pid by m_b_executed_server_stop_use_target_dev flag
+
 	bool m_b_run_by_cf; // this updater is run by coffee manager.
 	bool m_b_start_from_bootloader;
 	std::string m_s_rom_file_abs_full_path;//rom or bin file path.

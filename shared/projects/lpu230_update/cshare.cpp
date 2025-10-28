@@ -114,6 +114,9 @@ int cshare::get_app_area_zero_based_start_sector_from_sector_number(int n_sector
 
 void cshare::_ini()
 {
+	m_b_executed_server_stop_use_target_dev = false;
+	m_n_stopped_usb_vid = m_n_stopped_usb_pid = 0;
+
 	m_b_run_by_cf = false;
 
 	m_b_start_from_bootloader = false;
@@ -163,6 +166,20 @@ cshare& cshare::set_start_from_bootloader(bool b_start_from_bootloader)
 {
 	m_b_start_from_bootloader = b_start_from_bootloader;
 	return *this;
+}
+
+cshare& cshare::set_executed_server_stop_use_target_dev(bool b_executed, int n_vid, int n_pid)
+{
+	m_b_executed_server_stop_use_target_dev = b_executed;
+	m_n_stopped_usb_vid = n_vid;
+	m_n_stopped_usb_pid = n_pid;
+	return *this;
+}
+
+void cshare::clear_executed_server_stop_use_target_dev()
+{
+	m_b_executed_server_stop_use_target_dev = false;
+	m_n_stopped_usb_vid = m_n_stopped_usb_pid = 0;
 }
 
 cshare& cshare::set_run_by_cf(bool b_yes)
@@ -229,6 +246,11 @@ cshare& cshare::set_write_sec_index(const std::vector<int>& v_sec_index /* = std
 {
 	m_v_write_sec_index = v_sec_index;
 	return *this;
+}
+
+std::tuple<bool,int,int> cshare::is_executed_server_stop_use_target_dev() const
+{
+	return std::make_tuple( m_b_executed_server_stop_use_target_dev, m_n_stopped_usb_vid, m_n_stopped_usb_pid);
 }
 
 _mp::type_pair_bool_result_bool_complete cshare::io_save_all_variable_sys_parameter(bool b_first)

@@ -129,6 +129,9 @@
     <ClInclude Include="..\shared\common\inc\cfun_lpu237.h">
       <Filter>common</Filter>
     </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_coffee_pipe.h">
+      <Filter>lib</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\shared\lib\inc\mp_cnamed_pipe_.cpp">

@@ -13,6 +13,7 @@
 
 #include <mp_cwait.h>
 #include <mp_coffee_path.h>
+#include <mp_coffee_pipe.h>
 #include <hid/mp_clibhid.h>
 #include <cprotocol_lpu237.h>
 
@@ -631,7 +632,71 @@ std::string cupdater::_check_target_device_path_in_initial()
 	//target devie 가 lpu237 or kpu238 이면 open 해서 정보를 얻어와서 
 	// version & name 설정.
 	// 를 해야함.
-		
+	uint32_t n_server_rsp_check_interval_mm = 10;
+	int n_n_server_rsp_check_times = 300; // n_server_rsp_check_interval_mm 를 몇번 검사 할 건지.
+
+	// lpu237 or kpu238 생성 전에, coffee-manager-2nd(server) 이 동작 중이면, server 에서 해당 device 사용 중지를 요청해야함.
+	do{
+		_mp::cnamed_pipe::type_ptr ptr_tx_ctl_pipe, ptr_rx_ctl_pipe;
+		//setup controller
+		ptr_tx_ctl_pipe = std::make_shared<_mp::cnamed_pipe>(_mp::_coffee::CONST_S_COFFEE_MGMT_CTL_PIPE_NAME, false);
+		if (!ptr_tx_ctl_pipe) {
+			m_log_ref.log_fmt("[E] server control pip getting.\n");
+			continue;
+		}
+		if (!ptr_tx_ctl_pipe->is_ini()) {
+			m_log_ref.log_fmt("[E] server control pip ini.\n");
+			continue;
+		}
+
+		ptr_rx_ctl_pipe = std::make_shared<_mp::cnamed_pipe>(_mp::_coffee::CONST_S_COFFEE_MGMT_CTL_PIPE_NAME_OF_SERVER_RESPONSE, false);
+		if (!ptr_rx_ctl_pipe) {
+			m_log_ref.log_fmt("[E] server rx control pip getting.\n");
+			continue;
+		}
+		if (!ptr_rx_ctl_pipe->is_ini()) {
+			m_log_ref.log_fmt("[E] server rx control pip ini.\n");
+			continue;
+		}
+
+		// 서버 control pipe 에 연결 설공.
+		std::wstring s_req_ctl_pip = _mp::ccoffee_pipe::generate_ctl_request_for_consider_to_removed(
+			it_dev->get_vendor_id(), it_dev->get_product_id()
+		);
+		if (s_req_ctl_pip.empty()) {
+			m_log_ref.log_fmt("[E] generating request for stopping %s\n", s_target_dev_path.c_str());
+			continue;
+		}
+		if (!ptr_tx_ctl_pipe->write(s_req_ctl_pip)) {
+			m_log_ref.log_fmt("[E] request is sent to server for stopping %s\n", s_target_dev_path.c_str());
+			continue;
+		}
+
+		std::wstring s_rx;
+		int i = 0;
+		for (; i < n_n_server_rsp_check_times; i++) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(n_server_rsp_check_interval_mm)); // 서버의 작업 시간을 위한 sleep.
+			if (!ptr_rx_ctl_pipe->read(s_rx)) {
+				continue;
+			}
+			if (s_rx.compare(_mp::_coffee::CONST_S_COFFEE_MGMT_CTL_RSP_STOP_DEV) == 0) {
+				m_log_ref.log_fmt("[I] request is sent to server for stopping %s\n", s_target_dev_path.c_str());
+
+				cshare::get_instance().set_executed_server_stop_use_target_dev(
+					true,
+					(int)it_dev->get_vendor_id(),
+					(int)it_dev->get_product_id()
+				);
+				std::this_thread::sleep_for(std::chrono::milliseconds(500)); // 서버의 작업 시간을 위한 sleep.
+				break; //exit for
+			}
+		}//end for
+
+		if (i == n_n_server_rsp_check_times) {
+			m_log_ref.log_fmt("[E] response timeout from server for stopping %s\n", s_target_dev_path.c_str());
+		}
+	} while (false);
+
 	// create & open clibhid_dev.
 	_mp::clibhid_dev::type_ptr ptr_dev = std::make_shared<_mp::clibhid_dev>(*it_dev, m_ptr_hid_api_briage.get());
 	if (!ptr_dev->is_open()) {

@@ -96,8 +96,8 @@ lpu23x device c++ library
 + Debian : elpusk-hid-d /removeall
 
 ### terminate security websocket server.
-+ Win11 : elpusk-hid-d.exe /bye
-+ Debian : elpusk-hid-d /bye
++ Win11 : use services.msc
++ Debian : sudo systemctl stop coffee-manager-2nd
 
 ### start termainl.
 + control "security websocket server and device manager".
@@ -105,13 +105,13 @@ lpu23x device c++ library
 + Debian : elpusk-hid-d /terminal
 
 ## Problems
-+ fixed after starting wss, the inserted device is reported that  is used.
-+ In li_lpu237_dll project.
++ fixed : after starting wss, the inserted device is reported that  is used.
++ fixed : In li_lpu237_dll project.
   - project setting : for using ld file, --version-script=$(RemoteProjectDir)li_lpu237_dll/li_lpu237_dll.ld 
   - build error "/usr/bin/ld : error : cannot open linker script file ~/projects/li_lpu237_dll/li_lpu237_dll/li_lpu237_dll.ld: No such file or directory"
   - BUT li_lpu237_dll.ld exist in ~/projects/li_lpu237_dll/li_lpu237_dll/.  -_-;;
   - workaround : changing setting, --version-script=/home/tester/projects/li_lpu237_dll/li_lpu237_dll/li_lpu237_dll.ld
-+ fixed : when installation, elpusk-hid-d start failure.(exit iwth error)
++ fixed : when installation, elpusk-hid-d start failure.(exit with error)
 + fixed : deb pkg install /uninstall
 + fixed : conversion string data of "::" and ":".( Now native app can read a ms-card)
 
@@ -138,6 +138,7 @@ sudo rm /var/lib/dpkg/info/coffee-manager*
 + trace pipe name : _mp::_coffee::CONST_S_COFFEE_MGMT_TRACE_PIPE_NAME = L"PIPE_NAME_COFFEE_MGMT_TRACE_036423FC_2189_423D_8D0E_75992725F843"
 + for single instance, file lock : _mp::_coffee::CONST_S_COFFEE_MGMT_FILE_LOCK_FOR_SINGLE = L"FILE_LOCK_COFFEE_MGMT_E0A38B4D_DBE7_4F77_A657_45BD8A19B923"
 + for controll object, pipe name : _mp::_coffee::CONST_S_COFFEE_MGMT_CTL_PIPE_NAME = L"PIPE_NAME_COFFEE_MGMT_CTL_6B092EC7_0D20_4123_8165_2C1DE27C9AAF"
++ for controll object, pipe name : _mp::_coffee::CONST_S_COFFEE_MGMT_CTL_PIPE_NAME_OF_SERVER_RESPONSE = L"PIPE_NAME_COFFEE_MGMT_CTL_SV_RSP_867621B4_B234_4823_82EC_D5562655EFA3"
 + security websocket port : mp::_ws_tools::WEBSOCKET_SECURITY_SERVER_PORT_COFFEE_MANAGER =  443
 
 
@@ -156,14 +157,14 @@ sudo rm /var/lib/dpkg/info/coffee-manager*
   - log directory : _mp::_coffee::CONST_S_LOG_DIR_EXCEPT_BACKSLASH = L"%ProgramData%\\elpusk\\00000006\\coffee_manager\\elpusk-hid-d\\log"
   - virtual drive root directory : _mp::_coffee::CONST_S_ROOT_DIR_EXCEPT_BACKSLASH = L"%ProgramData%\\elpusk\\programdata\\00000006\\coffee_manager\\root"
 
-#### Linux build x86 and x64
+#### Linux build x64
 + common
   - PID file path : _mp::_coffee::CONST_S_PID_FILE_FULL_PATH = L"/var/run/elpusk-hid-d.pid"
 
 + debug build
   - certificate file : _mp::_coffee::CONST_S_CERT_ABS_FULL_PATH = L"/home/tester/projects/LiElpuskHidDaemon/bin/x64/Debug/coffee_server.crt"
   - private key file : _mp::_coffee::CONST_S_PRIVATE_KEY_ABS_FULL_PATH = L"/home/tester/projects/LiElpuskHidDaemon/bin/x64/Debug/coffee_server.key"
-  - log directory : _mp::_coffee::CONST_S_LOG_DIR_EXCEPT_BACKSLASH = L"/home/tester/projects/LiElpuskHidDaemon/bin/x64/Debug"
+  - log directory : _mp::_coffee::CONST_S_LOG_DIR_EXCEPT_BACKSLASH = L"/home/tester/projects/LiElpuskHidDaemon/bin/x64/Debug/00000006/coffee_manager/elpusk-hid-d"
   - virtual drive root directory : _mp::_coffee::CONST_S_ROOT_DIR_EXCEPT_BACKSLASH = L"/home/tester/projects/LiElpuskHidDaemon/bin/x64/Debug"
   
 + release build
@@ -173,8 +174,50 @@ sudo rm /var/lib/dpkg/info/coffee-manager*
   - virtual drive root directory : _mp::_coffee::CONST_S_ROOT_DIR_EXCEPT_BACKSLASH = L"/usr/share/elpusk/programdata/00000006/coffee_manager/root"
 
 
-### tg_lpu27_dll.so file.(tg_lpu27_dll.dll on Windows)
+### libtg_lpu237_dll.so file.(tg_lpu237_dll.dll on Windows)
 
 #### common
-+ log directory : L"."
+#### Windows x86 and x64
++ debug build
+  - ini file : L"C:\\job\\library.cpp.lpu230\\shared\\projects\\lpu237_dll\\tg_lpu237_dll.ini"
+  - log directory : L"C:\\ProgramData\\Elpusk\\00000006\\tg_lpu237_dll\\log"
++ release build
+  - ini file : L"C:\\ProgramData\\Elpusk\\00000006\\tg_lpu237_dll\\tg_lpu237_dll.ini"
+  - log directory : L"C:\\ProgramData\\Elpusk\\00000006\\tg_lpu237_dll\\log"
+
+#### Linux build x64
++ debug build
+  - ini file : L"/home/tester/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/projects/tg_lpu237_dll/tg_lpu237_dll.ini"
+  - log directory
+    + root user : L"/home/tester/projects/LiElpuskHidDaemon/bin/x64/Debug/00000006/coffee_manager/tg_lpu237_dll"
+    + normal user : L"/home/tester/projects/LiElpuskHidDaemon/bin/x64/Debug/00000006/coffee_manager/tg_lpu237_dll"
++ release build
+  - ini file : L"/usr/share/elpusk/programdata/00000006/coffee_manager/tg_lpu237_dll/tg_lpu237_dll.ini"
+  - log directory
+    + root user : L"/var/log/elpusk/00000006/coffee_manager/tg_lpu237_dll"
+    + normal user : L"~/.elpusk/log/00000006/coffee_manager/tg_lpu237_dll"
+
+
+### libtg_lpu237_ibutton.so file.(tg_lpu237_ibutton.dll on Windows)
+
+#### common
+#### Windows x86 and x64
++ debug build
+  - ini file : L"C:\\job\\library.cpp.lpu230\\shared\\projects\\lpu237_ibutton\\tg_lpu237_ibutton.ini"
+  - log directory : L"C:\\ProgramData\\Elpusk\\00000006\\tg_lpu237_ibutton\\log"
++ release build
+  - ini file : L"C:\\ProgramData\\Elpusk\\00000006\\tg_lpu237_ibutton\\tg_lpu237_ibutton.ini"
+  - log directory : L"C:\\ProgramData\\Elpusk\\00000006\\tg_lpu237_ibutton\\log"
+
+#### Linux build x64
++ debug build
+  - ini file : L"/home/tester/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/projects/tg_lpu237_ibutton/tg_lpu237_ibutton.ini"
+  - log directory
+    + root user : L"/home/tester/projects/LiElpuskHidDaemon/bin/x64/Debug/00000006/coffee_manager/tg_lpu237_ibutton"
+    + normal user : L"/home/tester/projects/LiElpuskHidDaemon/bin/x64/Debug/00000006/coffee_manager/tg_lpu237_ibutton"
++ release build
+  - ini file : L"/usr/share/elpusk/programdata/00000006/coffee_manager/tg_lpu237_ibutton/tg_lpu237_ibutton.ini"
+  - log directory
+    + root user : L"/var/log/elpusk/00000006/coffee_manager/tg_lpu237_ibutton"
+    + normal user : L"~/.elpusk/log/00000006/coffee_manager/tg_lpu237_ibutton"
 

@@ -107,6 +107,7 @@
     <None Include="$(MSBuildThisFileDirectory)..\gemini.md" />
     <None Include="$(MSBuildThisFileDirectory)..\info.md" />
     <None Include="$(MSBuildThisFileDirectory)..\README.md" />
+    <None Include="$(MSBuildThisFileDirectory)..\tc_lpu230_update.md" />
   </ItemGroup>
   <ItemGroup>
     <Xml Include="$(MSBuildThisFileDirectory)projects\ElpuskHidDaemon\device.xml" />

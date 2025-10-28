@@ -8,20 +8,22 @@
 #include <array>
 #include <main.h>
 
-#include <mp_coffee.h>
+#include <mp_coffee_pipe.h>
 #include <mp_cstring.h>
 #include <mp_clog.h>
 #include <mp_csystem_.h>
 #include <websocket/mp_cws_server.h>
 #include <server/mp_cserver_.h>
+#include <hid/mp_clibhid.h>
 
 #include <cfile_coffee_manager_ini.h>
 #include <cdev_lib.h>
 
 
-static _mp::cnamed_pipe::type_ptr gptr_ctl_pipe;
+static _mp::cnamed_pipe::type_ptr gptr_tx_ctl_pipe, gptr_rx_ctl_pipe;
 static std::atomic_bool gb_run_main_loop(true);
 
+static int gn_result(EXIT_FAILURE);
 static void _signal_handler(int signum);
 
 /**
@@ -39,7 +41,6 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 {
 	bool b_need_remove_pid_file(false);
 
-	int n_result(EXIT_FAILURE);
 	std::shared_ptr<boost::interprocess::file_lock> ptr_file_lock_for_single_instance;
 	std::wstring s_pipe_name_of_trace(_mp::_coffee::CONST_S_COFFEE_MGMT_TRACE_PIPE_NAME);
 
@@ -62,7 +63,7 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 	
 	do {
 		if (!_mp::csystem::daemonize_on_linux(s_pid_file_full_path, std::wstring(), _signal_handler)) {
-			n_result = _mp::exit_error_daemonize;
+			gn_result = _mp::exit_error_daemonize;
 			continue;
 		}
 
@@ -72,13 +73,14 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 		//check single instance
 		ptr_file_lock_for_single_instance = _mp::csystem::get_file_lock_for_single_instance(_mp::_coffee::CONST_S_COFFEE_MGMT_FILE_LOCK_FOR_SINGLE);
 		if (!ptr_file_lock_for_single_instance) {
-			n_result = _mp::exit_error_already_running;
+			gn_result = _mp::exit_error_already_running;
 			continue;//Another instance is already running.
 		}
 
 		//////////////////////////////////////////////////////////////
 		//setup controller
-		gptr_ctl_pipe = std::make_shared<_mp::cnamed_pipe>(_mp::_coffee::CONST_S_COFFEE_MGMT_CTL_PIPE_NAME, true);
+		gptr_tx_ctl_pipe = std::make_shared<_mp::cnamed_pipe>(_mp::_coffee::CONST_S_COFFEE_MGMT_CTL_PIPE_NAME, true);
+		gptr_rx_ctl_pipe = std::make_shared<_mp::cnamed_pipe>(_mp::_coffee::CONST_S_COFFEE_MGMT_CTL_PIPE_NAME_OF_SERVER_RESPONSE, true);
 
 		// load coffee manager ini file
 		cfile_coffee_manager_ini& ini(cfile_coffee_manager_ini::get_instance());
@@ -110,10 +112,16 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 		log.log_fmt(L"%ls", ini.get_string().c_str());
 		log.trace(L"%ls", ini.get_string().c_str());
 
-		if (!gptr_ctl_pipe) {
-			log.log_fmt(L"[E] %ls | create controller pipe.\n", __WFUNCTION__);
-			log.trace(L"[E] %ls | create controller pipe.\n", __WFUNCTION__);
-			n_result = _mp::exit_error_create_ctl_pipe;
+		if (!gptr_tx_ctl_pipe) {
+			log.log_fmt(L"[E] %ls | create tx controller pipe.\n", __WFUNCTION__);
+			log.trace(L"[E] %ls | create tx controller pipe.\n", __WFUNCTION__);
+			gn_result = _mp::exit_error_create_ctl_pipe;
+			continue;
+		}
+		if (!gptr_rx_ctl_pipe) {
+			log.log_fmt(L"[E] %ls | rx create controller pipe.\n", __WFUNCTION__);
+			log.trace(L"[E] %ls | rx create controller pipe.\n", __WFUNCTION__);
+			gn_result = _mp::exit_error_create_ctl_pipe;
 			continue;
 		}
 
@@ -126,7 +134,7 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 		if (!cdev_lib::get_instance().load(s_dev_lib_dll_abs_full_path,&log)) {
 			log.log_fmt(L"[E] %ls | load dev_lib.dll(.so) | %ls.\n", __WFUNCTION__, s_dev_lib_dll_abs_full_path.c_str());
 			log.trace(L"[E] %ls | load dev_lib.dll(.so) | %ls.\n", __WFUNCTION__, s_dev_lib_dll_abs_full_path.c_str());
-			n_result = _mp::exit_error_load_dev_lib;
+			gn_result = _mp::exit_error_load_dev_lib;
 		}
 
 		//////////////////////////////////////////////////////////////
@@ -156,10 +164,10 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 		if (!wss_svr.start(n_thread_for_server, s_root_folder_except_backslash)) {
 			log.log_fmt(L"[E] %ls | cserver::get_instance().start().\n", __WFUNCTION__);
 			log.trace(L"[E] - %ls | cserver::get_instance().start().\n", __WFUNCTION__);
-			n_result = _mp::exit_error_start_server;
+			gn_result = _mp::exit_error_start_server;
 			continue;
 		}
-		n_result = EXIT_SUCCESS;
+		gn_result = EXIT_SUCCESS;
 		log.log_fmt(L"[I] %ls | cserver::get_instance().start().\n", __WFUNCTION__);
 		log.trace(L"[I] - %ls | cserver::get_instance().start().\n", __WFUNCTION__);
 		std::wstring s_data;
@@ -173,18 +181,60 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 			_mp::_coffee::CONST_S_COFFEE_MGMT_CTL_EX_REQ_PRE_CTL_PIPE_CHECK_INTERVAL
 		};
 
+		bool b_req(false);
+		int n_vid(0), n_pid(0);
+		//lib_hid 는 wss_svr.start() 가 성공하면, 생성되는 instance 이므로, wss_svr.start() 보다 먼저 사용 불가.
+		_mp::clibhid& lib_hid(_mp::clibhid::get_instance());
 		long long ll_ctl_pipe_check_interval_mmsec(_mp::_coffee::CONST_N_COFFEE_MGMT_SLEEP_INTERVAL_MMSEC);
 		do {
-			if (gptr_ctl_pipe->read(s_data)) {
+			if (gptr_tx_ctl_pipe->read(s_data)) {
 				if (s_data.empty()) {
 					continue; // skip empty input
 				}
 
-				if (s_data.compare(_mp::_coffee::CONST_S_COFFEE_MGMT_CTL_REQ) == 0) {
+				if (_mp::ccoffee_pipe::is_ctl_request_for_terminate_server(s_data)) {
+					// 응답불요.
 					gb_run_main_loop = false;
 					log.log_fmt(L"[I] %ls | req - server stop.\n", __WFUNCTION__);
 					log.trace(L"[I] - %ls | req - server stop.\n", __WFUNCTION__);
-					n_result = _mp::exit_info_ctl_pipe_requst_terminate;
+					gn_result = _mp::exit_info_ctl_pipe_requst_terminate;
+					continue;
+				}
+
+				std::tie(b_req, n_vid, n_pid) = _mp::ccoffee_pipe::is_ctl_request_for_consider_to_removed(s_data);
+				if (b_req) {
+					//응답 필요.
+					if (lib_hid.consider_to_be_removed(n_vid, n_pid)) {
+						log.log_fmt(L"[I] %ls | req - consider_to_be_removed.\n", __WFUNCTION__);
+						log.trace(L"[I] - %ls | req - consider_to_be_removed.\n", __WFUNCTION__);
+					}
+					else {
+						log.log_fmt(L"[E] %ls | req - consider_to_be_removed.\n", __WFUNCTION__);
+						log.trace(L"[E] - %ls | req - consider_to_be_removed.\n", __WFUNCTION__);
+					}
+
+					if (!gptr_rx_ctl_pipe->write(_mp::_coffee::CONST_S_COFFEE_MGMT_CTL_RSP_STOP_DEV)) {
+						log.log_fmt(L"[E] %ls | rsp - consider_to_be_removed.\n", __WFUNCTION__);
+						log.trace(L"[E] - %ls | rsp - consider_to_be_removed.\n", __WFUNCTION__);
+					}
+					continue;
+				}
+				std::tie(b_req, n_vid, n_pid) = _mp::ccoffee_pipe::is_ctl_request_for_cancel_consider_to_removed(s_data);
+				if (b_req) {
+					//응답 필요.
+					if (lib_hid.cancel_considering_dev_as_removed(n_vid, n_pid)) {
+						log.log_fmt(L"[I] %ls | req - cancel_consider_to_be_removed.\n", __WFUNCTION__);
+						log.trace(L"[I] - %ls | req - cancel_consider_to_be_removed.\n", __WFUNCTION__);
+					}
+					else {
+						log.log_fmt(L"[E] %ls | req - cancel_consider_to_be_removed.\n", __WFUNCTION__);
+						log.trace(L"[E] - %ls | req - cancel_consider_to_be_removed.\n", __WFUNCTION__);
+					}
+
+					if (!gptr_rx_ctl_pipe->write(_mp::_coffee::CONST_S_COFFEE_MGMT_CTL_RSP_START_DEV)) {
+						log.log_fmt(L"[E] %ls | rsp - cancel_consider_to_be_removed.\n", __WFUNCTION__);
+						log.trace(L"[E] - %ls | rsp - cancel_consider_to_be_removed.\n", __WFUNCTION__);
+					}
 					continue;
 				}
 
@@ -266,7 +316,8 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 			}
 		} while (gb_run_main_loop);
 
-		gptr_ctl_pipe.reset();
+		gptr_tx_ctl_pipe.reset();
+		gptr_rx_ctl_pipe.reset();
 
 		wss_svr.stop();
 		log.log_fmt(L"[I] %ls | cserver::get_instance().stop().\n", __WFUNCTION__);
@@ -281,7 +332,7 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 		remove(s_pid_file.c_str());
 	}
 #endif
-	return n_result;
+	return gn_result;
 }
 
 
@@ -326,8 +377,8 @@ void _signal_handler(int signum)
 
 		if (signum == SIGTERM) {
 			// Handle termination gracefully
-			if (!gptr_ctl_pipe) {
-				_exit(EXIT_SUCCESS);
+			if (!gptr_tx_ctl_pipe) {
+				_exit(gn_result);
 			}
 
 			gb_run_main_loop = false;

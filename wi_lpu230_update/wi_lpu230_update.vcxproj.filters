@@ -176,6 +176,12 @@
     <ClInclude Include="..\shared\lib\inc\mp_cfile.h">
       <Filter>lib</Filter>
     </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_coffee_pipe.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cstring.h">
+      <Filter>lib</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="wi_lpu230_update.rc">

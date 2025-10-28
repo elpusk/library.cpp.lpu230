@@ -341,6 +341,7 @@
       <Filter>doc</Filter>
     </None>
     <None Include="$(MSBuildThisFileDirectory)..\gemini.md" />
+    <None Include="$(MSBuildThisFileDirectory)..\tc_lpu230_update.md" />
   </ItemGroup>
   <ItemGroup>
     <Xml Include="$(MSBuildThisFileDirectory)projects\lpu237_dll\tg_lpu237_dll.xml">

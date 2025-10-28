@@ -13,11 +13,19 @@ namespace _mp{
         * Can include letters, underscore, or digits. Examples: shm1, shm2and3, ShM3plus4...
         */
         constexpr const wchar_t* CONST_S_COFFEE_MGMT_CTL_PIPE_NAME = L"PIPE_NAME_COFFEE_MGMT_CTL_6B092EC7_0D20_4123_8165_2C1DE27C9AAF";
+        constexpr const wchar_t* CONST_S_COFFEE_MGMT_CTL_PIPE_NAME_OF_SERVER_RESPONSE = L"PIPE_NAME_COFFEE_MGMT_CTL_SV_RSP_867621B4_B234_4823_82EC_D5562655EFA3";
         constexpr const wchar_t* CONST_S_COFFEE_MGMT_TRACE_PIPE_NAME = L"PIPE_NAME_COFFEE_MGMT_TRACE_036423FC_2189_423D_8D0E_75992725F843";
         constexpr const wchar_t* CONST_S_COFFEE_MGMT_PIPE_NAME_FOR_SINGLE = L"PIPE_NAME_COFFEE_MGMT_72F5E19C_A00E_4FFF_9F6F_53AAAB4B7264";//L"Global\\PIPE_NAME_NAME_COFFEE_MGMT_72F5E19C_A00E_4FFF_9F6F_53AAAB4B7264
         constexpr const wchar_t* CONST_S_COFFEE_MGMT_FILE_LOCK_FOR_SINGLE = L"FILE_LOCK_COFFEE_MGMT_E0A38B4D_DBE7_4F77_A657_45BD8A19B923";
 
-        constexpr const wchar_t* CONST_S_COFFEE_MGMT_CTL_REQ = L"GET_OUT_OF_HERE_NOW";
+        /**
+        * the definition of CONST_S_COFFEE_MGMT_CTL_PIPE_NAME requests
+        */
+
+        // terminate server
+        constexpr const wchar_t* CONST_S_COFFEE_MGMT_CTL_REQ = L"GET_OUT_OF_HERE_NOW"; 
+
+        // control inner time-interval for optimation
         constexpr const int CONST_N_COFFEE_MGMT_SLEEP_INTERVAL_MMSEC = 500;
         constexpr const int CONST_N_COFFEE_MGMT_CTL_PIPE_READ_INTERVAL_MMSEC = 10;
 
@@ -28,7 +36,22 @@ namespace _mp{
         constexpr const wchar_t* CONST_S_COFFEE_MGMT_CTL_EX_REQ_PRE_DEV_RX_Q_LOOP_INTERVAL = L"dev-rx-q-loop-interval-time:";
         constexpr const wchar_t* CONST_S_COFFEE_MGMT_CTL_EX_REQ_PRE_CTL_PIPE_CHECK_INTERVAL = L"ctl-pipe-check-interval-time:";
 
+        // stop device service perfix string
+        // ex) if ypu want to stop a usb device(vid 0x1234, pid 0x4567),
+        // send "DEV_STOP:USB:VID_1234:PID_4567" to CONST_S_COFFEE_MGMT_CTL_PIPE_NAME control pipe.
+        constexpr const wchar_t* CONST_S_COFFEE_MGMT_CTL_REQ_STOP_DEV_PREFIX = L"DEV_STOP:USB:";
+        // the sever response of CONST_S_COFFEE_MGMT_CTL_REQ_STOP_DEV_PREFIX req.
+        constexpr const wchar_t* CONST_S_COFFEE_MGMT_CTL_RSP_STOP_DEV = L"DEV_STOP:USB:OK";
+
+        // start device service perfix string
+        // ex) if ypu want to start a usb device(vid 0x1234, pid 0x4567),
+        // send "DEV_START:USB:VID_1234:PID_4567" to CONST_S_COFFEE_MGMT_CTL_PIPE_NAME control pipe.
+        constexpr const wchar_t* CONST_S_COFFEE_MGMT_CTL_REQ_START_DEV_PREFIX = L"DEV_START:USB:";
+        // the sever response of CONST_S_COFFEE_MGMT_CTL_REQ_START_DEV_PREFIX req.
+        constexpr const wchar_t* CONST_S_COFFEE_MGMT_CTL_RSP_START_DEV = L"DEV_START:USB:OK";
+
 		constexpr const int CONST_N_MGMT_ALIVE_CHECK_INTERVAL_SEC = 10; //10 sec
+
 
 #ifdef _WIN32
         ////////////////// WIN

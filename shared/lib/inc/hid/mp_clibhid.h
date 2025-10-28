@@ -136,6 +136,16 @@ namespace _mp{
 
 
         chid_briage::type_ptr get_briage();
+
+        /**
+        * @brief Consider the equipment to be removed
+        */
+        bool consider_to_be_removed(int n_vid, int n_pid);
+
+        /**
+        * @brief Cancel considering the equipment as removed
+        */
+        bool cancel_considering_dev_as_removed(int n_vid =-1, int n_pid=-1);
         
     protected:
         clibhid();
@@ -198,6 +208,10 @@ namespace _mp{
 
 		bool m_b_ini;//true - ini, false - not ini of this manager
         std::mutex m_mutex;
+
+        // this usb device must be considerated to plugout.
+        // protected by m_mutex
+        _mp::type_set_usb_id m_set_usb_id_considerated_to_remove;
 
 		// key : device path(primitive & compositive), value : first - device instance, second - device info instance
         clibhid::type_map_pair_ptrs m_map_pair_ptrs;

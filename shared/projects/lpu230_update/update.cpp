@@ -26,10 +26,77 @@
 #include <mp_csystem_.h>
 #include <mp_cfile.h>
 #include <mp_coffee_path.h>
+#include <mp_coffee_pipe.h>
 
 #include <cdev_lib.h>
 #include "update.h"
 
+class _cleanup_anager {
+public:
+	_cleanup_anager() {
+		// 리소스 획득 (예: 임시 파일 열기, 연결 설정 등)
+	}
+
+	~_cleanup_anager() {
+		// 프로그램 종료 시 반드시 실행되어야 하는 클린업 코드
+		// 여기에 정리 코드를 배치합니다.
+		do {
+			cshare& sh(cshare::get_instance());
+
+			auto r = sh.is_executed_server_stop_use_target_dev();
+			if (!std::get<0>(r)) {
+				continue;
+			}
+			sh.clear_executed_server_stop_use_target_dev();
+			//
+			_mp::cnamed_pipe::type_ptr ptr_tx_ctl_pipe, ptr_rx_ctl_pipe;
+			ptr_tx_ctl_pipe = std::make_shared<_mp::cnamed_pipe>(_mp::_coffee::CONST_S_COFFEE_MGMT_CTL_PIPE_NAME, false);
+			if (!ptr_tx_ctl_pipe) {
+				continue;
+			}
+			if (!ptr_tx_ctl_pipe->is_ini()) {
+				continue;
+			}
+			ptr_rx_ctl_pipe = std::make_shared<_mp::cnamed_pipe>(_mp::_coffee::CONST_S_COFFEE_MGMT_CTL_PIPE_NAME_OF_SERVER_RESPONSE, false);
+			if (!ptr_rx_ctl_pipe) {
+				continue;
+			}
+			if (!ptr_rx_ctl_pipe->is_ini()) {
+				continue;
+			}
+
+			// 서버 control pipe 에 연결 설공.
+			std::wstring s_req_ctl_pip = _mp::ccoffee_pipe::generate_ctl_request_for_cancel_considering_dev_as_removed(
+				std::get<1>(r), std::get<2>(r)
+			);
+			if (s_req_ctl_pip.empty()) {
+				continue;
+			}
+			if (!ptr_tx_ctl_pipe->write(s_req_ctl_pip)) {
+				continue;
+			}
+
+			uint32_t n_server_rsp_check_interval_mm = 10;
+			int n_n_server_rsp_check_times = 300; // n_server_rsp_check_interval_mm 를 몇번 검사 할 건지.
+
+			std::wstring s_rx;
+			int i = 0;
+			for (; i < n_n_server_rsp_check_times; i++) {
+				std::this_thread::sleep_for(std::chrono::milliseconds(n_server_rsp_check_interval_mm)); // 서버의 작업 시간을 위한 sleep.
+				if (!ptr_rx_ctl_pipe->read(s_rx)) {
+					continue;
+				}
+				if (s_rx.compare(_mp::_coffee::CONST_S_COFFEE_MGMT_CTL_RSP_START_DEV) == 0) {
+					// 정상 응답 성공.
+					break; //exit for
+				}
+			}//end for
+
+		} while (false);
+	}
+};
+
+static int gn_result(EXIT_FAILURE);
 
 static std::vector<std::filesystem::path> _find_rom_files();
 
@@ -70,11 +137,12 @@ int update_main
 	bool b_run_by_cf
 )
 {
-	int n_result(EXIT_FAILURE);
 	std::wstring s_pid_file_full_path;
 	bool b_need_remove_pid_file(false);
 
 	do {
+		_cleanup_anager _cls_mgmt;
+
 		b_need_remove_pid_file = setup_display(b_display);
 
 		setup_log(b_run_by_cf, b_log_file);
@@ -84,14 +152,14 @@ int update_main
 
 		auto result_dev_io_dll = setup_dev_io_dll(b_run_by_cf, log);
 		if (!result_dev_io_dll.first) {
-			n_result = result_dev_io_dll.second;
+			gn_result = result_dev_io_dll.second;
 			continue;
 		}
 		// from this line, cdev_lib::get_instance() can be used. 
 
 		auto result_rom_dll = setup_rom_dll(b_run_by_cf, log);
 		if (!result_rom_dll.first) {
-			n_result = result_rom_dll.second;
+			gn_result = result_rom_dll.second;
 			continue;
 		}
 
@@ -104,12 +172,12 @@ int update_main
 		if (b_run_by_cf) {
 			if (s_abs_full_rom_file.empty()) {
 				log.log_fmt(L"[E] b_run_by_cf is set, but none rom file.\n");
-				n_result = _mp::exit_error_run_by_cf_rom_file;
+				gn_result = _mp::exit_error_run_by_cf_rom_file;
 				continue;
 			}
 			if (s_device_path.empty()) {
 				log.log_fmt(L"[E] b_run_by_cf is set, but none devie.\n");
-				n_result = _mp::exit_error_run_by_cf_device;
+				gn_result = _mp::exit_error_run_by_cf_device;
 				continue;
 			}
 			log.log_fmt(L"[I] run by cf is on.\n");
@@ -167,7 +235,7 @@ int update_main
 		updater.ui_main_loop();
 
 		log.log_fmt(L"[I] end ui_main_loop().\n");
-		n_result = EXIT_SUCCESS;
+		gn_result = EXIT_SUCCESS;
 	}while(false);
 
 #ifndef _WIN32
@@ -178,7 +246,7 @@ int update_main
 	}
 #endif
 
-	return n_result;
+	return gn_result;
 }
 
 std::vector<std::filesystem::path> _find_rom_files()
@@ -213,7 +281,7 @@ void _signal_handler(int signum)
 
 		if (signum == SIGTERM) {
 			// Handle termination gracefully
-			_exit(EXIT_SUCCESS);
+			_exit(gn_result);
 			continue;
 		}
 		if (signum == SIGHUP) {

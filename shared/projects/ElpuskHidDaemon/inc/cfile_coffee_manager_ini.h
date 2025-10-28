@@ -329,7 +329,7 @@ public:
 			if (m_s_ini_file_full_path.empty()) {
 				ss << L"[:] INI file not loaded(default setting).\n";
 				ss << L"[:] Name(default): " << m_s_name << L"\n"
-					<< L"[:] Version(default): " << m_s_version << L"\n"
+					<< L"[:] Ini version(default): " << m_s_version << L"\n"
 					<< L"[:] Description(default): " << m_s_description << L"\n"
 					<< L"[:] Date(default): " << m_s_date << L"\n"
 					<< L"[:] Log Enable(default): " << (m_b_log_enable ? L"true" : L"false") << L"\n"
@@ -351,10 +351,10 @@ public:
 				ss << L"[:] Name: " << m_s_name << L"\n";
 			}
 			if (!m_b_exist_version) {
-				ss << L"[:] Version(default): " << m_s_version << L"\n";
+				ss << L"[:] Ini version(default): " << m_s_version << L"\n";
 			}
 			else {
-				ss << L"[:] Version: " << m_s_version << L"\n";
+				ss << L"[:] Ini version: " << m_s_version << L"\n";
 			}
 			if (!m_b_exist_description) {
 				ss << L"[:] Description(default): " << m_s_description << L"\n";

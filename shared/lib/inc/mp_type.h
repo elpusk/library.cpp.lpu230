@@ -135,6 +135,9 @@ namespace _mp{
     typedef	std::tuple<int, int, int> type_tuple_usb_filter;//get<0> vid, get<1> pid, get<2> inf
     typedef	std::set<type_tuple_usb_filter> type_set_usb_filter;
 
+    typedef	std::pair<int, int> type_pair_usb_id;//first vid, second pid
+    typedef	std::set<type_pair_usb_id> type_set_usb_id;
+
     typedef std::list<std::wstring> type_list_wstring;
     typedef std::list<std::string> type_list_string;
 
