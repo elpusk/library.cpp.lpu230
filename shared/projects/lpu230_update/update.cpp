@@ -100,7 +100,11 @@ static int gn_result(EXIT_FAILURE);
 
 static std::vector<std::filesystem::path> _find_rom_files();
 
+#ifdef _WIN32
+static BOOL WINAPI _console_handler(DWORD signal);
+#else
 static void _signal_handler(int signum);
+#endif
 
 static bool setup_display(bool b_display);
 
@@ -274,11 +278,36 @@ std::vector<std::filesystem::path> _find_rom_files()
 	return rom_files;
 }
 
+#ifdef _WIN32
+BOOL WINAPI _console_handler(DWORD signal)
+{
+	cshare& sh(cshare::get_instance());
+
+	switch (signal) {
+	case CTRL_C_EVENT:
+	case CTRL_BREAK_EVENT:
+
+	case CTRL_CLOSE_EVENT:
+	case CTRL_LOGOFF_EVENT:
+	case CTRL_SHUTDOWN_EVENT:
+		if (sh.is_possible_exit()) {
+			ATLTRACE("EXIT REQ!!!!!\n");
+			return FALSE;// 종요
+		}
+		else {
+			ATLTRACE("EXIT REQ is ignored!!!!!\n");
+			return TRUE; // 종료 무시
+		}
+	default:
+		return FALSE;
+	}
+}
+#else
 void _signal_handler(int signum)
 {
-#ifndef _WIN32
 	do {
-
+		cshare& sh(cshare::get_instance());
+		if( sh.is_possible_exit())
 		if (signum == SIGTERM) {
 			// Handle termination gracefully
 			_exit(gn_result);
@@ -289,9 +318,8 @@ void _signal_handler(int signum)
 		}
 
 	} while (false);
-#endif
 }
-
+#endif
 
 bool setup_display(bool b_display)
 {
@@ -306,6 +334,15 @@ bool setup_display(bool b_display)
 		if (!_mp::csystem::daemonize_on_linux(s_pid_file_full_path, std::wstring(), _signal_handler)) {
 			b_result = false;
 		}
+#endif
+	}
+	else {
+#ifdef _WIN32
+		SetConsoleCtrlHandler(_console_handler, TRUE);
+#else
+		signal(SIGINT, _signal_handler);   // Ctrl+C
+		signal(SIGTERM, _signal_handler);  // kill 명령
+		signal(SIGHUP, _signal_handler);   // 터미널 종료
 #endif
 	}
 

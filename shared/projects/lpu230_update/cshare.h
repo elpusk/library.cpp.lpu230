@@ -1,6 +1,7 @@
 #pragma once
 
 #include <filesystem>
+#include <atomic>
 #include <mp_type.h>
 #include <mp_cversion.h>
 #include <hid/mp_clibhid_dev.h>
@@ -77,6 +78,7 @@ public:
 	cshare& set_erase_sec_index(const std::vector<int>& v_sec_index = std::vector<int>(0));
 	cshare& set_write_sec_index(const std::vector<int>& v_sec_index = std::vector<int>(0));
 
+	cshare& set_possible_exit(bool b_possible);
 	/**
 	* @return get<0> - trure : executed stop_use_target_dev- request.
 	* @return get<1> - stopped usb vid
@@ -117,6 +119,8 @@ public:
 
 	std::vector<int> get_erase_sec_index() const;
 	std::vector<int> get_write_sec_index() const;
+
+	bool is_possible_exit() const;
 
 	/**
 	* @brief get one sector fw data from the selected firmware of the selected rom file. or raw bin file.
@@ -198,6 +202,8 @@ private:
 	void _set_firmware_size(size_t n_size_fw);
 
 private:
+	// exitable or not
+	std::atomic_bool m_b_is_possible_exit;
 
 	// Indicate that a stop request for device usage has been sent to the server.
 	// If this value is true, request to resume usage once the update is completed.

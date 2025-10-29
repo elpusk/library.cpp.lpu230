@@ -822,10 +822,6 @@ namespace _mp {
         ss << std::this_thread::get_id();
         std::wstring s_id = ss.str();
         //_mp::clog::get_instance().log_fmt(L"[I] exit : %ls : id = %ls.\n", __WFUNCTION__, s_id.c_str()); ,, dead lock
-
-#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-        ATLTRACE(L" =======Exit clibhid_dev::_worker_rx(0x%08x-%s).\n", m_n_dev, _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str());
-#endif
     }
 
     void clibhid_dev::_worker()
@@ -893,16 +889,6 @@ namespace _mp {
                         }
                         // pumping
                         std::tie(b_read_ok, b_expected_replugin) = _pump();//pumpping.
-#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-                        if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
-                            if (m_n_debug_line != (__LINE__+1)) {
-                                m_n_debug_line = __LINE__;
-                                ATLTRACE(L" =======(%ls) pump().\n",
-                                    _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str()
-                                );
-                            }
-                        }
-#endif
                         continue;// go ptr_cur.callback, ptr_new.callback
                     }
 
@@ -1265,10 +1251,6 @@ namespace _mp {
         ss << std::this_thread::get_id();
         std::wstring s_id = ss.str();
         //_mp::clog::get_instance().log_fmt(L"[I] exit : %ls : id = %ls.\n", __WFUNCTION__, s_id.c_str());<<dead lock
-
-#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-        ATLTRACE(L" =======Exit clibhid_dev::_worker(0x%08x-%ls).\n", m_n_dev, _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str());
-#endif
     }
 
 }

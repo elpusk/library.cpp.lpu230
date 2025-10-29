@@ -414,6 +414,7 @@ std::shared_ptr<ftxui::Component> cupdater::_create_sub_ui3_last_warning()
 std::shared_ptr<ftxui::Component> cupdater::_create_sub_ui4_updating()
 {
 	std::shared_ptr<ftxui::Component> ptr_component = std::make_shared<ftxui::Component>(ftxui::Renderer([&]() {
+		cshare& sh(cshare::get_instance());
 		std::string status;
 
 		float a = (float)m_n_progress_cur - (float)m_n_progress_min;
@@ -422,16 +423,28 @@ std::shared_ptr<ftxui::Component> cupdater::_create_sub_ui4_updating()
 		f = f * 100.0f;
 
 		status = std::to_string((int)f) + " %";
-		return ftxui::vbox({
-					ftxui::text("Updating"),
-					ftxui::gauge(static_cast<float>(m_n_progress_cur - m_n_progress_min) / (m_n_progress_max - m_n_progress_min)) | ftxui::color(ftxui::Color::Blue),
-					ftxui::text(status),
-					ftxui::text(m_s_message_in_ing_state),
-					ftxui::emptyElement()
-			}) |
-			ftxui::border;
-		})
-	);
+
+		if (sh.is_possible_exit()) {
+			return ftxui::vbox({
+						ftxui::text("Updating"),
+						ftxui::gauge(static_cast<float>(m_n_progress_cur - m_n_progress_min) / (m_n_progress_max - m_n_progress_min)) | ftxui::color(ftxui::Color::Blue),
+						ftxui::text(status),
+						ftxui::text(m_s_message_in_ing_state),
+						ftxui::emptyElement()
+				}) | ftxui::border;
+		}
+		else {
+			return ftxui::vbox({
+						ftxui::text("Updating-Lock"),
+						ftxui::gauge(static_cast<float>(m_n_progress_cur - m_n_progress_min) / (m_n_progress_max - m_n_progress_min)) | ftxui::color(ftxui::Color::Blue),
+						ftxui::text(status),
+						ftxui::text(m_s_message_in_ing_state),
+						ftxui::emptyElement()
+				}) | ftxui::border;
+		}
+		}
+	)//Renderer
+	);//make_shared
 
 	return ptr_component;
 
@@ -1128,6 +1141,7 @@ void cupdater::_updates_thread_function()
 		if (!m_b_is_running)
 			break; // 종료 직전 체크
 		
+		sh.set_possible_exit(false); // 종료 막기
 		int n_step(0);
 		////////////////////////////////////////////////////
 		if (!_updates_sub_thread_backup_system_param(n_step)) {
@@ -1306,6 +1320,9 @@ void cupdater::_updates_thread_function()
 	if (b_need_close_bootloader) {
 		m_p_mgmt->UnselectDevice(); 
 	}
+
+	sh.set_possible_exit(true); // 종료 막기 해제
+	//
 #ifdef _WIN32
 	ATLTRACE(L"Good bye\n");
 #endif

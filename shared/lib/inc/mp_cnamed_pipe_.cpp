@@ -84,6 +84,9 @@ namespace _mp {
 		catch (boost::interprocess::interprocess_exception& ex) {
 			m_ptr_mq.reset();
 		}
+		catch (...) {
+			m_ptr_mq.reset();
+		}
 	}
 
 	bool cnamed_pipe::is_ini() const

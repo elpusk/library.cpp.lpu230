@@ -26,6 +26,10 @@ static std::atomic_bool gb_run_main_loop(true);
 static int gn_result(EXIT_FAILURE);
 static void _signal_handler(int signum);
 
+#ifdef _WIN32
+static BOOL WINAPI _console_handler(DWORD signal);
+#endif
+
 /**
 * @brief get long long type interval from control pipe data.
 * @param s_pipe_data - data from control pipe.
@@ -66,6 +70,10 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 			gn_result = _mp::exit_error_daemonize;
 			continue;
 		}
+
+#ifdef _WIN32
+		SetConsoleCtrlHandler(_console_handler, TRUE);
+#endif
 
 		b_need_remove_pid_file = true;
 
@@ -187,133 +195,146 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 		_mp::clibhid& lib_hid(_mp::clibhid::get_instance());
 		long long ll_ctl_pipe_check_interval_mmsec(_mp::_coffee::CONST_N_COFFEE_MGMT_SLEEP_INTERVAL_MMSEC);
 		do {
-			if (gptr_tx_ctl_pipe->read(s_data)) {
-				if (s_data.empty()) {
-					continue; // skip empty input
-				}
-
-				if (_mp::ccoffee_pipe::is_ctl_request_for_terminate_server(s_data)) {
-					// 응답불요.
-					gb_run_main_loop = false;
-					log.log_fmt(L"[I] %ls | req - server stop.\n", __WFUNCTION__);
-					log.trace(L"[I] - %ls | req - server stop.\n", __WFUNCTION__);
-					gn_result = _mp::exit_info_ctl_pipe_requst_terminate;
-					continue;
-				}
-
-				std::tie(b_req, n_vid, n_pid) = _mp::ccoffee_pipe::is_ctl_request_for_consider_to_removed(s_data);
-				if (b_req) {
-					//응답 필요.
-					if (lib_hid.consider_to_be_removed(n_vid, n_pid)) {
-						log.log_fmt(L"[I] %ls | req - consider_to_be_removed.\n", __WFUNCTION__);
-						log.trace(L"[I] - %ls | req - consider_to_be_removed.\n", __WFUNCTION__);
-					}
-					else {
-						log.log_fmt(L"[E] %ls | req - consider_to_be_removed.\n", __WFUNCTION__);
-						log.trace(L"[E] - %ls | req - consider_to_be_removed.\n", __WFUNCTION__);
-					}
-
-					if (!gptr_rx_ctl_pipe->write(_mp::_coffee::CONST_S_COFFEE_MGMT_CTL_RSP_STOP_DEV)) {
-						log.log_fmt(L"[E] %ls | rsp - consider_to_be_removed.\n", __WFUNCTION__);
-						log.trace(L"[E] - %ls | rsp - consider_to_be_removed.\n", __WFUNCTION__);
-					}
-					continue;
-				}
-				std::tie(b_req, n_vid, n_pid) = _mp::ccoffee_pipe::is_ctl_request_for_cancel_consider_to_removed(s_data);
-				if (b_req) {
-					//응답 필요.
-					if (lib_hid.cancel_considering_dev_as_removed(n_vid, n_pid)) {
-						log.log_fmt(L"[I] %ls | req - cancel_consider_to_be_removed.\n", __WFUNCTION__);
-						log.trace(L"[I] - %ls | req - cancel_consider_to_be_removed.\n", __WFUNCTION__);
-					}
-					else {
-						log.log_fmt(L"[E] %ls | req - cancel_consider_to_be_removed.\n", __WFUNCTION__);
-						log.trace(L"[E] - %ls | req - cancel_consider_to_be_removed.\n", __WFUNCTION__);
-					}
-
-					if (!gptr_rx_ctl_pipe->write(_mp::_coffee::CONST_S_COFFEE_MGMT_CTL_RSP_START_DEV)) {
-						log.log_fmt(L"[E] %ls | rsp - cancel_consider_to_be_removed.\n", __WFUNCTION__);
-						log.trace(L"[E] - %ls | rsp - cancel_consider_to_be_removed.\n", __WFUNCTION__);
-					}
-					continue;
-				}
-
-				// pipe 로 부터 얻은 s_data 가 ss_pre_req_for_opt_time[0] 으로 시작하는 하고,':' 뒤에 숫자만 있으면,
-				// 그 숫자를 long long 으로 변환해서 log.trace() 에 출력하는 코드
-				long long ll_number(0);
-				bool b_valid(false);
-				int n_req = 0;
-				std::tie(b_valid, ll_number) = _get_interval_from_ctl_pipe(s_data, ss_pre_req_for_opt_time[n_req]);
-				if (b_valid) {
-					log.log_fmt(L"[I] - %ls | ll_server_worker_sleep_interval_mmsec = %lld\n", __WFUNCTION__, ll_number);
-					log.trace(L"[I] - %ls | ll_server_worker_sleep_interval_mmsec = %lld\n", __WFUNCTION__, ll_number);
-					wss_svr.set_worker_sleep_interval(ll_number);
-					s_data.clear();
-					continue;
-				}
-				//
-				++n_req;
-				std::tie(b_valid, ll_number) = _get_interval_from_ctl_pipe(s_data, ss_pre_req_for_opt_time[n_req]);
-				if (b_valid) {
-					log.log_fmt(L"[I] - %ls | ll_dev_plug_in_out_sleep_interval_mmsec = %lld\n", __WFUNCTION__, ll_number);
-					log.trace(L"[I] - %ls | ll_dev_plug_in_out_sleep_interval_mmsec = %lld\n", __WFUNCTION__, ll_number);
-					wss_svr.set_dev_pluginout_check_interval(ll_number);
-					s_data.clear();
-					continue;
-				}
-				//.......
-				++n_req;
-				std::tie(b_valid, ll_number) = _get_interval_from_ctl_pipe(s_data, ss_pre_req_for_opt_time[n_req]);
-				if (b_valid) {
-					log.log_fmt(L"[I] - %ls | ll_dev_tx_api_loop_interval_mmsec = %lld\n", __WFUNCTION__, ll_number);
-					log.trace(L"[I] - %ls | ll_dev_tx_api_loop_interval_mmsec = %lld\n", __WFUNCTION__, ll_number);
-					wss_svr.set_dev_tx_by_api_check_interval(ll_number);
-					s_data.clear();
-					continue;
-				}
-				//
-				++n_req;
-				std::tie(b_valid, ll_number) = _get_interval_from_ctl_pipe(s_data, ss_pre_req_for_opt_time[n_req]);
-				if (b_valid) {
-					log.log_fmt(L"[I] - %ls | ll_dev_rx_api_loop_interval_mmsec = %lld\n", __WFUNCTION__, ll_number);
-					log.trace(L"[I] - %ls | ll_dev_rx_api_loop_interval_mmsec = %lld\n", __WFUNCTION__, ll_number);
-					wss_svr.set_dev_rx_by_api_in_rx_worker_check_interval(ll_number);
-					s_data.clear();
-					continue;
-				}
-
-				//rx_q_check_interval must be 1msec(default) - this is tested value.
-				++n_req;
-				std::tie(b_valid, ll_number) = _get_interval_from_ctl_pipe(s_data, ss_pre_req_for_opt_time[n_req]);
-				if (b_valid) {
-					log.log_fmt(L"[I] - %ls | ll_dev_rx_q_loop_interval_mmsec = %lld\n", __WFUNCTION__, ll_number);
-					log.trace(L"[I] - %ls | ll_dev_rx_q_loop_interval_mmsec = %lld\n", __WFUNCTION__, ll_number);
-					wss_svr.set_dev_rx_q_check_interval(ll_number);
-					s_data.clear();
-					continue;
-				}
-				//
-				++n_req;
-				std::tie(b_valid, ll_number) = _get_interval_from_ctl_pipe(s_data, ss_pre_req_for_opt_time[n_req]);
-				if (b_valid) {
-					log.log_fmt(L"[I] - %ls | ll_ctl_pipe_check_interval_mmsec = %lld\n", __WFUNCTION__, ll_number);
-					log.trace(L"[I] - %ls | ll_ctl_pipe_check_interval_mmsec = %lld\n", __WFUNCTION__, ll_number);
-
-					if (ll_number >= 0) {
-						ll_ctl_pipe_check_interval_mmsec = ll_number;
-					}
-					s_data.clear();
-					continue;
-				}
-
-				log.log_fmt(L"[I] - user input | %ls\n", s_data.c_str());
-				log.trace(L"[I] - user input | %ls\n", s_data.c_str());
-
-				s_data.clear();
-			}
-			else {
+			if (!gptr_tx_ctl_pipe) {
 				std::this_thread::sleep_for(std::chrono::milliseconds(ll_ctl_pipe_check_interval_mmsec));
+				continue;
 			}
+			if (!gptr_tx_ctl_pipe->read(s_data)) {
+				std::this_thread::sleep_for(std::chrono::milliseconds(ll_ctl_pipe_check_interval_mmsec));
+				continue;
+			}
+			if (s_data.empty()) {
+				continue; // skip empty input
+			}
+
+			if (_mp::ccoffee_pipe::is_ctl_request_for_terminate_server(s_data)) {
+				// 응답불요.
+				gb_run_main_loop = false;
+				log.log_fmt(L"[I] %ls | req - server stop.\n", __WFUNCTION__);
+				log.trace(L"[I] - %ls | req - server stop.\n", __WFUNCTION__);
+				gn_result = _mp::exit_info_ctl_pipe_requst_terminate;
+				continue;
+			}
+
+			std::tie(b_req, n_vid, n_pid) = _mp::ccoffee_pipe::is_ctl_request_for_consider_to_removed(s_data);
+			if (b_req) {
+				//응답 필요.
+				if (lib_hid.consider_to_be_removed(n_vid, n_pid)) {
+					log.log_fmt(L"[I] %ls | req - consider_to_be_removed.\n", __WFUNCTION__);
+					log.trace(L"[I] - %ls | req - consider_to_be_removed.\n", __WFUNCTION__);
+				}
+				else {
+					log.log_fmt(L"[E] %ls | req - consider_to_be_removed.\n", __WFUNCTION__);
+					log.trace(L"[E] - %ls | req - consider_to_be_removed.\n", __WFUNCTION__);
+				}
+
+				if (!gptr_rx_ctl_pipe) {
+					log.log_fmt(L"[E] %ls | rsp - pipe null.\n", __WFUNCTION__);
+					log.trace(L"[E] %ls | rsp - pipe null.\n", __WFUNCTION__);
+					continue;
+				}
+				if (!gptr_rx_ctl_pipe->write(_mp::_coffee::CONST_S_COFFEE_MGMT_CTL_RSP_STOP_DEV)) {
+					log.log_fmt(L"[E] %ls | rsp - consider_to_be_removed.\n", __WFUNCTION__);
+					log.trace(L"[E] - %ls | rsp - consider_to_be_removed.\n", __WFUNCTION__);
+				}
+				continue;
+			}
+			std::tie(b_req, n_vid, n_pid) = _mp::ccoffee_pipe::is_ctl_request_for_cancel_consider_to_removed(s_data);
+			if (b_req) {
+				//응답 필요.
+				if (lib_hid.cancel_considering_dev_as_removed(n_vid, n_pid)) {
+					log.log_fmt(L"[I] %ls | req - cancel_consider_to_be_removed.\n", __WFUNCTION__);
+					log.trace(L"[I] - %ls | req - cancel_consider_to_be_removed.\n", __WFUNCTION__);
+				}
+				else {
+					log.log_fmt(L"[E] %ls | req - cancel_consider_to_be_removed.\n", __WFUNCTION__);
+					log.trace(L"[E] - %ls | req - cancel_consider_to_be_removed.\n", __WFUNCTION__);
+				}
+
+				if (!gptr_rx_ctl_pipe) {
+					log.log_fmt(L"[E] %ls | rsp - pipe null.\n", __WFUNCTION__);
+					log.trace(L"[E] %ls | rsp - pipe null.\n", __WFUNCTION__);
+					continue;
+				}
+				if (!gptr_rx_ctl_pipe->write(_mp::_coffee::CONST_S_COFFEE_MGMT_CTL_RSP_START_DEV)) {
+					log.log_fmt(L"[E] %ls | rsp - cancel_consider_to_be_removed.\n", __WFUNCTION__);
+					log.trace(L"[E] - %ls | rsp - cancel_consider_to_be_removed.\n", __WFUNCTION__);
+				}
+				continue;
+			}
+
+			// pipe 로 부터 얻은 s_data 가 ss_pre_req_for_opt_time[0] 으로 시작하는 하고,':' 뒤에 숫자만 있으면,
+			// 그 숫자를 long long 으로 변환해서 log.trace() 에 출력하는 코드
+			long long ll_number(0);
+			bool b_valid(false);
+			int n_req = 0;
+			std::tie(b_valid, ll_number) = _get_interval_from_ctl_pipe(s_data, ss_pre_req_for_opt_time[n_req]);
+			if (b_valid) {
+				log.log_fmt(L"[I] - %ls | ll_server_worker_sleep_interval_mmsec = %lld\n", __WFUNCTION__, ll_number);
+				log.trace(L"[I] - %ls | ll_server_worker_sleep_interval_mmsec = %lld\n", __WFUNCTION__, ll_number);
+				wss_svr.set_worker_sleep_interval(ll_number);
+				s_data.clear();
+				continue;
+			}
+			//
+			++n_req;
+			std::tie(b_valid, ll_number) = _get_interval_from_ctl_pipe(s_data, ss_pre_req_for_opt_time[n_req]);
+			if (b_valid) {
+				log.log_fmt(L"[I] - %ls | ll_dev_plug_in_out_sleep_interval_mmsec = %lld\n", __WFUNCTION__, ll_number);
+				log.trace(L"[I] - %ls | ll_dev_plug_in_out_sleep_interval_mmsec = %lld\n", __WFUNCTION__, ll_number);
+				wss_svr.set_dev_pluginout_check_interval(ll_number);
+				s_data.clear();
+				continue;
+			}
+			//.......
+			++n_req;
+			std::tie(b_valid, ll_number) = _get_interval_from_ctl_pipe(s_data, ss_pre_req_for_opt_time[n_req]);
+			if (b_valid) {
+				log.log_fmt(L"[I] - %ls | ll_dev_tx_api_loop_interval_mmsec = %lld\n", __WFUNCTION__, ll_number);
+				log.trace(L"[I] - %ls | ll_dev_tx_api_loop_interval_mmsec = %lld\n", __WFUNCTION__, ll_number);
+				wss_svr.set_dev_tx_by_api_check_interval(ll_number);
+				s_data.clear();
+				continue;
+			}
+			//
+			++n_req;
+			std::tie(b_valid, ll_number) = _get_interval_from_ctl_pipe(s_data, ss_pre_req_for_opt_time[n_req]);
+			if (b_valid) {
+				log.log_fmt(L"[I] - %ls | ll_dev_rx_api_loop_interval_mmsec = %lld\n", __WFUNCTION__, ll_number);
+				log.trace(L"[I] - %ls | ll_dev_rx_api_loop_interval_mmsec = %lld\n", __WFUNCTION__, ll_number);
+				wss_svr.set_dev_rx_by_api_in_rx_worker_check_interval(ll_number);
+				s_data.clear();
+				continue;
+			}
+
+			//rx_q_check_interval must be 1msec(default) - this is tested value.
+			++n_req;
+			std::tie(b_valid, ll_number) = _get_interval_from_ctl_pipe(s_data, ss_pre_req_for_opt_time[n_req]);
+			if (b_valid) {
+				log.log_fmt(L"[I] - %ls | ll_dev_rx_q_loop_interval_mmsec = %lld\n", __WFUNCTION__, ll_number);
+				log.trace(L"[I] - %ls | ll_dev_rx_q_loop_interval_mmsec = %lld\n", __WFUNCTION__, ll_number);
+				wss_svr.set_dev_rx_q_check_interval(ll_number);
+				s_data.clear();
+				continue;
+			}
+			//
+			++n_req;
+			std::tie(b_valid, ll_number) = _get_interval_from_ctl_pipe(s_data, ss_pre_req_for_opt_time[n_req]);
+			if (b_valid) {
+				log.log_fmt(L"[I] - %ls | ll_ctl_pipe_check_interval_mmsec = %lld\n", __WFUNCTION__, ll_number);
+				log.trace(L"[I] - %ls | ll_ctl_pipe_check_interval_mmsec = %lld\n", __WFUNCTION__, ll_number);
+
+				if (ll_number >= 0) {
+					ll_ctl_pipe_check_interval_mmsec = ll_number;
+				}
+				s_data.clear();
+				continue;
+			}
+
+			log.log_fmt(L"[I] - user input | %ls\n", s_data.c_str());
+			log.trace(L"[I] - user input | %ls\n", s_data.c_str());
+
+			s_data.clear();
 		} while (gb_run_main_loop);
 
 		gptr_tx_ctl_pipe.reset();
@@ -381,6 +402,9 @@ void _signal_handler(int signum)
 				_exit(gn_result);
 			}
 
+			gptr_tx_ctl_pipe.reset();
+			gptr_rx_ctl_pipe.reset();
+
 			gb_run_main_loop = false;
 			continue;//terminated by main loop
 		}
@@ -391,3 +415,25 @@ void _signal_handler(int signum)
 	} while (false);
 #endif
 }
+
+#ifdef _WIN32
+BOOL WINAPI _console_handler(DWORD signal)
+{
+	switch (signal) {
+	case CTRL_C_EVENT:
+	case CTRL_BREAK_EVENT:
+
+	case CTRL_CLOSE_EVENT:
+	case CTRL_LOGOFF_EVENT:
+	case CTRL_SHUTDOWN_EVENT:
+
+		gptr_tx_ctl_pipe.reset();
+		gptr_rx_ctl_pipe.reset();
+
+		gb_run_main_loop = false;
+		return FALSE;// 종료
+	default:
+		return FALSE;
+	}
+}
+#endif

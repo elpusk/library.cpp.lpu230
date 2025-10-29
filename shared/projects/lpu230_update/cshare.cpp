@@ -114,6 +114,8 @@ int cshare::get_app_area_zero_based_start_sector_from_sector_number(int n_sector
 
 void cshare::_ini()
 {
+	m_b_is_possible_exit = true;
+
 	m_b_executed_server_stop_use_target_dev = false;
 	m_n_stopped_usb_vid = m_n_stopped_usb_pid = 0;
 
@@ -245,6 +247,12 @@ cshare& cshare::set_erase_sec_index(const std::vector<int>& v_sec_index/* = std:
 cshare& cshare::set_write_sec_index(const std::vector<int>& v_sec_index /* = std::vector<int>(0) */)
 {
 	m_v_write_sec_index = v_sec_index;
+	return *this;
+}
+
+cshare& cshare::set_possible_exit(bool b_possible)
+{
+	m_b_is_possible_exit = b_possible;
 	return *this;
 }
 
@@ -846,6 +854,11 @@ std::vector<int> cshare::get_erase_sec_index() const
 std::vector<int> cshare::get_write_sec_index() const
 {
 	return m_v_write_sec_index;
+}
+
+bool cshare::is_possible_exit() const
+{
+	return m_b_is_possible_exit;
 }
 
 _mp::type_pair_bool_result_bool_complete cshare::get_one_sector_fw_data
