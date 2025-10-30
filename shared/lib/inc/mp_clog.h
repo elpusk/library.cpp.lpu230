@@ -81,7 +81,7 @@ namespace _mp
 		/**
 		* get client named pipe of tracing system.
 		*/
-		static cnamed_pipe::type_ptr get_trace_client(const std::wstring & s_pipe_name_of_trace)
+		static cnamed_pipe::type_ptr get_trace_client(const std::string & s_pipe_name_of_trace)
 		{
 			cnamed_pipe::type_ptr ptr = std::make_shared<_mp::cnamed_pipe>(s_pipe_name_of_trace, false);
 			return ptr;
@@ -102,7 +102,7 @@ namespace _mp
 		* @param b_enable : true(enable trace), false(disable trace).
 		* @param b_owner : true( owner of trace pipe , use in server), false(use in client)
 		*/
-		bool enable_trace(const std::wstring& s_pipe_name_of_trace, bool b_enable, bool b_owner = true)
+		bool enable_trace(const std::string& s_pipe_name_of_trace, bool b_enable, bool b_owner = true)
 		{
 			bool b_result(false);
 

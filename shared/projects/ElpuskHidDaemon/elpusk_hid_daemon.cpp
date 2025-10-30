@@ -44,6 +44,7 @@
 /**
 * 2025.08.08 - v2.0
 * 2025.10.28 - v2.1 : lpu230_update 지원을 위함.
+* 2025.10 - v2.2 : ?
 */
 
 /**
@@ -158,7 +159,7 @@ int main(int argc, char* argv[])
 			continue;
 		}
 		//
-		std::wstring ws_version(L"2.1");
+		std::wstring ws_version(L"2.2");
 
 		if (set_parameters.find(L"/version") != std::end(set_parameters)) {
 			std::wcout << ws_version << std::endl;

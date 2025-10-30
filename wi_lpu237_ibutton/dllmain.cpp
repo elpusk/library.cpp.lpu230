@@ -56,7 +56,7 @@ void _process_attach(HINSTANCE hInstance)
 #endif		//_YSS_ENABLE_STDOUT_FOR_DEBUG_
 
     std::wstring s_log_root_folder_except_backslash = _mp::ccoffee_path::get_path_of_coffee_logs_root_folder_except_backslash();
-    std::wstring s_pipe_name_of_trace(_mp::_coffee::CONST_S_COFFEE_MGMT_TRACE_PIPE_NAME);
+    std::string s_pipe_name_of_trace(_mp::_coffee::CONST_S_COFFEE_MGMT_TRACE_PIPE_NAME);
 
     cdll_ini& cini(cdll_ini::get_instance());
     bool b_ini = cini.load_definition_file(_mp::ccoffee_path::get_path_of_coffee_lpu237_ibutton_ini_file());

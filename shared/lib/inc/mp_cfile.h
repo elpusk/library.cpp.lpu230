@@ -61,7 +61,7 @@ namespace _mp{
 			wchar_t temp_path[MAX_PATH];
 			DWORD length = GetTempPath(MAX_PATH, temp_path);
 			if (length > 0 && length <= MAX_PATH) {
-				s = std::wstring(temp_path) + L'\\';
+				s = std::wstring(temp_path);
 				return s;
 			}
 			else {

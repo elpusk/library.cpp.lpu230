@@ -46,7 +46,7 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 	bool b_need_remove_pid_file(false);
 
 	std::shared_ptr<boost::interprocess::file_lock> ptr_file_lock_for_single_instance;
-	std::wstring s_pipe_name_of_trace(_mp::_coffee::CONST_S_COFFEE_MGMT_TRACE_PIPE_NAME);
+	std::string s_pipe_name_of_trace(_mp::_coffee::CONST_S_COFFEE_MGMT_TRACE_PIPE_NAME);
 
 	std::wstring s_server_certificate_file = cdef_const::get_certificate_file();
 	std::wstring s_server_private_key_file = cdef_const::get_private_key_file();

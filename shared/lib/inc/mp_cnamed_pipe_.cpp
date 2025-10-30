@@ -1,9 +1,41 @@
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
+#include <boost/interprocess/permissions.hpp>
 
 #include <mp_cnamed_pipe_.h>
 #include <mp_cstring.h>
+
+#ifdef _WIN32
+#include <windows.h>
+#include <sddl.h>
+// D:(A;;GA;;;WD) -> DACL: Allow Generic All to World (Everyone)
+const char* SDDL_EVERYONE_FULL_ACCESS = "D:(A;;GA;;;WD)";
+
+static PSECURITY_ATTRIBUTES _create_sa_from_sddl();
+
+PSECURITY_ATTRIBUTES _create_sa_from_sddl() {
+	PSECURITY_DESCRIPTOR pSecDesc = nullptr;
+	PSECURITY_ATTRIBUTES pSecAttr = new SECURITY_ATTRIBUTES;
+
+	// SDDL 문자열을 실제 보안 디스크립터로 변환
+	if (!ConvertStringSecurityDescriptorToSecurityDescriptorA(
+		SDDL_EVERYONE_FULL_ACCESS,
+		SDDL_REVISION_1,
+		&pSecDesc,
+		NULL))
+	{
+		delete pSecAttr;
+		return nullptr;
+	}
+
+	pSecAttr->nLength = sizeof(SECURITY_ATTRIBUTES);
+	pSecAttr->lpSecurityDescriptor = pSecDesc;
+	pSecAttr->bInheritHandle = FALSE;
+
+	return pSecAttr;
+}
+#endif
 
 // need link. boost_thread.lib, boost_system.lib
 namespace _mp {
@@ -11,23 +43,18 @@ namespace _mp {
 	/**
 	* static member
 	*/
-	std::wstring cnamed_pipe::generated_pipe_name()
+	std::string cnamed_pipe::generated_pipe_name()
 	{
 		boost::uuids::uuid uuid = boost::uuids::random_generator()();
-		return L"_20240725::_mp::cnamed_pipe::" + boost::uuids::to_wstring(uuid);
+		return "_20240725::_mp::cnamed_pipe::" + boost::uuids::to_string(uuid);
 	}
 
 	cnamed_pipe::~cnamed_pipe()
 	{
-#ifdef _WIN32
-		std::wstring s(m_s_name);
-#else
-		std::string s(cstring::get_mcsc_from_unicode(m_s_name));
-#endif
 		if (m_b_i_am_creator) {
 			if (m_ptr_mq) {
 				boost::interprocess::message_queue::remove(
-					s.c_str()
+					m_s_name.c_str()
 				);
 				m_ptr_mq.reset();
 			}
@@ -39,45 +66,54 @@ namespace _mp {
 	{
 		m_s_name = generated_pipe_name();
 
-#ifdef _WIN32
-		std::wstring s(m_s_name);
-#else
-		std::string s(cstring::get_mcsc_from_unicode(m_s_name));
-#endif
-		boost::interprocess::message_queue::remove(s.c_str());
+		boost::interprocess::message_queue::remove(m_s_name.c_str());
 
 		m_ptr_mq = std::make_shared<boost::interprocess::message_queue>(
 			boost::interprocess::create_only,
-			s.c_str(),
+			m_s_name.c_str(),
 			cnamed_pipe::_max_number_of_message,//max message
 			cnamed_pipe::_max_size_of_one_message_unit_byte//the max size of each message.
 		);
 	}
 
-	cnamed_pipe::cnamed_pipe(const std::wstring& s_name, bool b_creator)
+	cnamed_pipe::cnamed_pipe(const std::string& s_name, bool b_creator)
 	{
+#ifdef _WIN32
+		PSECURITY_ATTRIBUTES pSA = NULL;
+#endif //_WIN32
+
 		m_s_name = s_name;
 		m_b_i_am_creator = b_creator;
 
-#ifdef _WIN32
-		std::wstring s(m_s_name);
-#else
-		std::string s(cstring::get_mcsc_from_unicode(m_s_name));
-#endif
 		try {
 			if (m_b_i_am_creator) {
-				boost::interprocess::message_queue::remove(s.c_str());
+				boost::interprocess::message_queue::remove(m_s_name.c_str());
+#ifdef _WIN32
+				boost::interprocess::permissions perm;
+				perm.set_unrestricted();//perm.set_permissions(pSA);
+
 				m_ptr_mq = std::make_shared<boost::interprocess::message_queue>(
 					boost::interprocess::create_only,
-					s.c_str(),
+					m_s_name.c_str(),
+					cnamed_pipe::_max_number_of_message,//max message
+					cnamed_pipe::_max_size_of_one_message_unit_byte,//the max size of each message.
+					perm
+				);
+#else
+				m_ptr_mq = std::make_shared<boost::interprocess::message_queue>(
+					boost::interprocess::create_only,
+					m_s_name.c_str(),
 					cnamed_pipe::_max_number_of_message,//max message
 					cnamed_pipe::_max_size_of_one_message_unit_byte//the max size of each message.
 				);
+
+#endif // _WIN32
+
 			}
 			else {
 				m_ptr_mq = std::make_shared<boost::interprocess::message_queue>(
 					boost::interprocess::open_only,
-					s.c_str()
+					m_s_name.c_str()
 				);
 			}
 		}
@@ -87,6 +123,14 @@ namespace _mp {
 		catch (...) {
 			m_ptr_mq.reset();
 		}
+
+#ifdef _WIN32
+		if (pSA) {
+			LocalFree(pSA->lpSecurityDescriptor);
+			delete pSA;
+		}
+#endif //_WIN32
+
 	}
 
 	bool cnamed_pipe::is_ini() const

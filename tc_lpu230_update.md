@@ -25,3 +25,7 @@
 - firmware 업데이트 전, system parameters 자동 보존.
 - firmware 정상 업데이트.
 - firmware 업데이트 후, system parameters 복원.
+
+
+## tested option
+- --file lpu23x_00035.rom

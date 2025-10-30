@@ -616,7 +616,7 @@ namespace _test{
 				wchar_t c = NULL;
 
 				_mp::cnamed_pipe::type_ptr ptr_np;
-				std::wstring s_name = L"NAME_PIPE_2024.07.25_";
+				std::string s_name = "NAME_PIPE_2024.07.25_";
 				int n_cnt = 0;
 				std::wstring s_tx;
 

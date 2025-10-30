@@ -6,7 +6,7 @@ set -e # Exit immediately if a command exits with a non-zero status.
 
 # 패키지 정보 설정
 PACKAGE_NAME="coffee-manager-2nd"
-VERSION="2.1"
+VERSION="2.2"
 ARCH="amd64" # 또는 'arm64', 'i386' 등 실제 아키텍처에 맞게 수정
 DEB_PACKAGE_NAME="${PACKAGE_NAME}_${VERSION}_${ARCH}.deb"
 
@@ -77,7 +77,7 @@ Version: ${VERSION}
 Architecture: ${ARCH}
 Pre-Depends: libnss3-tools
 Maintainer: Elpusk<elpusk@naver.com>
-Description: Coffee Manager 2nd Daemon 2.1
+Description: Coffee Manager 2nd Daemon 2.2
  Provides the necessary daemon, libraries and fw-updater, for the coffee manager 2nd system.
 EOF
 
@@ -95,6 +95,7 @@ Type=forking
 PIDFile=/var/run/elpusk-hid-d.pid
 ExecStart=/usr/share/elpusk/program/00000006/coffee_manager/bin/elpusk-hid-d
 Restart=always
+RestartSec=2
 User=root
 Group=root
 WorkingDirectory=/usr/share/elpusk/program/00000006/coffee_manager/bin/

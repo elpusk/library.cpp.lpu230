@@ -196,7 +196,15 @@ cshare& cshare::set_rom_file_abs_full_path(const std::string& s_abs_full_rom_fil
 	if (!s_abs_full_rom_file.empty()) {
 		std::filesystem::path p(s_abs_full_rom_file);
 
-		m_current_dir = p.parent_path();
+		std::filesystem::path current_dir = p.parent_path();
+		if (current_dir.empty()) {
+			m_current_dir = std::filesystem::current_path();
+			auto f = m_current_dir / s_abs_full_rom_file; /// std::filesystem::path::preferred_separator
+			m_s_rom_file_abs_full_path = f.string();
+		}
+		else {
+			m_current_dir = current_dir;
+		}
 		if (p.extension() != ".rom") {
 			_set_firmware_size((size_t)std::filesystem::file_size(p));
 		}

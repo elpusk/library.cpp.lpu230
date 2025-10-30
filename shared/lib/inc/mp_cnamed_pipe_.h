@@ -32,13 +32,13 @@ namespace _mp {
 		typedef	std::shared_ptr<boost::interprocess::message_queue> _type_ptr_mq;
 
 	public:
-		static std::wstring generated_pipe_name();
+		static std::string generated_pipe_name();
 	public:
 		virtual ~cnamed_pipe();
 		cnamed_pipe();
-		cnamed_pipe(const std::wstring & s_name,bool b_creator);
+		cnamed_pipe(const std::string & s_name,bool b_creator);
 
-		std::wstring get_name() const
+		std::string get_name() const
 		{
 			return m_s_name;
 		}
@@ -65,7 +65,7 @@ namespace _mp {
 		}
 
 	private:
-		std::wstring m_s_name;
+		std::string m_s_name;
 		bool m_b_i_am_creator;
 		cnamed_pipe::_type_ptr_mq m_ptr_mq;
 	private:
