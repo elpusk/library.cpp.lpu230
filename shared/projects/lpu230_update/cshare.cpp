@@ -114,6 +114,7 @@ int cshare::get_app_area_zero_based_start_sector_from_sector_number(int n_sector
 
 void cshare::_ini()
 {
+	m_b_display = true;
 	m_b_is_possible_exit = true;
 
 	m_b_executed_server_stop_use_target_dev = false;
@@ -262,6 +263,17 @@ cshare& cshare::set_possible_exit(bool b_possible)
 {
 	m_b_is_possible_exit = b_possible;
 	return *this;
+}
+
+cshare& cshare::set_display_ui(bool b_display)
+{
+	m_b_display = b_display;
+	return *this;
+}
+
+bool cshare::get_display_ui() const
+{
+	return m_b_display;
 }
 
 std::tuple<bool,int,int> cshare::is_executed_server_stop_use_target_dev() const

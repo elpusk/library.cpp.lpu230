@@ -25,17 +25,18 @@
 #include "update.h"
 #include "cshare.h"
 
-static void _hide_console();
 static void _print_help(const std::string& program_name);
 
 /**
 * @brief command option 유효성 검사. ONLY
-*   
-*   dev_lib.dll(libdev_dll.so) 와 tg_rom.dll(libtg_rom.dll) 를 사용.
+* @brief dev_lib.dll(libdev_dll.so) 와 tg_rom.dll(libtg_rom.dll) 를 사용.
+* @brief 여기서는 코솔 출력 금지.
+* @brief 여기서 로깅도 금지.
+* 
 */
 int main(int argc, char** argv)
 {
-	int n_result(EXIT_FAILURE);
+    int n_result(_mp::exit_error_invalid_command_line_argment);//(EXIT_FAILURE);
 
 	bool b_help(false);
     bool b_quiet(false);
@@ -277,9 +278,6 @@ int main(int argc, char** argv)
 	} while (false);
 
     do {
-        if (n_result != EXIT_SUCCESS) {
-            std::wcout << "Missing Format......." << std::endl;
-        }
         bool b_log(true);
         bool b_display(true);
 
@@ -291,21 +289,15 @@ int main(int argc, char** argv)
             b_log = false;
         }
         //
-        if (!b_display) {
-            //hide mode
-            _hide_console();
-        }
-        else {
+        if (b_display) {
             if (b_help) {
                 _print_help(std::filesystem::path(argv[0]).filename().string());
                 continue;
             }
         }
-
         if (n_result != EXIT_SUCCESS) {
-            continue;
+            continue;//std::wcout << "Missing Format......." << std::endl;
         }
-
 
         // .프로그램 시작.
         n_result = update_main(
@@ -359,13 +351,3 @@ void _print_help(const std::string& program_name)
         << std::endl;
 }
 
-void _hide_console() 
-{
-#ifdef _WIN32
-    FreeConsole(); // Detach console
-#else
-    // 이후 출력 억제
-    std::cout.setstate(std::ios_base::failbit);
-    std::cerr.setstate(std::ios_base::failbit);
-#endif
-}

@@ -79,6 +79,10 @@ public:
 	cshare& set_write_sec_index(const std::vector<int>& v_sec_index = std::vector<int>(0));
 
 	cshare& set_possible_exit(bool b_possible);
+	cshare& set_display_ui(bool b_display);
+
+
+	bool get_display_ui() const;
 	/**
 	* @return get<0> - trure : executed stop_use_target_dev- request.
 	* @return get<1> - stopped usb vid
@@ -202,6 +206,8 @@ private:
 	void _set_firmware_size(size_t n_size_fw);
 
 private:
+
+	bool m_b_display; // display(default) ui or not
 	// exitable or not
 	std::atomic_bool m_b_is_possible_exit;
 

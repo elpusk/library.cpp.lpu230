@@ -10,8 +10,11 @@
 #ifdef _WIN32
 #include <windows.h>
 #include <sddl.h>
+#include <shellapi.h> // For ShellExecuteEx()
 #else
 #include <unistd.h>
+#include <termios.h>  // For terminal manipulation
+#include <sys/select.h>// For select()
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <signal.h>
@@ -250,7 +253,45 @@ namespace _mp {
 		return b_result;
 	}
 
-csystem::~csystem()
+	bool csystem::is_running_as_admin_or_root()
+	{
+		bool b_result(false);
+#ifdef _WIN32
+		BOOL b_admin = FALSE;
+		PSID admin_group = NULL;
+		do {
+			// Create a SID for the BUILTIN\Administrators group
+			SID_IDENTIFIER_AUTHORITY nt_authority = SECURITY_NT_AUTHORITY;
+			if (!AllocateAndInitializeSid(&nt_authority, 2,
+				SECURITY_BUILTIN_DOMAIN_RID,
+				DOMAIN_ALIAS_RID_ADMINS,
+				0, 0, 0, 0, 0, 0,
+				&admin_group)) {
+				continue;
+			}
+			// Check if the current process is a member of the admin group
+			if (!CheckTokenMembership(NULL, admin_group, &b_admin)) {
+				b_admin = FALSE;
+			}
+			// Free the SID created
+			if (admin_group) {
+				FreeSid(admin_group);
+			}
+		} while (false);
+		if (b_admin) {
+			b_result = true;
+		}
+#else	//linux
+		uid_t uid = getuid();    // 실제 사용자 ID
+		uid_t euid = geteuid();  // 유효 사용자 ID
+		if (uid == 0 || euid == 0) {
+			b_result = true;
+		}
+#endif
+		return b_result;
+	}
+
+	csystem::~csystem()
 	{
 	}
 

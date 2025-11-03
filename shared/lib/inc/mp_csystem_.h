@@ -23,6 +23,12 @@ namespace _mp {
 		*/
 		static bool daemonize_on_linux(const std::wstring  & s_daemon_pid_file_full_path, const std::wstring& s_cur_dir_abs_with_slash, void(*signal_handler)(int));
 
+		/**
+		* @brief check the process is running as admin(windows) or root(linux)
+		* @return true - running as admin or root, false - not running as admin or root
+		*/
+		static bool is_running_as_admin_or_root();
+
 	public:
 		virtual ~csystem();
 

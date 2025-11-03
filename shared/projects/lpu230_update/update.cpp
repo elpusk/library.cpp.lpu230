@@ -147,21 +147,29 @@ int update_main
 	do {
 		_cleanup_anager _cls_mgmt;
 
-		b_need_remove_pid_file = setup_display(b_display);
-
 		setup_log(b_run_by_cf, b_log_file);
 		// from this line, _mp::clog::get_instance() can be used.
-
 		_mp::clog& log(_mp::clog::get_instance());
 
-		auto result_dev_io_dll = setup_dev_io_dll(b_run_by_cf, log);
+		if (!_mp::csystem::is_running_as_admin_or_root()) {
+			log.log_fmt(L"[E] need to run as admin(windows) or root(linux).\n");
+			gn_result = _mp::exit_error_need_admin_or_root_for_running;
+			if (b_display) {
+				// setup_display() 후에 하면 안됌, setup_display() 에서 admin 권한을 요구하는 함수 사용 가능성있음.
+				std::cout << "Error: need to run as admin(windows) or root(linux)." << std::endl;
+			}
+			continue;//error
+		}
+		b_need_remove_pid_file = setup_display(b_display);
+
+		auto result_dev_io_dll = setup_dev_io_dll(b_run_by_cf, log);//logging 도 포함.
 		if (!result_dev_io_dll.first) {
 			gn_result = result_dev_io_dll.second;
 			continue;
 		}
 		// from this line, cdev_lib::get_instance() can be used. 
 
-		auto result_rom_dll = setup_rom_dll(b_run_by_cf, log);
+		auto result_rom_dll = setup_rom_dll(b_run_by_cf, log);//logging 도 포함.
 		if (!result_rom_dll.first) {
 			gn_result = result_rom_dll.second;
 			continue;
@@ -188,6 +196,7 @@ int update_main
 			cshare::get_instance().set_run_by_cf(b_run_by_cf);
 		}
 
+		cshare::get_instance().set_display_ui(b_display);
 		///////////////////////////////////////////////////
 		// setup info
 		if (b_display) {
@@ -327,9 +336,15 @@ bool setup_display(bool b_display)
 
 	if (!b_display) {
 #ifdef _WIN32
+		//FreeConsole(); // Detach console
+
 		HWND consoleWindow = GetConsoleWindow();
 		ShowWindow(consoleWindow, SW_HIDE); // 콘솔 창 숨기기
 #else
+		// 이후 출력 억제
+		std::cout.setstate(std::ios_base::failbit);
+		std::cerr.setstate(std::ios_base::failbit);
+
 		std::wstring s_pid_file_full_path = _mp::_coffee::CONST_S_PID_FILE_FULL_PATH_LPU230_UPDATE;
 		if (!_mp::csystem::daemonize_on_linux(s_pid_file_full_path, std::wstring(), _signal_handler)) {
 			b_result = false;

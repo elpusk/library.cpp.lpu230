@@ -202,6 +202,8 @@ namespace _mp{
 	// exit code type for main() function.
     typedef enum : int {
         exit_error_not_supported = 200,
+		exit_error_invalid_command_line_argment = 201,
+
         exit_error_daemonize = 250,
         exit_error_already_running = 251,
         exit_error_create_ctl_pipe = 252,
@@ -215,6 +217,12 @@ namespace _mp{
 
         exit_error_run_by_cf_rom_file = 260,
         exit_error_run_by_cf_device = 261,
+
+		exit_error_need_admin_or_root_for_running = 270,
+		exit_error_elevate_privileges = 271,
+		exit_error_setup_display = 272,
+
+        exit_error_initialize_ui = 280,
 
         exit_info_ctl_pipe_requst_terminate = 300
     }type_exit_code;
