@@ -41,6 +41,14 @@ public:
 		// 프로그램 종료 시 반드시 실행되어야 하는 클린업 코드
 		// 여기에 정리 코드를 배치합니다.
 		do {
+#ifdef _WIN32
+			HWND consoleWindow = GetConsoleWindow();
+			if (consoleWindow) {
+				ShowWindow(consoleWindow, SW_SHOW); // 콘솔 창 표시(복구)
+				HMENU sysMenu = GetSystemMenu(consoleWindow, TRUE);// 닫기 버튼 복원
+			}
+#endif
+
 			cshare& sh(cshare::get_instance());
 
 			auto r = sh.is_executed_server_stop_use_target_dev();
