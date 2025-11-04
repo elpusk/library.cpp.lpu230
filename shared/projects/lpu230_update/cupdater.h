@@ -115,12 +115,16 @@ public:
 
 	void ui_main_loop();
 
+	void non_ui_main_loop();
+
 	/**
 	* @brief as like initial dialog
 	*/
 	bool initial_update();
 
 private:
+	void _queueed_message_process(int n_msg,const std::string& s_msg);
+
 	void _updates_thread_function();//thread main
 
 	bool _updates_sub_thread_backup_system_param(int &n_step);
@@ -279,10 +283,9 @@ private:
 	* @param event The event that triggers the state update.
 	* @param s_rom_or_bin_file rom or bin file abs full path.
 	*   if s_rom_or_bin_file isn't empty, s_rom_or_bin_file file ,must exist.
-	* @return 
-	*    1'st - true : state is changed, false : state is not changed.
-	*    2'nd - The new application state after processing the event.
-	*    3'th - message to be displayed to the user (empty if no message).
+	* @return 1'st - true : state is changed, false : state is not changed.
+	* @return 2'nd - The new application state after processing the event.
+	* @return 3'th - message to be displayed to the user (empty if no message).
 	*/
 	std::tuple<bool,cupdater::AppState,std::string> _update_state(cupdater::AppEvent event,const std::string & s_rom_or_bin_file = std::string());
 

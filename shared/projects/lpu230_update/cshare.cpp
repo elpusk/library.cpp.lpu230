@@ -1137,10 +1137,12 @@ void cshare::update_files_list_of_cur_dir(const std::filesystem::path& current_d
 				continue;
 			}
 			if (path_ext == ".rom") {
-				m_v_rom_files_in_current_dir.push_back(entry.path().filename().string());
+				//m_v_rom_files_in_current_dir.push_back(entry.path().filename().string());
+				m_v_rom_files_in_current_dir.push_back(entry.path().string());
 			}
 			else if (path_ext == ".bin") {
-				m_v_bin_files_in_current_dir.push_back(entry.path().filename().string());
+				//m_v_bin_files_in_current_dir.push_back(entry.path().filename().string());
+				m_v_bin_files_in_current_dir.push_back(entry.path().string());
 			}
 
 			m_v_files_in_current_dir_except_dir.push_back(entry.path().filename().string());

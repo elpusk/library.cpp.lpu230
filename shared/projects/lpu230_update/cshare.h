@@ -230,8 +230,8 @@ private:
 	int m_n_selected_file_in_v_files_in_current_dir;
 	std::vector<std::string> m_v_files_in_current_dir;//this include folder and ".."
 	std::vector<std::string> m_v_files_in_current_dir_except_dir;//this exclude folder and ".."
-	std::vector<std::string> m_v_rom_files_in_current_dir; // rom file list in the m_v_files_in_current_dir.
-	std::vector<std::string> m_v_bin_files_in_current_dir; // bin file list in the m_v_files_in_current_dir.
+	std::vector<std::string> m_v_rom_files_in_current_dir; // rom file list in the m_v_files_in_current_dir.(full path)
+	std::vector<std::string> m_v_bin_files_in_current_dir; // bin file list in the m_v_files_in_current_dir.(full path)
 	std::filesystem::path m_current_dir;
 
 	//fw section of the rom file

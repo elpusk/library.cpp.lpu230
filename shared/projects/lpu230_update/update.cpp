@@ -106,7 +106,12 @@ static BOOL WINAPI _console_handler(DWORD signal);
 static void _signal_handler(int signum);
 #endif
 
-static bool setup_display(bool b_display);
+/**
+* @param b_display : true - display ui, false - no display ui
+* @return first - success setup display
+* @return second - need to remove pid file when exit
+*/
+static std::pair<bool,bool> setup_display(bool b_display);
 
 static void setup_log(bool b_run_by_coffee_manager, bool b_enable);
 
@@ -143,6 +148,7 @@ int update_main
 {
 	std::wstring s_pid_file_full_path;
 	bool b_need_remove_pid_file(false);
+	bool b_result_setup_display(false);
 
 	do {
 		_cleanup_anager _cls_mgmt;
@@ -160,7 +166,15 @@ int update_main
 			}
 			continue;//error
 		}
-		b_need_remove_pid_file = setup_display(b_display);
+		std::tie(b_result_setup_display,b_need_remove_pid_file) = setup_display(b_display);
+		if(!b_result_setup_display) {
+			log.log_fmt(L"[E] setup_display() failed.\n");
+			gn_result = _mp::exit_error_setup_display;
+			if (b_display) {
+				std::cout << "Error: setup display failed." << std::endl;
+			}
+			continue;
+		}
 
 		auto result_dev_io_dll = setup_dev_io_dll(b_run_by_cf, log);//logging 도 포함.
 		if (!result_dev_io_dll.first) {
@@ -245,7 +259,12 @@ int update_main
 			continue;
 		}
 
-		updater.ui_main_loop();
+		if (b_display) {
+			updater.ui_main_loop();
+		}
+		else {
+			updater.non_ui_main_loop();
+		}
 
 		log.log_fmt(L"[I] end ui_main_loop().\n");
 		gn_result = EXIT_SUCCESS;
@@ -330,38 +349,61 @@ void _signal_handler(int signum)
 }
 #endif
 
-bool setup_display(bool b_display)
+std::pair<bool,bool> setup_display(bool b_display)
 {
-	bool b_result(true);
+	bool b_result(false);
+	bool b_need_remove_pid_file(false);
 
-	if (!b_display) {
+	do {
+		if (!b_display) {
 #ifdef _WIN32
-		//FreeConsole(); // Detach console
+			//FreeConsole(); // Detach console
 
-		HWND consoleWindow = GetConsoleWindow();
-		ShowWindow(consoleWindow, SW_HIDE); // 콘솔 창 숨기기
+			HWND consoleWindow = GetConsoleWindow();
+			if (consoleWindow == NULL) {
+				continue; // error
+			}
+			ShowWindow(consoleWindow, SW_HIDE); // 콘솔 창 숨기기
 #else
-		// 이후 출력 억제
-		std::cout.setstate(std::ios_base::failbit);
-		std::cerr.setstate(std::ios_base::failbit);
+			// 이후 출력 억제
+			std::cout.setstate(std::ios_base::failbit);
+			std::cerr.setstate(std::ios_base::failbit);
 
-		std::wstring s_pid_file_full_path = _mp::_coffee::CONST_S_PID_FILE_FULL_PATH_LPU230_UPDATE;
-		if (!_mp::csystem::daemonize_on_linux(s_pid_file_full_path, std::wstring(), _signal_handler)) {
-			b_result = false;
+			std::wstring s_pid_file_full_path = _mp::_coffee::CONST_S_PID_FILE_FULL_PATH_LPU230_UPDATE;
+			if (_mp::csystem::daemonize_on_linux(s_pid_file_full_path, std::wstring(), _signal_handler)) {
+				b_need_remove_pid_file = true;
+			}
+#endif
 		}
-#endif
-	}
-	else {
+		else {
 #ifdef _WIN32
-		SetConsoleCtrlHandler(_console_handler, TRUE);
-#else
-		signal(SIGINT, _signal_handler);   // Ctrl+C
-		signal(SIGTERM, _signal_handler);  // kill 명령
-		signal(SIGHUP, _signal_handler);   // 터미널 종료
-#endif
-	}
+			HWND consoleWindow = GetConsoleWindow();
+			if (consoleWindow == NULL) {
+				continue; // error
+			}
+			ShowWindow(consoleWindow, SW_SHOW); // 콘솔 창 표시
 
-	return b_result;
+			HMENU sysMenu = GetSystemMenu(consoleWindow, FALSE);
+			if (sysMenu == NULL) {
+				continue; // error
+			}
+			// 시스템 메뉴에서 '닫기(SC_CLOSE)' 항목을 제거하여 버튼을 비활성화합니다.
+			DeleteMenu(sysMenu, SC_CLOSE, MF_BYCOMMAND);
+
+			// CRl+C , Ctrl+Break 이벤트에 의한 종료 막기 핸들러 등록
+			SetConsoleCtrlHandler(_console_handler, TRUE);
+#else
+			// CRl+C , Ctrl+Break 이벤트에 의한 종료 막기 핸들러 등록
+			signal(SIGINT, _signal_handler);   // Ctrl+C
+			signal(SIGTERM, _signal_handler);  // kill 명령
+			signal(SIGHUP, _signal_handler);   // 터미널 종료
+#endif
+		}
+
+		b_result = true;
+	} while (false);
+
+	return std::make_pair(b_result,b_need_remove_pid_file);
 }
 
 void setup_log(bool b_run_by_coffee_manager, bool b_enable)

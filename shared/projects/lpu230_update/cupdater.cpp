@@ -54,6 +54,9 @@ cupdater::cupdater(_mp::clog& log,bool b_disaplay, bool b_log) :
 			continue; // ERROR
 		}
 
+		int n_updatable_index = -1;
+		int n_total_fw(0);
+
 		// 여기 부터는 s_target_dev_path 가 실제 연결된 장비로 검증됨.
 		bool b_file_is_rom_type(false);
 		std::string s_target_rom_file;
@@ -69,8 +72,6 @@ cupdater::cupdater(_mp::clog& log,bool b_disaplay, bool b_log) :
 			// 여기 부터는 s_target_dev_path 가 실제 연결된 장비로 검증 & s_target_rom_file 파일 존재 검증.
 			if (b_file_is_rom_type) {
 
-				int n_updatable_index = -1;
-				int n_total_fw(0);
 				std::tie(n_total_fw, n_updatable_index) = _check_target_fw_of_selected_rom_in_initial();
 				if (n_total_fw <= 0) {
 					continue;// error잘못된 파일
@@ -101,6 +102,16 @@ cupdater::cupdater(_mp::clog& log,bool b_disaplay, bool b_log) :
 				if (!m_b_display && b_file_is_rom_type) {
 					// UI 가 숨겨져 있고, 선택파일이 rom type 일때만 자동 선택 저장.
 					cshare::get_instance().set_rom_file_abs_full_path(s_target_rom_file);
+
+					std::tie(n_total_fw, n_updatable_index) = _check_target_fw_of_selected_rom_in_initial();
+					if (n_total_fw <= 0) {
+						continue;// error잘못된 파일
+					}
+					if (n_updatable_index < 0) {
+						// FW 있는데, 적절한 것이 없음.
+						continue; // 에러 ... UI 가 숨겨져
+					}
+					//
 					m_n_progress_max = cshare::get_instance().calculate_update_step();
 				}
 			}
@@ -108,73 +119,84 @@ cupdater::cupdater(_mp::clog& log,bool b_disaplay, bool b_log) :
 
 		m_b_ini = true;
 	} while (false);
-	//
-	m_n_progress_min = 0;
-	m_n_progress_cur = m_n_progress_min;
 
-	// 작업에 필요한 step 의 수를 계산 한다.
-	m_n_progress_max = cshare::get_instance().calculate_update_step();
-
-
-	m_n_tab_index = 0; // 0: s_ini, 1: s_selfile, 2: s_selfirm, 3: s_sellast(confirm), 4: s_sellast(warning) ,5: s_ing, 6: s_scom
-	m_v_tabs = {
-		*_create_sub_ui0_ini(),
-		*_create_sub_ui1_select_file(),
-		*_create_sub_ui2_select_firmware(),
-		*_create_sub_ui3_last_confirm(),
-		*_create_sub_ui3_last_warning(),
-		*_create_sub_ui4_updating(),
-		*_create_sub_ui5_complete()
-	};
-
-	m_ptr_tab_container = std::make_shared<ftxui::Component>(ftxui::Container::Tab(m_v_tabs, &m_n_tab_index));
-
-	// Root with title
-	m_ptr_root = std::make_shared<ftxui::Component>(ftxui::Renderer(*m_ptr_tab_container, [&]() {
-		return ftxui::vbox({
-				   ftxui::text("lpu230_update : " 
-					   + cshare::get_instance().get_target_device_model_name_by_string()
-					   + " : "
-					   + _mp::cstring::get_mcsc_from_unicode(cshare::get_instance().get_target_device_version().get_by_string() )
-					   + " : " 
-					   + cshare::get_instance().get_rom_file_abs_full_path()
-				   ) | ftxui::border,
-				   (*m_ptr_tab_container)->Render() | ftxui::flex,
-			}) |
-			ftxui::border;
-		})
-	);
-
-	m_ptr_final_root = std::make_shared<ftxui::Component>(ftxui::CatchEvent(*m_ptr_root, [&](ftxui::Event event) {
-		if (event == ftxui::Event::Custom && m_state == cupdater::AppState::s_ing) {
-			float progress_ratio = 0.0f;
-			int total_steps = m_n_progress_max - m_n_progress_min;
-			if (total_steps == 0) {
-				progress_ratio = 0.0f;
-			}
-			else {
-				progress_ratio = static_cast<float>(m_n_progress_cur - m_n_progress_min) / total_steps;
-			}
-
-			++m_n_progress_cur;
-			if (m_n_progress_cur >= m_n_progress_max) {
-				m_n_progress_cur = m_n_progress_max;
-				_update_state(cupdater::AppEvent::e_ulstep_s);
-#ifdef _WIN32
-				ATLTRACE(L"Progress update complete: (%d/%d)\n", m_n_progress_cur, m_n_progress_max);
-#endif
-				return false;
-			}
-			else {
-				_update_state(cupdater::AppEvent::e_ustep_s);
-#ifdef _WIN32
-				ATLTRACE(L"Progress update : (%d/%d)\n", m_n_progress_cur, m_n_progress_max);
-#endif
-			}
+	// UI part
+	
+	do {
+		if(!m_b_ini) {
+			continue; // constructure failure
 		}
-		return false;  // Allow other events to propagate
-		})
-	);
+		//
+		m_n_progress_min = 0;
+		m_n_progress_cur = m_n_progress_min;
+
+		// 작업에 필요한 step 의 수를 계산 한다.
+		m_n_progress_max = cshare::get_instance().calculate_update_step();
+
+		if (!b_disaplay) {
+			continue; // UI 표시가 없으므로, UI 구성 불요.
+		}
+
+		m_n_tab_index = 0; // 0: s_ini, 1: s_selfile, 2: s_selfirm, 3: s_sellast(confirm), 4: s_sellast(warning) ,5: s_ing, 6: s_scom
+		m_v_tabs = {
+			*_create_sub_ui0_ini(),
+			*_create_sub_ui1_select_file(),
+			*_create_sub_ui2_select_firmware(),
+			*_create_sub_ui3_last_confirm(),
+			*_create_sub_ui3_last_warning(),
+			*_create_sub_ui4_updating(),
+			*_create_sub_ui5_complete()
+		};
+
+		m_ptr_tab_container = std::make_shared<ftxui::Component>(ftxui::Container::Tab(m_v_tabs, &m_n_tab_index));
+
+		// Root with title
+		m_ptr_root = std::make_shared<ftxui::Component>(ftxui::Renderer(*m_ptr_tab_container, [&]() {
+			return ftxui::vbox({
+					   ftxui::text("lpu230_update : "
+						   + cshare::get_instance().get_target_device_model_name_by_string()
+						   + " : "
+						   + _mp::cstring::get_mcsc_from_unicode(cshare::get_instance().get_target_device_version().get_by_string())
+						   + " : "
+						   + cshare::get_instance().get_rom_file_abs_full_path()
+					   ) | ftxui::border,
+					   (*m_ptr_tab_container)->Render() | ftxui::flex,
+				}) |
+				ftxui::border;
+			})
+		);
+
+		m_ptr_final_root = std::make_shared<ftxui::Component>(ftxui::CatchEvent(*m_ptr_root, [&](ftxui::Event event) {
+			if (event == ftxui::Event::Custom && m_state == cupdater::AppState::s_ing) {
+				float progress_ratio = 0.0f;
+				int total_steps = m_n_progress_max - m_n_progress_min;
+				if (total_steps == 0) {
+					progress_ratio = 0.0f;
+				}
+				else {
+					progress_ratio = static_cast<float>(m_n_progress_cur - m_n_progress_min) / total_steps;
+				}
+
+				++m_n_progress_cur;
+				if (m_n_progress_cur >= m_n_progress_max) {
+					m_n_progress_cur = m_n_progress_max;
+					_update_state(cupdater::AppEvent::e_ulstep_s);
+#ifdef _WIN32
+					ATLTRACE(L"Progress update complete: (%d/%d)\n", m_n_progress_cur, m_n_progress_max);
+#endif
+					return false;
+				}
+				else {
+					_update_state(cupdater::AppEvent::e_ustep_s);
+#ifdef _WIN32
+					ATLTRACE(L"Progress update : (%d/%d)\n", m_n_progress_cur, m_n_progress_max);
+#endif
+				}
+			}
+			return false;  // Allow other events to propagate
+			})
+		);
+	} while (false);
 }
 
 bool cupdater::initial_update()
@@ -202,10 +224,12 @@ bool cupdater::initial_update()
 		b_result = true;
 
 		if (cshare::get_instance().is_run_by_cf()) {
+			_update_state(cupdater::AppEvent::e_slast_o);
 			b_result = start_update_with_thread(); // run by cf 이면, 자동으로 실행되어야 한다.
 		}
 		else {
 			if (!m_b_display) {
+				_update_state(cupdater::AppEvent::e_slast_o);
 				b_result = start_update_with_thread(); // UI 표시가 없으므로 자동 실행되어야 한다.
 			}
 		}
@@ -923,23 +947,33 @@ std::tuple<bool, cupdater::AppState, std::string> cupdater::_update_state(cupdat
 
 	do {
 		//special case.
-		if (old_state == cupdater::AppState::s_ini && event == cupdater::AppEvent::e_start) {
-			
-			if (!s_rom_or_bin_file.empty()) {
-				std::filesystem::path fp(s_rom_or_bin_file);
-				if (fp.extension() == ".rom") {
-					// s_rom_or_bin_file 확장자가 rom 인 경우.	
-					new_value.first = (int)cupdater::AppState::s_selfirm;
-					new_value.second = std::string("select a firmware in the selected rom file");
+		if (old_state == cupdater::AppState::s_ini ) {
+
+			if (event == cupdater::AppEvent::e_start) {
+				if (!s_rom_or_bin_file.empty()) {
+					std::filesystem::path fp(s_rom_or_bin_file);
+					if (fp.extension() == ".rom") {
+						// s_rom_or_bin_file 확장자가 rom 인 경우.	
+						new_value.first = (int)cupdater::AppState::s_selfirm;
+						new_value.second = std::string("select a firmware in the selected rom file");
+					}
+					else if (fp.extension() == ".bin") {
+						// s_rom_or_bin_file 확장자가 bin 인 경우.	
+						new_value.first = (int)cupdater::AppState::s_sellast;
+						new_value.second = std::string("confirm the selected firmware");
+					}
+					else {
+						continue;
+					}
 				}
-				else if (fp.extension() == ".bin") {
-					// s_rom_or_bin_file 확장자가 bin 인 경우.	
-					new_value.first = (int)cupdater::AppState::s_sellast;
-					new_value.second = std::string("confirm the selected firmware");
-				}
-				else {
-					continue;
-				}
+			}
+			else if (event == cupdater::AppEvent::e_slast_o) {
+				// run_by_cf 나 display 가 off 된 상태에서 자동 실행이 필요하므로.
+				// 바로 실행하는 상태로 전환.
+				b_changed = true;
+				m_state = new_state = cupdater::AppState::s_ing;
+				s_message = "run by auto";
+				continue;
 			}
 		}
 
@@ -1056,6 +1090,44 @@ int cupdater::get_pos_of_progress() const
 	return m_n_progress_cur;
 }
 
+void cupdater::_queueed_message_process(int n_msg, const std::string& s_msg)
+{
+	int n_progress_cur(0), n_progress_min(0), n_progress_max(0);
+
+	// get progress pos
+	n_progress_cur = m_n_progress_cur;
+	n_progress_min = m_n_progress_min;
+	n_progress_max = m_n_progress_max;
+
+	m_s_message_in_ing_state.clear();
+
+	m_s_message_in_ing_state += "[";
+	m_s_message_in_ing_state += std::to_string(n_progress_min);
+	m_s_message_in_ing_state += ".";
+	m_s_message_in_ing_state += std::to_string(n_progress_cur);
+	m_s_message_in_ing_state += ".";
+	m_s_message_in_ing_state += std::to_string(n_progress_max);
+	m_s_message_in_ing_state += "]";
+
+	m_s_message_in_ing_state += " step";
+	m_s_message_in_ing_state += std::to_string(n_msg);
+	m_s_message_in_ing_state += " : ";
+	m_s_message_in_ing_state += s_msg;
+
+	if (s_msg.empty()) {
+		m_log_ref.log_fmt("[I] ui_main_loop : (%d,empty)\n", n_msg);
+#ifdef _WIN32
+		ATLTRACE("(INT,MSG) - (%d,empty)\n", n_msg);
+#endif
+	}
+	else {
+		m_log_ref.log_fmt("[I] ui_main_loop : (%d,%s)\n", n_msg, s_msg.c_str());
+#ifdef _WIN32
+		ATLTRACE("(INT,MSG) - (%d,%s)\n", n_msg, s_msg.c_str());
+#endif
+	}
+
+}
 void cupdater::ui_main_loop()
 {
 	int n_progress_cur(0),n_progress_min(0),n_progress_max(0);
@@ -1076,40 +1148,7 @@ void cupdater::ui_main_loop()
 			if (!_pop_message(n_msg, s_msg)) {
 				continue;
 			}
-			else {
-				// get progress pos
-				n_progress_cur = m_n_progress_cur;
-				n_progress_min = m_n_progress_min;
-				n_progress_max = m_n_progress_max;
-			}
-
-			m_s_message_in_ing_state.clear();
-			
-			m_s_message_in_ing_state += "[";
-			m_s_message_in_ing_state += std::to_string(n_progress_min);
-			m_s_message_in_ing_state += ".";
-			m_s_message_in_ing_state += std::to_string(n_progress_cur);
-			m_s_message_in_ing_state += ".";
-			m_s_message_in_ing_state += std::to_string(n_progress_max);
-			m_s_message_in_ing_state += "]";
-
-			m_s_message_in_ing_state += " step";
-			m_s_message_in_ing_state += std::to_string(n_msg);
-			m_s_message_in_ing_state += " : ";
-			m_s_message_in_ing_state += s_msg;
-
-			if (s_msg.empty()) {
-				m_log_ref.log_fmt("[I] ui_main_loop : (%d,empty)\n", n_msg);
-#ifdef _WIN32
-				ATLTRACE("(INT,MSG) - (%d,empty)\n",n_msg);
-#endif
-			}
-			else {
-				m_log_ref.log_fmt("[I] ui_main_loop : (%d,%s)\n", n_msg, s_msg.c_str());
-#ifdef _WIN32
-				ATLTRACE("(INT,MSG) - (%d,%s)\n", n_msg,s_msg.c_str());
-#endif
-			}
+			_queueed_message_process(n_msg, s_msg);
 			//
 			try {
 				m_screen.PostEvent(ftxui::Event::Custom);
@@ -1121,6 +1160,37 @@ void cupdater::ui_main_loop()
 		} while (false);
 	}//end while
 	
+}
+
+void cupdater::non_ui_main_loop()
+{
+	int n_progress_cur(0), n_progress_min(0), n_progress_max(0);
+	bool b_run(true);
+	int n_msg(0);
+	std::string s_msg;
+
+	while (b_run) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+		if (!m_b_is_running) {
+			// 작업 쓰레드 자체 종료됨. 수신된 메시지 처리 후 종료.
+			b_run = false;
+			//
+			while (_pop_message(n_msg, s_msg)) {
+				_queueed_message_process(n_msg, s_msg);
+			}//end while
+			continue;
+		}
+
+		do {
+			if (!_pop_message(n_msg, s_msg)) {
+				continue;
+			}
+			_queueed_message_process(n_msg, s_msg);
+
+		} while (false);
+	}//end while
+
 }
 
 void cupdater::_updates_thread_function()
@@ -1145,7 +1215,8 @@ void cupdater::_updates_thread_function()
 		int n_step(0);
 		////////////////////////////////////////////////////
 		if (!_updates_sub_thread_backup_system_param(n_step)) {
-			break;//error
+			m_b_is_running = false; // 에러 종료
+			continue;
 		}
 		b_need_close_lpu23x = true;
 
@@ -1156,7 +1227,8 @@ void cupdater::_updates_thread_function()
 		// 부트로더 실행
 		b_need_close_lpu23x = false; // _updates_sub_thread_run_bootloader 을 실행하면, 항상 내부에서, close 함.
 		if (!_updates_sub_thread_run_bootloader(n_step)) {
-			break; // error
+			m_b_is_running = false; // 에러 종료
+			continue;
 		}
 		if (!m_b_is_running)
 			break; // 종료 직전 체크
@@ -1183,7 +1255,8 @@ void cupdater::_updates_thread_function()
 		////////////////////////////////////////////////////
 		// 부트로더 설정 실시.
 		if (!_updates_sub_thread_setup_bootloader(n_step)) {
-			break;
+			m_b_is_running = false; // 에러 종료
+			continue;
 		}
 		b_need_close_bootloader = true;
 		if (!m_b_is_running)
@@ -1192,7 +1265,8 @@ void cupdater::_updates_thread_function()
 		////////////////////////////////////////////////////
 		// 섹터 삭제
 		if (!_updates_sub_thread_erase_sector(n_step)) {
-			break;
+			m_b_is_running = false; // 에러 종료
+			continue;
 		}
 		if (!m_b_is_running)
 			break; // 종료 직전 체크
@@ -1252,7 +1326,8 @@ void cupdater::_updates_thread_function()
 #endif
 
 		if (!b_result) {
-			break; // error exit
+			m_b_is_running = false; // 에러 종료
+			continue;
 		}
 		if (!m_b_is_running) {
 			break; // 종료 직전 체크
@@ -1262,14 +1337,16 @@ void cupdater::_updates_thread_function()
 		// 앱실행
 		b_need_close_bootloader = false; // 아래 실행하면 무조건, bootloader 닫음.
 		if (!_updates_sub_thread_run_app(n_step)) {
-			break;
+			m_b_is_running = false; // 에러 종료
+			continue;
 		}
 		if (!m_b_is_running)
 			break; // 종료 직전 체크
 		
 		////////////////////////////////////////////////////
 		if (!_updates_sub_thread_wait_plugout_bootloader(n_step)) {
-			break;
+			m_b_is_running = false; // 에러 종료
+			continue;
 		}
 		if (!m_b_is_running)
 			break; // 종료 직전 체크
@@ -1278,7 +1355,8 @@ void cupdater::_updates_thread_function()
 		_mp::clibhid_dev_info dev_info_after_update;
 		std::tie(b_result, dev_info_after_update) = _updates_sub_thread_wait_plugin_lpu23x(n_step);
 		if (!b_result) {
-			break;
+			m_b_is_running = false; // 에러 종료
+			continue;
 		}
 		if (!m_b_is_running)
 			break; // 종료 직전 체크
@@ -1286,7 +1364,8 @@ void cupdater::_updates_thread_function()
 		////////////////////////////////////////////////////
 		// 시스템 파라메터 복구.
 		if (!_updates_sub_thread_recover_system_param(n_step, dev_info_after_update)) {
-			break;
+			m_b_is_running = false; // 에러 종료
+			continue;
 		}
 		b_need_close_lpu23x = true;
 		if (!m_b_is_running)
@@ -1295,7 +1374,8 @@ void cupdater::_updates_thread_function()
 		////////////////////////////////////////////////////
 		// 업데이트 후 인터페이스 변경.
 		if (!_updates_sub_thread_change_interface_after_update(n_step, dev_info_after_update)) {
-			break;
+			m_b_is_running = false; // 에러 종료
+			continue;
 		}
 		if (!m_b_is_running)
 			break; // 종료 직전 체크
@@ -1303,7 +1383,8 @@ void cupdater::_updates_thread_function()
 		////////////////////////////////////////////////////
 		// 업데이트 후 iso mode 로.
 		if (!_updates_sub_thread_set_iso_mode_after_update(n_step, dev_info_after_update)) {
-			break;
+			m_b_is_running = false; // 에러 종료
+			continue;
 		}
 		if (!m_b_is_running)
 			break; // 종료 직전 체크
