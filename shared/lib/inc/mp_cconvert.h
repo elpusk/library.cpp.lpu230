@@ -1661,6 +1661,21 @@ namespace _mp{
 			return list_parameters;
 		}
 
+		static type_list_string get_command_line_parameters_by_mcsc_list(int argc, wchar_t* argv[])
+		{
+			type_list_string list_parameters;
+			std::string s;
+
+			do {
+				for (int i = 0; i < argc; i++) {
+					if (argv[i]) {
+						s = _mp::cstring::get_mcsc_from_unicode(argv[i]);
+						list_parameters.push_back(s);
+					}
+				}//end for
+			} while (false);
+			return list_parameters;
+		}
 
 		//
     private:

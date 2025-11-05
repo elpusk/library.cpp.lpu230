@@ -17,6 +17,7 @@
 ## 공통
 - update 가 장비 open 전에 cf cotrol pipe 를 통해, 해당 장비 관리 해제 요청.
 - update 종료 후, cf cntrol pipr 를 통해, 해당 장비 관리 다시 요청.
+- cmd.exe 를 관리자 모드로 실행(conhost.exe)
 
 
 ## option 없을때
@@ -28,4 +29,12 @@
 
 
 ## tested option
-- --file lpu23x_00035.rom
+### win(관리자 권한 필수)
+- 옵션없이 실행. //자동으로 system menu 의 close 가 사용불가되고, 종료 후 다시 사용 가능해짐.
+- --file lpu23x_00035.rom //파일 선택창 패스됨.
+- -q // 관리자 권한 콘솔에서 실행 시키면, 화면 없어졌다가 프로그램 종료되면 다시 나타남.
+- -qa // 상동.
+- Update-Lock 표시 중, CTL+C 누루면 프로그램 종료됨. // 이 건 문제!!!
+
+
+

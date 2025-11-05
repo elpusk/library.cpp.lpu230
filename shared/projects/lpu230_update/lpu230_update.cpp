@@ -14,6 +14,7 @@
 #ifdef _WIN32
 #define NOMINMAX
 #include <windows.h>
+#include <shellapi.h>
 #endif
 
 #include <ftxui/dom/elements.hpp>
@@ -25,6 +26,57 @@
 #include "update.h"
 #include "cshare.h"
 
+#ifdef _WIN32
+class _win_console_manager {
+public:
+    _win_console_manager() : 
+        m_b_allocated_console(false)
+		, m_argc(0)
+		, m_argv(nullptr)
+    {
+        // 1. 새 콘솔 창을 할당합니다.
+            // GUI 애플리케이션이 콘솔 I/O를 사용할 수 있게 합니다.
+        if (AllocConsole()) {
+            // 2. 표준 출력 스트림 (stdout)을 새로 할당된 콘솔에 연결합니다.
+            // C++의 std::cout이 콘솔에 출력되도록 설정합니다.
+            FILE* pFile;
+            freopen_s(&pFile, "CONOUT$", "w", stdout);
+
+            // 3. 표준 입력 스트림 (stdin)을 콘솔에 연결합니다.
+            // C++의 std::cin이 콘솔로부터 입력받을 수 있도록 설정합니다.
+            freopen_s(&pFile, "CONIN$", "r", stdin);
+
+            // 4. 표준 오류 스트림 (stderr)을 콘솔에 연결합니다.
+            freopen_s(&pFile, "CONOUT$", "w", stderr);
+
+            m_b_allocated_console = true;
+        }
+
+		m_argv = CommandLineToArgvW(GetCommandLineW(), &m_argc); // 프로제트 설정이 unicode 이어서 unicode 로 받음.
+    }
+    ~_win_console_manager() 
+    {
+        if (m_b_allocated_console) {
+            FreeConsole();
+        }
+
+        if (m_argv) {
+            LocalFree(m_argv);
+        }
+	}
+
+    std::pair<int, wchar_t**> get_command_line_arguments() const
+    {
+        return std::make_pair(m_argc, m_argv);
+	}
+private:
+	bool m_b_allocated_console;
+    int m_argc;
+    wchar_t** m_argv;
+};
+
+#endif // _WIN32
+
 static void _print_help(const std::string& program_name);
 
 /**
@@ -33,9 +85,17 @@ static void _print_help(const std::string& program_name);
 * @brief 여기서는 코솔 출력 금지.
 * @brief 여기서 로깅도 금지.
 * 
+* @prarm lpCmdLine : The command line for the application, excluding the program name. To retrieve the entire command line, use the GetCommandLine function.
 */
+#ifdef _WIN32
+int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR lpCmdLine, int nShowCmd)
+#else
 int main(int argc, char** argv)
+#endif
 {
+#ifdef _WIN32
+	_win_console_manager win_console_manager; //윈도우즈에서 자동으로 콘솔 생성 및 제거 창 관리를 위한 객체.
+#endif
     int n_result(_mp::exit_error_invalid_command_line_argment);//(EXIT_FAILURE);
 
 	bool b_help(false);
@@ -51,11 +111,16 @@ int main(int argc, char** argv)
 
     std::string s_rom_file;
     std::string s_device_path;
-
+    _mp::type_list_string list_parameters;
 	do {
         //////////////////////////////////////////
         //get command line parameters 
-        _mp::type_list_string list_parameters(_mp::cconvert::get_command_line_parameters_by_mcsc_list(argc, argv));
+#ifdef _WIN32
+        int argc = 0;
+        wchar_t** argv = NULL;
+		std::tie(argc, argv) = win_console_manager.get_command_line_arguments();
+#endif
+        list_parameters = _mp::cconvert::get_command_line_parameters_by_mcsc_list(argc, argv);
 
         if (list_parameters.size() <= 1) {
             n_result = EXIT_SUCCESS;
@@ -291,7 +356,10 @@ int main(int argc, char** argv)
         //
         if (b_display) {
             if (b_help) {
-                _print_help(std::filesystem::path(argv[0]).filename().string());
+                if (!list_parameters.empty()) {
+                    _print_help(std::filesystem::path(*list_parameters.begin()).filename().string());
+                }
+                
                 continue;
             }
         }
@@ -349,5 +417,6 @@ void _print_help(const std::string& program_name)
         "      After the update, set the MMD1100 device to Binary mode.\n"
         "      Cannot be used together with --mmd1100_iso_mode.\n"
         << std::endl;
+    std::cout << "press any key to exit..." << std::endl;
+    std::cin.get();
 }
-

@@ -42,6 +42,8 @@ public:
 		// 여기에 정리 코드를 배치합니다.
 		do {
 #ifdef _WIN32
+			SetConsoleCtrlHandler(NULL, FALSE);  // 모든 핸들러 제거 → Ctrl+C 다시 동작
+
 			HWND consoleWindow = GetConsoleWindow();
 			if (consoleWindow) {
 				ShowWindow(consoleWindow, SW_SHOW); // 콘솔 창 표시(복구)
@@ -328,7 +330,7 @@ BOOL WINAPI _console_handler(DWORD signal)
 	case CTRL_SHUTDOWN_EVENT:
 		if (sh.is_possible_exit()) {
 			ATLTRACE("EXIT REQ!!!!!\n");
-			return FALSE;// 종요
+			return FALSE;// 종료
 		}
 		else {
 			ATLTRACE("EXIT REQ is ignored!!!!!\n");
@@ -398,10 +400,13 @@ std::pair<bool,bool> setup_display(bool b_display)
 			// 시스템 메뉴에서 '닫기(SC_CLOSE)' 항목을 제거하여 버튼을 비활성화합니다.
 			DeleteMenu(sysMenu, SC_CLOSE, MF_BYCOMMAND);
 
-			// CRl+C , Ctrl+Break 이벤트에 의한 종료 막기 핸들러 등록
-			SetConsoleCtrlHandler(_console_handler, TRUE);
+			SetConsoleCtrlHandler(NULL, FALSE); //등록 전 기본값 복원.
+			// Ctrl+C , Ctrl+Break 이벤트에 의한 종료 막기 핸들러 등록
+			if (!SetConsoleCtrlHandler(_console_handler, TRUE)) {
+				ATLTRACE("Could not set control handler\n");
+			}
 #else
-			// CRl+C , Ctrl+Break 이벤트에 의한 종료 막기 핸들러 등록
+			// Ctrl+C , Ctrl+Break 이벤트에 의한 종료 막기 핸들러 등록
 			signal(SIGINT, _signal_handler);   // Ctrl+C
 			signal(SIGTERM, _signal_handler);  // kill 명령
 			signal(SIGHUP, _signal_handler);   // 터미널 종료
