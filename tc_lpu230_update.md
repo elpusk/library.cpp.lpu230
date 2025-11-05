@@ -32,8 +32,8 @@
 ### win(관리자 권한 필수)
 - 옵션없이 실행. //자동으로 system menu 의 close 가 사용불가되고, 종료 후 다시 사용 가능해짐.
 - --file lpu23x_00035.rom //파일 선택창 패스됨.
-- -q // 관리자 권한 콘솔에서 실행 시키면, 화면 없어졌다가 프로그램 종료되면 다시 나타남.
-- -qa // 상동.
+- -q // 정상( windows subsystem 사용 후)
+- -qa //정상.( windows subsystem 사용 후)
 - Update-Lock 표시 중, CTL+C 누루면 프로그램 종료됨. // 이 건 문제!!!
 
 
