@@ -123,6 +123,12 @@ public:
 	bool initial_update();
 
 private:
+	/**
+	* @brief processing message and processing counter
+	* @param n_msg - positive : normal processing counter. negative : for repaint(ignore this message)
+	* @param s_msg - message of ing statues.
+	* 
+	*/
 	void _queueed_message_process(int n_msg,const std::string& s_msg);
 
 	void _updates_thread_function();//thread main
@@ -188,10 +194,10 @@ private:
 
 	/**
 	* @brief push message with thread safety
-	* @param n_in_data : int type pushed data.
+	* @param n_in_data : int type pushed data. -1 : no data. for repaint only.
 	* @param s_in_msg : pushed string
 	*/
-	void _push_message(int n_in_data,const std::string& s_in_msg);
+	void _push_message(int n_in_data = -1,const std::string& s_in_msg = std::string());
 
 	/**
 	* @brief pop message with thread safety
