@@ -190,14 +190,14 @@ cupdater::cupdater(_mp::clog& log,bool b_disaplay, bool b_log) :
 				++m_n_progress_cur;
 				if (m_n_progress_cur >= m_n_progress_max) {
 					m_n_progress_cur = m_n_progress_max;
-					_update_state(cupdater::AppEvent::e_ulstep_s);
+					//_update_state(cupdater::AppEvent::e_ulstep_s);
 #ifdef _WIN32
 					ATLTRACE(L"Progress update complete: (%d/%d)\n", m_n_progress_cur, m_n_progress_max);
 #endif
 					return false;
 				}
 				else {
-					_update_state(cupdater::AppEvent::e_ustep_s);
+					//_update_state(cupdater::AppEvent::e_ustep_s);
 #ifdef _WIN32
 					ATLTRACE(L"Progress update : (%d/%d)\n", m_n_progress_cur, m_n_progress_max);
 #endif
@@ -1245,6 +1245,7 @@ void cupdater::_updates_thread_function()
 		int n_step(0);
 		////////////////////////////////////////////////////
 		if (!_updates_sub_thread_backup_system_param(n_step)) {
+			_update_state(cupdater::AppEvent::e_ustep_e);
 			m_b_is_running = false; // 에러 종료
 			continue;
 		}
@@ -1257,6 +1258,7 @@ void cupdater::_updates_thread_function()
 		// 부트로더 실행
 		b_need_close_lpu23x = false; // _updates_sub_thread_run_bootloader 을 실행하면, 항상 내부에서, close 함.
 		if (!_updates_sub_thread_run_bootloader(n_step)) {
+			_update_state(cupdater::AppEvent::e_ustep_e);
 			m_b_is_running = false; // 에러 종료
 			continue;
 		}
@@ -1285,6 +1287,7 @@ void cupdater::_updates_thread_function()
 		////////////////////////////////////////////////////
 		// 부트로더 설정 실시.
 		if (!_updates_sub_thread_setup_bootloader(n_step)) {
+			_update_state(cupdater::AppEvent::e_ustep_e);
 			m_b_is_running = false; // 에러 종료
 			continue;
 		}
@@ -1295,6 +1298,7 @@ void cupdater::_updates_thread_function()
 		////////////////////////////////////////////////////
 		// 섹터 삭제
 		if (!_updates_sub_thread_erase_sector(n_step)) {
+			_update_state(cupdater::AppEvent::e_ustep_e);
 			m_b_is_running = false; // 에러 종료
 			continue;
 		}
@@ -1356,6 +1360,7 @@ void cupdater::_updates_thread_function()
 #endif
 
 		if (!b_result) {
+			_update_state(cupdater::AppEvent::e_ustep_e);
 			m_b_is_running = false; // 에러 종료
 			continue;
 		}
@@ -1367,6 +1372,7 @@ void cupdater::_updates_thread_function()
 		// 앱실행
 		b_need_close_bootloader = false; // 아래 실행하면 무조건, bootloader 닫음.
 		if (!_updates_sub_thread_run_app(n_step)) {
+			_update_state(cupdater::AppEvent::e_ustep_e);
 			m_b_is_running = false; // 에러 종료
 			continue;
 		}
@@ -1375,6 +1381,7 @@ void cupdater::_updates_thread_function()
 		
 		////////////////////////////////////////////////////
 		if (!_updates_sub_thread_wait_plugout_bootloader(n_step)) {
+			_update_state(cupdater::AppEvent::e_ustep_e);
 			m_b_is_running = false; // 에러 종료
 			continue;
 		}
@@ -1385,6 +1392,7 @@ void cupdater::_updates_thread_function()
 		_mp::clibhid_dev_info dev_info_after_update;
 		std::tie(b_result, dev_info_after_update) = _updates_sub_thread_wait_plugin_lpu23x(n_step);
 		if (!b_result) {
+			_update_state(cupdater::AppEvent::e_ustep_e);
 			m_b_is_running = false; // 에러 종료
 			continue;
 		}
@@ -1394,6 +1402,7 @@ void cupdater::_updates_thread_function()
 		////////////////////////////////////////////////////
 		// 시스템 파라메터 복구.
 		if (!_updates_sub_thread_recover_system_param(n_step, dev_info_after_update)) {
+			_update_state(cupdater::AppEvent::e_ustep_e);
 			m_b_is_running = false; // 에러 종료
 			continue;
 		}
@@ -1404,6 +1413,7 @@ void cupdater::_updates_thread_function()
 		////////////////////////////////////////////////////
 		// 업데이트 후 인터페이스 변경.
 		if (!_updates_sub_thread_change_interface_after_update(n_step, dev_info_after_update)) {
+			_update_state(cupdater::AppEvent::e_ustep_e);
 			m_b_is_running = false; // 에러 종료
 			continue;
 		}
@@ -1413,6 +1423,7 @@ void cupdater::_updates_thread_function()
 		////////////////////////////////////////////////////
 		// 업데이트 후 iso mode 로.
 		if (!_updates_sub_thread_set_iso_mode_after_update(n_step, dev_info_after_update)) {
+			_update_state(cupdater::AppEvent::e_ulstep_e);
 			m_b_is_running = false; // 에러 종료
 			continue;
 		}
@@ -1420,6 +1431,7 @@ void cupdater::_updates_thread_function()
 			break; // 종료 직전 체크
 
 		///////////////////////////////////////////////////
+		_update_state(cupdater::AppEvent::e_ulstep_s);
 		m_b_is_running = false; // 정상 종료
 		_push_message(n_step, " * Firmware update complete. *");
 	}//running
@@ -1471,6 +1483,7 @@ bool cupdater::_updates_sub_thread_backup_system_param(int& n_step)
 #ifdef _WIN32
 				ATLTRACE(L"ERROR : io_save_all_variable_sys_parameter().\n");
 #endif
+				break;
 			}
 		} while (!b_complete && m_b_is_running);
 

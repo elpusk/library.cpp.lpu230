@@ -666,6 +666,10 @@ bool cshare::io_read_sync(_mp::clibhid_dev::type_ptr& ptr_dev,_mp::type_v_buffer
 	std::tuple<int, _mp::cwait*, _mp::type_v_buffer*> param_rx(n_w, &waiter, &v_rx);
 	ptr_dev->start_read(0,
 		[](_mp::cqitem_dev& qi, void* p_user)->std::pair<bool, std::vector<size_t>> {
+			if (qi.get_result() == _mp::cqitem_dev::result_error) {
+				return std::make_pair(true, std::vector<size_t>()); // error
+			}
+
 			std::tuple<int, _mp::cwait*, _mp::type_v_buffer*>* p_param = (std::tuple<int, _mp::cwait*, _mp::type_v_buffer*>*)p_user;
 
 			if (qi.is_complete()) {
@@ -713,6 +717,9 @@ bool cshare::io_write_read_sync(
 	std::tuple<int, _mp::cwait*, _mp::type_v_buffer*> param_rx(n_w, &waiter, &v_rx);
 	ptr_dev->start_write_read(0,v_tx,
 		[](_mp::cqitem_dev& qi, void* p_user)->std::pair<bool, std::vector<size_t>> {
+			if (qi.get_result() == _mp::cqitem_dev::result_error) {
+				return std::make_pair(true, std::vector<size_t>()); // error
+			}
 			std::tuple<int, _mp::cwait*, _mp::type_v_buffer*>* p_param = (std::tuple<int, _mp::cwait*, _mp::type_v_buffer*>*)p_user;
 
 			if (qi.is_complete()) {

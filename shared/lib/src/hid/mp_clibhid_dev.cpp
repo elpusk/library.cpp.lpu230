@@ -704,9 +704,15 @@ namespace _mp {
 
             if (v_rx.size() == 0) {
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-                ATLTRACE(L" =******= RX retry.\n");
+                ATLTRACE(L" =******= RX retry(cnt=%d).\n", n_try_cnt);
 #endif
-                b_wait = true; // 에러는 아닌데 받은게 없어서 좀더 기다림.
+                if (m_b_run_th_worker) {
+                    b_wait = true; // 에러는 아닌데 받은게 없어서 좀더 기다림.
+                }
+                else{
+					b_result = false;//worker thread 가 종료 요청 받은 경우.
+					break;//exit while(false)
+                }
                 continue;
             }
 
