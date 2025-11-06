@@ -28,6 +28,8 @@ cupdater::cupdater(_mp::clog& log,bool b_disaplay, bool b_log) :
 	, m_b_ini(false)
 	, m_n_selected_fw_for_ui(-1)
 {
+	m_screen.ForceHandleCtrlC(false);// Disable default handling. CatchEvent() 에서 ctrl-c 처리 함.
+
 	m_n_kill_signal = m_wait.generate_new_event();
 	//
 	m_state = cupdater::AppState::s_ini;
@@ -151,7 +153,7 @@ cupdater::cupdater(_mp::clog& log,bool b_disaplay, bool b_log) :
 		m_ptr_tab_container = std::make_shared<ftxui::Component>(ftxui::Container::Tab(m_v_tabs, &m_n_tab_index));
 
 		// Root with title
-		m_ptr_root = std::make_shared<ftxui::Component>(ftxui::Renderer(*m_ptr_tab_container, [&]() {
+		m_ptr_root = ftxui::Renderer(*m_ptr_tab_container, [&]() {
 			return ftxui::vbox({
 					   ftxui::text("lpu230_update : "
 						   + cshare::get_instance().get_target_device_model_name_by_string()
@@ -163,10 +165,18 @@ cupdater::cupdater(_mp::clog& log,bool b_disaplay, bool b_log) :
 					   (*m_ptr_tab_container)->Render() | ftxui::flex,
 				}) |
 				ftxui::border;
-			})
-		);
+			});
 
-		m_ptr_final_root = std::make_shared<ftxui::Component>(ftxui::CatchEvent(*m_ptr_root, [&](ftxui::Event event) {
+		m_ptr_final_root = ftxui::CatchEvent(m_ptr_root, [&](ftxui::Event event) {
+
+			if (event == ftxui::Event::CtrlC) {  // Ctrl+C = ASCII 3
+				m_log_ref.log_fmt("[I] Detected CTRL+C\n");
+#ifdef _WIN32
+				ATLTRACE("~~~~~CTRL+C\n");
+#endif
+				return true;  // 처리됨 -> 종료 이벤트로 전달 안 함
+			}
+
 			if (event == ftxui::Event::Custom && m_state == cupdater::AppState::s_ing) {
 				float progress_ratio = 0.0f;
 				int total_steps = m_n_progress_max - m_n_progress_min;
@@ -194,8 +204,7 @@ cupdater::cupdater(_mp::clog& log,bool b_disaplay, bool b_log) :
 				}
 			}
 			return false;  // Allow other events to propagate
-			})
-		);
+			});
 	} while (false);
 }
 
@@ -241,11 +250,18 @@ bool cupdater::initial_update()
 
 std::shared_ptr<ftxui::Component> cupdater::_create_sub_ui0_ini()
 {
-	m_ptr_update_button = std::make_shared<ftxui::Component>(ftxui::Button("Update", [&]() {
+	m_ptr_update_button = std::make_shared<ftxui::Component>(ftxui::Button(" Update", [&]() {
 		std::string s(cshare::get_instance().get_rom_file_abs_full_path());
 		_update_state(cupdater::AppEvent::e_start, s);
 		}));
 
+	m_ptr_update_exit_button = std::make_shared<ftxui::Component>(ftxui::Button(" Exit", [&]() {
+		std::string s(cshare::get_instance().get_rom_file_abs_full_path());
+		m_b_is_running = false;
+		_update_state(cupdater::AppEvent::e_exit,s);
+		m_screen.ExitLoopClosure()();
+		}));
+	/*
 	ftxui::Component container(ftxui::Container::Vertical({ *m_ptr_update_button }));
 	std::shared_ptr<ftxui::Component> ptr_component = std::make_shared<ftxui::Component>(ftxui::Renderer(container, [&]() {
 		return ftxui::vbox({
@@ -255,6 +271,17 @@ std::shared_ptr<ftxui::Component> cupdater::_create_sub_ui0_ini()
 			ftxui::border;
 		})
 	);
+	*/
+	ftxui::Component container(ftxui::Container::Horizontal({ *m_ptr_update_button, *m_ptr_update_exit_button }));
+	std::shared_ptr<ftxui::Component> ptr_component = std::make_shared<ftxui::Component>(ftxui::Renderer(container, [&]() {
+		return ftxui::vbox({
+				   ftxui::text(" Initialization complete."),
+				   ftxui::hbox({(*m_ptr_update_button)->Render() | ftxui::flex, (*m_ptr_update_exit_button)->Render() | ftxui::flex}),
+			}) |
+			ftxui::border;
+		})
+	);
+
 	return ptr_component;
 }
 
@@ -274,7 +301,7 @@ std::shared_ptr<ftxui::Component> cupdater::_create_sub_ui1_select_file()
 
 	m_ptr_file_menu = std::make_shared<ftxui::Component>(ftxui::Menu(&_v_files_in_current_dir, &_n_selected_file_in_v_files_in_current_dir));
 
-	m_ptr_select_file_button = std::make_shared<ftxui::Component>(ftxui::Button("Select", [&]() {
+	m_ptr_select_file_button = std::make_shared<ftxui::Component>(ftxui::Button(" Select", [&]() {
 		/*
 		std::tie(
 			_n_selected_file_in_v_files_in_current_dir,
@@ -331,7 +358,7 @@ std::shared_ptr<ftxui::Component> cupdater::_create_sub_ui1_select_file()
 		}
 		}));
 	//
-	m_ptr_cancel_file_button = std::make_shared<ftxui::Component>(ftxui::Button("Cancel", [&]() {
+	m_ptr_cancel_file_button = std::make_shared<ftxui::Component>(ftxui::Button(" Cancel", [&]() {
 		_update_state(cupdater::AppEvent::e_sfile_c);
 		}));
 	ftxui::Component container(ftxui::Container::Vertical(
@@ -359,12 +386,12 @@ std::shared_ptr<ftxui::Component> cupdater::_create_sub_ui2_select_firmware()
 	std::tie(m_n_selected_fw_for_ui, m_v_firmware_list_for_ui) = cshare::get_instance().get_firmware_list_of_rom_file();
 
 	m_ptr_fw_menu = std::make_shared<ftxui::Component>(ftxui::Menu(&m_v_firmware_list_for_ui, &m_n_selected_fw_for_ui));
-	m_ptr_ok_fw_button = std::make_shared<ftxui::Component>(ftxui::Button("OK", [&]() {
+	m_ptr_ok_fw_button = std::make_shared<ftxui::Component>(ftxui::Button(" OK", [&]() {
 		cshare::get_instance().set_firmware_list_of_rom_file(m_n_selected_fw_for_ui, m_v_firmware_list_for_ui);
 		m_n_progress_max = cshare::get_instance().calculate_update_step();
 		_update_state(cupdater::AppEvent::e_sfirm_o);
 		}));
-	m_ptr_cancel_fw_button = std::make_shared<ftxui::Component>(ftxui::Button("Cancel", [&]() {
+	m_ptr_cancel_fw_button = std::make_shared<ftxui::Component>(ftxui::Button(" Cancel", [&]() {
 		_update_state(cupdater::AppEvent::e_sfirm_c);
 		}));
 
@@ -385,12 +412,12 @@ std::shared_ptr<ftxui::Component> cupdater::_create_sub_ui2_select_firmware()
 }
 std::shared_ptr<ftxui::Component> cupdater::_create_sub_ui3_last_confirm()
 {
-	m_ptr_ok_confirm_button = std::make_shared<ftxui::Component>(ftxui::Button("OK", [&]() {
+	m_ptr_ok_confirm_button = std::make_shared<ftxui::Component>(ftxui::Button(" OK", [&]() {
 		
 		_update_state(cupdater::AppEvent::e_slast_o);
 		start_update_with_thread();//최종 확인 후 실행.
 		}));
-	m_ptr_cancel_confirm_button = std::make_shared<ftxui::Component>(ftxui::Button("Cancel", [&]() {
+	m_ptr_cancel_confirm_button = std::make_shared<ftxui::Component>(ftxui::Button(" Cancel", [&]() {
 		_update_state(cupdater::AppEvent::e_slast_c);
 		}));
 
@@ -411,11 +438,11 @@ std::shared_ptr<ftxui::Component> cupdater::_create_sub_ui3_last_confirm()
 
 std::shared_ptr<ftxui::Component> cupdater::_create_sub_ui3_last_warning()
 {
-	m_ptr_ok_warning_button = std::make_shared<ftxui::Component>(ftxui::Button("OK", [&]() {
+	m_ptr_ok_warning_button = std::make_shared<ftxui::Component>(ftxui::Button(" OK", [&]() {
 		_update_state(cupdater::AppEvent::e_slast_o);
 		start_update_with_thread();//경고 후 실행.
 		}));
-	m_ptr_cancel_warning_button = std::make_shared<ftxui::Component>(ftxui::Button("Cancel", [&]() {
+	m_ptr_cancel_warning_button = std::make_shared<ftxui::Component>(ftxui::Button(" Cancel", [&]() {
 		_update_state(cupdater::AppEvent::e_slast_c);
 		}));
 
@@ -450,7 +477,7 @@ std::shared_ptr<ftxui::Component> cupdater::_create_sub_ui4_updating()
 
 		if (sh.is_possible_exit()) {
 			return ftxui::vbox({
-						ftxui::text("Updating"),
+						ftxui::text(" Updating"),
 						ftxui::gauge(static_cast<float>(m_n_progress_cur - m_n_progress_min) / (m_n_progress_max - m_n_progress_min)) | ftxui::color(ftxui::Color::Blue),
 						ftxui::text(status),
 						ftxui::text(m_s_message_in_ing_state),
@@ -459,7 +486,7 @@ std::shared_ptr<ftxui::Component> cupdater::_create_sub_ui4_updating()
 		}
 		else {
 			return ftxui::vbox({
-						ftxui::text("Updating-Lock"),
+						ftxui::text( " Updating - Don't exit!"),
 						ftxui::gauge(static_cast<float>(m_n_progress_cur - m_n_progress_min) / (m_n_progress_max - m_n_progress_min)) | ftxui::color(ftxui::Color::Blue),
 						ftxui::text(status),
 						ftxui::text(m_s_message_in_ing_state),
@@ -501,7 +528,7 @@ std::shared_ptr<ftxui::Component> cupdater::_create_sub_ui5_complete()
 */
 std::shared_ptr<ftxui::Component> cupdater::_create_sub_ui5_complete()
 {
-	m_ptr_exit_button = std::make_shared<ftxui::Component>(ftxui::Button("Exit", [&]() {
+	m_ptr_exit_button = std::make_shared<ftxui::Component>(ftxui::Button(" Exit", [&]() {
 		//std::cout << "Exit button clicked, current state: " << get_string(m_state) << std::endl;
 		m_b_is_running = false;
 		_update_state(cupdater::AppEvent::e_exit);
@@ -863,7 +890,7 @@ std::tuple<bool, cupdater::AppState, std::string> cupdater::_update_state(cupdat
 			std::make_pair(-1,""),
 			std::make_pair(-1,""),
 			std::make_pair(-1,""),
-			std::make_pair(-1,"")
+			std::make_pair(-1,"Terminate program")
 		}, // <- s_ini state
 		{
 			std::make_pair(-1,""),
@@ -1132,11 +1159,14 @@ void cupdater::ui_main_loop()
 {
 	int n_progress_cur(0),n_progress_min(0),n_progress_max(0);
 
-	ftxui::Loop loop(&m_screen, *m_ptr_final_root);
+	ftxui::Loop loop(&m_screen, m_ptr_final_root);
 
-	while (!loop.HasQuitted()) {
+	while (true) {
+		if (loop.HasQuitted()) {
+			break; // exit while
+		}
 		loop.RunOnce();
-		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+		//std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		// Do something else like running a different library loop function.
 #ifdef _WIN32
 		//ATLTRACE("Current state: %s, tab_index: %d.\n", cupdater::get_string(m_state).c_str(), m_n_tab_index);
@@ -1151,7 +1181,7 @@ void cupdater::ui_main_loop()
 			_queueed_message_process(n_msg, s_msg);
 			//
 			try {
-				m_screen.PostEvent(ftxui::Event::Custom);
+				m_screen.PostEvent(ftxui::Event::Custom);//for repainting
 			}
 			catch (...) {
 				continue;

@@ -33,7 +33,10 @@
 
 class _cleanup_anager {
 public:
-	_cleanup_anager() {
+	_cleanup_anager() : 
+		m_b_need_restore_console_mode(false)
+		, m_dw_mode(0)
+	{
 		// 리소스 획득 (예: 임시 파일 열기, 연결 설정 등)
 	}
 
@@ -42,12 +45,20 @@ public:
 		// 여기에 정리 코드를 배치합니다.
 		do {
 #ifdef _WIN32
-			SetConsoleCtrlHandler(NULL, FALSE);  // 모든 핸들러 제거 → Ctrl+C 다시 동작
+			//SetConsoleCtrlHandler(NULL, FALSE);  // 모든 핸들러 제거 → Ctrl+C 다시 동작
 
 			HWND consoleWindow = GetConsoleWindow();
 			if (consoleWindow) {
 				ShowWindow(consoleWindow, SW_SHOW); // 콘솔 창 표시(복구)
 				HMENU sysMenu = GetSystemMenu(consoleWindow, TRUE);// 닫기 버튼 복원
+			}
+
+			if (m_b_need_restore_console_mode) {
+				// 콘솔 모드 복원
+				auto h_std = GetStdHandle(STD_INPUT_HANDLE);
+				if (INVALID_HANDLE_VALUE != h_std) {
+					SetConsoleMode(h_std, m_dw_mode);
+				}
 			}
 #endif
 
@@ -104,6 +115,16 @@ public:
 
 		} while (false);
 	}
+
+	void set_need_restore_console_mode(bool b_need_restore, unsigned long dw_mode) 
+	{
+		m_b_need_restore_console_mode = b_need_restore;
+		m_dw_mode = dw_mode;
+	}
+
+private:
+	bool m_b_need_restore_console_mode;
+	unsigned long m_dw_mode;
 };
 
 static int gn_result(EXIT_FAILURE);
@@ -121,7 +142,7 @@ static void _signal_handler(int signum);
 * @return first - success setup display
 * @return second - need to remove pid file when exit
 */
-static std::pair<bool,bool> setup_display(bool b_display);
+static std::tuple<bool,bool,unsigned long,bool> setup_display(bool b_display);
 
 static void setup_log(bool b_run_by_coffee_manager, bool b_enable);
 
@@ -159,6 +180,8 @@ int update_main
 	std::wstring s_pid_file_full_path;
 	bool b_need_remove_pid_file(false);
 	bool b_result_setup_display(false);
+	bool b_need_restore_console_mode(false);
+	unsigned long dw_original_console_mode(0);
 
 	do {
 		_cleanup_anager _cls_mgmt;
@@ -176,7 +199,7 @@ int update_main
 			}
 			continue;//error
 		}
-		std::tie(b_result_setup_display,b_need_remove_pid_file) = setup_display(b_display);
+		std::tie(b_result_setup_display,b_need_remove_pid_file, dw_original_console_mode, b_need_restore_console_mode) = setup_display(b_display);
 		if(!b_result_setup_display) {
 			log.log_fmt(L"[E] setup_display() failed.\n");
 			gn_result = _mp::exit_error_setup_display;
@@ -184,6 +207,9 @@ int update_main
 				std::cout << "Error: setup display failed." << std::endl;
 			}
 			continue;
+		}
+		if (b_need_restore_console_mode) {
+			_cls_mgmt.set_need_restore_console_mode(b_need_restore_console_mode, dw_original_console_mode);
 		}
 
 		auto result_dev_io_dll = setup_dev_io_dll(b_run_by_cf, log);//logging 도 포함.
@@ -260,21 +286,25 @@ int update_main
 		//
 		
 		///////////////////////////////////////////////////
+		// 여기서 cupdater 를 shared_ptr 로 생성하는 이유는 
+		// cupdater 에서 생성하는 ftxui 라이브러리에서 콘솔 모드를 변경했다가 복원하는데,
+		// 이 함수의 지역변수인 _cls_mgmt 도 콘솔 모드를 복원하기 때문에, 복원 순서를 맞추기 위해
+		// _cls_mgmt 보다 먼저 cupdater instance 가 소멸되도록 하기 위함임.
+		cupdater::type_ptr ptr_updater(new cupdater(log,b_display, b_log_file));
 
-
-		cupdater updater(log,b_display, b_log_file);
-
-		if (!updater.initial_update()) {
+		if (!ptr_updater->initial_update()) {
 			log.log_fmt(L"[E] initial_update().\n");
 			continue;
 		}
 
 		if (b_display) {
-			updater.ui_main_loop();
+			ptr_updater->ui_main_loop();
 		}
 		else {
-			updater.non_ui_main_loop();
+			ptr_updater->non_ui_main_loop();
 		}
+
+		ptr_updater.reset();
 
 		log.log_fmt(L"[I] end ui_main_loop().\n");
 		gn_result = EXIT_SUCCESS;
@@ -359,16 +389,16 @@ void _signal_handler(int signum)
 }
 #endif
 
-std::pair<bool,bool> setup_display(bool b_display)
+std::tuple<bool, bool, unsigned long, bool> setup_display(bool b_display)
 {
 	bool b_result(false);
 	bool b_need_remove_pid_file(false);
+	unsigned long dw_original_mode(0);
+	bool b_need_restore_console_mode(false);
 
 	do {
 		if (!b_display) {
 #ifdef _WIN32
-			//FreeConsole(); // Detach console
-
 			HWND consoleWindow = GetConsoleWindow();
 			if (consoleWindow == NULL) {
 				continue; // error
@@ -399,24 +429,52 @@ std::pair<bool,bool> setup_display(bool b_display)
 			}
 			// 시스템 메뉴에서 '닫기(SC_CLOSE)' 항목을 제거하여 버튼을 비활성화합니다.
 			DeleteMenu(sysMenu, SC_CLOSE, MF_BYCOMMAND);
-
+			
+			DWORD mode(0);
+			auto h_std = GetStdHandle(STD_INPUT_HANDLE);
+			if (INVALID_HANDLE_VALUE != h_std) {
+				if (GetConsoleMode(h_std, &mode)) {
+					dw_original_mode = mode;
+					mode &= ~ENABLE_PROCESSED_INPUT;  // CTRL+C 를 입력으로 전달, ftxui lib 에서 ctrl-c 처리 하도록 함.
+					if (SetConsoleMode(h_std, mode)) {
+						b_need_restore_console_mode = true;
+						ATLTRACE("++++++++++ OK set console mode\n");
+					}
+					else {
+						ATLTRACE("++++++++++ Could not set console mode\n");
+					}
+				}
+				else {
+					ATLTRACE("++++++++++ Could not get console mode\n");
+				}
+			}
+			else {
+				ATLTRACE("++++++++++ Could not get std handle\n");
+			}
+			/* 위에서 ENABLE_PROCESSED_INPUT 제거 했으므로, 아래 코드는 필요 없음.
 			SetConsoleCtrlHandler(NULL, FALSE); //등록 전 기본값 복원.
 			// Ctrl+C , Ctrl+Break 이벤트에 의한 종료 막기 핸들러 등록
 			if (!SetConsoleCtrlHandler(_console_handler, TRUE)) {
 				ATLTRACE("Could not set control handler\n");
 			}
+			else {
+				ATLTRACE("OK set control handler\n");
+			}
+			*/
 #else
 			// Ctrl+C , Ctrl+Break 이벤트에 의한 종료 막기 핸들러 등록
+			/*
 			signal(SIGINT, _signal_handler);   // Ctrl+C
 			signal(SIGTERM, _signal_handler);  // kill 명령
 			signal(SIGHUP, _signal_handler);   // 터미널 종료
+			*/
 #endif
 		}
 
 		b_result = true;
 	} while (false);
 
-	return std::make_pair(b_result,b_need_remove_pid_file);
+	return std::make_tuple(b_result,b_need_remove_pid_file,dw_original_mode,b_need_restore_console_mode);
 }
 
 void setup_log(bool b_run_by_coffee_manager, bool b_enable)

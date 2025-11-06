@@ -1,5 +1,5 @@
 // wi_lpu230_update.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
+// Windows 10 버전 1703(Creators Update) 이상 사용 필수. ftxui 의 SetConsoleMode() 사용시 ENABLE_VIRTUAL_TERMINAL_INPUT 사용.
 
 #include <iostream>
 #include <wchar.h>

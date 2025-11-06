@@ -248,6 +248,7 @@ private:
 	ftxui::ScreenInteractive m_screen;
 
 	std::shared_ptr<ftxui::Component> m_ptr_update_button; // update start button
+	std::shared_ptr<ftxui::Component> m_ptr_update_exit_button; // update exit button
 
 	std::shared_ptr<ftxui::Component> m_ptr_file_menu; // list UI in file selection dialog
 	std::shared_ptr<ftxui::Component> m_ptr_select_file_button; // select button in file selection dialog
@@ -275,8 +276,8 @@ private:
 	std::shared_ptr<ftxui::Component> m_ptr_tab_container;
 
 	// Root with title
-	std::shared_ptr<ftxui::Component> m_ptr_root;
-	std::shared_ptr<ftxui::Component> m_ptr_final_root;// Event handler for progress animation
+	std::shared_ptr<ftxui::ComponentBase> m_ptr_root;
+	std::shared_ptr<ftxui::ComponentBase> m_ptr_final_root;// Event handler for progress animation
 
 	/**
 	* @brief Update the application state based on the given event.

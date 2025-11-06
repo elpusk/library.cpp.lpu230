@@ -4318,7 +4318,7 @@ private:
 			ATLTRACE("::<gen-get(offset,size)=(%s,%u(%x),%u(%x))\n", dw_offset, dw_offset, dw_size, dw_size);
 		}
 		else {
-			ATLTRACE("::<gen-get(name,offset,size)=(%s,%u(%x),%u(%x))\n", s_debug_parameter.c_str(), dw_offset, dw_offset, dw_size, dw_size);
+			//ATLTRACE("::<gen-get(name,offset,size)=(%s,%u(%x),%u(%x))\n", s_debug_parameter.c_str(), dw_offset, dw_offset, dw_size, dw_size);
 		}
 #endif
 		_mp::type_v_buffer v_data(sizeof(uint32_t) + sizeof(uint32_t), 0);////offset and size
@@ -6139,7 +6139,7 @@ private:
 			ATLTRACE("::>gen-set(offset,size)=(%s,%u(%x),%u(%x))\n",  dw_offset, dw_offset, dw_size, dw_size);
 		}
 		else {
-			ATLTRACE("::>gen-set(name,offset,size)=(%s,%u(%x),%u(%x))\n", s_debug_parameter.c_str(), dw_offset, dw_offset, dw_size, dw_size);
+			//ATLTRACE("::>gen-set(name,offset,size)=(%s,%u(%x),%u(%x))\n", s_debug_parameter.c_str(), dw_offset, dw_offset, dw_size, dw_size);
 		}
 #endif
 
