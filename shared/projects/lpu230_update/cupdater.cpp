@@ -38,10 +38,14 @@ cupdater::cupdater(_mp::clog& log,bool b_disaplay, bool b_log) :
 	m_p_mgmt = CHidBootManager::GetInstance();
 
 	// 현재 디렉토리를 얻음.
-	auto current_dir = std::filesystem::current_path();
+	std::filesystem::path current_dir = _mp::cfile::get_cur_exe_abs_path_except_backslah_file_name_extension();
 	if(!cshare::get_instance().get_rom_file_abs_full_path().empty()) {
 		//사용자가 커맨트 라인 옵션으로 rom/bin 파일을 지정한 경우, 그 파일이 있는 디렉토리를 현재 디렉토리로 설정. 
 		current_dir = std::filesystem::path(cshare::get_instance().get_rom_file_abs_full_path()).parent_path();
+		m_log_ref.log_fmt("[I] user defined : current dir = %s\n", current_dir.string().c_str());
+	}
+	else {
+		m_log_ref.log_fmt("[I] auto detected : current dir = %s\n", current_dir.string().c_str());
 	}
 
 	cshare::get_instance().update_files_list_of_cur_dir(current_dir);//m_current_dir 에 있는 file 를 m_v_files_in_current_dir 에 설정.

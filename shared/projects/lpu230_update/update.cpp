@@ -375,14 +375,23 @@ void _signal_handler(int signum)
 {
 	do {
 		cshare& sh(cshare::get_instance());
-		if( sh.is_possible_exit())
-		if (signum == SIGTERM) {
-			// Handle termination gracefully
-			_exit(gn_result);
+		if (sh.is_possible_exit()) 
+		{
+			switch (signum)
+			{
+			case SIGINT:// Handle Ctrl+C gracefully
+			case SIGHUP :
+			case SIGTERM:
+			case SIGTSTP:
+				_exit(gn_result);
+				break;
+			default:
+				break;//ignore
+			}
 			continue;
 		}
-		if (signum == SIGHUP) {
-			// notify reload initial file!
+		else {
+			continue;
 		}
 
 	} while (false);
@@ -462,12 +471,17 @@ std::tuple<bool, bool, unsigned long, bool> setup_display(bool b_display)
 			}
 			*/
 #else
-			// Ctrl+C , Ctrl+Break 이벤트에 의한 종료 막기 핸들러 등록
-			/*
-			signal(SIGINT, _signal_handler);   // Ctrl+C
-			signal(SIGTERM, _signal_handler);  // kill 명령
-			signal(SIGHUP, _signal_handler);   // 터미널 종료
-			*/
+			// SIGINT (Ctrl+C) 처리
+			signal(SIGINT, _signal_handler);
+
+			// SIGHUP (터미널 창 닫기 또는 세션 종료) 처리
+			signal(SIGHUP, _signal_handler);
+
+			// SIGTERM (시스템 종료 또는 kill 명령) 처리
+			signal(SIGTERM, _signal_handler);
+
+			// SIGTSTP (Ctrl+Z, 일시 중지)를 무시하여 백그라운드 전환 방지
+			signal(SIGTSTP, SIG_IGN);
 #endif
 		}
 
@@ -496,6 +510,7 @@ void setup_log(bool b_run_by_coffee_manager, bool b_enable)
 		);
 	}
 	else {
+#ifdef _DEBUG
 		log.config(
 			path_cur.wstring() // without backslash
 			, -1
@@ -503,6 +518,31 @@ void setup_log(bool b_run_by_coffee_manager, bool b_enable)
 			, std::wstring()
 			, std::wstring()
 		);
+#else 
+		//release
+		std::wstring s_coffee_mgmt_folder_except_backslash = _mp::ccoffee_path::get_path_of_coffee_mgmt_folder_except_backslash();
+		if (s_coffee_mgmt_folder_except_backslash.compare(path_cur.wstring()) == 0) {
+			// 현재 업데이터가 실행 중인 곳이 installer 에 의해 설치된 곳이면, 로그를 b_run_by_coffee_manager 에 의한 곳과 동일한 곳에 만듬.
+			std::wstring s_log_root_folder_except_backslash = _mp::ccoffee_path::get_path_of_coffee_logs_root_folder_except_backslash();
+			log.config(
+				s_log_root_folder_except_backslash
+				, 6
+				, std::wstring(L"coffee_manager")
+				, std::wstring(L"lpu230_update")
+				, std::wstring(L"lpu230_update")
+			);
+		}
+		else {
+			log.config(
+				path_cur.wstring() // without backslash
+				, -1
+				, std::wstring()
+				, std::wstring()
+				, std::wstring()
+			);
+
+		}
+#endif
 	}
 
 	log.enable(b_enable);

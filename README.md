@@ -12,6 +12,23 @@ lpu23x device c++ library
 + deb package directory : /home/tester/build_deb/
 + FTXUI 6.1.9 lib - path :/home/tester/FTXUI/
 
+## the current developing version
++ dev_lib : v1.0
++ lpu230_update : v2.1
+  - Fixed an error that occurred when only the filename was provided to lpu230_update --file.
+  - Fixed -q option error.
+  - recover console mode when processing is completed automatically.
+  - on Wndows, enter function is changed to WinMain().
+  - Prevented exiting via Ctrl+C.
+  - Fixed an access violation error that occurred when the device was unplugged before running update, which previously caused the program to wait indefinitely.
+  
++ tg_lpu237_dll : v6.0
++ tg_lpu237_ibutton : v6.0
++ tg_rom : v1.2
++ tg_rom_build : v1.2
++ elpusk-hid-d : v2.2
+  - Fixed an issue where the named object of a message pipe was not removed on Windows when the server terminates.
+
 ## build on debian12.
 + notice
   - when linking the library, -lssl must be in front of -lcrypto.

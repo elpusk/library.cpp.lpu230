@@ -580,6 +580,39 @@ namespace _mp{
 			return path;
 		}
 
+		/*
+		* @brief Function to get the absolute path of the current executable.
+		* @return A std::string containing the absolute path of the current executable.
+		* @return without backslash file name & file extension.
+		*/
+		static std::string get_cur_exe_abs_path_except_backslah_file_name_extension()
+		{
+			std::string path;
+
+#ifdef _WIN32
+			// Windows
+			std::vector<char> path_buffer(MAX_PATH);
+			DWORD length = GetModuleFileNameA(NULL, path_buffer.data(), static_cast<DWORD>(path_buffer.size()));
+			if (length > 0) {
+				std::string p;
+				p.assign(path_buffer.data(), length);
+				boost::filesystem::path exePath(p);
+				path = exePath.parent_path().string();
+			}
+#else
+			try {
+				boost::filesystem::path exePath = boost::filesystem::read_symlink("/proc/self/exe");
+				path = exePath.parent_path().string();
+			}
+			catch (const std::exception& e) {
+				path.clear();
+				//std::cout << "Error: " << e.what() << std::endl;
+			}
+#endif
+
+			return path;
+		}
+
 #ifdef _WIN32
 		/**
 		* The returned path does not include a trailing backslash.

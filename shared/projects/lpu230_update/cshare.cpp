@@ -6,6 +6,7 @@
 
 #include <mp_cstring.h>
 #include <mp_cwait.h>
+#include <mp_cfile.h>
 
 #include <tg_rom.h>
 
@@ -138,7 +139,7 @@ void cshare::_ini()
 	m_v_files_in_current_dir_except_dir.resize(0);
 	m_v_rom_files_in_current_dir.resize(0);
 	m_v_bin_files_in_current_dir.resize(0);
-	m_current_dir = std::filesystem::current_path();
+	m_current_dir = _mp::cfile::get_cur_exe_abs_path_except_backslah_file_name_extension();
 
 	m_n_size_fw = 0;
 	m_v_erase_sec_index.resize(0);
@@ -199,7 +200,7 @@ cshare& cshare::set_rom_file_abs_full_path(const std::string& s_abs_full_rom_fil
 
 		std::filesystem::path current_dir = p.parent_path();
 		if (current_dir.empty()) {
-			m_current_dir = std::filesystem::current_path();
+			m_current_dir = _mp::cfile::get_cur_exe_abs_path_except_backslah_file_name_extension();
 			auto f = m_current_dir / s_abs_full_rom_file; /// std::filesystem::path::preferred_separator
 			m_s_rom_file_abs_full_path = f.string();
 		}
