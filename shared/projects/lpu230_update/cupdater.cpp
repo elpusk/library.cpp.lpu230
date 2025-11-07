@@ -29,6 +29,12 @@ cupdater::cupdater(_mp::clog& log,bool b_disaplay, bool b_log) :
 	, m_n_selected_fw_for_ui(-1)
 {
 	m_screen.ForceHandleCtrlC(false);// Disable default handling. CatchEvent() 에서 ctrl-c 처리 함.
+#ifndef _WIN32
+	//linux only
+	m_screen.ForceHandleCtrlZ(false);// Disable default handling. CatchEvent() 에서 ctrl-z 처리 함.
+#endif // !_WIN32
+
+	
 
 	m_n_kill_signal = m_wait.generate_new_event();
 	//
@@ -177,6 +183,14 @@ cupdater::cupdater(_mp::clog& log,bool b_disaplay, bool b_log) :
 				m_log_ref.log_fmt("[I] Detected CTRL+C\n");
 #ifdef _WIN32
 				ATLTRACE("~~~~~CTRL+C\n");
+#endif
+				return true;  // 처리됨 -> 종료 이벤트로 전달 안 함
+			}
+
+			if (event == ftxui::Event::CtrlZ) {
+				m_log_ref.log_fmt("[I] Detected CTRL+Z\n");
+#ifdef _WIN32
+				ATLTRACE("~~~~~CTRL+Z\n");
 #endif
 				return true;  // 처리됨 -> 종료 이벤트로 전달 안 함
 			}
