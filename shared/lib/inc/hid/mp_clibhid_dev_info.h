@@ -89,6 +89,8 @@ namespace _mp{
 
         clibhid_dev_info& operator=(const clibhid_dev_info& src);
 
+		bool is_valid() const;
+
     protected:
         unsigned short m_w_vid, m_w_pid;
         int m_n_interface;

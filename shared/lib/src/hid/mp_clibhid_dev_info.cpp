@@ -348,5 +348,16 @@ namespace _mp{
         return *this;
     }
 
+    bool clibhid_dev_info::is_valid() const
+    {
+        if (m_w_vid == 0 && m_w_pid == 0) {
+			return false;
+        }
+        else {
+			return true;
+        }
+
+    }
+
 
 }//the end of namespace _mp

@@ -12,7 +12,7 @@ lpu23x device c++ library
 + deb package directory : /home/tester/build_deb/
 + FTXUI 6.1.9 lib - path :/home/tester/FTXUI/
 
-## the current developing version
+## the current developed version(pkg v2.2)
 + dev_lib : v1.0
 + lpu230_update : v2.1
   - Fixed an error that occurred when only the filename was provided to lpu230_update --file.

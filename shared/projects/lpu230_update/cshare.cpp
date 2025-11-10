@@ -113,6 +113,11 @@ int cshare::get_app_area_zero_based_start_sector_from_sector_number(int n_sector
 	return n_zero_base_sector_number;
 }
 
+_mp::clibhid_dev_info cshare::get_plugin_device_info_after_update() const
+{
+	return m_plugin_dev_info_after_update;
+}
+
 void cshare::_ini()
 {
 	m_b_display = true;
@@ -269,6 +274,12 @@ cshare& cshare::set_possible_exit(bool b_possible)
 cshare& cshare::set_display_ui(bool b_display)
 {
 	m_b_display = b_display;
+	return *this;
+}
+
+cshare& cshare::set_plugin_device_info_after_update(const _mp::clibhid_dev_info& dev_info_after_update)
+{
+	m_plugin_dev_info_after_update = dev_info_after_update;
 	return *this;
 }
 

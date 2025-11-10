@@ -31,6 +31,8 @@
 #include <cdev_lib.h>
 #include "update.h"
 
+static void _notify_cleanup_to_server_on_exit();
+
 class _cleanup_anager {
 public:
 	_cleanup_anager() : 
@@ -61,57 +63,7 @@ public:
 				}
 			}
 #endif
-
-			cshare& sh(cshare::get_instance());
-
-			auto r = sh.is_executed_server_stop_use_target_dev();
-			if (!std::get<0>(r)) {
-				continue;
-			}
-			sh.clear_executed_server_stop_use_target_dev();
-			//
-			_mp::cnamed_pipe::type_ptr ptr_tx_ctl_pipe, ptr_rx_ctl_pipe;
-			ptr_tx_ctl_pipe = std::make_shared<_mp::cnamed_pipe>(_mp::_coffee::CONST_S_COFFEE_MGMT_CTL_PIPE_NAME, false);
-			if (!ptr_tx_ctl_pipe) {
-				continue;
-			}
-			if (!ptr_tx_ctl_pipe->is_ini()) {
-				continue;
-			}
-			ptr_rx_ctl_pipe = std::make_shared<_mp::cnamed_pipe>(_mp::_coffee::CONST_S_COFFEE_MGMT_CTL_PIPE_NAME_OF_SERVER_RESPONSE, false);
-			if (!ptr_rx_ctl_pipe) {
-				continue;
-			}
-			if (!ptr_rx_ctl_pipe->is_ini()) {
-				continue;
-			}
-
-			// 서버 control pipe 에 연결 설공.
-			std::wstring s_req_ctl_pip = _mp::ccoffee_pipe::generate_ctl_request_for_cancel_considering_dev_as_removed(
-				std::get<1>(r), std::get<2>(r)
-			);
-			if (s_req_ctl_pip.empty()) {
-				continue;
-			}
-			if (!ptr_tx_ctl_pipe->write(s_req_ctl_pip)) {
-				continue;
-			}
-
-			uint32_t n_server_rsp_check_interval_mm = 10;
-			int n_n_server_rsp_check_times = 300; // n_server_rsp_check_interval_mm 를 몇번 검사 할 건지.
-
-			std::wstring s_rx;
-			int i = 0;
-			for (; i < n_n_server_rsp_check_times; i++) {
-				std::this_thread::sleep_for(std::chrono::milliseconds(n_server_rsp_check_interval_mm)); // 서버의 작업 시간을 위한 sleep.
-				if (!ptr_rx_ctl_pipe->read(s_rx)) {
-					continue;
-				}
-				if (s_rx.compare(_mp::_coffee::CONST_S_COFFEE_MGMT_CTL_RSP_START_DEV) == 0) {
-					// 정상 응답 성공.
-					break; //exit for
-				}
-			}//end for
+			_notify_cleanup_to_server_on_exit();
 
 		} while (false);
 	}
@@ -321,6 +273,77 @@ int update_main
 	return gn_result;
 }
 
+void _notify_cleanup_to_server_on_exit()
+{
+	// 프로그램 종료 시 반드시 실행되어야 하는 클린업 코드
+	do {
+
+		cshare& sh(cshare::get_instance());
+
+		int n_vid(0), n_pid(0);
+		bool b_stop(false);
+
+		std::tie(b_stop, n_vid, n_pid) = sh.is_executed_server_stop_use_target_dev();
+		if (!b_stop) {
+			_mp::clibhid_dev_info plugin_dev_info_after_update = sh.get_plugin_device_info_after_update();
+			if(plugin_dev_info_after_update.is_valid()){
+				n_vid = (int)plugin_dev_info_after_update.get_vendor_id();
+				n_pid = (int)plugin_dev_info_after_update.get_product_id();
+			}
+			else {
+				continue;
+			}
+		}
+		
+		sh.clear_executed_server_stop_use_target_dev();
+		//
+		_mp::cnamed_pipe::type_ptr ptr_tx_ctl_pipe, ptr_rx_ctl_pipe;
+		ptr_tx_ctl_pipe = std::make_shared<_mp::cnamed_pipe>(_mp::_coffee::CONST_S_COFFEE_MGMT_CTL_PIPE_NAME, false);
+		if (!ptr_tx_ctl_pipe) {
+			continue;
+		}
+		if (!ptr_tx_ctl_pipe->is_ini()) {
+			continue;
+		}
+		ptr_rx_ctl_pipe = std::make_shared<_mp::cnamed_pipe>(_mp::_coffee::CONST_S_COFFEE_MGMT_CTL_PIPE_NAME_OF_SERVER_RESPONSE, false);
+		if (!ptr_rx_ctl_pipe) {
+			continue;
+		}
+		if (!ptr_rx_ctl_pipe->is_ini()) {
+			continue;
+		}
+
+		// 서버 control pipe 에 연결 설공.
+		std::wstring s_req_ctl_pip = _mp::ccoffee_pipe::generate_ctl_request_for_cancel_considering_dev_as_removed(
+			n_vid,n_pid
+		);
+		if (s_req_ctl_pip.empty()) {
+			continue;
+		}
+		if (!ptr_tx_ctl_pipe->write(s_req_ctl_pip)) {
+			continue;
+		}
+
+		uint32_t n_server_rsp_check_interval_mm = 10;
+		int n_n_server_rsp_check_times = 300; // n_server_rsp_check_interval_mm 를 몇번 검사 할 건지.
+
+		std::wstring s_rx;
+		int i = 0;
+		for (; i < n_n_server_rsp_check_times; i++) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(n_server_rsp_check_interval_mm)); // 서버의 작업 시간을 위한 sleep.
+			if (!ptr_rx_ctl_pipe->read(s_rx)) {
+				continue;
+			}
+			if (s_rx.compare(_mp::_coffee::CONST_S_COFFEE_MGMT_CTL_RSP_START_DEV) == 0) {
+				// 정상 응답 성공.
+				_mp::clog::get_instance().log_fmt(L"[D]_cleanup : (vid:pid) = (0x%x,0x%x).\n", n_vid,n_pid);
+				break; //exit for
+			}
+		}//end for
+
+	} while (false);
+}
+
 std::vector<std::filesystem::path> _find_rom_files()
 {
 	std::vector<std::filesystem::path> rom_files;
@@ -377,12 +400,15 @@ void _signal_handler(int signum)
 		cshare& sh(cshare::get_instance());
 		if (sh.is_possible_exit()) 
 		{
+			_mp::clog::get_instance().log_fmt(L"[D]_signal_handler : enabled exit = %d.\n", signum);
 			switch (signum)
 			{
 			case SIGINT:// Handle Ctrl+C gracefully
-			case SIGHUP :
+			case SIGHUP ://close button
+
 			case SIGTERM:
 			case SIGTSTP:
+				_notify_cleanup_to_server_on_exit();
 				_exit(gn_result);
 				break;
 			default:
@@ -391,6 +417,9 @@ void _signal_handler(int signum)
 			continue;
 		}
 		else {
+			_mp::clog::get_instance().log_fmt(L"[D]_signal_handler : disabled exit = %d.\n", signum);
+			_notify_cleanup_to_server_on_exit();
+			_exit(gn_result);
 			continue;
 		}
 

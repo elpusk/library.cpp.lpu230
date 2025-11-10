@@ -1428,6 +1428,8 @@ void cupdater::_updates_thread_function()
 		}
 		if (!m_b_is_running)
 			break; // 종료 직전 체크
+		//
+		sh.set_plugin_device_info_after_update(dev_info_after_update);
 
 		////////////////////////////////////////////////////
 		// 시스템 파라메터 복구.

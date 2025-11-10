@@ -36,5 +36,15 @@
 - -qa //정상.( windows subsystem 사용 후)
 - Update-Lock 표시 중, CTL+C 누루면 프로그램 종료됨. // 이 건 문제!!!
 
+### debian12(root 로 실행)
+- 실행 후, "Exit" 버튼에 의해 나감.- cleanup 정상.
+- 실행 후, "X" 버튼에 의해 나감. - signal(1) 에 의한 cleanup 정상."
+- 항상  CTL+C에 의한 종료 막기. -정상
+- Update-Lock 표시 중 "X" 버튼에 의해 나감. 
+  + bootloader 가 실행 전 나감. - signal(1) 에 의한 cleanup 정상."
+  + bootloader 가 실행 후 나감.
+	* bootlader 로 연결 상태로 서버는 인식 못하고, clenanup 도 못함.(cf 에ㅅ게 제어원 반환 없음) 
+	* lpu230_update 를 다시 시작헤서, bootload 에서 수종 firmware 선택에 의해 복구 후, cleanup 정상.
+
 
 

@@ -213,7 +213,7 @@ private:
 	/**
 	* @brief cheks tagrget device validation.
 	* 
-	* @return target device. if return is empty, error
+	* @return target device path. if return is empty, error
 	*/
 	std::string _check_target_device_path_in_initial();
 

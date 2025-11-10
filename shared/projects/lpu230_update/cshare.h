@@ -81,6 +81,8 @@ public:
 	cshare& set_possible_exit(bool b_possible);
 	cshare& set_display_ui(bool b_display);
 
+	cshare& set_plugin_device_info_after_update(const _mp::clibhid_dev_info& dev_info_after_update);
+
 
 	bool get_display_ui() const;
 	/**
@@ -199,6 +201,9 @@ public:
 	* @return -1 : error, 0>= : app area zero based sector number.
 	*/
 	int get_app_area_zero_based_start_sector_from_sector_number( int n_sector_number) const;
+
+	_mp::clibhid_dev_info get_plugin_device_info_after_update() const;
+
 private:
 	void _ini();
 	cshare();
@@ -206,6 +211,7 @@ private:
 	void _set_firmware_size(size_t n_size_fw);
 
 private:
+	_mp::clibhid_dev_info m_plugin_dev_info_after_update; // device ingo after update.
 
 	bool m_b_display; // display(default) ui or not
 	// exitable or not

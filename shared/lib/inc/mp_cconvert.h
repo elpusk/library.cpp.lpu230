@@ -832,8 +832,8 @@ namespace _mp{
 						b_result = false;
 						break;
 					}
-					c_value = (v_ascii_numeric[2 * i] - '0') << 4;
-					c_value += (v_ascii_numeric[2 * i + 1] - '0');
+					c_value = (unsigned char)((v_ascii_numeric[2 * i] - '0') << 4);
+					c_value += (unsigned char)(v_ascii_numeric[2 * i + 1] - '0');
 					v_bcd_result.push_back(c_value);
 				}//end for
 
