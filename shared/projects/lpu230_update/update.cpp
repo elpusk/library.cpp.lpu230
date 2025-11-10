@@ -540,12 +540,13 @@ void setup_log(bool b_run_by_coffee_manager, bool b_enable)
 	}
 	else {
 #ifdef _DEBUG
-		log.config(
+		log.config_ex(
 			path_cur.wstring() // without backslash
 			, -1
 			, std::wstring()
 			, std::wstring()
 			, std::wstring()
+			, false // 기존 lpu230_update 와 로그 파일 위치를 동일하게 하기 위해
 		);
 #else 
 		//release
@@ -562,12 +563,13 @@ void setup_log(bool b_run_by_coffee_manager, bool b_enable)
 			);
 		}
 		else {
-			log.config(
+			log.config_ex(
 				path_cur.wstring() // without backslash
 				, -1
 				, std::wstring()
 				, std::wstring()
 				, std::wstring()
+				, false // 기존 lpu230_update 와 로그 파일 위치를 동일하게 하기 위해
 			);
 
 		}

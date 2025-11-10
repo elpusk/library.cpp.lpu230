@@ -34,7 +34,8 @@
 - --file lpu23x_00035.rom //파일 선택창 패스됨.
 - -q // 정상( windows subsystem 사용 후)
 - -qa //정상.( windows subsystem 사용 후)
-- Update-Lock 표시 중, CTL+C 누루면 프로그램 종료됨. // 이 건 문제!!!
+- Update-Lock 표시 중, CTL+C 눌러도 프로그램 종료 안됌.
+- log 의 위치가 실행 파일과 같은 위체에 생성됨.
 
 ### debian12(root 로 실행)
 - 실행 후, "Exit" 버튼에 의해 나감.- cleanup 정상.

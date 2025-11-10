@@ -12,15 +12,10 @@ lpu23x device c++ library
 + deb package directory : /home/tester/build_deb/
 + FTXUI 6.1.9 lib - path :/home/tester/FTXUI/
 
-## the current developed version(pkg v2.2)
+## the current developing version(pkg v2.3)
 + dev_lib : v1.0
-+ lpu230_update : v2.1
-  - Fixed an error that occurred when only the filename was provided to lpu230_update --file.
-  - Fixed -q option error.
-  - recover console mode when processing is completed automatically.
-  - on Wndows, enter function is changed to WinMain().
-  - Prevented exiting via Ctrl+C.
-  - Fixed an access violation error that occurred when the device was unplugged before running update, which previously caused the program to wait indefinitely.
++ lpu230_update : v2.2
+  - at windows, logging folder is equal to lpu230_update.exe_ logging folder.
   
 + tg_lpu237_dll : v6.0
 + tg_lpu237_ibutton : v6.0

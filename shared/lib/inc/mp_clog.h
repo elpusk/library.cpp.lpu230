@@ -211,8 +211,10 @@ namespace _mp
 		///////////////////////////////////////
 		// foir logging system
 		/**
-		* configuration logging system
-		* Don't creates log() function.
+		* @brief configuration logging system
+		* @brief Don't creates log() function.
+		* 
+		* @param b_create_log_folder - if true, create log folder when folder dosen't exsit.(default:true)
 		*/
 		bool config(
 			const std::wstring & s_in_folder_path 
@@ -224,6 +226,27 @@ namespace _mp
 		{
 			std::lock_guard<std::mutex>	lock(m_mutex_log);
 			return _config(s_in_folder_path, n_employee_id, s_program_name, s_module_name, s_in_prefix_log_file);
+		}
+
+		///////////////////////////////////////
+		// foir logging system
+		/**
+		* @brief configuration logging system
+		* @brief Don't creates log() function.
+		*
+		* @param b_create_log_folder - if true, create log folder when folder dosen't exsit.
+		*/
+		bool config_ex(
+			const std::wstring& s_in_folder_path
+			, size_t n_employee_id
+			, const std::wstring& s_program_name
+			, const std::wstring& s_module_name
+			, const std::wstring& s_in_prefix_log_file
+			, bool b_create_log_folder
+		)
+		{
+			std::lock_guard<std::mutex>	lock(m_mutex_log);
+			return _config_ex(s_in_folder_path, n_employee_id, s_program_name, s_module_name, s_in_prefix_log_file, b_create_log_folder);
 		}
 
 		void enable(bool b_enable = true)
@@ -703,6 +726,81 @@ namespace _mp
 				s_log_folder_without_backslash += L"log";
 #endif
 				
+
+				cfile::is_exist_folder(s_log_folder_without_backslash, true);
+				if (!cfile::is_exist_folder(s_log_folder_without_backslash, false)) {
+					continue;
+				}
+				m_s_log_file_path.clear();
+				m_b_ini = false;
+				std::wstring s_folder_path(s_log_folder_without_backslash);
+				std::wstring s_file_path;
+				s_file_path = _get_log_file_abs_path(s_folder_path, s_in_prefix_log_file);
+
+				if (s_folder_path.empty())
+					continue;
+				//
+				m_s_log_folder_path = s_folder_path;
+				m_s_log_file_path = s_file_path;
+				m_n_employee_id = n_employee_id;
+				m_b_ini = true;
+				b_result = true;
+			} while (false);
+			return b_result;
+		}
+
+		/**
+		* @brief configuration of log file. if log folder doesn't exist, create it.<br>
+		* @param s_in_folder_abs_path_without_backslash - abs path of log file folder.<br>
+		* @param n_employee_id - using id , if you don't know, set to zero.
+		* @param s_program_name - the name of program, except path and extension. this is summation of all modules.
+		* @param s_module_name - the name of module, except path and extension.
+		* @param s_in_prefix_log_file - the prefix of log file name
+		* @param b_create_log_folder - if true, create log folder when folder dosen't exsit.
+		* @return if folder dosen't exsit, error(failure of create folder).
+		*/
+		bool _config_ex(
+			const std::wstring& s_in_folder_abs_path_without_backslash,
+			size_t n_employee_id,
+			const std::wstring& s_program_name,
+			const std::wstring& s_module_name,
+			const std::wstring& s_in_prefix_log_file,
+			bool b_create_log_folder
+		)
+		{
+#ifdef _WIN32
+			std::wstring s_separator(L"\\");
+#else
+			std::wstring s_separator(L"/");
+#endif
+			bool b_result(false);
+			do {
+				std::wstring s_log_folder_without_backslash;
+				if (s_in_folder_abs_path_without_backslash.empty())
+					continue;
+
+				s_log_folder_without_backslash = s_in_folder_abs_path_without_backslash;
+
+				if (n_employee_id != (size_t)(-1)) {
+					s_log_folder_without_backslash += s_separator;
+					std::wstring s_em;
+					_mp::cstring::format_c_style(s_em, L"%08u", n_employee_id);
+					s_log_folder_without_backslash += s_em;
+				}
+
+				if (!s_program_name.empty()) {
+					s_log_folder_without_backslash += s_separator;
+					s_log_folder_without_backslash += s_program_name;
+				}
+				if (!s_module_name.empty()) {
+					s_log_folder_without_backslash += s_separator;
+					s_log_folder_without_backslash += s_module_name;
+				}
+
+				if (b_create_log_folder) {
+					s_log_folder_without_backslash += s_separator;
+					s_log_folder_without_backslash += L"log";
+				}
 
 				cfile::is_exist_folder(s_log_folder_without_backslash, true);
 				if (!cfile::is_exist_folder(s_log_folder_without_backslash, false)) {
