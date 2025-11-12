@@ -112,7 +112,8 @@ public:
 		error_reason_file_operation = 16,
 		error_reason_bootload_mismatch_condition = 17,
 		error_reason_overflow_buffer = 18,	//from v1.8.1, tx rx overflow.
-		error_reason_last_error_code = 19	//this constant must be defined in the last position.
+		error_reason_allocation_memory = 19, 	//from v2.0, (second edition) memory allocation failure.
+		error_reason_last_error_code	//this constant must be defined in the last position.
 											// only this is used for indicating the last of error code.
 	};
 
@@ -165,7 +166,8 @@ public:
 			L"file_not_selected",
 			L"file_operation",
 			L"bootload_mismatch_condition",
-			L"overflow_buffer"
+			L"overflow_buffer",
+			L"allocation_memory"
 		};
 
 		std::wstring s_message(L"unknown_error");

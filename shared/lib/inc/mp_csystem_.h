@@ -29,6 +29,18 @@ namespace _mp {
 		*/
 		static bool is_running_as_admin_or_root();
 
+		/**
+		* @brief run executable file with command line arguments
+		* @param s_abs_fullpath_of_exe - exe file abs full path.
+		* @param v_command_line_arguments_except_exe command line argments vector.
+		* @param b_wait_for_termination_created_process - true : wait the end of terminating new process.
+		*/
+		static bool execute_process(
+			const std::string& s_abs_fullpath_of_exe
+			, const std::vector<std::string>& v_command_line_arguments_except_exe
+			, bool b_wait_for_termination_created_process
+		);
+
 	public:
 		virtual ~csystem();
 

@@ -96,7 +96,7 @@ public:
 		return s;
 	}
 public:
-	cupdater(_mp::clog& log,bool b_disaplay, bool b_log);
+	cupdater(_mp::clog& log,bool b_disaplay, bool b_log,bool b_notify_progress_to_server);
 	virtual ~cupdater();
 	// Update function to be implemented by derived classes
 	bool start_update_with_thread();
@@ -125,11 +125,18 @@ public:
 private:
 	/**
 	* @brief processing message and processing counter
-	* @param n_msg - positive : normal processing counter. negative : for repaint(ignore this message)
+	* @param n_step - positive : normal processing counter. negative : for repaint(ignore this message)
+	* @param b_step_result - the result of step
 	* @param s_msg - message of ing statues.
+	* @param ptr_tx - for notifying message pipe
 	* 
 	*/
-	void _queueed_message_process(int n_msg,const std::string& s_msg);
+	void _queueed_message_process(
+		int n_step
+		, bool b_step_result
+		, const std::string& s_msg
+		, _mp::cnamed_pipe::type_ptr& ptr_tx
+	);
 
 	void _updates_thread_function();//thread main
 
@@ -194,19 +201,26 @@ private:
 
 	/**
 	* @brief push message with thread safety
-	* @param n_in_data : int type pushed data. -1 : no data. for repaint only.
+	* @param n_in_step : int type pushed data. -1 : no data. for repaint only.
+	* @param b_in_step_result : n_in_step result
 	* @param s_in_msg : pushed string
 	*/
-	void _push_message(int n_in_data = -1,const std::string& s_in_msg = std::string());
+	void _push_message(int n_in_step = -1,bool b_in_step_result = false,const std::string& s_in_msg = std::string());
 
 	/**
 	* @brief pop message with thread safety
-	* @param n_out_data : poped ,int
+	* @param n_out_step : poped ,int
+	* @param b_out_step_result : poped, bool ,the result of step
 	* @param s_out_msg : poped string
 	* @param b_remove_after_pop  true : if a item is poped,remove item from q.
 	* @return true : pop OK. false : none item in the q.
 	*/
-	bool _pop_message(int &n_out_data, std::string& s_out_msg,bool b_remove_after_pop = true);
+	bool _pop_message(
+		int & n_out_step
+		, bool& b_out_step_result
+		, std::string& s_out_msg
+		,bool b_remove_after_pop = true
+	);
 
 	std::vector<std::filesystem::path> _find_rom_files();
 
@@ -301,10 +315,16 @@ private:
 	// UI option
 	bool m_b_display; //CUI enable or disable
 	bool m_b_log; //log file generation
+	bool m_b_notify_progress_to_server;
 
 	// Mutex for thread safety
 	std::mutex m_mutex;
-	std::queue<std::pair<int,std::string>> m_q_messages; // Queue for messages from the update thread
+
+	// 1'st - step number,(negative is repainting only)
+	// 2'nd - step result
+	// 3'th - error reason or info message
+	// Queue for messages from the update thread
+	std::queue<std::tuple<int,bool,std::string>> m_q_messages; 
 
 	_mp::cwait m_wait; // Wait object for synchronization
 	int m_n_kill_signal; // Signal to stop the updater

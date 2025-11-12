@@ -20,11 +20,12 @@
 #include "HidBootManager.h"
 #include "cshare.h"
 
-cupdater::cupdater(_mp::clog& log,bool b_disaplay, bool b_log) :
+cupdater::cupdater(_mp::clog& log,bool b_disaplay, bool b_log, bool b_notify_progress_to_server) :
 	m_screen(ftxui::ScreenInteractive::Fullscreen())
 	, m_log_ref(log)
 	, m_b_display(b_disaplay)
 	, m_b_log(b_log)
+	, m_b_notify_progress_to_server(b_notify_progress_to_server)
 	, m_b_ini(false)
 	, m_n_selected_fw_for_ui(-1)
 {
@@ -570,13 +571,22 @@ std::shared_ptr<ftxui::Component> cupdater::_create_sub_ui5_complete()
 	return ptr_component;
 }
 
-void cupdater::_push_message(int n_in_data /*= -1*/,const std::string& s_in_msg/*=std::string()*/)
+void cupdater::_push_message(
+	int n_in_step /*= -1*/
+	, bool b_in_step_result /*= false*/
+	,const std::string& s_in_msg/*=std::string()*/
+)
 {
 	std::lock_guard<std::mutex> lock(m_mutex);
-	m_q_messages.push(std::make_pair(n_in_data,s_in_msg));
+	m_q_messages.push(std::make_tuple(n_in_step, b_in_step_result,s_in_msg));
 }
 
-bool cupdater::_pop_message(int& n_out_data,std::string& s_out_msg, bool b_remove_after_pop/*=true*/)
+bool cupdater::_pop_message(
+	int& n_out_step
+	, bool& b_out_step_result
+	, std::string& s_out_msg
+	, bool b_remove_after_pop/*=true*/
+)
 {
 	bool b_result(false);
 
@@ -588,7 +598,7 @@ bool cupdater::_pop_message(int& n_out_data,std::string& s_out_msg, bool b_remov
 			continue;
 		}
 
-		std::tie(n_out_data,s_out_msg) = m_q_messages.front();
+		std::tie(n_out_step, b_out_step_result, s_out_msg) = m_q_messages.front();
 		if (b_remove_after_pop) {
 			m_q_messages.pop();
 		}
@@ -655,7 +665,8 @@ std::string cupdater::_check_target_device_path_in_initial()
 
 	/////////////////////////////////////////////////////////////////////////////////
 	//주어진 path 가 연결된 path 에 있는지 확인
-	std::string s_target_dev_path = cshare::get_instance().get_device_path();
+	cshare& sh(cshare::get_instance());
+	std::string s_target_dev_path = sh.get_device_path();
 
 	// 우선 순위는
 	// 1. 주어진 device path
@@ -666,6 +677,7 @@ std::string cupdater::_check_target_device_path_in_initial()
 			// 주어진 장비를 연결된 lpu237, lpu238 에서 찾기
 			it_dev = _mp::clibhid_dev_info::find(set_primitive_dev_info_lpu, s_target_dev_path);
 			if (it_dev != std::end(set_primitive_dev_info_lpu)) {
+				sh.set_target_vid(it_dev->get_vendor_id()).set_target_pid(it_dev->get_product_id());
 				m_log_ref.log_fmt("[I] target is  %s\n", s_target_dev_path.c_str());
 				continue; // next step
 			}
@@ -673,7 +685,7 @@ std::string cupdater::_check_target_device_path_in_initial()
 			// 주어진 장비를 hidboot에서 찾기.
 			it_boot = _mp::clibhid_dev_info::find(set_dev_info_boot, s_target_dev_path);
 			if (it_boot != std::end(set_dev_info_boot)) {
-				cshare::get_instance().set_start_from_bootloader(true); //start from boot
+				sh.set_start_from_bootloader(true); //start from boot
 				m_log_ref.log_fmt("[I] target is  %s\n", s_target_dev_path.c_str());
 				continue; // next step
 			}
@@ -692,7 +704,7 @@ std::string cupdater::_check_target_device_path_in_initial()
 		if (!set_dev_info_boot.empty()) {
 			it_boot = set_dev_info_boot.begin();
 			s_target_dev_path = it_boot->get_path_by_string();
-			cshare::get_instance().set_start_from_bootloader(true); //start from boot
+			sh.set_start_from_bootloader(true); //start from boot
 			m_log_ref.log_fmt("[I] auto target is  %s\n", s_target_dev_path.c_str());
 			continue;
 		}
@@ -706,6 +718,7 @@ std::string cupdater::_check_target_device_path_in_initial()
 	}
 
 	if (cshare::get_instance().get_start_from_bootloader()) {
+		sh.set_target_vid().set_target_pid(); //reset
 		cshare::get_instance().set_device_path(s_target_dev_path);// 시작 장비가 hidboot loader 로 장비가 설정됨
 		cshare::get_instance().set_bootloader_path(s_target_dev_path);
 		return s_target_dev_path;
@@ -803,6 +816,10 @@ std::string cupdater::_check_target_device_path_in_initial()
 			);
 			cshare::get_instance().set_device_path(s_target_dev_path);// 시작 장비가 lpu23x 로 장비가 설정됨
 		}
+	}
+
+	if (s_target_dev_path.empty()) {
+		sh.set_target_vid().set_target_pid(); //reset
 	}
 
 	return s_target_dev_path;
@@ -1135,9 +1152,14 @@ int cupdater::get_pos_of_progress() const
 	return m_n_progress_cur;
 }
 
-void cupdater::_queueed_message_process(int n_msg, const std::string& s_msg)
+void cupdater::_queueed_message_process(
+	int n_step
+	, bool b_step_result
+	, const std::string& s_msg
+	, _mp::cnamed_pipe::type_ptr& ptr_tx
+)
 {
-	if(n_msg < 0) {
+	if(n_step < 0) {
 		return;
 	}
 
@@ -1159,27 +1181,57 @@ void cupdater::_queueed_message_process(int n_msg, const std::string& s_msg)
 	m_s_message_in_ing_state += "]";
 
 	m_s_message_in_ing_state += " step";
-	m_s_message_in_ing_state += std::to_string(n_msg);
+	m_s_message_in_ing_state += std::to_string(n_step);
 	m_s_message_in_ing_state += " : ";
+	if (!b_step_result) {
+		m_s_message_in_ing_state += "ERROR - "; //에러 일때는 :ERROR - 추가.
+	}
 	m_s_message_in_ing_state += s_msg;
 
-	if (s_msg.empty()) {
-		m_log_ref.log_fmt("[I] ui_main_loop : (%d,empty)\n", n_msg);
+	if (m_s_message_in_ing_state.empty()) {
+		m_log_ref.log_fmt("[I] main_loop : (%d,empty)\n", n_step);
 #ifdef _WIN32
-		ATLTRACE("(INT,MSG) - (%d,empty)\n", n_msg);
+		ATLTRACE("(INT,MSG) - (%d,empty)\n", n_step);
 #endif
 	}
 	else {
-		m_log_ref.log_fmt("[I] ui_main_loop : (%d,%s)\n", n_msg, s_msg.c_str());
+		m_log_ref.log_fmt("[I] main_loop : (%d,%s)\n", n_step, m_s_message_in_ing_state.c_str());
 #ifdef _WIN32
-		ATLTRACE("(INT,MSG) - (%d,%s)\n", n_msg, s_msg.c_str());
+		ATLTRACE("(INT,MSG) - (%d,%s)\n", n_step, m_s_message_in_ing_state.c_str());
 #endif
 	}
+
+	if (m_b_notify_progress_to_server) {
+		if (ptr_tx) {
+			cshare& sh(cshare::get_instance());
+
+			std::wstring s_request = _mp::ccoffee_pipe::generate_ctl_request_for_notify_progress_to_server(
+				sh.get_target_vid()
+				, sh.get_target_pid()
+				, n_progress_cur
+				, n_progress_max
+				, b_step_result
+				, _mp::cstring::get_unicode_from_mcsc(s_msg)
+			);
+
+			ptr_tx->write(s_request); // notify
+		}
+	}
+
 
 }
 void cupdater::ui_main_loop()
 {
 	int n_progress_cur(0),n_progress_min(0),n_progress_max(0);
+
+	_mp::cnamed_pipe::type_ptr ptr_tx_ctl_pipe;
+	//setup controller
+	ptr_tx_ctl_pipe = std::make_shared<_mp::cnamed_pipe>(_mp::_coffee::CONST_S_COFFEE_MGMT_CTL_PIPE_NAME, false);
+	if (ptr_tx_ctl_pipe) {
+		if (!ptr_tx_ctl_pipe->is_ini()) {
+			ptr_tx_ctl_pipe.reset();
+		}
+	}
 
 	ftxui::Loop loop(&m_screen, m_ptr_final_root);
 
@@ -1195,12 +1247,13 @@ void cupdater::ui_main_loop()
 #endif
 
 		do {
-			int n_msg(0);
+			int n_step(0);
+			bool b_step_result(false);
 			std::string s_msg;
-			if (!_pop_message(n_msg, s_msg)) {
+			if (!_pop_message(n_step, b_step_result,s_msg)) {
 				continue;
 			}
-			_queueed_message_process(n_msg, s_msg);
+			_queueed_message_process(n_step, b_step_result, s_msg, ptr_tx_ctl_pipe);
 			//
 			try {
 				m_screen.PostEvent(ftxui::Event::Custom);//for repainting
@@ -1218,8 +1271,18 @@ void cupdater::non_ui_main_loop()
 {
 	int n_progress_cur(0), n_progress_min(0), n_progress_max(0);
 	bool b_run(true);
-	int n_msg(0);
+	int n_step(0);
+	bool b_step_result(false);
 	std::string s_msg;
+
+	_mp::cnamed_pipe::type_ptr ptr_tx_ctl_pipe;
+	//setup controller
+	ptr_tx_ctl_pipe = std::make_shared<_mp::cnamed_pipe>(_mp::_coffee::CONST_S_COFFEE_MGMT_CTL_PIPE_NAME, false);
+	if (ptr_tx_ctl_pipe) {
+		if (!ptr_tx_ctl_pipe->is_ini()) {
+			ptr_tx_ctl_pipe.reset();
+		}
+	}
 
 	while (b_run) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -1228,17 +1291,17 @@ void cupdater::non_ui_main_loop()
 			// 작업 쓰레드 자체 종료됨. 수신된 메시지 처리 후 종료.
 			b_run = false;
 			//
-			while (_pop_message(n_msg, s_msg)) {
-				_queueed_message_process(n_msg, s_msg);
+			while (_pop_message(n_step, b_step_result,s_msg)) {
+				_queueed_message_process(n_step, b_step_result,s_msg, ptr_tx_ctl_pipe);
 			}//end while
 			continue;
 		}
 
 		do {
-			if (!_pop_message(n_msg, s_msg)) {
+			if (!_pop_message(n_step, b_step_result,s_msg)) {
 				continue;
 			}
-			_queueed_message_process(n_msg, s_msg);
+			_queueed_message_process(n_step, b_step_result, s_msg, ptr_tx_ctl_pipe);
 
 		} while (false);
 	}//end while
@@ -1467,7 +1530,7 @@ void cupdater::_updates_thread_function()
 
 		///////////////////////////////////////////////////
 		_update_state(cupdater::AppEvent::e_ulstep_s);
-		_push_message(n_step, " * Firmware update complete. *");
+		_push_message(n_step, true, " * Firmware update complete. *");
 		m_b_is_running = false; // 정상 종료
 	}//running
 
@@ -1511,10 +1574,10 @@ bool cupdater::_updates_sub_thread_backup_system_param(int& n_step)
 			std::tie(b_result, b_complete) = sh.io_save_all_variable_sys_parameter(b_first);
 			b_first = false;
 			if (b_result) {
-				_push_message(n_step,"backup system parameters");
+				_push_message(n_step,true,"backup system parameters");
 			}
 			else {
-				_push_message(n_step, "ERROR - backup system parameters");
+				_push_message(n_step, false, "backup system parameters");
 #ifdef _WIN32
 				ATLTRACE(L"ERROR : io_save_all_variable_sys_parameter().\n");
 #endif
@@ -1558,10 +1621,10 @@ bool cupdater::_updates_sub_thread_run_bootloader(int& n_step)
 	//
 	b_result = sh.io_run_bootloader();
 	if (b_result) {
-		_push_message(n_step,"run bootloader.");
+		_push_message(n_step,true,"run bootloader.");
 	}
 	else {
-		_push_message(n_step, "ERROR - run bootloader.");
+		_push_message(n_step, false,"run bootloader.");
 #ifdef _WIN32
 		ATLTRACE(L"ERROR : io_run_bootloader().\n");
 #endif
@@ -1597,7 +1660,7 @@ std::pair<bool, bool> cupdater::_updates_sub_thread_wait_plugout_lpu23x(int& n_s
 	_mp::clibhid& mlibhid(_mp::clibhid::get_manual_instance());
 	_mp::clibhid_dev_info::type_set::iterator it_out, it_in;
 
-	_push_message(n_step, "waits plugout lpu23x.");
+	_push_message(n_step, true, "waits plugout lpu23x.");
 
 	do {
 		mlibhid.update_dev_set_in_manual();
@@ -1632,11 +1695,11 @@ std::pair<bool, bool> cupdater::_updates_sub_thread_wait_plugout_lpu23x(int& n_s
 	} while (b_wait);
 
 	if (!b_result) {
-		_push_message(n_step, "ERROR - detect plugout lpu23x.");
+		_push_message(n_step, false, "detect plugout lpu23x.");
 	}
 	else {
 		if (b_detect_plugin_hidboot) {
-			_push_message(n_step, "detected plugout lpu23x and plugin bootloader.");
+			_push_message(n_step, true,"detected plugout lpu23x and plugin bootloader.");
 		}
 	}
 	return std::make_pair(b_result, b_detect_plugin_hidboot);
@@ -1665,7 +1728,7 @@ bool cupdater::_updates_sub_thread_wait_plugin_bootloader(int& n_step)
 	_mp::clibhid& mlibhid(_mp::clibhid::get_manual_instance());
 	_mp::clibhid_dev_info::type_set::iterator it_in;
 
-	_push_message(n_step, "waits plugin bootloader.");
+	_push_message(n_step, true, "waits plugin bootloader.");
 
 	do {
 		mlibhid.update_dev_set_in_manual();
@@ -1692,7 +1755,7 @@ bool cupdater::_updates_sub_thread_wait_plugin_bootloader(int& n_step)
 	} while (b_wait);
 
 	if (!b_result) {
-		_push_message(n_step, "ERROR - detect plugin bootloader.");
+		_push_message(n_step,false, "detect plugin bootloader.");
 	}
 	return b_result;
 }
@@ -1729,11 +1792,11 @@ bool cupdater::_updates_sub_thread_setup_bootloader(int& n_step)
 		m_p_mgmt->UnselectDevice();
 	}
 	if (!b_result) {
-		_push_message(n_step, "ERROR - setup bootloader.");
+		_push_message(n_step, false,"setup bootloader.");
 	}
 	else {
 		//
-		_push_message(n_step, "setup bootloader.");
+		_push_message(n_step, true,"setup bootloader.");
 	}
 
 	return b_result;
@@ -1759,19 +1822,19 @@ bool cupdater::_updates_sub_thread_erase_sector(int& n_step)
 			++n_step;
 			std::tie(b_result, s_error) = m_p_mgmt->do_erase_in_worker(n_sec);
 			if (!b_result) {
-				s_msg = "ERROR - erase sector ";
+				s_msg = "erase sector ";
 				s_msg += std::to_string(n_sec);
 				s_msg += "(";
 				s_msg += s_error;
 				s_msg += ").";
-				_push_message(n_step, s_msg);
+				_push_message(n_step, false, s_msg);
 				break;//exit for
 			}
 			else {
 				s_msg = "erase sector ";
 				s_msg += std::to_string(n_sec);
 				s_msg += ".";
-				_push_message(n_step, s_msg);
+				_push_message(n_step, true, s_msg);
 			}
 
 			std::this_thread::sleep_for(std::chrono::milliseconds(500));
@@ -1804,7 +1867,7 @@ _mp::type_pair_bool_result_bool_complete cupdater::_updates_sub_thread_read_one_
 		s_msg = "read sector ";
 		s_msg += std::to_string(n_out_zero_base_sector_number);
 		s_msg += " from file.";
-		_push_message(n_step, s_msg);
+		_push_message(n_step, true, s_msg);
 
 		std::tie(b_result, b_complete) = sh.get_one_sector_fw_data(
 			CHidBootManager::GetInstance()->get_rom_library()
@@ -1814,10 +1877,10 @@ _mp::type_pair_bool_result_bool_complete cupdater::_updates_sub_thread_read_one_
 		
 		);
 		if (!b_result) {
-			s_msg = "ERROR - read sector ";
+			s_msg = "read sector ";
 			s_msg += std::to_string(n_out_zero_base_sector_number);
 			s_msg += " from file.";
-			_push_message(n_step, s_msg);
+			_push_message(n_step, false, s_msg);
 			continue;
 		}
 
@@ -1845,19 +1908,19 @@ bool cupdater::_updates_sub_thread_write_one_sector(
 	s_msg = "write & verify sector ";
 	s_msg += std::to_string(n_zero_base_sector_number);
 	s_msg += "(7 seconds).";
-	_push_message(n_step, s_msg);
+	_push_message(n_step, true, s_msg);
 
 	std::string s_error;
 	// 하나의 sector 를 모두 쓴다. verify 는 fw 를 받은 마이컴에서 write 한 후 읽어서 비교해서 verify 한다.
 	std::tie(b_result, s_error) = m_p_mgmt->do_write_sector(n_zero_base_sector_number, v_sector, opened_debug_file);
 
 	if (!b_result) {
-		s_msg = "ERROR - write & verify sector ";
+		s_msg = "write & verify sector ";
 		s_msg += std::to_string(n_zero_base_sector_number);
 		s_msg += "(";
 		s_msg += s_error;
 		s_msg += ").";
-		_push_message(n_step, s_msg);
+		_push_message(n_step, false, s_msg);
 
 	}
 
@@ -1884,10 +1947,10 @@ bool cupdater::_updates_sub_thread_run_app(int& n_step)
 	} while (false);
 
 	if (!b_result) {
-		_push_message(n_step, "ERROR - run application.");
+		_push_message(n_step, false, "run application.");
 	}
 	else {
-		_push_message(n_step, "run application.");
+		_push_message(n_step, true, "run application.");
 	}
 
 	return b_result;
@@ -1921,7 +1984,7 @@ bool cupdater::_updates_sub_thread_wait_plugout_bootloader(int& n_step)
 
 	_mp::clibhid_dev_info::type_set::iterator it_rm;
 
-	_push_message(n_step, "waits plugout bootloader.");
+	_push_message(n_step, true, "waits plugout bootloader.");
 
 	do {
 		mlibhid.update_dev_set_in_manual();
@@ -1948,7 +2011,7 @@ bool cupdater::_updates_sub_thread_wait_plugout_bootloader(int& n_step)
 	} while (b_wait);
 
 	if (!b_result) {
-		_push_message(n_step, "ERROR - detect plugout bootloader.");
+		_push_message(n_step,false, "detect plugout bootloader.");
 	}
 	return b_result;
 }
@@ -1975,7 +2038,7 @@ std::pair<bool, _mp::clibhid_dev_info> cupdater::_updates_sub_thread_wait_plugin
 	_mp::clibhid& mlibhid(_mp::clibhid::get_manual_instance());
 	_mp::clibhid_dev_info::type_set::iterator it_in;
 
-	_push_message(n_step, "waits plugin lpu23x.");
+	_push_message(n_step,true, "waits plugin lpu23x.");
 
 	do {
 		mlibhid.update_dev_set_in_manual();
@@ -2009,10 +2072,10 @@ std::pair<bool, _mp::clibhid_dev_info> cupdater::_updates_sub_thread_wait_plugin
 	} while (b_wait);
 
 	if (!b_result) {
-		_push_message(n_step, "ERROR - detect plugin lpu23x.");
+		_push_message(n_step,false, "detect plugin lpu23x.");
 	}
 	else {
-		_push_message(n_step, "detected plugin lpu23x.");
+		_push_message(n_step,true, "detected plugin lpu23x.");
 	}
 	return std::make_pair(b_result, dev_plug_in);
 }
@@ -2028,9 +2091,9 @@ bool cupdater::_updates_sub_thread_recover_system_param(int& n_step, const _mp::
 
 	cshare& sh(cshare::get_instance());
 	std::string s_msg_success = "the system parameters has been recovered.";
-	std::string s_msg_error = "ERROR - recover lpu23x system parameters.";
+	std::string s_msg_error = "recover lpu23x system parameters.";
 
-	_push_message(n_step, "recovering system parameters.");
+	_push_message(n_step,true, "recovering system parameters.");
 
 	do {
 		if (sh.get_start_from_bootloader()) {
@@ -2057,10 +2120,10 @@ bool cupdater::_updates_sub_thread_recover_system_param(int& n_step, const _mp::
 			std::tie(b_result, b_complete) = sh.io_recover_all_variable_sys_parameter(b_first, ptr_dev);
 			b_first = false;
 			if (b_result) {
-				_push_message(n_step, "recovering system parameters");
+				_push_message(n_step,true, "recovering system parameters");
 			}
 			else {
-				_push_message(n_step, "ERROR - recovering system parameters");
+				_push_message(n_step, false,"recovering system parameters");
 #ifdef _WIN32
 				ATLTRACE(L"ERROR : io_recover_all_variable_sys_parameter().\n");
 #endif
@@ -2070,10 +2133,10 @@ bool cupdater::_updates_sub_thread_recover_system_param(int& n_step, const _mp::
 	} while (false);
 
 	if (!b_result) {
-		_push_message(n_step, s_msg_error);
+		_push_message(n_step,false, s_msg_error);
 	}
 	else {
-		_push_message(n_step, s_msg_success);
+		_push_message(n_step,true, s_msg_success);
 	}
 
 	return b_result;
@@ -2094,9 +2157,9 @@ bool cupdater::_updates_sub_thread_change_interface_after_update(int& n_step, co
 	std::string s_new_inf = sh.get_string(sh.get_lpu23x_interface_change_after_update());
 
 	std::string s_msg_success = "the interface is changed to " + s_new_inf + ".";
-	std::string s_msg_error = "ERROR - change interface(" + s_new_inf + ").";
+	std::string s_msg_error = "change interface(" + s_new_inf + ").";
 
-	_push_message(n_step, "changing interface(" + s_new_inf + ").");
+	_push_message(n_step, true,"changing interface(" + s_new_inf + ").");
 
 	do {
 		++n_step;
@@ -2123,10 +2186,10 @@ bool cupdater::_updates_sub_thread_change_interface_after_update(int& n_step, co
 	} while (false);
 
 	if (!b_result) {
-		_push_message(n_step, s_msg_error);
+		_push_message(n_step,false, s_msg_error);
 	}
 	else {
-		_push_message(n_step, s_msg_success);
+		_push_message(n_step, true,s_msg_success);
 	}
 
 	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
@@ -2146,9 +2209,9 @@ bool cupdater::_updates_sub_thread_set_iso_mode_after_update(int& n_step, const 
 	bool b_result(false);
 
 	std::string s_msg_success = "mmd1100 mode have been changed to iso mode.";
-	std::string s_msg_error = "ERROR - mmd1100 mode change to iso mode.";
+	std::string s_msg_error = "mmd1100 mode change to iso mode.";
 
-	_push_message(n_step, "mmd1100 iso mode.");
+	_push_message(n_step, true,"mmd1100 iso mode.");
 
 	do {
 		++n_step;
@@ -2181,10 +2244,10 @@ bool cupdater::_updates_sub_thread_set_iso_mode_after_update(int& n_step, const 
 	} while (false);
 
 	if (!b_result) {
-		_push_message(n_step, s_msg_error);
+		_push_message(n_step, false,s_msg_error);
 	}
 	else {
-		_push_message(n_step, s_msg_success);
+		_push_message(n_step, true,s_msg_success);
 	}
 
 	std::this_thread::sleep_for(std::chrono::milliseconds(1000));

@@ -15,9 +15,12 @@
 
 #include <server/mp_cserver_.h>
 #include <server/mp_cdev_ctl_fn_.h>
+#include <server/mp_cupdater_param_mgmt_.h>
 
 #include <hid/mp_clibhid.h>
 #include <hid/_vhid_info_lpu237.h>
+
+#include <cprocess_watcher.h>
 
 #if defined(_WIN32) && defined(_DEBUG)
 //#undef __THIS_FILE_ONLY__
@@ -1080,20 +1083,80 @@ namespace _mp {
 					ptr_result->after_processing_set_rsp_with_error_complete(cio_packet::error_reason_device_misformat);
 					continue;
 				}
-				if (deque_s_data[0].compare(L"start") != 0 && deque_s_data[0].compare(L"set")) {
-					ptr_result->after_processing_set_rsp_with_error_complete(cio_packet::error_reason_device_misformat);
+
+				if (deque_s_data[0].compare(L"set") == 0) {
+					//firmware update 를 위한 parameter setting
+					if (deque_s_data.size() < 3) {
+						ptr_result->after_processing_set_rsp_with_error_complete(cio_packet::error_reason_device_misformat);
+						//_ns_tools::ct_log::get_instance().log_fmt(L"[E] %s | set | none key, value pair.\n", __WFUNCTION__);
+						continue;
+					}
+					if ((deque_s_data.size() - 1) % 2 != 0) {//"set", key0, value0, key1, value1, .......
+						ptr_result->after_processing_set_rsp_with_error_complete(cio_packet::error_reason_device_misformat);
+						//_ns_tools::ct_log::get_instance().log_fmt(L"[E] %s | set | key, value must be paired.\n", __WFUNCTION__);
+						continue;
+					}
+
+					cupdater_param::type_ptr ptr_boot_param;
+					std::tie(std::ignore, ptr_boot_param) = cupdater_param_mgmt::get_instance().insert(ptr_req_new->get_session_number());
+					if (!ptr_boot_param) {
+						ptr_result->after_processing_set_rsp_with_error_complete(cio_packet::error_reason_allocation_memory);
+						continue;
+					}
+					for (size_t i = 0; i < ((deque_s_data.size() - 1) / 2); i++) {
+						std::wstring s_key(deque_s_data[2 * i + 1]);
+
+						std::wstring s_value(deque_s_data[2 * (i + 1)]);
+						ptr_boot_param->insert(s_key, s_value);
+					}//end for
+
+					ptr_result->after_processing_set_rsp_with_succss_complete(_mp::type_v_buffer());
 					continue;
 				}
+
 				if (deque_s_data[0].compare(L"start") == 0) {
 					if (deque_s_data.size() != 1) {
 						ptr_result->after_processing_set_rsp_with_error_complete(cio_packet::error_reason_device_misformat);
 						continue;
 					}
+					cupdater_param::type_ptr ptr_boot_param = cupdater_param_mgmt::get_instance().get(ptr_req_new->get_session_number());
+					if (!ptr_boot_param) {
+						ptr_result->after_processing_set_rsp_with_error_complete(cio_packet::error_reason_allocation_memory);
+						continue;
+					}
+
+					std::wstring s_rom_file = ccoffee_path::get_path_of_virtual_drive_root_except_backslash();
+#ifdef _WIN32
+					s_rom_file += L"\\";//windows
+#else
+					s_rom_file += L"/";//linux
+#endif
+					s_rom_file += ccoffee_path::get_virtual_path_of_temp_rom_file_of_session(ptr_req_new->get_session_number());
+					if(!_mp::cfile::is_exist_file(s_rom_file)){
+						ptr_result->after_processing_set_rsp_with_error_complete(cio_packet::error_reason_file_none_file);
+						continue;
+					}
+
+					ptr_boot_param->insert_run_by_cf2_mode();
+					ptr_boot_param->insert_file(s_rom_file);
+
+					ptr_boot_param->insert_device(m_s_dev_path);
+
+					if(!ptr_boot_param->can_be_start_firmware_update()){
+						// bootloader start command 에 필요한 parameter 가 설정되지 않음.
+						ptr_result->after_processing_set_rsp_with_error_complete(cio_packet::error_reason_bootload_mismatch_condition);
+						continue;
+					}
+
+					// 여기서 lpu230_update 실행
+					// TDOO: cupdater_param 에 설정된 parameter 로 bootloader 실행.
+					ptr_result->after_processing_set_rsp_with_succss_complete(_mp::type_v_buffer());
+					continue;
 				}
 
-				// TODO: bootloader start command 에 대한 처리.
-
-				// start bootloader  or ("cf_bl_progress" ,"true") or ("cf_bl_window",true)
+				// unknown bootloader command
+				// now, only "set", "start" command supported.
+				ptr_result->after_processing_set_rsp_with_error_complete(cio_packet::error_reason_device_misformat);
 			} while (false);
 
 			return ptr_result;

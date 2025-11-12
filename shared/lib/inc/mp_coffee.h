@@ -38,21 +38,34 @@ namespace _mp{
         constexpr const wchar_t* CONST_S_COFFEE_MGMT_CTL_EX_REQ_PRE_DEV_RX_Q_LOOP_INTERVAL = L"dev-rx-q-loop-interval-time:";
         constexpr const wchar_t* CONST_S_COFFEE_MGMT_CTL_EX_REQ_PRE_CTL_PIPE_CHECK_INTERVAL = L"ctl-pipe-check-interval-time:";
 
-        // stop device service perfix string
+        // stop device service prefix string
         // ex) if ypu want to stop a usb device(vid 0x1234, pid 0x4567),
         // send "DEV_STOP:USB:VID_1234:PID_4567" to CONST_S_COFFEE_MGMT_CTL_PIPE_NAME control pipe.
         constexpr const wchar_t* CONST_S_COFFEE_MGMT_CTL_REQ_STOP_DEV_PREFIX = L"DEV_STOP:USB:";
         // the sever response of CONST_S_COFFEE_MGMT_CTL_REQ_STOP_DEV_PREFIX req.
         constexpr const wchar_t* CONST_S_COFFEE_MGMT_CTL_RSP_STOP_DEV = L"DEV_STOP:USB:OK";
 
-        // start device service perfix string
+        // start device service prefix string
         // ex) if ypu want to start a usb device(vid 0x1234, pid 0x4567),
         // send "DEV_START:USB:VID_1234:PID_4567" to CONST_S_COFFEE_MGMT_CTL_PIPE_NAME control pipe.
         constexpr const wchar_t* CONST_S_COFFEE_MGMT_CTL_REQ_START_DEV_PREFIX = L"DEV_START:USB:";
         // the sever response of CONST_S_COFFEE_MGMT_CTL_REQ_START_DEV_PREFIX req.
         constexpr const wchar_t* CONST_S_COFFEE_MGMT_CTL_RSP_START_DEV = L"DEV_START:USB:OK";
 
+        // notify service prefix string
+        // ex) if ypu want to start a usb device(vid 0x1234, pid 0x4567), max step 200(0x00C8), current step 23(0x0017), result-error, reason io failure.
+        // send "DEV_NOTIFY:USB:VID_1234:PID_4567:CUR_0017:MAX_00c8:RSP_error:WHY_io failure" to CONST_S_COFFEE_MGMT_CTL_PIPE_NAME control pipe.
+        constexpr const wchar_t* CONST_S_COFFEE_MGMT_CTL_REQ_NOTIFY_DEV_PREFIX = L"DEV_NOTIFY:USB:";
+
+
 		constexpr const int CONST_N_MGMT_ALIVE_CHECK_INTERVAL_SEC = 10; //10 sec
+
+		// for firmware update command line argument
+		constexpr const wchar_t* CONST_S_CMD_LINE_FW_UPDATE_INDICATOR = L"run_by_coffee_manager_2nd"; // indicator key for coffee manager 2'nd process
+		constexpr const wchar_t* CONST_S_CMD_LINE_FW_UPDATE_SET_FW_FILE = L"file"; // rom or bin file full abs path key
+		constexpr const wchar_t* CONST_S_CMD_LINE_FW_UPDATE_SET_DEV_PATH = L"device"; // fw update device path key
+        constexpr const wchar_t* CONST_S_CMD_LINE_FW_UPDATE_SET_HIDE_UI = L"quiet"; // fw update hide UI
+		constexpr const wchar_t* CONST_S_CMD_LINE_FW_UPDATE_SET_NOTIFY_PROGRESS = L"notify"; // fw update progress notify via ipc pipe
 
 
 #ifdef _WIN32
@@ -116,6 +129,7 @@ namespace _mp{
         constexpr const wchar_t* CONST_S_DIR_DLL_EXCEPT_BACKSLASH = L"/home/tester/projects/LiElpuskHidDaemon/bin/x64/Debug";
         constexpr const wchar_t* CONST_S_DIR_DLL_ROM_SO = L"/home/tester/projects/li_rom/bin/x64/Debug/libtg_rom.so";
         constexpr const wchar_t* CONST_S_DIR_DLL_DEV_LIB_SO = L"/home/tester/projects/li_rom/bin/x64/Debug/libdev_lib.so";
+        constexpr const wchar_t* CONST_S_DIR_LPU230_UPDATE = L"/home/tester/projects/li_lpu230_update/bin/x64/Debug/lpu230_update.out";
 #else
         constexpr const wchar_t* CONST_S_CERT_ABS_FULL_PATH = L"/usr/share/elpusk/programdata/00000006/coffee_manager/data/server/coffee_server.crt";
         constexpr const wchar_t* CONST_S_PRIVATE_KEY_ABS_FULL_PATH = L"/usr/share/elpusk/programdata/00000006/coffee_manager/data/server/coffee_server.key";

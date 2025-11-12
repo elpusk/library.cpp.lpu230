@@ -127,6 +127,7 @@ void cshare::_ini()
 	m_n_stopped_usb_vid = m_n_stopped_usb_pid = 0;
 
 	m_b_run_by_cf = false;
+	m_n_target_vid = m_n_target_pid = 0;
 
 	m_b_start_from_bootloader = false;
 
@@ -230,6 +231,18 @@ cshare& cshare::set_device_path(const std::string& s_device_path)
 cshare& cshare::set_bootloader_path(const std::string& s_bootloader_path)
 {
 	m_s_bootloader_path = s_bootloader_path;
+	return *this;
+}
+
+cshare& cshare::set_target_vid(int n_vid /*=0*/)
+{
+	m_n_target_vid = n_vid;
+	return *this;
+}
+
+cshare& cshare::set_target_pid(int n_pid /*=0*/)
+{
+	m_n_target_pid = n_pid;
 	return *this;
 }
 
@@ -833,6 +846,16 @@ std::string cshare::get_bootloader_path() const
 std::wstring cshare::get_bootloader_wpath() const
 {
 	return _mp::cstring::get_unicode_from_mcsc(m_s_bootloader_path);
+}
+
+int cshare::get_target_vid() const
+{
+	return m_n_target_vid;
+}
+
+int cshare::get_target_pid() const
+{
+	return m_n_target_pid;
 }
 
 bool cshare::is_iso_mode_after_update() const

@@ -160,7 +160,18 @@ namespace _mp {
 
 					//이 action 은 항상 complete 이므로, ptr_result->get_rsp() 가 반드시 있어야 함.
 					std::tie(b_result, std::ignore) = ptr_result->process_get_result();
-					// 여기 계속 코딩.......
+					if (!b_result) {
+						ptr_result_error = std::make_shared<cbase_ctl_fn::cresult>(*ptr_req_new, m_fun.get_dev_path());
+						ptr_result_error->after_processing_set_rsp_with_error_complete(cio_packet::error_reason_device_subsystem);
+						continue;
+					}
+					//
+					ptr_response = ptr_result->get_rsp();
+					if (!ptr_response) {
+						ptr_result_error = std::make_shared<cbase_ctl_fn::cresult>(*ptr_req_new, m_fun.get_dev_path());
+						ptr_result_error->after_processing_set_rsp_with_error_complete(cio_packet::error_reason_device_subsystem);
+						continue;
+					}
 					break;
 				case cio_packet::act_dev_independent_bootloader:
 				default:// 현재는 지원하지 않으므로 그냥 에러 처리.

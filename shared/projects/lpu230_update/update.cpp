@@ -126,7 +126,8 @@ int update_main
 	bool b_log_file,
 	bool b_mmd1100_iso_mode,
 	cshare::Lpu237Interface lpu237_interface_after_update,
-	bool b_run_by_cf
+	bool b_run_by_cf,
+	bool b_notify_progress_to_server
 )
 {
 	std::wstring s_pid_file_full_path;
@@ -242,7 +243,7 @@ int update_main
 		// cupdater 에서 생성하는 ftxui 라이브러리에서 콘솔 모드를 변경했다가 복원하는데,
 		// 이 함수의 지역변수인 _cls_mgmt 도 콘솔 모드를 복원하기 때문에, 복원 순서를 맞추기 위해
 		// _cls_mgmt 보다 먼저 cupdater instance 가 소멸되도록 하기 위함임.
-		cupdater::type_ptr ptr_updater(new cupdater(log,b_display, b_log_file));
+		cupdater::type_ptr ptr_updater(new cupdater(log,b_display, b_log_file, b_notify_progress_to_server));
 
 		if (!ptr_updater->initial_update()) {
 			log.log_fmt(L"[E] initial_update().\n");

@@ -70,6 +70,9 @@ public:
 	cshare& set_rom_file_abs_full_path(const std::string &s_abs_full_rom_file);
 	cshare& set_device_path(const std::string& s_device_path);
 	cshare& set_bootloader_path(const std::string& s_bootloader_path);
+	cshare& set_target_vid(int n_vid = 0); //default is reset
+	cshare& set_target_pid(int n_pid = 0); //default is reset
+
 	cshare& set_iso_mode_after_update(bool b_enable_iso_mode_after_update);
 	cshare& set_lpu23x_interface_change_after_update(cshare::Lpu237Interface inf_new);
 
@@ -105,6 +108,8 @@ public:
 	std::wstring get_rom_file_abs_full_wpath() const;
 	std::string get_device_path() const;
 	std::wstring get_device_wpath() const;
+	int get_target_vid() const;
+	int get_target_pid() const;
 
 	std::string get_bootloader_path() const;
 	std::wstring get_bootloader_wpath() const;
@@ -228,6 +233,8 @@ private:
 	std::string m_s_rom_file_abs_full_path;//rom or bin file path.
 	std::string m_s_device_path;// if the given device is bootloader, then m_s_device_path can be eqaul to m_s_bootloader_path.
 	std::string m_s_bootloader_path;// if the given device is bootloader, then m_s_device_path can be eqaul to m_s_bootloader_path.
+	int m_n_target_vid;
+	int m_n_target_pid;
 
 	bool m_b_enable_iso_mode_after_update;
 	cshare::Lpu237Interface m_lpu23x_interface_after_update;

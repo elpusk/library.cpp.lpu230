@@ -12,5 +12,6 @@ int update_main
 	bool b_log_file,
 	bool b_mmd1100_iso_mode,
 	cshare::Lpu237Interface lpu237_interface_after_update,
-	bool b_run_by_cf
+	bool b_run_by_cf,
+	bool b_notify_progress_to_server
 );

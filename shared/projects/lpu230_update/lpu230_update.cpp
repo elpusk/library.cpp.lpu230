@@ -100,6 +100,7 @@ int main(int argc, char** argv)
 
 	bool b_help(false);
     bool b_quiet(false);
+    bool b_notify(false);
     bool b_quietabsolute(false);
     bool b_mmd1100_iso_mode(false);
     bool b_mmd1100_binary_mode(false);
@@ -333,7 +334,58 @@ int main(int argc, char** argv)
         // coffee manager flag
         it = std::find(list_parameters.begin(), list_parameters.end(), "--run_by_coffee_manager_2nd");
         if (it != std::end(list_parameters)) {
+			// cf2 에 의한 실행의 경우 모든 option run_by_coffee_manager_2nd 에 맞는 지 검사.
+			// --file 필수.
+            it = std::find(list_parameters.begin(), list_parameters.end(), "--file");
+            if (it != std::end(list_parameters)) {
+                ++it;
+                if (it == std::end(list_parameters)) {
+                    // -f, --file 다음은 rom 파일 path.
+                    continue;//error
+                }
+
+                if (!std::filesystem::exists(*it)) {
+                    continue;//error
+                }
+                if (!std::filesystem::is_regular_file(*it)) {
+                    continue;//error
+                }
+
+                s_rom_file = *it;
+                b_rom_file = true;
+            }
+
+            // --device 필수. : s_device_path
+            it = std::find(list_parameters.begin(), list_parameters.end(), "--device");
+            if (it != std::end(list_parameters)) {
+                ++it;
+                if (it == std::end(list_parameters)) {
+                    // --device 다음은 device path.
+                    continue;//error
+                }
+                s_device_path = *it;
+            }
+
             b_run_by_cf = true;
+
+            // --quiet 선택
+            it = std::find(list_parameters.begin(), list_parameters.end(), "--quiet");
+            if (it != std::end(list_parameters)) {
+                b_quiet = true;
+            }
+            else {
+                b_quiet = false;
+            }
+
+            // --notify 선택.
+            it = std::find(list_parameters.begin(), list_parameters.end(), "--notify");
+            if (it != std::end(list_parameters)) {
+                b_notify = true;
+            }
+            else {
+                b_notify = false;
+            }
+
         }
 
         
@@ -375,7 +427,8 @@ int main(int argc, char** argv)
             b_log,
             b_mmd1100_iso_mode,
             lpu237_interface_after_update,
-            b_run_by_cf
+            b_run_by_cf,
+            b_notify
         );
 
     } while (false);

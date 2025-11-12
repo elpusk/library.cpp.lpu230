@@ -192,6 +192,35 @@ namespace _mp{
 			return s;
 		}
 
+		static std::wstring get_abs_full_path_of_updater()
+		{
+			std::wstring s;
+#ifdef _WIN32
+#ifdef _DEBUG
+			//win-debug
+			s = _mp::_coffee::CONST_S_DIR_MGMT_EXCEPT_BACKSLASH;
+			s += L"\\lpu230_update.exe";
+#else
+			//win-release
+			s = _mp::cfile::get_path_ProgramFiles();
+			s += L"\\elpusk\\00000006\\coffee_manager\\bin\\lpu230_update.exe";
+
+#endif //_DEBUG
+#else
+#ifdef _DEBUG
+			//linux-debug
+			s = _mp::_coffee::CONST_S_DIR_LPU230_UPDATE;
+#else
+			//linux-release
+			s = _mp::_coffee::CONST_S_DIR_MGMT_EXCEPT_BACKSLASH;
+			s += L"/lpu230_update";
+#endif //_DEBUG
+
+#endif
+			return s;
+
+		}
+
 		static std::wstring get_abs_full_path_of_rom_dll()
 		{
 			std::wstring s;
