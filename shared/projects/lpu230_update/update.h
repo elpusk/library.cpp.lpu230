@@ -6,6 +6,7 @@
 
 int update_main
 (
+	unsigned long n_session,
 	const std::string& s_abs_full_rom_file,
 	const std::string& s_device_path,
 	bool b_display,

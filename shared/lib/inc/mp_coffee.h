@@ -53,8 +53,10 @@ namespace _mp{
         constexpr const wchar_t* CONST_S_COFFEE_MGMT_CTL_RSP_START_DEV = L"DEV_START:USB:OK";
 
         // notify service prefix string
-        // ex) if ypu want to start a usb device(vid 0x1234, pid 0x4567), max step 200(0x00C8), current step 23(0x0017), result-error, reason io failure.
-        // send "DEV_NOTIFY:USB:VID_1234:PID_4567:CUR_0017:MAX_00c8:RSP_error:WHY_io failure" to CONST_S_COFFEE_MGMT_CTL_PIPE_NAME control pipe.
+        // ex) if ypu want to start a usb device(vid 0x1234, pid 0x4567)
+        // , this device is managed by client session number 0xabcd0123
+        // , max step 200(0x00C8), current step 23(0x0017), result-error, reason io failure.
+        // send "DEV_NOTIFY:USB:VID_1234:PID_4567:SID_ABCD0123:CUR_0017:MAX_00c8:RSP_error:WHY_io failure" to CONST_S_COFFEE_MGMT_CTL_PIPE_NAME control pipe.
         constexpr const wchar_t* CONST_S_COFFEE_MGMT_CTL_REQ_NOTIFY_DEV_PREFIX = L"DEV_NOTIFY:USB:";
 
 
@@ -66,6 +68,7 @@ namespace _mp{
 		constexpr const wchar_t* CONST_S_CMD_LINE_FW_UPDATE_SET_DEV_PATH = L"device"; // fw update device path key
         constexpr const wchar_t* CONST_S_CMD_LINE_FW_UPDATE_SET_HIDE_UI = L"quiet"; // fw update hide UI
 		constexpr const wchar_t* CONST_S_CMD_LINE_FW_UPDATE_SET_NOTIFY_PROGRESS = L"notify"; // fw update progress notify via ipc pipe
+        constexpr const wchar_t* CONST_S_CMD_LINE_FW_UPDATE_SET_SESSION = L"session"; // the client session number of server for updating
 
 
 #ifdef _WIN32

@@ -18,7 +18,7 @@
 
 #include <cfile_coffee_manager_ini.h>
 #include <cdev_lib.h>
-
+#include <cupdater_mgmt_.h>
 
 static _mp::cnamed_pipe::type_ptr gptr_tx_ctl_pipe, gptr_rx_ctl_pipe;
 static std::atomic_bool gb_run_main_loop(true);
@@ -260,6 +260,14 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 					log.log_fmt(L"[E] %ls | rsp - cancel_consider_to_be_removed.\n", __WFUNCTION__);
 					log.trace(L"[E] - %ls | rsp - cancel_consider_to_be_removed.\n", __WFUNCTION__);
 				}
+				continue;
+			}
+
+			_mp::ccoffee_pipe::type_tuple_notify_info ni;
+			std::tie(b_req, ni) = _mp::ccoffee_pipe::is_ctl_request_for_notify_progress(s_data);
+			if (b_req) {
+				//처리 필요.
+				cupdater_mgmt::get_instance().notify_to_server(ni);
 				continue;
 			}
 

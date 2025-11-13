@@ -18,7 +18,7 @@
 
 class cprocess_watcher {
 public:
-    using type_callback = std::function<void(int exit_code)>;
+    using type_callback = std::function<void(int)>;
 
     cprocess_watcher() = default;
     ~cprocess_watcher() {
@@ -27,7 +27,7 @@ public:
 
     void start(const std::string& exe_path,
         const std::vector<std::string>& args,
-        type_callback cb)
+        cprocess_watcher::type_callback cb)
     {
         m_b_stop_worker = false;
         m_worker = std::thread([=]() { _watch_process(exe_path, args, cb); });

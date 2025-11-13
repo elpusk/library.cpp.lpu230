@@ -134,20 +134,35 @@ namespace _mp{
         }
 
         /**
-        * @brief request string is cancel-consider-to-removed or not
-        * @param s_request : request string
-        * @return first(true) : request is consider-to-removed.
-        * @return second : usb vendor id.
-        * @return third : usb product id.
-        * @return forth : the current step of update(0~max step)
+        * update-progress-notification information tuple
+        * @return first : usb vendor id.
+        * @return second : usb product id. 
+        * @return third : client sesion number
+        * @return fourth : the current step of update(0~max step) 
         * @return fifth : the max step of update
         * @return sixth : the result of current step. , true - success, false - failure.
-        * @return seveth : operation error resaon
+        * @return seventh : operation error resaon
         */
-        static std::tuple<bool, int, int,int,int,bool,std::wstring> is_ctl_request_for_notify_progress(const std::wstring& s_request)
+        typedef std::tuple<int, int, unsigned long, int, int, bool, std::wstring> type_tuple_notify_info;
+
+        /**
+        * @brief request string is update-progress-notification or not
+        * @param s_request : request string
+        * @return first(true) : request is update-progress-notification.
+        * @return second : update-progress-notification information tuple
+        * @return second.first : usb vendor id.
+        * @return second.second : usb product id.
+        * @return second.third : client sesion number
+        * @return second.fourth : the current step of update(0~max step)
+        * @return second.fifth : the max step of update
+        * @return second.sixth : the result of current step. , true - success, false - failure.
+        * @return second.seventh : operation error resaon
+        */
+        static std::pair<bool, ccoffee_pipe::type_tuple_notify_info> is_ctl_request_for_notify_progress(const std::wstring& s_request)
         {
             bool b_result(false);
             int n_vid = 0, n_pid = 0;
+            unsigned long n_session(0);
             int n_cur = 0, n_max = 0;
             std::wstring s_result; // "error" or "success"
             std::wstring s_error_reason;
@@ -164,6 +179,10 @@ namespace _mp{
                 }
                 std::wstring s_prefix = s_request.substr(0, vid_pos); // "DEV_NOTIFY:USB:"
                 if (s_prefix.compare(_mp::_coffee::CONST_S_COFFEE_MGMT_CTL_REQ_NOTIFY_DEV_PREFIX) != 0) {
+                    continue;
+                }
+                size_t sid_pos = s_request.find(L"SID_"); //mandotory
+                if (sid_pos == std::wstring::npos) {
                     continue;
                 }
                 size_t cur_pos = s_request.find(L"CUR_"); //mandotory
@@ -187,6 +206,9 @@ namespace _mp{
 
                     std::wstring pid_hex = s_request.substr(pid_pos + 4, 4);
                     n_pid = std::stoi(pid_hex, nullptr, 16);
+
+                    std::wstring sid_hex = s_request.substr(sid_pos + 4, 8);
+                    n_session = std::stoul(sid_hex, nullptr, 16);
 
                     std::wstring cur_hex = s_request.substr(cur_pos + 4, 4);
                     n_cur = std::stoi(cur_hex, nullptr, 16);
@@ -214,14 +236,14 @@ namespace _mp{
 
                 //
                 if (why_pos == std::wstring::npos) {
-                    s_result = s_request.substr(rsp_pos);
+                    s_result = s_request.substr(rsp_pos + 4);
                 }
                 else {
                     if (rsp_pos >= why_pos) {
                         continue; // error
                     }
-                    s_result = s_request.substr(rsp_pos, why_pos- rsp_pos);
-                    s_error_reason = s_request.substr(why_pos);
+                    s_result = s_request.substr(rsp_pos + 4, why_pos- rsp_pos-5);
+                    s_error_reason = s_request.substr(why_pos + 4);
                 }
 
                 if (s_result.compare(L"success") == 0) {
@@ -236,7 +258,12 @@ namespace _mp{
 
                 b_result = true;
             } while (false);
-            return std::make_tuple(b_result, n_vid, n_pid, n_cur,n_max, b_step_result, s_error_reason);
+            return std::make_pair(
+                b_result
+                ,std::make_tuple(
+                n_vid, n_pid, n_session,n_cur,n_max, b_step_result, s_error_reason
+                )
+            );
         }
 
         /**
@@ -313,6 +340,7 @@ namespace _mp{
         * @brief generate the control notify request which manager understands the current update processing status.
         * @param n_vid - usb vendor id
         * @param n_pid - usb product id
+        * @param n_session - client session number of server. 
         * @param n_cur_step - current update step(0~n_max_step)
         * @param n_max_step - max update step
         * @param b_step_result - true : success current step. false : failed current step, processing is stopped and will be terminated process.
@@ -322,6 +350,7 @@ namespace _mp{
         static std::wstring generate_ctl_request_for_notify_progress_to_server(
             int n_vid
             , int n_pid
+            , unsigned long n_session
             ,int n_cur_step
             ,int n_max_step
             ,bool b_step_result
@@ -377,10 +406,11 @@ namespace _mp{
             }
 
             if (!s_error_reason.empty()) {
-                _mp::cstring::format_c_style(s, L"%lsVID_%04X:PID_%04X:CUR_%04X:MAX_%04X:RSP_%ls:WHY_%ls"
+                _mp::cstring::format_c_style(s, L"%lsVID_%04X:PID_%04X:SID_%08X:CUR_%04X:MAX_%04X:RSP_%ls:WHY_%ls"
                     , _mp::_coffee::CONST_S_COFFEE_MGMT_CTL_REQ_NOTIFY_DEV_PREFIX
                     , w_v
                     , w_p
+                    , n_session
                     , w_cur
                     , w_max
                     , s_step_result.c_str()
@@ -388,10 +418,11 @@ namespace _mp{
                 );
             }
             else {
-                _mp::cstring::format_c_style(s, L"%lsVID_%04X:PID_%04X:CUR_%04X:MAX_%04X:RSP_%ls"
+                _mp::cstring::format_c_style(s, L"%lsSID_%08X:VID_%04X:PID_%04X:SID_%08X:CUR_%04X:MAX_%04X:RSP_%ls"
                     , _mp::_coffee::CONST_S_COFFEE_MGMT_CTL_REQ_NOTIFY_DEV_PREFIX
                     , w_v
                     , w_p
+                    , n_session
                     , w_cur
                     , w_max
                     , s_step_result.c_str()

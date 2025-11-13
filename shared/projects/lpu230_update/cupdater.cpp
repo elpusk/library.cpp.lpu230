@@ -20,7 +20,13 @@
 #include "HidBootManager.h"
 #include "cshare.h"
 
-cupdater::cupdater(_mp::clog& log,bool b_disaplay, bool b_log, bool b_notify_progress_to_server) :
+cupdater::cupdater(
+	_mp::clog& log
+	,bool b_disaplay
+	, bool b_log
+	, bool b_notify_progress_to_server
+	, unsigned long n_session
+) :
 	m_screen(ftxui::ScreenInteractive::Fullscreen())
 	, m_log_ref(log)
 	, m_b_display(b_disaplay)
@@ -28,6 +34,7 @@ cupdater::cupdater(_mp::clog& log,bool b_disaplay, bool b_log, bool b_notify_pro
 	, m_b_notify_progress_to_server(b_notify_progress_to_server)
 	, m_b_ini(false)
 	, m_n_selected_fw_for_ui(-1)
+	, m_n_session(n_session)
 {
 	m_screen.ForceHandleCtrlC(false);// Disable default handling. CatchEvent() 에서 ctrl-c 처리 함.
 #ifndef _WIN32
@@ -1034,7 +1041,8 @@ std::tuple<bool, cupdater::AppState, std::string> cupdater::_update_state(cupdat
 				// 바로 실행하는 상태로 전환.
 				b_changed = true;
 				m_state = new_state = cupdater::AppState::s_ing;
-				s_message = "run by auto";
+				m_n_tab_index = 5;
+				s_message = "run by auto";//run-by-auto 인데도, UI 변경을 않하고 바로 return 함.
 				continue;
 			}
 		}
@@ -1208,6 +1216,7 @@ void cupdater::_queueed_message_process(
 			std::wstring s_request = _mp::ccoffee_pipe::generate_ctl_request_for_notify_progress_to_server(
 				sh.get_target_vid()
 				, sh.get_target_pid()
+				, m_n_session
 				, n_progress_cur
 				, n_progress_max
 				, b_step_result
@@ -1222,6 +1231,7 @@ void cupdater::_queueed_message_process(
 }
 void cupdater::ui_main_loop()
 {
+	cshare& sh(cshare::get_instance());
 	int n_progress_cur(0),n_progress_min(0),n_progress_max(0);
 
 	_mp::cnamed_pipe::type_ptr ptr_tx_ctl_pipe;
@@ -1245,7 +1255,18 @@ void cupdater::ui_main_loop()
 #ifdef _WIN32
 		//ATLTRACE("Current state: %s, tab_index: %d.\n", cupdater::get_string(m_state).c_str(), m_n_tab_index);
 #endif
+		
+		
+		if (!m_b_is_running) {
+			if (sh.is_run_by_cf()) {
+				m_screen.ExitLoopClosure()(); // 이것 호출하면 loop.HasQuitted() 가 true 반환.
+			}
+			else {
+				//m_b_is_running 가 false 되어 update thread 가 종료되어도, UI 가 있기 때문에 사용자 exit 승인 필요하므로.
+			}
+		}
 
+		//여기서 m_b_is_running 는 의미 없음.
 		do {
 			int n_step(0);
 			bool b_step_result(false);
@@ -1289,6 +1310,7 @@ void cupdater::non_ui_main_loop()
 
 		if (!m_b_is_running) {
 			// 작업 쓰레드 자체 종료됨. 수신된 메시지 처리 후 종료.
+			// UI 가 없는 경우, 사용자 exit 승인 없이 바로 종료.
 			b_run = false;
 			//
 			while (_pop_message(n_step, b_step_result,s_msg)) {
@@ -1656,7 +1678,7 @@ std::pair<bool, bool> cupdater::_updates_sub_thread_wait_plugout_lpu23x(int& n_s
 
 	bool b_wait(true);
 	int n_timeout_mm_unit = 300; //300msec
-	int n_total_timeout_unit = 3;
+	int n_total_timeout_unit = 9;
 	_mp::clibhid& mlibhid(_mp::clibhid::get_manual_instance());
 	_mp::clibhid_dev_info::type_set::iterator it_out, it_in;
 

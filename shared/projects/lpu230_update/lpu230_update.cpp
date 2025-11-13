@@ -110,8 +110,10 @@ int main(int argc, char** argv)
     cshare::Lpu237Interface lpu237_interface_after_update(cshare::Lpu237Interface::nc);
     bool b_run_by_cf(false); //executed by coffee manager 2'nd 
 
+    unsigned long n_session = 0;
     std::string s_rom_file;
     std::string s_device_path;
+
     _mp::type_list_string list_parameters;
 	do {
         //////////////////////////////////////////
@@ -331,40 +333,62 @@ int main(int argc, char** argv)
             lpu237_interface_after_update = cshare::Lpu237Interface::uart;
         }
 
+        //////////////////////////////////////////////////////////
         // coffee manager flag
         it = std::find(list_parameters.begin(), list_parameters.end(), "--run_by_coffee_manager_2nd");
         if (it != std::end(list_parameters)) {
 			// cf2 에 의한 실행의 경우 모든 option run_by_coffee_manager_2nd 에 맞는 지 검사.
+            
+            // --session 필수
+            it = std::find(list_parameters.begin(), list_parameters.end(), "--session");
+            if (it == std::end(list_parameters)) {
+                continue;// 에러
+            }
+            ++it;
+            if (it == std::end(list_parameters)) {
+                // --session 다음은 10 진수 session number.
+                continue;//error
+            }
+
+            try {
+                n_session = std::stoul(*it);
+            }
+            catch (...) {
+                continue; // format 에러
+            }
+
 			// --file 필수.
             it = std::find(list_parameters.begin(), list_parameters.end(), "--file");
-            if (it != std::end(list_parameters)) {
-                ++it;
-                if (it == std::end(list_parameters)) {
-                    // -f, --file 다음은 rom 파일 path.
-                    continue;//error
-                }
-
-                if (!std::filesystem::exists(*it)) {
-                    continue;//error
-                }
-                if (!std::filesystem::is_regular_file(*it)) {
-                    continue;//error
-                }
-
-                s_rom_file = *it;
-                b_rom_file = true;
+            if (it == std::end(list_parameters)) {
+                continue;// 에러
             }
+            ++it;
+            if (it == std::end(list_parameters)) {
+                // -f, --file 다음은 rom 파일 path.
+                continue;//error
+            }
+
+            if (!std::filesystem::exists(*it)) {
+                continue;//error
+            }
+            if (!std::filesystem::is_regular_file(*it)) {
+                continue;//error
+            }
+
+            s_rom_file = *it;
+            b_rom_file = true;
 
             // --device 필수. : s_device_path
             it = std::find(list_parameters.begin(), list_parameters.end(), "--device");
-            if (it != std::end(list_parameters)) {
-                ++it;
-                if (it == std::end(list_parameters)) {
-                    // --device 다음은 device path.
-                    continue;//error
-                }
-                s_device_path = *it;
+            if (it == std::end(list_parameters)) {
+                continue;//error
             }
+            ++it;
+            if (it == std::end(list_parameters)) {
+                // --device 다음은 device path.
+                continue;//error
+            }
+            s_device_path = *it;
 
             b_run_by_cf = true;
 
@@ -421,6 +445,7 @@ int main(int argc, char** argv)
 
         // .프로그램 시작.
         n_result = update_main(
+            n_session,
             s_rom_file,
             s_device_path,
             b_display,

@@ -764,7 +764,7 @@ bool cshare::io_write_read_sync(
 		}
 	, &param_rx);
 
-	if (waiter.wait_for_one_at_time(5000) >= 0) {
+	if (waiter.wait_for_one_at_time(6000) >= 0) {
 		return true;
 	}
 	else {

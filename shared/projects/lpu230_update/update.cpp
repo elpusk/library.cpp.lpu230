@@ -120,6 +120,7 @@ static std::pair<bool, int> setup_rom_dll(bool b_run_by_coffee_manager,_mp::clog
 */
 int update_main
 (
+	unsigned long n_session,
 	const std::string& s_abs_full_rom_file,
 	const std::string& s_device_path,
 	bool b_display,
@@ -219,7 +220,7 @@ int update_main
 			log.log_fmt(L"[I] rom file : auto detected rom.\n");
 		}
 		else {
-			log.log_fmt(L"[I] rom file : %s.\n", s_abs_full_rom_file.c_str());
+			log.log_fmt("[I] rom file : %s.\n", s_abs_full_rom_file.c_str());
 			cshare::get_instance().set_rom_file_abs_full_path(s_abs_full_rom_file);//커맨드라인에서 주어지는 rom/bin 파일 저장.
 		}
 		//
@@ -227,7 +228,7 @@ int update_main
 			log.log_fmt(L"[I] target device : auto detected device.\n");
 		}
 		else{
-			log.log_fmt(L"[I] target device : %s.\n",s_device_path.c_str());
+			log.log_fmt("[I] target device : %s.\n",s_device_path.c_str());
 			cshare::get_instance().set_device_path(s_device_path);//사용자로 부터 받은 장비 경로 저장.
 		}
 
@@ -243,7 +244,7 @@ int update_main
 		// cupdater 에서 생성하는 ftxui 라이브러리에서 콘솔 모드를 변경했다가 복원하는데,
 		// 이 함수의 지역변수인 _cls_mgmt 도 콘솔 모드를 복원하기 때문에, 복원 순서를 맞추기 위해
 		// _cls_mgmt 보다 먼저 cupdater instance 가 소멸되도록 하기 위함임.
-		cupdater::type_ptr ptr_updater(new cupdater(log,b_display, b_log_file, b_notify_progress_to_server));
+		cupdater::type_ptr ptr_updater(new cupdater(log,b_display, b_log_file, b_notify_progress_to_server, n_session));
 
 		if (!ptr_updater->initial_update()) {
 			log.log_fmt(L"[E] initial_update().\n");

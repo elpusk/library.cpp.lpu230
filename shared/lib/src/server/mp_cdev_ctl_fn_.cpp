@@ -15,12 +15,11 @@
 
 #include <server/mp_cserver_.h>
 #include <server/mp_cdev_ctl_fn_.h>
-#include <server/mp_cupdater_param_mgmt_.h>
+#include <cupdater_mgmt_.h>
 
 #include <hid/mp_clibhid.h>
 #include <hid/_vhid_info_lpu237.h>
 
-#include <cprocess_watcher.h>
 
 #if defined(_WIN32) && defined(_DEBUG)
 //#undef __THIS_FILE_ONLY__
@@ -1098,7 +1097,7 @@ namespace _mp {
 					}
 
 					cupdater_param::type_ptr ptr_boot_param;
-					std::tie(std::ignore, ptr_boot_param) = cupdater_param_mgmt::get_instance().insert(ptr_req_new->get_session_number());
+					std::tie(std::ignore, ptr_boot_param) = cupdater_mgmt::get_instance().insert(ptr_req_new->get_session_number());
 					if (!ptr_boot_param) {
 						ptr_result->after_processing_set_rsp_with_error_complete(cio_packet::error_reason_allocation_memory);
 						continue;
@@ -1119,7 +1118,10 @@ namespace _mp {
 						ptr_result->after_processing_set_rsp_with_error_complete(cio_packet::error_reason_device_misformat);
 						continue;
 					}
-					cupdater_param::type_ptr ptr_boot_param = cupdater_param_mgmt::get_instance().get(ptr_req_new->get_session_number());
+
+					cupdater_mgmt& update_param_mgmt(cupdater_mgmt::get_instance());
+
+					cupdater_param::type_ptr ptr_boot_param = update_param_mgmt.get(ptr_req_new->get_session_number());
 					if (!ptr_boot_param) {
 						ptr_result->after_processing_set_rsp_with_error_complete(cio_packet::error_reason_allocation_memory);
 						continue;
@@ -1142,14 +1144,20 @@ namespace _mp {
 
 					ptr_boot_param->insert_device(m_s_dev_path);
 
+					ptr_boot_param->set_packet_info_for_notify(*ptr_req_new);
+
+					ptr_boot_param->set_exe_full_abs_path(ccoffee_path::get_abs_full_path_of_updater());
+
 					if(!ptr_boot_param->can_be_start_firmware_update()){
 						// bootloader start command 에 필요한 parameter 가 설정되지 않음.
 						ptr_result->after_processing_set_rsp_with_error_complete(cio_packet::error_reason_bootload_mismatch_condition);
 						continue;
 					}
-
-					// 여기서 lpu230_update 실행
-					// TDOO: cupdater_param 에 설정된 parameter 로 bootloader 실행.
+					// 
+					if (!update_param_mgmt.run_update(ptr_req_new->get_session_number())) {
+						ptr_result->after_processing_set_rsp_with_error_complete(cio_packet::error_reason_bootload_mismatch_condition);
+						continue;
+					}
 					ptr_result->after_processing_set_rsp_with_succss_complete(_mp::type_v_buffer());
 					continue;
 				}

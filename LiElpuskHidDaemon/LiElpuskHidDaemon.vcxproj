@@ -134,6 +134,8 @@
     <ClCompile Include="..\shared\3thpart\src\linux\hid.c" />
     <ClCompile Include="..\shared\common\src\cbootloader_lpu237.cpp" />
     <ClCompile Include="..\shared\common\src\chid_briage.cpp" />
+    <ClCompile Include="..\shared\common\src\cupdater_mgmt_.cpp" />
+    <ClCompile Include="..\shared\common\src\cupdater_param_.cpp" />
     <ClCompile Include="..\shared\common\src\main_bye.cpp" />
     <ClCompile Include="..\shared\common\src\main_cert.cpp" />
     <ClCompile Include="..\shared\common\src\main_remove_all.cpp" />
@@ -165,8 +167,6 @@
     <ClCompile Include="..\shared\lib\src\server\mp_cmain_ctl_.cpp" />
     <ClCompile Include="..\shared\lib\src\server\mp_cmain_ctl_fn_.cpp" />
     <ClCompile Include="..\shared\lib\src\server\mp_cserver_.cpp" />
-    <ClCompile Include="..\shared\lib\src\server\mp_cupdater_param_.cpp" />
-    <ClCompile Include="..\shared\lib\src\server\mp_cupdater_param_mgmt_.cpp" />
     <ClCompile Include="..\shared\projects\ElpuskHidDaemon\elpusk_hid_daemon.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -181,6 +181,8 @@
     <ClInclude Include="..\shared\common\inc\ckey_map.h" />
     <ClInclude Include="..\shared\common\inc\cprocess_watcher.h" />
     <ClInclude Include="..\shared\common\inc\cprotocol_lpu237.h" />
+    <ClInclude Include="..\shared\common\inc\cupdater_mgmt_.h" />
+    <ClInclude Include="..\shared\common\inc\cupdater_param_.h" />
     <ClInclude Include="..\shared\common\inc\lpu230\compiler.h" />
     <ClInclude Include="..\shared\common\inc\lpu230\config\cfg_msrlib.h" />
     <ClInclude Include="..\shared\common\inc\lpu230\info_msr.h" />
@@ -237,8 +239,6 @@
     <ClInclude Include="..\shared\lib\inc\server\mp_cmain_ctl_fn_.h" />
     <ClInclude Include="..\shared\lib\inc\server\mp_cserver_.h" />
     <ClInclude Include="..\shared\lib\inc\server\mp_cctl_svr_.h" />
-    <ClInclude Include="..\shared\lib\inc\server\mp_cupdater_param_.h" />
-    <ClInclude Include="..\shared\lib\inc\server\mp_cupdater_param_mgmt_.h" />
     <ClInclude Include="..\shared\lib\inc\server\mp_cworker_ctl.h" />
     <ClInclude Include="..\shared\lib\inc\test\test_tp_hid.h" />
     <ClInclude Include="..\shared\lib\inc\usb\mp_clibusb.h" />

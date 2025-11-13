@@ -96,7 +96,7 @@ public:
 		return s;
 	}
 public:
-	cupdater(_mp::clog& log,bool b_disaplay, bool b_log,bool b_notify_progress_to_server);
+	cupdater(_mp::clog& log,bool b_disaplay, bool b_log,bool b_notify_progress_to_server,unsigned long n_session);
 	virtual ~cupdater();
 	// Update function to be implemented by derived classes
 	bool start_update_with_thread();
@@ -262,6 +262,7 @@ private:
 
 	std::atomic<cupdater::AppState> m_state;
 
+	unsigned long m_n_session; //client session number of server
 	std::string m_s_message_in_ing_state;
 	int m_n_progress_cur, m_n_progress_min, m_n_progress_max;
 
