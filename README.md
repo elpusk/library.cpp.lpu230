@@ -16,13 +16,15 @@ lpu23x device c++ library
 + dev_lib : v1.0
 + lpu230_update : v2.2
   - at windows, logging folder is equal to lpu230_update.exe_ logging folder.
+  - run by elpusk-hid-d server.
   
 + tg_lpu237_dll : v6.0
 + tg_lpu237_ibutton : v6.0
 + tg_rom : v1.2
 + tg_rom_build : v1.2
-+ elpusk-hid-d : v2.2
++ elpusk-hid-d : v2.3
   - Fixed an issue where the named object of a message pipe was not removed on Windows when the server terminates.
+  - For Updating lpu237 firmware, run lpu230_update (Web app)
 
 ## build on debian12.
 + notice

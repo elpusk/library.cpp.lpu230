@@ -105,6 +105,12 @@
     <ClCompile Include="..\shared\common\src\chid_briage.cpp">
       <Filter>common</Filter>
     </ClCompile>
+    <ClCompile Include="..\shared\common\src\cupdater_mgmt_.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\common\src\cupdater_param_.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\local\libusb\out\include\libusb-1.0\libusb.h">
@@ -294,6 +300,18 @@
       <Filter>common</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\common\inc\cfun_lpu237.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\cupdater_mgmt_.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\cupdater_param_.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_coffee_pipe.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\cprocess_watcher.h">
       <Filter>common</Filter>
     </ClInclude>
   </ItemGroup>

@@ -41,6 +41,27 @@ namespace _mp{
 			return s_file;
 		}
 
+		static std::wstring get_path_of_virtual_drive_root_with_backslash()
+		{
+			std::wstring s_file;
+#ifdef _WIN32
+#ifdef _DEBUG
+			//win+debug
+			s_file = _coffee::CONST_S_ROOT_DIR_EXCEPT_BACKSLASH;
+			s_file += L"\\";
+#else
+			//win+releaase
+			s_file = _mp::cfile::get_path_ProgramData();
+			s_file += L"\\elpusk\\00000006\\coffee_manager\\root\\";
+#endif
+#else
+			//linux
+			s_file = _coffee::CONST_S_ROOT_DIR_EXCEPT_BACKSLASH;
+			s_file += L"/";
+#endif
+			return s_file;
+		}
+
 		static std::wstring get_path_of_coffee_mgmt_ini_file()
 		{
 			std::wstring s;

@@ -125,6 +125,8 @@
   <ItemGroup>
     <ClCompile Include="..\shared\3thpart\src\linux\hid.c" />
     <ClCompile Include="..\shared\common\src\chid_briage.cpp" />
+    <ClCompile Include="..\shared\common\src\cupdater_mgmt_.cpp" />
+    <ClCompile Include="..\shared\common\src\cupdater_param_.cpp" />
     <ClCompile Include="..\shared\lib\inc\mp_cnamed_pipe_.cpp" />
     <ClCompile Include="..\shared\lib\inc\mp_csystem_.cpp" />
     <ClCompile Include="..\shared\lib\src\cert\mp_ccertificate_.cpp" />
@@ -153,7 +155,10 @@
     <ClInclude Include="..\shared\common\inc\cfun_lpu237.h" />
     <ClInclude Include="..\shared\common\inc\chid_briage.h" />
     <ClInclude Include="..\shared\common\inc\ckey_map.h" />
+    <ClInclude Include="..\shared\common\inc\cprocess_watcher.h" />
     <ClInclude Include="..\shared\common\inc\cprotocol_lpu237.h" />
+    <ClInclude Include="..\shared\common\inc\cupdater_mgmt_.h" />
+    <ClInclude Include="..\shared\common\inc\cupdater_param_.h" />
     <ClInclude Include="..\shared\common\inc\lpu230\compiler.h" />
     <ClInclude Include="..\shared\common\inc\lpu230\config\cfg_msrlib.h" />
     <ClInclude Include="..\shared\common\inc\lpu230\info_msr.h" />
@@ -179,6 +184,7 @@
     <ClInclude Include="..\shared\lib\inc\mp_cnamed_pipe_.h" />
     <ClInclude Include="..\shared\lib\inc\mp_coffee.h" />
     <ClInclude Include="..\shared\lib\inc\mp_coffee_path.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_coffee_pipe.h" />
     <ClInclude Include="..\shared\lib\inc\mp_coperation.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cstring.h" />
     <ClInclude Include="..\shared\lib\inc\mp_csystem_.h" />

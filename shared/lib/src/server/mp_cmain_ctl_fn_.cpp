@@ -203,10 +203,10 @@ namespace _mp {
 						continue;
 					}
 					s_sub = deque_wstring_data_field[1];
-					std::wstring s_virtual_abs_file(ccoffee_path::get_virtual_path_of_temp_rom_file_of_session(n_session));
-					if (!ptr_session->file_firmware(s_sub, s_virtual_abs_file)) {
-						p_log->log_fmt(L"[E] - %ls | file_firmware(%ls,%ls).\n", __WFUNCTION__, s_sub.c_str(), s_virtual_abs_file.c_str());
-						p_log->trace(L"[E] - %ls | file_firmware(%ls,%ls).\n", __WFUNCTION__, s_sub.c_str(), s_virtual_abs_file.c_str());
+					std::wstring s_virtual_full_file(ccoffee_path::get_virtual_path_of_temp_rom_file_of_session(n_session));
+					if (!ptr_session->file_firmware(s_sub, s_virtual_full_file)) {
+						p_log->log_fmt(L"[E] - %ls | file_firmware(%ls,%ls).\n", __WFUNCTION__, s_sub.c_str(), s_virtual_full_file.c_str());
+						p_log->trace(L"[E] - %ls | file_firmware(%ls,%ls).\n", __WFUNCTION__, s_sub.c_str(), s_virtual_full_file.c_str());
 						continue;
 					}
 					//

@@ -36,6 +36,7 @@
 - -qa //정상.( windows subsystem 사용 후)
 - Update-Lock 표시 중, CTL+C 눌러도 프로그램 종료 안됌.
 - log 의 위치가 실행 파일과 같은 위체에 생성됨.
+- elpusk-hid-d.exe 를 관리자 권한으로 실행, [web app](https://elpusk.github.io/library.js.coffee/tools_lpu237_full.html) 으로 firmware 업데이트 성공.
 
 ### debian12(root 로 실행)
 - 실행 후, "Exit" 버튼에 의해 나감.- cleanup 정상.
@@ -46,6 +47,6 @@
   + bootloader 가 실행 후 나감.
 	* bootlader 로 연결 상태로 서버는 인식 못하고, clenanup 도 못함.(cf 에ㅅ게 제어원 반환 없음) 
 	* lpu230_update 를 다시 시작헤서, bootload 에서 수종 firmware 선택에 의해 복구 후, cleanup 정상.
-
+- elpusk-hid-d 를 실행, [web app](https://elpusk.github.io/library.js.coffee/tools_lpu237_full.html) 으로 firmware 업데이트 성공.
 
 

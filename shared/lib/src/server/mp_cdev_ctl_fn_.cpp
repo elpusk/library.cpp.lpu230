@@ -1127,12 +1127,7 @@ namespace _mp {
 						continue;
 					}
 
-					std::wstring s_rom_file = ccoffee_path::get_path_of_virtual_drive_root_except_backslash();
-#ifdef _WIN32
-					s_rom_file += L"\\";//windows
-#else
-					s_rom_file += L"/";//linux
-#endif
+					std::wstring s_rom_file = ccoffee_path::get_path_of_virtual_drive_root_with_backslash();
 					s_rom_file += ccoffee_path::get_virtual_path_of_temp_rom_file_of_session(ptr_req_new->get_session_number());
 					if(!_mp::cfile::is_exist_file(s_rom_file)){
 						ptr_result->after_processing_set_rsp_with_error_complete(cio_packet::error_reason_file_none_file);
