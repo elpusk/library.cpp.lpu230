@@ -2,6 +2,10 @@
 #include <server/mp_cserver_.h>
 #include <cupdater_mgmt_.h>
 
+#if defined(_WIN32)
+#include <atltrace.h>
+#endif
+
 cupdater_mgmt& cupdater_mgmt::get_instance()
 {
 	static cupdater_mgmt obj;
@@ -34,6 +38,7 @@ bool cupdater_mgmt::notify_to_server(const _mp::ccoffee_pipe::type_tuple_notify_
 	bool b_result(false);
 
 	do {
+		bool b_complete(false); // update .complete with error or success
 		int n_vid(0), n_pid(0);
 		unsigned long n_session(0);
 		int n_step_cur(0), n_step_max(0);
@@ -55,8 +60,12 @@ bool cupdater_mgmt::notify_to_server(const _mp::ccoffee_pipe::type_tuple_notify_
 		_mp::cio_packet response(ptr_param->get_rsp_packet_before_setting());
 		if (b_step_result) {
 			response.set_data_by_utf8(L"success", false);
+			if (n_step_cur >= n_step_max) {
+				b_complete = true;// complete with success
+			}
 		}
 		else {
+			b_complete = true; //complete with error
 			response.set_data_by_utf8(L"error", false);
 		}
 		
@@ -74,6 +83,18 @@ bool cupdater_mgmt::notify_to_server(const _mp::ccoffee_pipe::type_tuple_notify_
 		_mp::type_v_buffer v_rsp(0);
 		response.get_packet_by_json_format(v_rsp);
 		b_result = _mp::cserver::get_instance().send_data_to_client_by_ip4(v_rsp, response.get_session_number());
+
+#if defined(_WIN32)
+		if (b_complete) {
+			if (b_result) {
+				ATLTRACE(L"[I][_EXE] complete - update with success.\n");
+			}
+			else {
+				ATLTRACE(L"[I][_EXE] complete - update with error.\n");
+			}
+		}
+#endif
+
 	} while (false);
 	return b_result;
 }

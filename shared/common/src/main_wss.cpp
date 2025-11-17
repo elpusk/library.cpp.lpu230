@@ -143,6 +143,7 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 			log.log_fmt(L"[E] %ls | load dev_lib.dll(.so) | %ls.\n", __WFUNCTION__, s_dev_lib_dll_abs_full_path.c_str());
 			log.trace(L"[E] %ls | load dev_lib.dll(.so) | %ls.\n", __WFUNCTION__, s_dev_lib_dll_abs_full_path.c_str());
 			gn_result = _mp::exit_error_load_dev_lib;
+			continue;
 		}
 
 		//////////////////////////////////////////////////////////////

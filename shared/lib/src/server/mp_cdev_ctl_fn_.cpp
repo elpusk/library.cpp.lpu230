@@ -1126,6 +1126,7 @@ namespace _mp {
 						ptr_result->after_processing_set_rsp_with_error_complete(cio_packet::error_reason_allocation_memory);
 						continue;
 					}
+					ptr_boot_param->set_log_obj(m_p_ctl_fun_log);
 
 					std::wstring s_rom_file = ccoffee_path::get_path_of_virtual_drive_root_with_backslash();
 					s_rom_file += ccoffee_path::get_virtual_path_of_temp_rom_file_of_session(ptr_req_new->get_session_number());
@@ -1143,7 +1144,12 @@ namespace _mp {
 
 					ptr_boot_param->set_exe_full_abs_path(ccoffee_path::get_abs_full_path_of_updater());
 
-					if(!ptr_boot_param->can_be_start_firmware_update()){
+					bool b_ok(false);
+					std::wstring s_info;
+					std::tie(b_ok, s_info) = ptr_boot_param->can_be_start_firmware_update();
+					m_p_ctl_fun_log->log_fmt(L"[I] - %ls | %ls\n", __WFUNCTION__, s_info.c_str());
+					m_p_ctl_fun_log->trace(L"[I] - %ls | %ls\n", __WFUNCTION__, s_info.c_str());
+					if(!b_ok){
 						// bootloader start command 에 필요한 parameter 가 설정되지 않음.
 						ptr_result->after_processing_set_rsp_with_error_complete(cio_packet::error_reason_bootload_mismatch_condition);
 						continue;

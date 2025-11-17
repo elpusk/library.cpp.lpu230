@@ -40,6 +40,11 @@ public:
         }
     }
 
+    bool is_stop_worker() const
+    {
+        return m_b_stop_worker;
+    }
+
 private:
     std::atomic<bool> m_b_stop_worker{ false };
     std::thread m_worker;
@@ -81,6 +86,8 @@ private:
                 if (cb) {
                     cb(static_cast<int>(exit_code));
                 }
+                // 프로세스 종료에 의해 중단.
+                m_b_stop_worker = true;
                 return;
             }
         }
@@ -109,6 +116,8 @@ private:
             if (cb) {
                 cb(-1);
             }
+            // 프로세스 종료에 의해 중단.
+            m_b_stop_worker = true;
             return;
         }
 
@@ -122,6 +131,8 @@ private:
                 if (cb) {
                     cb(exit_code);
                 }
+                // 프로세스 종료에 의해 중단.
+                m_b_stop_worker = true;
                 return;
             }
             std::this_thread::sleep_for(std::chrono::milliseconds(100));

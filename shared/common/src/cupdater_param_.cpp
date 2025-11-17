@@ -15,88 +15,104 @@
 
 cupdater_param::cupdater_param(unsigned long n_session_number) :
 	m_n_session_number(n_session_number)
+	, m_p_log(nullptr)
 {
 }
 
 cupdater_param::~cupdater_param()
 {
+	_delete_firmware();
 }
 
-std::pair<bool, std::wstring> cupdater_param::find(const std::wstring& s_key, bool b_remove_after_found)
+void cupdater_param::set_log_obj(_mp::clog* p_log)
 {
-	bool b_found(false);
-	std::wstring s_value;
-	auto it = m_map.find(s_key);
-	if (it != std::end(m_map)) {
-		//found
-		b_found = true;
-		s_value = it->second;
-		if (b_remove_after_found) {
-			m_map.erase(it);
-		}
-	}
-
-	return std::make_pair(b_found, s_value);
+	m_p_log = p_log;
 }
 
-bool cupdater_param::is_valid(const std::wstring& s_key) const
-{
-	bool b_found(false);
-	auto it = m_map.find(s_key);
-	if (it != std::end(m_map)) {
-		//found
-		b_found = true;
-	}
-
-	return b_found;
-}
-
-bool cupdater_param::can_be_start_firmware_update() const
+std::pair<bool, std::wstring> cupdater_param::can_be_start_firmware_update() const
 {
 	bool b_result(false);
+	std::wstring s_info;
 
 	do {
 		bool b_found(false);
 		std::wstring s_key,s_value;
 
 		if (m_s_abs_full_exe_path.empty()) {
+			s_info = L"m_s_abs_full_exe_path.empty()";
+			s_info += L"\n";
 			continue;
 		}
 
 		if (!_mp::cfile::is_exist_file(m_s_abs_full_exe_path)) {
+			s_info = L"none ";
+			s_info += m_s_abs_full_exe_path;
+			s_info += L"\n";
 			continue;
 		}
+
+		s_info += L"exe path - ";
+		s_info += m_s_abs_full_exe_path;
+		s_info += L"\n";
 
 		// mandatory parameters
 		s_key = std::wstring(_mp::_coffee::CONST_S_CMD_LINE_FW_UPDATE_INDICATOR);
 		auto it = m_map.find(s_key);
 		if (it == std::end(m_map)) {
+			s_info = L"none ";
+			s_info += s_key;
+			s_info += L"\n";
 			continue;
 		}
 		if(!(it->second.empty())){
 			// value must be empty
+			s_info = L"none ";
+			s_info += s_key;
+			s_info += L" key value";
+			s_info += L"\n";
 			continue;
 		}
+		s_info += s_key;
+		s_info += L"\n";
 
 		s_key = std::wstring(L"model_name");
 		it = m_map.find(s_key);
 		if (it == std::end(m_map)) {
+			s_info = L"none ";
+			s_info += s_key;
+			s_info += L"\n";
 			continue;
 		}
 		if(it->second.size() > 16){
 			// too long
+			s_info = L"none ";
+			s_info += s_key;
+			s_info += L" key value over length";
+			s_info += L"\n";
 			continue;
 		}
+		s_info += s_key;
+		s_info += L" - ";
+		s_info += it->second;
+		s_info += L"\n";
+
 		//
 		s_key = std::wstring(L"system_version");
 		it = m_map.find(s_key);
 		if (it == std::end(m_map)) {
+			s_info = L"none ";
+			s_info += s_key;
+			s_info += L"\n";
 			continue;
 		}
 		// 정규 표현식: 숫자.숫자.숫자.숫자 (각 숫자는 1~3자리)
 		static const std::wregex ipv4Pattern(LR"(^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$)");
 		if (!std::regex_match(it->second, ipv4Pattern)) {
 			// format error
+			s_info = L"none ";
+			s_info += s_key;
+			s_info += L" key value isn't a.b.c.d format";
+			s_info += L"\n";
 			continue;
 		}
 
@@ -109,11 +125,21 @@ bool cupdater_param::can_be_start_firmware_update() const
 		while (std::getline(ss, token, L'.')) {
 			try {
 				int num = std::stoi(token);
-				if (num < 0 || num > 255) return false;
+				if (num < 0 || num > 255) {
+					s_info = L"none ";
+					s_info += s_key;
+					s_info += L" key value - each number 0~255, but over range.";
+					s_info += L"\n";
+					return std::make_pair(false, s_info);
+				}
 			}
 			catch (...) {
 				//error
 				b_result = false;
+				s_info = L"none ";
+				s_info += s_key;
+				s_info += L" key value - stoi() error";
+				s_info += L"\n";
 				break;// exit while
 			}
 			++count;
@@ -124,20 +150,45 @@ bool cupdater_param::can_be_start_firmware_update() const
 		}
 		b_result = false;
 		if (count != 4) {
+			s_info = L"none ";
+			s_info += s_key;
+			s_info += L" key value isn't a.b.c.d format(only 4 digit)";
+			s_info += L"\n";
 			continue;
 		}
+
+		s_info += s_key;
+		s_info += L" - ";
+		s_info += it->second;
+		s_info += L"\n";
 
 		s_key = std::wstring(_mp::_coffee::CONST_S_CMD_LINE_FW_UPDATE_SET_FW_FILE);
 		it = m_map.find(s_key);
 		if (it == std::end(m_map)) {
+			s_info = L"none ";
+			s_info += s_key;
+			s_info += L"\n";
 			continue;
 		}
+		s_info += s_key;
+		s_info += L" - ";
+		s_info += it->second;
+		s_info += L"\n";
+
 		//
 		s_key = std::wstring(_mp::_coffee::CONST_S_CMD_LINE_FW_UPDATE_SET_DEV_PATH);
 		it = m_map.find(s_key);
 		if (it == std::end(m_map)) {
+			s_info = L"none ";
+			s_info += s_key;
+			s_info += L"\n";
 			continue;
 		}
+		s_info += s_key;
+		s_info += L" - ";
+		s_info += it->second;
+		s_info += L"\n";
+
 		//////////////////////////////////////////////
 		// optional parameters
 		// cf2 에서는 "notify" 이나, cf1 호환을 위해서 "_cf_bl_progress_" 를 받아서.
@@ -146,8 +197,23 @@ bool cupdater_param::can_be_start_firmware_update() const
 		it = m_map.find(s_key);
 		if (it != std::end(m_map)) {
 			if (it->second.compare(L"true") != 0 && it->second.compare(L"false")) {
+				s_info = L"none ";
+				s_info += s_key;
+				s_info += L" key value isn't true or false";
+				s_info += L"\n";
 				continue;
 			}
+			else {
+				s_info += s_key;
+				s_info += L" - ";
+				s_info += it->second;
+				s_info += L"\n";
+			}
+		}
+		else {
+			s_info += L"none ";
+			s_info += s_key;
+			s_info += L"\n";
 		}
 
 		// cf2 에서는 "quiet" 이나, cf1 호환을 위해서 "_cf_bl_window_" 를 받아서.
@@ -156,13 +222,28 @@ bool cupdater_param::can_be_start_firmware_update() const
 		it = m_map.find(s_key);
 		if (it != std::end(m_map)) {
 			if (it->second.compare(L"true") != 0 && it->second.compare(L"false")) {
+				s_info = L"none ";
+				s_info += s_key;
+				s_info += L" key value isn't true or false";
+				s_info += L"\n";
 				continue;
 			}
+			else {
+				s_info += s_key;
+				s_info += L" - ";
+				s_info += it->second;
+				s_info += L"\n";
+			}
+		}
+		else {
+			s_info += L"none ";
+			s_info += s_key;
+			s_info += L"\n";
 		}
 
 		b_result = true;
 	} while (false);
-	return b_result;
+	return std::make_pair(b_result, s_info);
 }
 
 bool cupdater_param::insert(const std::wstring& s_key, const std::wstring& s_value)
@@ -199,38 +280,16 @@ void cupdater_param::set_packet_info_for_notify(const _mp::cio_packet& req_act_d
 	//set_in_id(), set_out_id() already
 }
 
-bool cupdater_param::erase(const std::wstring& s_key)
-{
-	auto it = m_map.find(s_key);
-	if (it != std::end(m_map)) {
-		m_map.erase(it);
-		return true;
-	}
-	return false;
-}
-
-void cupdater_param::clear()
-{
-	m_map.clear();
-}
-
-bool cupdater_param::empty() const
-{
-	return m_map.empty();
-}
-
-size_t cupdater_param::size() const
-{
-	return m_map.size();
-}
-
 bool cupdater_param::start_update()
 {
 	bool b_result(false);
 
 	do {
 		if (m_ptr_runner) {
-			continue;// already executed
+			if (!m_ptr_runner->is_stop_worker()) {
+				continue;// already executed.. 현재 실행 중인 것이 있음.	 
+			}
+			m_ptr_runner.reset(); // 전에 실행되어서 종료된 것은 지움.
 		}
 
 		m_ptr_runner = std::make_shared<cprocess_watcher>();
@@ -251,6 +310,9 @@ bool cupdater_param::start_update()
 
 void cupdater_param::callback_update_end(int n_exit_code)
 {
+	//이 콜백은 m_ptr_runner의 _watch_process(thread) 에서 호촐되므로
+	//여기서  m_ptr_runner 에 대한 조작은 불가능하다.
+	_delete_firmware();
 #ifdef _WIN32
 	ATLTRACE(L"Exited lpu230_update with %d.\n",n_exit_code);
 #endif
@@ -275,9 +337,12 @@ std::string cupdater_param::get_exe_full_abs_path_by_string() const
 std::wstring cupdater_param::generate_command_line_arguments_except_exe_by_wstring() const
 {
 	std::wstring s_command_line_arguments;
-
+	
 	do {
-		if (!can_be_start_firmware_update()) {
+		bool b_ok(false);
+		std::wstring s_info;
+		std::tie(b_ok, s_info) = can_be_start_firmware_update();
+		if (!b_ok) {
 			continue;
 		}
 		//
@@ -354,7 +419,10 @@ std::vector<std::wstring> cupdater_param::generate_command_line_arguments_except
 	std::vector<std::wstring> v;
 
 	do {
-		if (!can_be_start_firmware_update()) {
+		bool b_ok(false);
+		std::wstring s_info;
+		std::tie(b_ok, s_info) = can_be_start_firmware_update();
+		if (!b_ok) {
 			continue;
 		}
 		std::wstring s_key;
@@ -445,4 +513,50 @@ std::vector<std::string> cupdater_param::generate_command_line_arguments_with_ex
 _mp::cio_packet& cupdater_param::get_rsp_packet_before_setting()
 {
 	return m_rsp;
+}
+
+bool cupdater_param::_delete_firmware()
+{
+	std::lock_guard<std::mutex> lock(m_mutex);
+	bool b_result(false);
+	std::wstring s_deb;
+	do {
+
+		std::wstring s_key = std::wstring(_mp::_coffee::CONST_S_CMD_LINE_FW_UPDATE_SET_FW_FILE);
+		auto it = m_map.find(s_key);
+		if (it == std::end(m_map)) {
+			s_deb += L"None ";
+			s_deb += s_key;
+			continue;
+		}
+
+		std::wstring s_full_abs_path = it->second;
+
+		if (!_mp::cfile::is_exist_file(s_full_abs_path)) {
+			s_deb += L"not found file : key: ";
+			s_deb += s_key;
+			s_deb += L",value: ";
+			s_deb += s_full_abs_path;
+			continue;
+		}
+
+		b_result = _mp::cfile::delete_file(s_full_abs_path);
+		s_deb += L"delete file : key: ";
+		s_deb += s_key;
+		s_deb += L",value: ";
+		s_deb += s_full_abs_path;
+
+	} while (false);
+	if (m_p_log) {
+		if (b_result) {
+			m_p_log->log_fmt(L"[I] - %ls | %ls\n", __WFUNCTION__, s_deb.c_str());
+			m_p_log->trace(L"[I] - %ls | %ls\n", __WFUNCTION__, s_deb.c_str());
+		}
+		else {
+			m_p_log->log_fmt(L"[E] - %ls | %ls\n", __WFUNCTION__, s_deb.c_str());
+			m_p_log->trace(L"[E] - %ls | %ls\n", __WFUNCTION__, s_deb.c_str());
+
+		}
+	}
+	return b_result;
 }

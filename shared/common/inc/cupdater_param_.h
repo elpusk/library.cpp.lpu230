@@ -2,9 +2,11 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <mutex>
 
 #include <mp_cstring.h>
 #include <mp_cio_packet.h>
+#include <mp_clog.h>
 
 #include <cprocess_watcher.h>
 
@@ -20,22 +22,14 @@ public:
 	cupdater_param(unsigned long n_session_number);
 	virtual ~cupdater_param();
 
-	/**
-	* @brief get value of the given key.
-	* @param s_key - key of map.
-	* @param b_remove_after_found - remove value of key in the map after returning value.
-	* @return first - true : found
-	* @return second - the value of key.
-	*/
-	std::pair<bool, std::wstring> find(const std::wstring& s_key, bool b_remove_after_found);
-
-	bool is_valid(const std::wstring& s_key) const;
+	void set_log_obj(_mp::clog* p_log);
 
 	/**
 	* @brief check bootloader request parameter existence.
-	* @return true - exist bootloader request parameter.
+	* @return first - true : exist bootloader request parameter.
+	* @return second - parameter info
 	*/
-	bool can_be_start_firmware_update() const;
+	std::pair<bool,std::wstring> can_be_start_firmware_update() const;
 
 	bool insert(const std::wstring& s_key, const std::wstring& s_value);
 
@@ -59,17 +53,15 @@ public:
 	*/
 	void set_packet_info_for_notify(const _mp::cio_packet& req_act_dev_sub_bootloader);
 
-	bool erase(const std::wstring& s_key);
-
 	/**
 	* @brief remove all item of map.
 	*/
-	void clear();
-	bool empty() const;
-	size_t size() const;
 
 	bool start_update();
 
+	/**
+	* @brief called by cprocess_watcher() thread.
+	*/
 	void callback_update_end(int n_exit_code);
 
 	/**
@@ -98,9 +90,20 @@ public:
 	_mp::cio_packet& get_rsp_packet_before_setting();
 
 
+private:
+	/**
+	* @brief delete firmware file which is created for updating temporarily.
+	* @brief this function is guard by mutex.
+	* @return true : delete success.
+	*/
+	bool _delete_firmware();
 
 private:
+	_mp::clog* m_p_log;
+
 	unsigned long m_n_session_number;
+
+	std::mutex m_mutex; //used in _delete_firmware()
 	cupdater_param::_type_map m_map;
 	std::wstring m_s_abs_full_exe_path;
 
