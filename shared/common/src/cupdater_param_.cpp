@@ -287,6 +287,10 @@ bool cupdater_param::start_update()
 	do {
 		if (m_ptr_runner) {
 			if (!m_ptr_runner->is_stop_worker()) {
+				if (m_p_log) {
+					m_p_log->log_fmt(L"[E] - %ls | %ls\n", __WFUNCTION__, L"alreay running updater.");
+					m_p_log->trace(L"[E] - %ls | %ls\n", __WFUNCTION__, L"alreay running updater.");
+				}
 				continue;// already executed.. 현재 실행 중인 것이 있음.	 
 			}
 			m_ptr_runner.reset(); // 전에 실행되어서 종료된 것은 지움.
@@ -294,11 +298,16 @@ bool cupdater_param::start_update()
 
 		m_ptr_runner = std::make_shared<cprocess_watcher>();
 		if (!m_ptr_runner) {
+			if (m_p_log) {
+				m_p_log->log_fmt(L"[E] - %ls | %ls\n", __WFUNCTION__, L"create updater.");
+				m_p_log->trace(L"[E] - %ls | %ls\n", __WFUNCTION__, L"create updater.");
+			}
 			continue;// created faiure
 		}
 
 		m_ptr_runner->start(
-			get_exe_full_abs_path_by_string()
+			m_p_log
+			, get_exe_full_abs_path_by_string()
 			, generate_command_line_arguments_except_exe_by_vector_string()
 			, std::bind(&cupdater_param::callback_update_end,this, std::placeholders::_1)
 		);

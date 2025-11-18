@@ -1152,11 +1152,15 @@ namespace _mp {
 					if(!b_ok){
 						// bootloader start command 에 필요한 parameter 가 설정되지 않음.
 						ptr_result->after_processing_set_rsp_with_error_complete(cio_packet::error_reason_bootload_mismatch_condition);
+						m_p_ctl_fun_log->log_fmt(L"[E] - %ls | %ls\n", __WFUNCTION__, L"bootload_mismatch_condition");
+						m_p_ctl_fun_log->trace(L"[E] - %ls | %ls\n", __WFUNCTION__, L"bootload_mismatch_condition");
 						continue;
 					}
 					// 
 					if (!update_param_mgmt.run_update(ptr_req_new->get_session_number())) {
 						ptr_result->after_processing_set_rsp_with_error_complete(cio_packet::error_reason_bootload_mismatch_condition);
+						m_p_ctl_fun_log->log_fmt(L"[E] - %ls | %ls\n", __WFUNCTION__, L"update_param_mgmt.run_update()");
+						m_p_ctl_fun_log->trace(L"[E] - %ls | %ls\n", __WFUNCTION__, L"update_param_mgmt.run_update()");
 						continue;
 					}
 					ptr_result->after_processing_set_rsp_with_succss_complete(_mp::type_v_buffer());
