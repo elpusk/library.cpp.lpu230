@@ -1,5 +1,5 @@
 # Software components information
-release 2.2
+release 2.3
 
 ## LiMgmtLpu230
 - for Debian 12.(x64)
@@ -12,7 +12,7 @@ release 2.2
 - lpu237 device library test program.
 
 ## LiElpuskHidDaemon
-- v2.2
+- v2.3
 - for Debian 12.(x64)
 - executable file name : elpusk-hid-d
 - secure websoecket server deamon.(only single instance) with /server option or none(default)
@@ -20,9 +20,10 @@ release 2.2
 - supports generation & installation self-signed certificate. with /cert option.
 - supports remove self-signed certificate. with /removecert option.
 - display runtime tracking message of the current elpusk-hid-d. with /trace option.
+- supports lpu237-fw update by webapp.
 
 ## WiElpuskHidDaemon
-- v2.2
+- v2.3
 - for windows 11.(x64, x86)
 - executable file name : elpusk-hid-d.exe
 - secure websoecket server exe file.(only single instance) with /server option or none(default)
@@ -31,6 +32,7 @@ release 2.2
 - supports generation & installation self-signed certificate. with /cert option.
 - supports remove self-signed certificate. with /removecert option.
 - display runtime tracking message of the current elpusk-hid-d. with /trace option.
+- supports lpu237-fw update by webapp.
 
 ## li_lpu237_dll
 - v6.0
@@ -71,16 +73,18 @@ release 2.2
 - tg_lpu237_dll.dll test program.(msr test)
 
 ## li_lpu237_update
-- v2.1
+- v2.2
 - for Debian 12.(x64)
 - executable file name : lpu237_update.out or lpu237_update
 - lpu237 firmware update program.
+- can be executed by elpusk-hid-d.
 
 ## wi_lpu237_update
-- v2.1
+- v2.2
 - for windows 11.(x64, x86)
 - executable file name : lpu237_update.exe
 - lpu237 firmware update program.
+- can be executed by elpusk-hid-d.exe.
 
 ## li_rom
 - v1.2

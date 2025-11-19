@@ -12,7 +12,7 @@ lpu23x device c++ library
 + deb package directory : /home/tester/build_deb/
 + FTXUI 6.1.9 lib - path :/home/tester/FTXUI/
 
-## the current developing version(pkg v2.3)
+## the current developed version(pkg v2.3)
 + dev_lib : v1.0
 + lpu230_update : v2.2
   - at windows, logging folder is equal to lpu230_update.exe_ logging folder.
@@ -25,6 +25,7 @@ lpu23x device c++ library
 + elpusk-hid-d : v2.3
   - Fixed an issue where the named object of a message pipe was not removed on Windows when the server terminates.
   - For Updating lpu237 firmware, run lpu230_update (Web app)
+  - After updating fw, the duplicated fw-file is deleted  automatically.
 
 ## build on debian12.
 + notice
@@ -119,15 +120,7 @@ lpu23x device c++ library
 + Debian : elpusk-hid-d /terminal
 
 ## Problems
-+ fixed : after starting wss, the inserted device is reported that  is used.
-+ fixed : In li_lpu237_dll project.
-  - project setting : for using ld file, --version-script=$(RemoteProjectDir)li_lpu237_dll/li_lpu237_dll.ld 
-  - build error "/usr/bin/ld : error : cannot open linker script file ~/projects/li_lpu237_dll/li_lpu237_dll/li_lpu237_dll.ld: No such file or directory"
-  - BUT li_lpu237_dll.ld exist in ~/projects/li_lpu237_dll/li_lpu237_dll/.  -_-;;
-  - workaround : changing setting, --version-script=/home/tester/projects/li_lpu237_dll/li_lpu237_dll/li_lpu237_dll.ld
-+ fixed : when installation, elpusk-hid-d start failure.(exit with error)
-+ fixed : deb pkg install /uninstall
-+ fixed : conversion string data of "::" and ":".( Now native app can read a ms-card)
++ not yet solved : In Debian12, "lpu230_update" run by "elpusk-hid-d" does not always display the UI.
 
 ## coding rules
 + Wherever the file log is, the trace must be present.
