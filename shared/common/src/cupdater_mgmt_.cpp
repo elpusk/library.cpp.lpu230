@@ -45,7 +45,7 @@ bool cupdater_mgmt::notify_to_server(const _mp::ccoffee_pipe::type_tuple_notify_
 		bool b_step_result(false);
 		std::wstring s_result_info;//result info or error reason
 
-		std::tie(n_vid, n_pid, n_session, n_step_cur, n_step_max, b_step_result, s_result_info) = nf;
+		std::tie(n_vid, n_pid, std::ignore, n_session, n_step_cur, n_step_max, b_step_result, s_result_info) = nf;
 
 		auto it = m_map.find(n_session);
 		if (it == std::end(m_map)) {

@@ -10,6 +10,7 @@
 
 #include <mp_cstring.h>
 #include <mp_elpusk.h>
+#include <mp_coperation.h>
 #include <hid/_vhid_info.h>
 #include <hid/mp_clibhid_dev_info.h>
 
@@ -159,6 +160,9 @@ namespace _mp{
     {
         if(ps_path){
             m_vs_path.assign(ps_path, ps_path + strlen(ps_path));
+            std::string s_p(ps_path);
+            std::wstring sw_p = _mp::cstring::get_unicode_from_mcsc(s_p);
+            m_s_pis = _mp::coperation::get_usb_pis_from_path(sw_p);
         }
 
         //assign data of known device
@@ -188,7 +192,15 @@ namespace _mp{
     {
         if (ps_path) {
             m_vs_path.assign(ps_path, ps_path + strlen(ps_path));
+            std::string s_p(ps_path);
+            std::wstring sw_p = _mp::cstring::get_unicode_from_mcsc(s_p);
+            m_s_pis = _mp::coperation::get_usb_pis_from_path(sw_p);
         }
+    }
+
+    clibhid_dev_info::clibhid_dev_info(const clibhid_dev_info& src)
+    {
+        *this = src;
     }
 
     clibhid_dev_info::~clibhid_dev_info()
@@ -267,6 +279,12 @@ namespace _mp{
         return m_n_interface;
     }
 
+    std::wstring clibhid_dev_info::get_port_id_string() const
+    {
+        return m_s_pis;
+    }
+
+
     int clibhid_dev_info::get_size_in_report() const
     {
         return m_n_size_in_report;
@@ -340,11 +358,15 @@ namespace _mp{
         this->m_w_vid = src.m_w_vid;
         this->m_w_pid = src.m_w_pid;
         this->m_n_interface = src.m_n_interface;
-
+        
         this->m_n_size_in_report = src.m_n_size_in_report;
         this->m_n_size_out_report = src.m_n_size_out_report;
+        
         this->m_vs_path = src.m_vs_path;
         this->m_s_extra_path = src.m_s_extra_path;
+
+        this->m_s_pis = src.m_s_pis;
+        this->m_b_support_shared = src.m_b_support_shared;
         return *this;
     }
 

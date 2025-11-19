@@ -138,6 +138,9 @@ namespace _mp{
     typedef	std::pair<int, int> type_pair_usb_id;//first vid, second pid
     typedef	std::set<type_pair_usb_id> type_set_usb_id;
 
+    typedef	std::tuple<int, int, std::wstring> type_tuple_usb_id_pis;//first vid, second pid, third port id string
+    typedef	std::set<type_tuple_usb_id_pis> type_set_usb_id_pis;
+
     typedef std::list<std::wstring> type_list_wstring;
     typedef std::list<std::string> type_list_string;
 

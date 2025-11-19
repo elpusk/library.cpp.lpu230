@@ -283,6 +283,15 @@ void cupdater_param::set_packet_info_for_notify(const _mp::cio_packet& req_act_d
 bool cupdater_param::start_update()
 {
 	bool b_result(false);
+	bool b_gui(false);
+
+	std::wstring s_key = std::wstring(L"_cf_bl_window_");
+	auto it = m_map.find(s_key);
+	if (it != std::end(m_map)) {
+		if (it->second.compare(L"true") == 0) {
+			b_gui = true; // console 할당 in linux/ 
+		}
+	}
 
 	do {
 		if (m_ptr_runner) {
@@ -307,6 +316,7 @@ bool cupdater_param::start_update()
 
 		m_ptr_runner->start(
 			m_p_log
+			, b_gui
 			, get_exe_full_abs_path_by_string()
 			, generate_command_line_arguments_except_exe_by_vector_string()
 			, std::bind(&cupdater_param::callback_update_end,this, std::placeholders::_1)

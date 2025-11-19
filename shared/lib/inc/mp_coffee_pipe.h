@@ -41,11 +41,13 @@ namespace _mp{
         * @return first(true) : request is consider-to-removed.
         * @return second : usb vendor id.
         * @return third : usb product id.
+        * @return fourth : port id string(PIS)
         */
-        static std::tuple<bool,int,int> is_ctl_request_for_consider_to_removed(const std::wstring& s_request)
+        static std::tuple<bool,int,int,std::wstring> is_ctl_request_for_consider_to_removed(const std::wstring& s_request)
         {
             bool b_result(false);
             int n_vid = 0, n_pid =0;
+            std::wstring s_pis;
 
             do {
                 size_t vid_pos = s_request.find(L"VID_");
@@ -79,9 +81,16 @@ namespace _mp{
                 if (n_pid == 0xFFFF) {
                     n_pid = -1;
                 }
+
+                size_t pis_pos = s_request.find(L"PIS_");
+                if (pis_pos == std::wstring::npos) {
+                    continue;
+                }
+                s_pis = s_request.substr(pis_pos + 4);
+
                 b_result = true;
             } while (false);
-            return std::make_tuple(b_result, n_vid, n_pid);
+            return std::make_tuple(b_result, n_vid, n_pid, s_pis);
         }
 
         /**
@@ -90,11 +99,13 @@ namespace _mp{
         * @return first(true) : request is consider-to-removed.
         * @return second : usb vendor id.
         * @return third : usb product id.
+        * @return fourth : port id string(PIS)
         */
-        static std::tuple<bool, int, int> is_ctl_request_for_cancel_consider_to_removed(const std::wstring& s_request)
+        static std::tuple<bool, int, int, std::wstring> is_ctl_request_for_cancel_consider_to_removed(const std::wstring& s_request)
         {
             bool b_result(false);
             int n_vid = 0, n_pid = 0;
+            std::wstring s_pis;
 
             do {
                 size_t vid_pos = s_request.find(L"VID_");
@@ -128,22 +139,30 @@ namespace _mp{
                 if (n_pid == 0xFFFF) {
                     n_pid = -1;
                 }
+
+                size_t pis_pos = s_request.find(L"PIS_");
+                if (pis_pos == std::wstring::npos) {
+                    continue;
+                }
+                s_pis = s_request.substr(pis_pos + 4);
+
                 b_result = true;
             } while (false);
-            return std::make_tuple(b_result, n_vid, n_pid);
+            return std::make_tuple(b_result, n_vid, n_pid, s_pis);
         }
 
         /**
         * update-progress-notification information tuple
         * @return first : usb vendor id.
         * @return second : usb product id. 
-        * @return third : client sesion number
-        * @return fourth : the current step of update(0~max step) 
-        * @return fifth : the max step of update
-        * @return sixth : the result of current step. , true - success, false - failure.
-        * @return seventh : operation error resaon
+        * @return third : port id string(PIS)
+        * @return fourth : client sesion number
+        * @return fifth : the current step of update(0~max step) 
+        * @return sixth : the max step of update
+        * @return seventh : the result of current step. , true - success, false - failure.
+        * @return eighth : operation error resaon
         */
-        typedef std::tuple<int, int, unsigned long, int, int, bool, std::wstring> type_tuple_notify_info;
+        typedef std::tuple<int, int, std::wstring,unsigned long, int, int, bool, std::wstring> type_tuple_notify_info;
 
         /**
         * @brief request string is update-progress-notification or not
@@ -152,11 +171,12 @@ namespace _mp{
         * @return second : update-progress-notification information tuple
         * @return second.first : usb vendor id.
         * @return second.second : usb product id.
-        * @return second.third : client sesion number
-        * @return second.fourth : the current step of update(0~max step)
-        * @return second.fifth : the max step of update
-        * @return second.sixth : the result of current step. , true - success, false - failure.
-        * @return second.seventh : operation error resaon
+        * @return second.third : port id string(PIS)
+        * @return second.fourth : client sesion number
+        * @return second.fifth : the current step of update(0~max step)
+        * @return second.sixth : the max step of update
+        * @return second.seventh : the result of current step. , true - success, false - failure.
+        * @return second.eighth : operation error resaon
         */
         static std::pair<bool, ccoffee_pipe::type_tuple_notify_info> is_ctl_request_for_notify_progress(const std::wstring& s_request)
         {
@@ -167,6 +187,7 @@ namespace _mp{
             std::wstring s_result; // "error" or "success"
             std::wstring s_error_reason;
             bool b_step_result(false);
+            std::wstring s_pis;
 
             do {
                 size_t vid_pos = s_request.find(L"VID_");
@@ -175,6 +196,10 @@ namespace _mp{
                 }
                 size_t pid_pos = s_request.find(L"PID_");
                 if (pid_pos == std::wstring::npos) {
+                    continue;
+                }
+                size_t pis_pos = s_request.find(L"PIS_");
+                if (pis_pos == std::wstring::npos) {
                     continue;
                 }
                 std::wstring s_prefix = s_request.substr(0, vid_pos); // "DEV_NOTIFY:USB:"
@@ -206,6 +231,8 @@ namespace _mp{
 
                     std::wstring pid_hex = s_request.substr(pid_pos + 4, 4);
                     n_pid = std::stoi(pid_hex, nullptr, 16);
+
+                    s_pis = s_request.substr(pis_pos + 4, sid_pos - (pis_pos + 4));
 
                     std::wstring sid_hex = s_request.substr(sid_pos + 4, 8);
                     n_session = std::stoul(sid_hex, nullptr, 16);
@@ -261,7 +288,7 @@ namespace _mp{
             return std::make_pair(
                 b_result
                 ,std::make_tuple(
-                n_vid, n_pid, n_session,n_cur,n_max, b_step_result, s_error_reason
+                n_vid, n_pid, s_pis, n_session,n_cur,n_max, b_step_result, s_error_reason
                 )
             );
         }
@@ -270,9 +297,10 @@ namespace _mp{
         * @brief generate the control request which manager consider a device to be removed.
         * @param n_vid : usb vendor id
         * @param n_pid : usb product id
+        * @param s_pis : port id string
         * @return th generted request-string
         */
-        static std::wstring generate_ctl_request_for_consider_to_removed(int n_vid, int n_pid)
+        static std::wstring generate_ctl_request_for_consider_to_removed(int n_vid, int n_pid, const std::wstring &s_pis)
         {
             std::wstring s;
             uint16_t w_v, w_p;
@@ -297,17 +325,18 @@ namespace _mp{
                 w_p = (uint16_t)n_pid;
             }
 
-            _mp::cstring::format_c_style(s, L"%lsVID_%04X:PID_%04X",_mp::_coffee::CONST_S_COFFEE_MGMT_CTL_REQ_STOP_DEV_PREFIX, w_v, w_p);
+            _mp::cstring::format_c_style(s, L"%lsVID_%04X:PID_%04X:PIS_%ls",_mp::_coffee::CONST_S_COFFEE_MGMT_CTL_REQ_STOP_DEV_PREFIX, w_v, w_p, s_pis.c_str());
             return s;
         }
 
         /**
         * @brief generate the control cancel request which manager  consider a device to be removed.
-        * @param n_vid : usb vendor id. -1 : all vendor
-        * @param n_pid : usb product id. -1 : all product
+        * @param n_vid : usb vendor id. 
+        * @param n_pid : usb product id.
+        * @param s_pis : port id string
         * @return th generted request-string
         */
-        static std::wstring generate_ctl_request_for_cancel_considering_dev_as_removed(int n_vid = -1, int n_pid = -1)
+        static std::wstring generate_ctl_request_for_cancel_considering_dev_as_removed(int n_vid, int n_pid, const std::wstring & s_pis)
         {
             std::wstring s;
             uint16_t w_v, w_p;
@@ -332,7 +361,7 @@ namespace _mp{
                 w_p = (uint16_t)n_pid;
             }
 
-            _mp::cstring::format_c_style(s, L"%lsVID_%04X:PID_%04X", _mp::_coffee::CONST_S_COFFEE_MGMT_CTL_REQ_START_DEV_PREFIX, w_v, w_p);
+            _mp::cstring::format_c_style(s, L"%lsVID_%04X:PID_%04X:PIS_%ls", _mp::_coffee::CONST_S_COFFEE_MGMT_CTL_REQ_START_DEV_PREFIX, w_v, w_p,s_pis.c_str());
             return s;
         }
 
@@ -340,6 +369,7 @@ namespace _mp{
         * @brief generate the control notify request which manager understands the current update processing status.
         * @param n_vid - usb vendor id
         * @param n_pid - usb product id
+        * @param s_pis : port id string
         * @param n_session - client session number of server. 
         * @param n_cur_step - current update step(0~n_max_step)
         * @param n_max_step - max update step
@@ -350,6 +380,7 @@ namespace _mp{
         static std::wstring generate_ctl_request_for_notify_progress_to_server(
             int n_vid
             , int n_pid
+            , const std::wstring& s_pis
             , unsigned long n_session
             ,int n_cur_step
             ,int n_max_step
@@ -406,10 +437,11 @@ namespace _mp{
             }
 
             if (!s_error_reason.empty()) {
-                _mp::cstring::format_c_style(s, L"%lsVID_%04X:PID_%04X:SID_%08X:CUR_%04X:MAX_%04X:RSP_%ls:WHY_%ls"
+                _mp::cstring::format_c_style(s, L"%lsVID_%04X:PID_%04X:PIS_%ls:SID_%08X:CUR_%04X:MAX_%04X:RSP_%ls:WHY_%ls"
                     , _mp::_coffee::CONST_S_COFFEE_MGMT_CTL_REQ_NOTIFY_DEV_PREFIX
                     , w_v
                     , w_p
+                    , s_pis.c_str()
                     , n_session
                     , w_cur
                     , w_max
@@ -418,10 +450,11 @@ namespace _mp{
                 );
             }
             else {
-                _mp::cstring::format_c_style(s, L"%lsSID_%08X:VID_%04X:PID_%04X:SID_%08X:CUR_%04X:MAX_%04X:RSP_%ls"
+                _mp::cstring::format_c_style(s, L"%lsSID_%08X:VID_%04X:PID_%04X:PIS_%ls:SID_%08X:CUR_%04X:MAX_%04X:RSP_%ls"
                     , _mp::_coffee::CONST_S_COFFEE_MGMT_CTL_REQ_NOTIFY_DEV_PREFIX
                     , w_v
                     , w_p
+                    , s_pis.c_str()
                     , n_session
                     , w_cur
                     , w_max

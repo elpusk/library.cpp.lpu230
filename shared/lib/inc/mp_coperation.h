@@ -26,6 +26,7 @@ namespace _mp{
 		}
 
 #ifdef _WIN32
+		// windows
 		static int get_usb_vid_from_path(const std::wstring& s_path)
 		{
 			int nVal = -1;// const_no_exist;
@@ -80,6 +81,63 @@ namespace _mp{
 			return nVal;
 		}
 
+		static std::wstring get_usb_pis_from_path(const std::wstring& s_path)
+		{
+			std::wstring s_pis;
+
+			do {
+				size_t pos_1_sharp = s_path.find(L'#');
+				if (pos_1_sharp == std::wstring::npos) {
+					continue;
+				}
+				size_t pos_2_sharp = s_path.find(L'#',pos_1_sharp+1);
+				if (pos_2_sharp == std::wstring::npos) {
+					continue;
+				}
+
+				std::wstring s_port;
+				size_t pos_3_sharp = s_path.find(L'#', pos_2_sharp + 1);
+				if (pos_3_sharp == std::wstring::npos) {
+					s_port = s_path.substr(pos_2_sharp + 1);
+				}
+				else {
+					s_port = s_path.substr(pos_2_sharp + 1, pos_3_sharp-(pos_2_sharp + 1));
+				}
+
+				//
+				size_t pos_1_amp = s_port.find(L'&');
+				if (pos_1_amp == std::wstring::npos) {
+					continue;
+				}
+
+				size_t pos_2_amp = s_port.find(L'&', pos_1_amp + 1);
+				if (pos_1_amp == std::wstring::npos) {
+					s_pis = s_port;
+				}
+				else {
+					s_pis = s_port.substr(0, pos_2_amp);
+				}
+
+			} while (false);
+			return s_pis;
+		}
+
+#else
+		//linux
+		static std::wstring get_usb_pis_from_path(const std::wstring& s_path)
+		{
+			std::wstring s_pis;
+
+			do {
+				size_t pos_1_scol = s_path.find(L':');
+				if (pos_1_scol == std::wstring::npos) {
+					continue;
+				}
+
+				s_pis = s_path.substr(0, pos_1_scol);
+			} while (false);
+			return s_pis;
+		}
 #endif
 		static bool copy_btb(unsigned char* ps_dst, unsigned int n_dst, const unsigned char* ps_src, unsigned int n_src, bool b_right_arrange = false)
 		{

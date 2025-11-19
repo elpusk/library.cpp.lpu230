@@ -192,6 +192,7 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 
 		bool b_req(false);
 		int n_vid(0), n_pid(0);
+		std::wstring s_pis;
 		//lib_hid 는 wss_svr.start() 가 성공하면, 생성되는 instance 이므로, wss_svr.start() 보다 먼저 사용 불가.
 		_mp::clibhid& lib_hid(_mp::clibhid::get_instance());
 		long long ll_ctl_pipe_check_interval_mmsec(_mp::_coffee::CONST_N_COFFEE_MGMT_SLEEP_INTERVAL_MMSEC);
@@ -217,16 +218,16 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 				continue;
 			}
 
-			std::tie(b_req, n_vid, n_pid) = _mp::ccoffee_pipe::is_ctl_request_for_consider_to_removed(s_data);
+			std::tie(b_req, n_vid, n_pid, s_pis) = _mp::ccoffee_pipe::is_ctl_request_for_consider_to_removed(s_data);
 			if (b_req) {
 				//응답 필요.
-				if (lib_hid.consider_to_be_removed(n_vid, n_pid)) {
-					log.log_fmt(L"[I] %ls | req - consider_to_be_removed.\n", __WFUNCTION__);
-					log.trace(L"[I] - %ls | req - consider_to_be_removed.\n", __WFUNCTION__);
+				if (lib_hid.consider_to_be_removed(n_vid, n_pid, s_pis)) {
+					log.log_fmt(L"[I] %ls | req - consider_to_be_removed(0x%x,0x%x,%ls).\n", __WFUNCTION__,n_vid,n_pid,s_pis.c_str());
+					log.trace(L"[I] - %ls | req - consider_to_be_removed(0x%x,0x%x,%ls).\n", __WFUNCTION__, n_vid, n_pid, s_pis.c_str());
 				}
 				else {
-					log.log_fmt(L"[E] %ls | req - consider_to_be_removed.\n", __WFUNCTION__);
-					log.trace(L"[E] - %ls | req - consider_to_be_removed.\n", __WFUNCTION__);
+					log.log_fmt(L"[E] %ls | req - consider_to_be_removed(0x%x,0x%x,%ls).\n", __WFUNCTION__, n_vid, n_pid, s_pis.c_str());
+					log.trace(L"[E] - %ls | req - consider_to_be_removed(0x%x,0x%x,%ls).\n", __WFUNCTION__, n_vid, n_pid, s_pis.c_str());
 				}
 
 				if (!gptr_rx_ctl_pipe) {
@@ -240,16 +241,16 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 				}
 				continue;
 			}
-			std::tie(b_req, n_vid, n_pid) = _mp::ccoffee_pipe::is_ctl_request_for_cancel_consider_to_removed(s_data);
+			std::tie(b_req, n_vid, n_pid, s_pis) = _mp::ccoffee_pipe::is_ctl_request_for_cancel_consider_to_removed(s_data);
 			if (b_req) {
 				//응답 필요.
-				if (lib_hid.cancel_considering_dev_as_removed(n_vid, n_pid)) {
-					log.log_fmt(L"[I] %ls | req - cancel_consider_to_be_removed.\n", __WFUNCTION__);
-					log.trace(L"[I] - %ls | req - cancel_consider_to_be_removed.\n", __WFUNCTION__);
+				if (lib_hid.cancel_considering_dev_as_removed(n_vid, n_pid, s_pis)) {
+					log.log_fmt(L"[I] %ls | req - cancel_consider_to_be_removed(0x%x,0x%x,%ls).\n", __WFUNCTION__, n_vid, n_pid, s_pis.c_str());
+					log.trace(L"[I] - %ls | req - cancel_consider_to_be_removed(0x%x,0x%x,%ls).\n", __WFUNCTION__, n_vid, n_pid, s_pis.c_str());
 				}
 				else {
-					log.log_fmt(L"[E] %ls | req - cancel_consider_to_be_removed.\n", __WFUNCTION__);
-					log.trace(L"[E] - %ls | req - cancel_consider_to_be_removed.\n", __WFUNCTION__);
+					log.log_fmt(L"[E] %ls | req - cancel_consider_to_be_removed(0x%x,0x%x,%ls).\n", __WFUNCTION__, n_vid, n_pid, s_pis.c_str());
+					log.trace(L"[E] - %ls | req - cancel_consider_to_be_removed(0x%x,0x%x,%ls).\n", __WFUNCTION__, n_vid, n_pid, s_pis.c_str());
 				}
 
 				if (!gptr_rx_ctl_pipe) {

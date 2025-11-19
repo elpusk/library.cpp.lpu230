@@ -125,9 +125,11 @@ void cshare::_ini()
 
 	m_b_executed_server_stop_use_target_dev = false;
 	m_n_stopped_usb_vid = m_n_stopped_usb_pid = 0;
+	m_s_stopped_usb_pis.clear();
 
 	m_b_run_by_cf = false;
 	m_n_target_vid = m_n_target_pid = 0;
+	m_s_target_pis.clear();
 
 	m_b_start_from_bootloader = false;
 
@@ -178,11 +180,12 @@ cshare& cshare::set_start_from_bootloader(bool b_start_from_bootloader)
 	return *this;
 }
 
-cshare& cshare::set_executed_server_stop_use_target_dev(bool b_executed, int n_vid, int n_pid)
+cshare& cshare::set_executed_server_stop_use_target_dev(bool b_executed, int n_vid, int n_pid,const std::wstring &s_pis)
 {
 	m_b_executed_server_stop_use_target_dev = b_executed;
 	m_n_stopped_usb_vid = n_vid;
 	m_n_stopped_usb_pid = n_pid;
+	m_s_stopped_usb_pis = s_pis;
 	return *this;
 }
 
@@ -190,6 +193,7 @@ void cshare::clear_executed_server_stop_use_target_dev()
 {
 	m_b_executed_server_stop_use_target_dev = false;
 	m_n_stopped_usb_vid = m_n_stopped_usb_pid = 0;
+	m_s_stopped_usb_pis.clear();
 }
 
 cshare& cshare::set_run_by_cf(bool b_yes)
@@ -243,6 +247,12 @@ cshare& cshare::set_target_vid(int n_vid /*=0*/)
 cshare& cshare::set_target_pid(int n_pid /*=0*/)
 {
 	m_n_target_pid = n_pid;
+	return *this;
+}
+
+cshare& cshare::set_target_pis(const std::wstring& s_pis /*=std::wstring()*/)
+{
+	m_s_target_pis = s_pis;
 	return *this;
 }
 
@@ -301,9 +311,9 @@ bool cshare::get_display_ui() const
 	return m_b_display;
 }
 
-std::tuple<bool,int,int> cshare::is_executed_server_stop_use_target_dev() const
+std::tuple<bool,int,int,std::wstring> cshare::is_executed_server_stop_use_target_dev() const
 {
-	return std::make_tuple( m_b_executed_server_stop_use_target_dev, m_n_stopped_usb_vid, m_n_stopped_usb_pid);
+	return std::make_tuple( m_b_executed_server_stop_use_target_dev, m_n_stopped_usb_vid, m_n_stopped_usb_pid, m_s_stopped_usb_pis);
 }
 
 _mp::type_pair_bool_result_bool_complete cshare::io_save_all_variable_sys_parameter(bool b_first)
@@ -856,6 +866,11 @@ int cshare::get_target_vid() const
 int cshare::get_target_pid() const
 {
 	return m_n_target_pid;
+}
+
+std::wstring cshare::get_target_pis() const
+{
+	return m_s_target_pis;
 }
 
 bool cshare::is_iso_mode_after_update() const

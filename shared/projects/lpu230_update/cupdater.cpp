@@ -684,7 +684,9 @@ std::string cupdater::_check_target_device_path_in_initial()
 			// 주어진 장비를 연결된 lpu237, lpu238 에서 찾기
 			it_dev = _mp::clibhid_dev_info::find(set_primitive_dev_info_lpu, s_target_dev_path);
 			if (it_dev != std::end(set_primitive_dev_info_lpu)) {
-				sh.set_target_vid(it_dev->get_vendor_id()).set_target_pid(it_dev->get_product_id());
+				sh.set_target_vid(it_dev->get_vendor_id())
+					.set_target_pid(it_dev->get_product_id())
+					.set_target_pis(it_dev->get_port_id_string());
 				m_log_ref.log_fmt("[I] target is  %s\n", s_target_dev_path.c_str());
 				continue; // next step
 			}
@@ -725,7 +727,7 @@ std::string cupdater::_check_target_device_path_in_initial()
 	}
 
 	if (cshare::get_instance().get_start_from_bootloader()) {
-		sh.set_target_vid().set_target_pid(); //reset
+		sh.set_target_vid().set_target_pid().set_target_pis(); //reset
 		cshare::get_instance().set_device_path(s_target_dev_path);// 시작 장비가 hidboot loader 로 장비가 설정됨
 		cshare::get_instance().set_bootloader_path(s_target_dev_path);
 		return s_target_dev_path;
@@ -763,7 +765,7 @@ std::string cupdater::_check_target_device_path_in_initial()
 
 		// 서버 control pipe 에 연결 설공.
 		std::wstring s_req_ctl_pip = _mp::ccoffee_pipe::generate_ctl_request_for_consider_to_removed(
-			it_dev->get_vendor_id(), it_dev->get_product_id()
+			it_dev->get_vendor_id(), it_dev->get_product_id(), it_dev->get_port_id_string()
 		);
 		if (s_req_ctl_pip.empty()) {
 			m_log_ref.log_fmt("[E] generating request for stopping %s\n", s_target_dev_path.c_str());
@@ -787,7 +789,8 @@ std::string cupdater::_check_target_device_path_in_initial()
 				cshare::get_instance().set_executed_server_stop_use_target_dev(
 					true,
 					(int)it_dev->get_vendor_id(),
-					(int)it_dev->get_product_id()
+					(int)it_dev->get_product_id(),
+					it_dev->get_port_id_string()
 				);
 				std::this_thread::sleep_for(std::chrono::milliseconds(500)); // 서버의 작업 시간을 위한 sleep.
 				break; //exit for
@@ -1216,6 +1219,7 @@ void cupdater::_queueed_message_process(
 			std::wstring s_request = _mp::ccoffee_pipe::generate_ctl_request_for_notify_progress_to_server(
 				sh.get_target_vid()
 				, sh.get_target_pid()
+				, sh.get_target_pis()
 				, m_n_session
 				, n_progress_cur
 				, n_progress_max

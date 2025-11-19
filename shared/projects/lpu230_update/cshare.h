@@ -59,7 +59,7 @@ public:
 	cshare& set_target_lpu23x(_mp::clibhid_dev::type_ptr& ptr_dev);
 	cshare &set_start_from_bootloader(bool b_start_from_bootloader);
 
-	cshare& set_executed_server_stop_use_target_dev(bool b_executed, int n_vid, int n_pid);
+	cshare& set_executed_server_stop_use_target_dev(bool b_executed, int n_vid, int n_pid,const std::wstring& s_pis);
 	void clear_executed_server_stop_use_target_dev();
 
 	/**
@@ -72,6 +72,7 @@ public:
 	cshare& set_bootloader_path(const std::string& s_bootloader_path);
 	cshare& set_target_vid(int n_vid = 0); //default is reset
 	cshare& set_target_pid(int n_pid = 0); //default is reset
+	cshare& set_target_pis(const std::wstring& s_pis = std::wstring());//default is reset
 
 	cshare& set_iso_mode_after_update(bool b_enable_iso_mode_after_update);
 	cshare& set_lpu23x_interface_change_after_update(cshare::Lpu237Interface inf_new);
@@ -93,7 +94,7 @@ public:
 	* @return get<1> - stopped usb vid
 	* @return get<2> - stopped usb pid
 	*/
-	std::tuple<bool,int,int> is_executed_server_stop_use_target_dev() const;
+	std::tuple<bool,int,int,std::wstring> is_executed_server_stop_use_target_dev() const;
 
 	std::string get_target_device_model_name_by_string() const;
 	std::string get_target_device_version_by_string() const;
@@ -110,6 +111,7 @@ public:
 	std::wstring get_device_wpath() const;
 	int get_target_vid() const;
 	int get_target_pid() const;
+	std::wstring get_target_pis() const;
 
 	std::string get_bootloader_path() const;
 	std::wstring get_bootloader_wpath() const;
@@ -227,6 +229,7 @@ private:
 	bool m_b_executed_server_stop_use_target_dev;
 	int m_n_stopped_usb_vid; // stopped usb vid by m_b_executed_server_stop_use_target_dev flag
 	int m_n_stopped_usb_pid; // stopped usb pid by m_b_executed_server_stop_use_target_dev flag
+	std::wstring m_s_stopped_usb_pis; // usb port id string
 
 	bool m_b_run_by_cf; // this updater is run by coffee manager.
 	bool m_b_start_from_bootloader;
@@ -235,6 +238,7 @@ private:
 	std::string m_s_bootloader_path;// if the given device is bootloader, then m_s_device_path can be eqaul to m_s_bootloader_path.
 	int m_n_target_vid;
 	int m_n_target_pid;
+	std::wstring m_s_target_pis; // usb port id string
 
 	bool m_b_enable_iso_mode_after_update;
 	cshare::Lpu237Interface m_lpu23x_interface_after_update;

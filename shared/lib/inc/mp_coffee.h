@@ -39,24 +39,25 @@ namespace _mp{
         constexpr const wchar_t* CONST_S_COFFEE_MGMT_CTL_EX_REQ_PRE_CTL_PIPE_CHECK_INTERVAL = L"ctl-pipe-check-interval-time:";
 
         // stop device service prefix string
-        // ex) if ypu want to stop a usb device(vid 0x1234, pid 0x4567),
-        // send "DEV_STOP:USB:VID_1234:PID_4567" to CONST_S_COFFEE_MGMT_CTL_PIPE_NAME control pipe.
+        // ex) if ypu want to stop a usb device(vid 0x1234, pid 0x4567), port id string a&2794af25(windows), 3-9(linux)
+        // send "DEV_START:USB:VID_1234:PID_4567:PIS_a&2794af25" or "DEV_START:USB:VID_1234:PID_4567:PIS_3-9" to CONST_S_COFFEE_MGMT_CTL_PIPE_NAME control pipe.
         constexpr const wchar_t* CONST_S_COFFEE_MGMT_CTL_REQ_STOP_DEV_PREFIX = L"DEV_STOP:USB:";
         // the sever response of CONST_S_COFFEE_MGMT_CTL_REQ_STOP_DEV_PREFIX req.
         constexpr const wchar_t* CONST_S_COFFEE_MGMT_CTL_RSP_STOP_DEV = L"DEV_STOP:USB:OK";
 
         // start device service prefix string
-        // ex) if ypu want to start a usb device(vid 0x1234, pid 0x4567),
-        // send "DEV_START:USB:VID_1234:PID_4567" to CONST_S_COFFEE_MGMT_CTL_PIPE_NAME control pipe.
+        // ex) if ypu want to start a usb device(vid 0x1234, pid 0x4567),, port id string a&2794af25(windows), 3-9(linux)
+        // send "DEV_START:USB:VID_1234:PID_4567:PIS_a&2794af25" or "DEV_START:USB:VID_1234:PID_4567:PIS_3-9" to CONST_S_COFFEE_MGMT_CTL_PIPE_NAME control pipe.
         constexpr const wchar_t* CONST_S_COFFEE_MGMT_CTL_REQ_START_DEV_PREFIX = L"DEV_START:USB:";
         // the sever response of CONST_S_COFFEE_MGMT_CTL_REQ_START_DEV_PREFIX req.
         constexpr const wchar_t* CONST_S_COFFEE_MGMT_CTL_RSP_START_DEV = L"DEV_START:USB:OK";
 
         // notify service prefix string
-        // ex) if ypu want to start a usb device(vid 0x1234, pid 0x4567)
+        // ex) if ypu want to start a usb device(vid 0x1234, pid 0x4567). , port id string a&2794af25(windows), 3-9(linux)
         // , this device is managed by client session number 0xabcd0123
         // , max step 200(0x00C8), current step 23(0x0017), result-error, reason io failure.
-        // send "DEV_NOTIFY:USB:VID_1234:PID_4567:SID_ABCD0123:CUR_0017:MAX_00c8:RSP_error:WHY_io failure" to CONST_S_COFFEE_MGMT_CTL_PIPE_NAME control pipe.
+        // send "DEV_NOTIFY:USB:VID_1234:PID_4567:PIS_a&2794af25:SID_ABCD0123:CUR_0017:MAX_00c8:RSP_error:WHY_io failure" or
+        // "DEV_NOTIFY:USB:VID_1234:PID_4567:PIS_3-9:SID_ABCD0123:CUR_0017:MAX_00c8:RSP_error:WHY_io failure" to CONST_S_COFFEE_MGMT_CTL_PIPE_NAME control pipe.
         constexpr const wchar_t* CONST_S_COFFEE_MGMT_CTL_REQ_NOTIFY_DEV_PREFIX = L"DEV_NOTIFY:USB:";
 
 

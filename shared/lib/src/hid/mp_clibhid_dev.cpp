@@ -279,7 +279,6 @@ namespace _mp {
         int n_flush = 0;
         _mp::type_ptr_v_buffer ptr_flush_buffer;
 
-        //std::lock_guard<std::mutex> lock(_hid_api_briage::get_mutex_for_hidapi());
         std::lock_guard<std::mutex> lock(chid_briage::get_mutex_for_hidapi());
 
         while (m_q_rx_ptr_v.try_pop(ptr_flush_buffer)) {
@@ -287,7 +286,7 @@ namespace _mp {
             std::this_thread::sleep_for(std::chrono::milliseconds(clibhid_dev::_const_dev_rx_flush_interval_mmsec));
         }//end while
         m_q_rx_ptr_v.clear();//reset rx queue.
-        clog::get_instance().log_fmt_in_debug_mode(L"[D] - %ls - flush cnt = %d.\n", __WFUNCTION__, n_flush);
+        //clog::get_instance().log_fmt_in_debug_mode(L"[D] - %ls - flush cnt = %d.\n", __WFUNCTION__, n_flush);
 
     }
 

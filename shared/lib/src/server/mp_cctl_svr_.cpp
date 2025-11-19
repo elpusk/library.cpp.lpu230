@@ -156,8 +156,8 @@ namespace _mp {
 					++m_w_new_device_index;
 				}
 
-				p_log->log_fmt(L"[I] - %ls | inserted(%u) : %ls.\n", __WFUNCTION__, w_result,item.get_path_by_wstring().c_str());
-				p_log->trace(L"[I] - %ls | inserted(%u) : %ls.\n", __WFUNCTION__, w_result,item.get_path_by_wstring().c_str());
+				p_log->log_fmt(L"[I] - %ls | inserted(%u) : (%ls) %ls.\n", __WFUNCTION__, w_result, item.get_port_id_string().c_str(), item.get_path_by_wstring().c_str());
+				p_log->trace(L"[I] - %ls | inserted(%u) : (%ls) %ls.\n", __WFUNCTION__, w_result, item.get_port_id_string().c_str(),item.get_path_by_wstring().c_str());
 			} while (false);
 			return w_result;
 		}

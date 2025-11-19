@@ -34,13 +34,13 @@ public:
         stop();
     }
 
-    void start(_mp::clog *p_log,const std::string& exe_path,
+    void start(_mp::clog *p_log,bool b_gui,const std::string& exe_path,
         const std::vector<std::string>& args,
         cprocess_watcher::type_callback cb)
     {
         m_p_log = p_log;
         m_b_stop_worker = false;
-        m_worker = std::thread([=]() { _watch_process(exe_path, args, cb); });
+        m_worker = std::thread([=]() { _watch_process(b_gui,exe_path, args, cb); });
     }
 
     void stop() {
@@ -61,7 +61,10 @@ private:
     std::atomic<bool> m_b_stop_worker{ false };
     std::thread m_worker;
 
-    void _watch_process(std::string exe, std::vector<std::string> args, type_callback cb)
+    /**
+    * @param b_enable_gui - only for linux, true - create console
+    */
+    void _watch_process(bool b_enable_gui, std::string exe, std::vector<std::string> args, type_callback cb)
     {
         if (m_p_log) {
             m_p_log->log_fmt(L"[I] - %ls | %ls\n", __WFUNCTION__, L"started");
@@ -116,21 +119,48 @@ private:
         //std::cout << "[Watcher] stopped before process ended.\n";
 
 #else
-        std::vector<char*> argv;
-        argv.push_back(const_cast<char*>(exe.c_str()));
-        for (auto& a : args)
-            argv.push_back(const_cast<char*>(a.c_str()));
-        argv.push_back(nullptr);
-
         pid_t pid;
         extern char** environ;
+        int ret = 0;
 
-        int ret = posix_spawn(
+        // 1. argv 안전하게 복사 (항상 해야 함)
+        /*
+        std::vector<std::string> new_args = {
+            "/usr/bin/systemd-run", "--pty", "--quiet",
+            "--service-type=exec", "--wait" 
+        };
+        */
+        std::vector<std::string> new_args;// 위 코드가 별 효과가 없어서 임시로 위 코드 기능 정지 시킴.
+
+        std::vector<std::string> args_storage;
+        if (b_enable_gui) {
+            args_storage.reserve(new_args.size() + args.size() + 1);
+            for (auto& a : new_args) {
+                args_storage.push_back(std::move(a));
+            }
+        }
+        else {
+            args_storage.reserve(args.size() + 1);
+        }
+
+        args_storage.push_back(exe);
+        for (auto& a : args) {
+            args_storage.push_back(std::move(a));
+        }
+
+        std::vector<char*> argv;
+        argv.reserve(args_storage.size() + 1);
+        for (auto& s : args_storage) {
+            argv.push_back(const_cast<char*>(s.c_str()));
+        }
+        argv.push_back(nullptr);
+
+        ret = posix_spawn(
             &pid
             , exe.c_str()
             , nullptr
             , nullptr
-            ,argv.data()
+            , argv.data()
             , environ
         );
 

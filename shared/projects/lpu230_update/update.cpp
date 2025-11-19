@@ -283,14 +283,16 @@ void _notify_cleanup_to_server_on_exit()
 		cshare& sh(cshare::get_instance());
 
 		int n_vid(0), n_pid(0);
+		std::wstring s_pis;
 		bool b_stop(false);
 
-		std::tie(b_stop, n_vid, n_pid) = sh.is_executed_server_stop_use_target_dev();
+		std::tie(b_stop, n_vid, n_pid, s_pis) = sh.is_executed_server_stop_use_target_dev();
 		if (!b_stop) {
 			_mp::clibhid_dev_info plugin_dev_info_after_update = sh.get_plugin_device_info_after_update();
 			if(plugin_dev_info_after_update.is_valid()){
 				n_vid = (int)plugin_dev_info_after_update.get_vendor_id();
 				n_pid = (int)plugin_dev_info_after_update.get_product_id();
+				s_pis = plugin_dev_info_after_update.get_port_id_string();
 			}
 			else {
 				continue;
@@ -317,7 +319,7 @@ void _notify_cleanup_to_server_on_exit()
 
 		// 서버 control pipe 에 연결 설공.
 		std::wstring s_req_ctl_pip = _mp::ccoffee_pipe::generate_ctl_request_for_cancel_considering_dev_as_removed(
-			n_vid,n_pid
+			n_vid,n_pid, s_pis
 		);
 		if (s_req_ctl_pip.empty()) {
 			continue;
@@ -338,7 +340,7 @@ void _notify_cleanup_to_server_on_exit()
 			}
 			if (s_rx.compare(_mp::_coffee::CONST_S_COFFEE_MGMT_CTL_RSP_START_DEV) == 0) {
 				// 정상 응답 성공.
-				_mp::clog::get_instance().log_fmt(L"[D]_cleanup : (vid:pid) = (0x%x,0x%x).\n", n_vid,n_pid);
+				_mp::clog::get_instance().log_fmt(L"[D]_cleanup : (vid:pid:pis) = (0x%x,0x%x,%ls).\n", n_vid,n_pid, s_pis.c_str());
 				break; //exit for
 			}
 		}//end for

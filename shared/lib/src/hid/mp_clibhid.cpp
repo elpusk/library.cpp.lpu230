@@ -1,6 +1,7 @@
 
 #include <hid/mp_clibhid.h>
 #include <mp_elpusk.h>
+#include <mp_coperation.h>
 
 #ifdef _WIN32
 #ifdef _DEBUG
@@ -214,15 +215,15 @@ namespace _mp{
         return m_ptr_hid_api_briage;
     }
 
-    bool clibhid::consider_to_be_removed(int n_vid, int n_pid)
+    bool clibhid::consider_to_be_removed(int n_vid, int n_pid, const std::wstring& s_pis)
     {
         bool b_result(false);
         std::lock_guard<std::mutex> lock(m_mutex);
-        std::tie(std::ignore,b_result) = m_set_usb_id_considerated_to_remove.insert(std::make_pair(n_vid, n_pid));
+        std::tie(std::ignore,b_result) = m_set_usb_id_considerated_to_remove.insert(std::make_tuple(n_vid, n_pid, s_pis));
         return b_result;
     }
 
-    bool clibhid::cancel_considering_dev_as_removed(int n_vid, int n_pid)
+    bool clibhid::cancel_considering_dev_as_removed(int n_vid, int n_pid, const std::wstring& s_pis)
     {
         bool b_result(false);
         std::lock_guard<std::mutex> lock(m_mutex);
@@ -231,7 +232,7 @@ namespace _mp{
             b_result = true;
         }
         else {
-            if (m_set_usb_id_considerated_to_remove.erase(std::make_pair(n_vid, n_pid)) > 0) {
+            if (m_set_usb_id_considerated_to_remove.erase(std::make_tuple(n_vid, n_pid, s_pis)) > 0) {
                 b_result = true;
             }
         }
@@ -412,8 +413,8 @@ namespace _mp{
             m_set_cur_dev_info = set_dev;
 
             for (auto item : m_set_removed_dev_info) {
-                clog::get_instance().trace(L"T[I] - %ls - removed : %ls.\n", __WFUNCTION__, item.get_path_by_wstring().c_str());
-                clog::get_instance().log_fmt(L"[I] - %ls - removed : %ls.\n", __WFUNCTION__, item.get_path_by_wstring().c_str());
+                clog::get_instance().trace(L"T[I] - %ls - removed : (%ls) %ls.\n", __WFUNCTION__, item.get_port_id_string().c_str(), item.get_path_by_wstring().c_str());
+                clog::get_instance().log_fmt(L"[I] - %ls - removed : (%ls) %ls.\n", __WFUNCTION__, item.get_port_id_string().c_str(), item.get_path_by_wstring().c_str());
             }
             /*
             for (auto item : m_set_inserted_dev_info) {
@@ -458,13 +459,15 @@ namespace _mp{
         set_dev = m_ptr_hid_api_briage->hid_enumerate();
 
         int n_v(-1), n_p(-1);
+        std::wstring s_pis, ws_path;
 
         // set 을 clibhid_dev_info set 으로 변경.
         for (auto item : set_dev) {
             n_v = (int)std::get<1>(item);
             n_p = (int)std::get<2>(item);
-
-            _mp::type_set_usb_id::iterator it_c_remove = m_set_usb_id_considerated_to_remove.find(std::make_pair(n_v, n_p));
+            ws_path = _mp::cstring::get_unicode_from_mcsc(std::get<0>(item));
+            s_pis = _mp::coperation::get_usb_pis_from_path(ws_path) ;
+            auto it_c_remove = m_set_usb_id_considerated_to_remove.find(std::make_tuple(n_v, n_p, s_pis));
             if (it_c_remove == std::end(m_set_usb_id_considerated_to_remove)) {
                 st.emplace(
                     std::get<0>(item).c_str(),
@@ -498,8 +501,9 @@ namespace _mp{
                 }
                 n_v = (int)item.second.second->get_vendor_id();
                 n_p = (int)item.second.second->get_product_id();
+                s_pis = item.second.second->get_port_id_string();
 
-                _mp::type_set_usb_id::iterator it_c_remove = m_set_usb_id_considerated_to_remove.find(std::make_pair(n_v, n_p));
+                auto it_c_remove = m_set_usb_id_considerated_to_remove.find(std::make_tuple(n_v, n_p, s_pis));
                 if (it_c_remove != std::end(m_set_usb_id_considerated_to_remove)) {
                     // 제거된 것으로 간주하는 것은 remove 된 것으로 하자.
                     b_remove = true;

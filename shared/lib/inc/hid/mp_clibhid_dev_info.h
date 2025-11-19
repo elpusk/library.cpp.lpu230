@@ -61,6 +61,7 @@ namespace _mp{
             int n_interface
         );
 
+        clibhid_dev_info(const clibhid_dev_info& src);
         
         virtual ~clibhid_dev_info();
 
@@ -76,6 +77,8 @@ namespace _mp{
         unsigned short get_product_id() const;
 
         int get_interface_number() const;
+
+        std::wstring get_port_id_string() const;
 
         int get_size_in_report() const;
         int get_size_out_report() const;
@@ -99,6 +102,8 @@ namespace _mp{
         //
         _mp::type_v_s_buffer m_vs_path;
         std::string m_s_extra_path;//for virtual device path
+
+        std::wstring m_s_pis; //usb port id string
 
         bool m_b_support_shared; // lpu237 ibutton supprts shared open and shared rx of ibutton key.
     };
