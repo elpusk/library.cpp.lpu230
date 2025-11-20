@@ -3,64 +3,6 @@
 <!--
 * history
 *
-* 2020.01.30 - package v 1.0.0 : coffee manager project(1.0.0.1). the first release.
-* 2020.05.21 - package v 1.1.0 : coffee manager project(1.1.0.1). 2'nd release
-* 2020.05.22 - package v 1.2.0 : coffee manager project(1.2.0.1). 3'th release
-* 2020.06.09 - package v 1.3.0 : coffee manager project(1.3.0.1). 4'th release
-* 2020.07.31 - package v 1.4.0 : coffee manager project(1.4.0.1). config-v1.1, control-v1.2, hlp_cert-1.1, help_client-v1.1.
-* 2020.08.06 - package v 1.5.0 : coffee manager project(1.5.0.1).
-* 2020.08.24 - package v 1.6.0 : coffee manager project(1.6.0.1).coffee_manager - v1.6, tg_lpu237_dll.dll - v4.0
-* 2020.10.08 - package v 1.7.0 : coffee manager project(1.7.0.1).coffee_manager - v1.7.
-*                              : add cf_bl_elpusk_hid.dll - v1.0
-*                              : add tg_lpu237_fw.dll - v1.1(external).
-*                              : add tg_rom.dll - v1.2(external).
-* 2021.08.13 - package v 1.8.0 : coffee manager project(1.8.1.1).coffee_manager - v1.8.
-*                              : updated tg_lpu237_fw.dll - v1.2(external).
-*                              : add cm_boot_manager.exe - v1.0
-*                              : add cm_bl_hid_elpusk.dll - v1.2
-*                              : add sd_helloworld.dll - v1.0
-*
-* 2021.09.24 - package v 1.9.0  : coffee manager project(1.9.0.0).coffee_manager - v1.9.
-*                               : cm_boot_manager.exe - v1.0
-*                               : coffee_config.exe - v1.3
-*                               : coffee_control.exe - v1.4
-*                               : coffee_service.exe - v1.0
-*                               : cf_bl_elpusk_hid.dll - v1.1
-*                               : cm_bl_hid_elpusk.dll - v1.2
-*                               : coffee_hlp_cert.dll - v1.1
-*                               : coffee_hlp_client.dll - v1.6
-*                               : sd_helloworld.dll - v1.0
-*                               : tg_lpu237_dll.dll - v4.5
-*                               : tg_lpu237_fw.dll - v1.2(external).
-*                               : tg_rom.dll - v1.2(external).
-*
-* 2021.09.24 - package v 1.10.0 : coffee manager project(1.10.0.0).coffee_manager - v1.10.
-*                               : cm_boot_manager.exe - v1.0
-*                               : coffee_config.exe - v1.3
-*                               : coffee_control.exe - v1.4
-*                               : coffee_service.exe - v1.0
-*                               : cf_bl_elpusk_hid.dll - v1.1
-*                               : cm_bl_hid_elpusk.dll - v1.2
-*                               : coffee_hlp_cert.dll - v1.1
-*                               : coffee_hlp_client.dll - v1.6
-*                               : sd_helloworld.dll - v1.2
-*                               : tg_lpu237_dll.dll - v4.5
-*                               : tg_lpu237_fw.dll - v1.2(external).
-*                               : tg_rom.dll - v1.2(external).
-*
-* 2022.03.21 - package v 1.11.0 : coffee manager project(1.11.0.0).coffee_manager - v1.11.
-*                               : cm_boot_manager.exe - v1.0
-*                               : coffee_config.exe - v1.3
-*                               : coffee_control.exe - v1.4
-*                               : coffee_service.exe - v1.0
-*                               : cf_bl_elpusk_hid.dll - v1.1
-*                               : cm_bl_hid_elpusk.dll - v1.2
-*                               : coffee_hlp_cert.dll - v1.1
-*                               : coffee_hlp_client.dll - v1.6
-*                               : sd_helloworld.dll - v1.2
-*                               : tg_lpu237_dll.dll - v4.5
-*                               : tg_lpu237_fw.dll - v1.2(external).
-*                               : tg_rom.dll - v1.2(external).
 *
 * 2022.11.23 - package v 1.11.1 : coffee manager project(1.11.1.0).coffee_manager - v1.11.1 : change openssl to v1.1.1s
 *                               : cm_boot_manager.exe - v1.0.1
@@ -77,12 +19,13 @@
 *                               : tg_rom.dll - v1.2(external).
 *                               : <?define Pre_ProductCode = "DD7577E8-48DB-40AD-84E9-E77725C8EC31"?>
 *
-* 2025.07 - package v 2.0.0     : coffee manager project(v2.0) - suuport windows 11 x64.
-*                               : elpusk-hid-d.exe - v2.0.0(from v2.0, this is a new name of coffee_manager.exe)
+* 2025.07 - package v 2.3.0     : coffee manager 2nd project(v2.3) - suuport windows 11 x64.
+*                               : elpusk-hid-d.exe - v2.3(from v2.0, this is a new name of coffee_manager.exe)
 *                               : tg_lpu237_dll.dll - v6.0
 *                               : tg_lpu237_ibutton.dll - v6.0
-
-
+*                               : lpu230_update.exe - v2.2
+*                               : dev_lib.dll - v1.0
+*                               : tg_rom.dll - v1.2
 -->
 
 <!-- 기본적으로 %ProgramFiles%\Pre_DirName_ProductName\Pre_DirName_Manufacturer 형식으로 설치됨.-->
@@ -96,10 +39,11 @@
 <!-- Pre_Manufacturer name 은 Pre_Manufacturer 에 설정.-->
 <?define Pre_ProductName = "coffee_manager"?>
 <!-- product name 은 Pre_ProductName 에 설정.-->
+<?define Pre_ProductName_2nd = "coffee_manager_2nd"?>
 
 <!-- Pre_ProductVersion 값이 변경되면, Pre_ProductCode 는 새로 생성해야함.-->
-<?define Pre_ProductVersion = "2.0.0"?>
-<?define Pre_ProductCode = "4E3250B3-83B2-4AE3-9C8E-165E8F21553C"?>
+<?define Pre_ProductVersion = "2.3.0"?>
+<?define Pre_ProductCode = "56BEB1E3-9FE6-4A25-BA4A-54D1475E100E"?>
 
 <!-- 같은 프로그래은 버전이 달라져도 Pre_ProductUpgradeCode 는 항상 동일해야 함.-->
 <?define Pre_ProductUpgradeCode = "B9BF3037-BD17-4F00-BA59-C5CE301723D6"?>
@@ -119,19 +63,21 @@
 <?define Pre_HomePage = "https://blog.naver.com/elpusk" ?>
 
 <?if $(var.Pre_PlatformPath) = "x64" ?>
-<?define Pre_Win64 = "yes" ?>
-<!-- Win64 = "$(var.Pre_Win64)" -->
-<?define PlatformProgramFilesFolder = "ProgramFiles64Folder" ?>
+  <?define Pre_Win64 = "yes" ?>
+  <!-- Win64 = "$(var.Pre_Win64)" -->
+  <?define PlatformProgramFilesFolder = "ProgramFiles64Folder" ?>
+  <?define PlatformBits = "x64" ?>
 <?else ?>
-<?define Pre_Win64 = "no" ?>
-<?define PlatformProgramFilesFolder = "ProgramFilesFolder" ?>
+  <?define Pre_Win64 = "no" ?>
+  <?define PlatformProgramFilesFolder = "ProgramFilesFolder" ?>
+  <?define PlatformBits = "x86" ?>
 <?endif ?>
 
 
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
   <Product
     Id="$(var.Pre_ProductCode)"
-    Name="$(var.Pre_ProductName)"
+    Name="$(var.Pre_ProductName_2nd)"
     Language="$(var.Pre_LCID)"
     Version="$(var.Pre_ProductVersion)"
     Manufacturer="$(var.Pre_Manufacturer)"
@@ -141,7 +87,7 @@
       InstallerVersion="400"
       Compressed="yes"
       InstallScope="perMachine"
-      Comments="$(var.Pre_ProductName) v$(var.Pre_ProductVersion) Windows Installer Package $(var.Pre_PlatformPath)"
+      Comments="$(var.Pre_ProductName_2nd) v$(var.Pre_ProductVersion) Windows Installer Package $(var.Pre_PlatformPath)"
       Platform="$(var.Pre_PlatformPath)"
       />
     <Media Id="1" Cabinet="$(var.TargetName).cab" EmbedCab="yes" />
@@ -177,7 +123,9 @@
     <UIRef Id="WixUI_ErrorProgressText" />
 
     <!-- copy file part -->
-    <Feature Id="Complete" Title="installation $(var.Pre_ProductName)" Description ="$(var.Pre_ProductName) v$(var.Pre_ProductVersion) software components" Level="1"
+    <Feature Id="Complete" 
+             Title="installation $(var.Pre_ProductName_2nd) $(var.PlatformBits)" 
+             Description ="$(var.Pre_ProductName_2nd) $(var.PlatformBits) v$(var.Pre_ProductVersion) software components" Level="1"
              Absent ="disallow"
              AllowAdvertise ="no"
              TypicalDefault ="install"
@@ -229,13 +177,13 @@
     <WixVariable Id="PLATHOME_VAR" Overridable="yes" Value="$(var.Pre_PlatformPath)"/>
 
     <?if $(var.Pre_PlatformPath) = "x86" ?>
-    <WixVariable Id="DIR_BIN" Overridable="yes" Value="$(var.SolutionDir)Release\"  />
-    <WixVariable Id="DIR_DLL" Overridable="yes" Value="$(var.SolutionDir)Release\"  />
-    <WixVariable Id="DIR_DLL_EXTERN" Overridable="yes" Value="$(var.SolutionDir)extern\dll\x86\"  />
+      <WixVariable Id="DIR_BIN" Overridable="yes" Value="$(var.SolutionDir)Release\"  />
+      <WixVariable Id="DIR_DLL" Overridable="yes" Value="$(var.SolutionDir)Release\"  />
+      <WixVariable Id="DIR_DLL_EXTERN" Overridable="yes" Value="$(var.SolutionDir)extern\dll\x86\"  />
     <?else ?>
-    <WixVariable Id="DIR_BIN" Overridable="yes" Value="$(var.SolutionDir)x64\Release\"  />
-    <WixVariable Id="DIR_DLL" Overridable="yes" Value="$(var.SolutionDir)x64\Release\"  />
-    <WixVariable Id="DIR_DLL_EXTERN" Overridable="yes" Value="$(var.SolutionDir)extern\dll\x64\"  />
+      <WixVariable Id="DIR_BIN" Overridable="yes" Value="$(var.SolutionDir)x64\Release\"  />
+      <WixVariable Id="DIR_DLL" Overridable="yes" Value="$(var.SolutionDir)x64\Release\"  />
+      <WixVariable Id="DIR_DLL_EXTERN" Overridable="yes" Value="$(var.SolutionDir)extern\dll\x64\"  />
     <?endif ?>
 
     <WixVariable Id="DIR_DLL_x64" Overridable="yes" Value="$(var.SolutionDir)x64\Release\"  />
@@ -244,13 +192,12 @@
     <WixVariable Id="DIR_DOC" Overridable="yes" Value="$(var.SolutionDir)doc\"  />
 
     <WixVariable Id="PATH_ICON_COFFEE_MANAGER" Overridable="yes" Value="$(var.SolutionDir)coffee_manager\res\coffee_manager.ico"  />
-    <WixVariable Id="DIR_SERVICE_INI" Overridable="yes" Value="$(var.SolutionDir)ProgramData\elpusk\00000006\coffee_service\"  />
-    <WixVariable Id="DIR_APP_INI" Overridable="yes" Value="$(var.SolutionDir)ProgramData\elpusk\00000006\coffee_manager\"  />
-    <WixVariable Id="DIR_APP_DATA_FILTER" Overridable="yes" Value="$(var.SolutionDir)ProgramData\elpusk\00000006\coffee_manager\data\filter\"  />
-    <WixVariable Id="DIR_APP_DATA_SERVER" Overridable="yes" Value="$(var.SolutionDir)ProgramData\elpusk\00000006\coffee_manager\data\server\"  />
-    <WixVariable Id="DIR_APP_ROOT" Overridable="yes" Value="$(var.SolutionDir)ProgramData\elpusk\00000006\coffee_manager\root\"  />
-    <WixVariable Id="DIR_APP_ROOT_TEMP" Overridable="yes" Value="$(var.SolutionDir)ProgramData\elpusk\00000006\coffee_manager\root\temp\"  />
-    <WixVariable Id="DIR_APP_SERVICE_DLL_3TH" Overridable="yes" Value="$(var.SolutionDir)extern\service\"  />
+    <WixVariable Id="DIR_SERVICE_INI"          Overridable="yes" Value="$(var.SolutionDir)shared\projects\coffee_service\"  />
+    <WixVariable Id="DIR_APP_INI"              Overridable="yes" Value="$(var.SolutionDir)shared\projects\ElpuskHidDaemon\"  />
+    <WixVariable Id="DIR_APP_DATA_FILTER"      Overridable="yes" Value="$(var.SolutionDir)shared\projects\ElpuskHidDaemon\"  />
+    <WixVariable Id="DIR_APP_DATA_SERVER"      Overridable="yes" Value="$(var.SolutionDir)shared\projects\ElpuskHidDaemon\"  />
+    <WixVariable Id="DIR_APP_ROOT"             Overridable="yes" Value="$(var.SolutionDir)shared\projects\ElpuskHidDaemon\vroot\"  />
+    <WixVariable Id="DIR_APP_ROOT_TEMP"        Overridable="yes" Value="$(var.SolutionDir)shared\projects\ElpuskHidDaemon\vroot\temp\"  />
   </Product>
 
   <Fragment>
@@ -467,7 +414,7 @@
 
         <Shortcut Id="sc_uninstall_Product"
                   Name="Uninstall"
-                  Description="Uninstalls $(var.Pre_ProductName) software components"
+                  Description="Uninstalls $(var.Pre_ProductName_2nd) software components"
                   Target="[SystemFolder]msiexec.exe"
                   Arguments="/x [ProductCode]"/>
         <RemoveFolder Id="clean_up_short_cut" Directory="SC_PRODUCT_FOLDER" On="uninstall"/>
@@ -503,7 +450,7 @@
   </Fragment>
 
   <Fragment>
-    <CustomAction Id="CA_InstallCert" Directory="BIN_FOLDER" ExeCommand="[BIN_FOLDER]coffee_config.exe /certificate" Return="check" Impersonate="no" Execute="deferred" />
+    <CustomAction Id="CA_InstallCert" Directory="BIN_FOLDER" ExeCommand="[BIN_FOLDER]elpusk-hid-d.exe /cert" Return="check" Impersonate="no" Execute="deferred" />
 
     <CustomAction Id="CA_InstallSvr" Directory="BIN_FOLDER" ExeCommand="[BIN_FOLDER]coffee_service.exe -i" Return="check" Impersonate="no" Execute="deferred" />
 
@@ -513,9 +460,9 @@
 
     <CustomAction Id="CA_UninstallSvr" Directory="BIN_FOLDER" ExeCommand="[BIN_FOLDER]coffee_service.exe -u" Return="check" Impersonate="no" Execute="deferred" />
 
-    <CustomAction Id="CA_RemoveCert" Directory="BIN_FOLDER" ExeCommand="[BIN_FOLDER]coffee_config.exe /remove"  Return="ignore" Impersonate="no" Execute="deferred"/>
+    <CustomAction Id="CA_RemoveCert" Directory="BIN_FOLDER" ExeCommand="[BIN_FOLDER]elpusk-hid-d.exe /removecert"  Return="ignore" Impersonate="no" Execute="deferred"/>
 
-    <CustomAction Id="CA_RemoveAll" Directory="BIN_FOLDER" ExeCommand="[BIN_FOLDER]coffee_config.exe /removeall"  Return="ignore" Impersonate="no" Execute="deferred"/>
+    <CustomAction Id="CA_RemoveAll" Directory="BIN_FOLDER" ExeCommand="[BIN_FOLDER]elpusk-hid-d.exe /removeall"  Return="ignore" Impersonate="no" Execute="deferred"/>
   </Fragment>
 
 </Wix>

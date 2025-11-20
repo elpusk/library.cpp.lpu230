@@ -12,7 +12,7 @@ lpu23x device c++ library
 + deb package directory : /home/tester/build_deb/
 + FTXUI 6.1.9 lib - path :/home/tester/FTXUI/
 
-## the current developed version(pkg v2.3)
+## the current developed version(pkg v2.4)
 + dev_lib : v1.0
 + lpu230_update : v2.2
   - at windows, logging folder is equal to lpu230_update.exe_ logging folder.
@@ -22,10 +22,8 @@ lpu23x device c++ library
 + tg_lpu237_ibutton : v6.0
 + tg_rom : v1.2
 + tg_rom_build : v1.2
-+ elpusk-hid-d : v2.3
-  - Fixed an issue where the named object of a message pipe was not removed on Windows when the server terminates.
-  - For Updating lpu237 firmware, run lpu230_update (Web app)
-  - After updating fw, the duplicated fw-file is deleted  automatically.
++ elpusk-hid-d : v2.4
+  - Version 2.3 was incorrectly labeled as 2.2; correcting this error.
 
 ## build on debian12.
 + notice

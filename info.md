@@ -12,7 +12,7 @@ release 2.3
 - lpu237 device library test program.
 
 ## LiElpuskHidDaemon
-- v2.3
+- v2.4
 - for Debian 12.(x64)
 - executable file name : elpusk-hid-d
 - secure websoecket server deamon.(only single instance) with /server option or none(default)
@@ -23,7 +23,7 @@ release 2.3
 - supports lpu237-fw update by webapp.
 
 ## WiElpuskHidDaemon
-- v2.3
+- v2.4
 - for windows 11.(x64, x86)
 - executable file name : elpusk-hid-d.exe
 - secure websoecket server exe file.(only single instance) with /server option or none(default)

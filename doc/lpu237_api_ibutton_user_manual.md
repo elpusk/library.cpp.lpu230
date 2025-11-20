@@ -1,12 +1,12 @@
 # LPU23X iButton API User Manual
 
-Version 5.0
+Version 6.0
 
 ## Overview
 
 This document describes the Application Programming Interface (API) for the LPU23X magnetic card reader with iButton reader functionality. The API allows a user application to retrieve iButton data easily.
 
-For version 3.x, the Next Device Manager (NDM) must be running on the system. Starting from version 4.0, the device I/O mode can be selected via the `lpu230_ibutton_api.ini` file (dual mode).
+For version 6.x, Coffee Manager 2nd (cf2) must be running on the system. Starting from version 6.0.
 
 **Recommendation:** Use "USB HID Vendor mode" for this API.
 
