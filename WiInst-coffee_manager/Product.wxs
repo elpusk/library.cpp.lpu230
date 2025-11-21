@@ -19,8 +19,8 @@
 *                               : tg_rom.dll - v1.2(external).
 *                               : <?define Pre_ProductCode = "DD7577E8-48DB-40AD-84E9-E77725C8EC31"?>
 *
-* 2025.07 - package v 2.3.0     : coffee manager 2nd project(v2.3) - suuport windows 11 x64.
-*                               : elpusk-hid-d.exe - v2.3(from v2.0, this is a new name of coffee_manager.exe)
+* 2025.07 - package v 2.4.0     : coffee manager 2nd project(v2.4) - suuport windows 11 x64.
+*                               : elpusk-hid-d.exe - v2.4(from v2.0, this is a new name of coffee_manager.exe)
 *                               : tg_lpu237_dll.dll - v6.0
 *                               : tg_lpu237_ibutton.dll - v6.0
 *                               : lpu230_update.exe - v2.2
@@ -42,17 +42,15 @@
 <?define Pre_ProductName_2nd = "coffee_manager_2nd"?>
 
 <!-- Pre_ProductVersion 값이 변경되면, Pre_ProductCode 는 새로 생성해야함.-->
-<?define Pre_ProductVersion = "2.3.0"?>
+<?define Pre_ProductVersion = "2.4.0"?>
 <?define Pre_ProductCode = "56BEB1E3-9FE6-4A25-BA4A-54D1475E100E"?>
 
 <!-- 같은 프로그래은 버전이 달라져도 Pre_ProductUpgradeCode 는 항상 동일해야 함.-->
 <?define Pre_ProductUpgradeCode = "B9BF3037-BD17-4F00-BA59-C5CE301723D6"?>
 
-<!-- 32비트면 Pre_PlatformPath 와 Pre_ProcessorArchitecture 값을 x86 으로 -->
-<!-- 64비트면 Pre_PlatformPath 와 Pre_ProcessorArchitecture 값을 x64 으로 -->
+<!-- 32비트면 Pre_PlatformPath(setting 에서 define preprocessor variables 로 설정) 값을 x86 으로 -->
+<!-- 64비트면 Pre_PlatformPath 값을 x64 으로 -->
 <!-- Pre_ProcessorArchitecture 은 .NET 사용 할때만 의미 있음.-->
-<?define Pre_PlatformPath = "x64"?>
-<?define Pre_ProcessorArchitecture = "x64"?>
 <!-- msil , x86, x64 or ia64-->
 
 <!-- 1033(0x0409) en-US : English United States -->
@@ -63,14 +61,9 @@
 <?define Pre_HomePage = "https://blog.naver.com/elpusk" ?>
 
 <?if $(var.Pre_PlatformPath) = "x64" ?>
-  <?define Pre_Win64 = "yes" ?>
-  <!-- Win64 = "$(var.Pre_Win64)" -->
   <?define PlatformProgramFilesFolder = "ProgramFiles64Folder" ?>
-  <?define PlatformBits = "x64" ?>
 <?else ?>
-  <?define Pre_Win64 = "no" ?>
   <?define PlatformProgramFilesFolder = "ProgramFilesFolder" ?>
-  <?define PlatformBits = "x86" ?>
 <?endif ?>
 
 
@@ -90,6 +83,7 @@
       Comments="$(var.Pre_ProductName_2nd) v$(var.Pre_ProductVersion) Windows Installer Package $(var.Pre_PlatformPath)"
       Platform="$(var.Pre_PlatformPath)"
       />
+    
     <Media Id="1" Cabinet="$(var.TargetName).cab" EmbedCab="yes" />
     <Icon Id="ProductIcon" SourceFile="$(var.SolutionDir)coffee_manager\res\coffee_manager.ico"/>
     <Property Id="ARPPRODUCTICON" Value="ProductIcon"/>
@@ -124,8 +118,8 @@
 
     <!-- copy file part -->
     <Feature Id="Complete" 
-             Title="installation $(var.Pre_ProductName_2nd) $(var.PlatformBits)" 
-             Description ="$(var.Pre_ProductName_2nd) $(var.PlatformBits) v$(var.Pre_ProductVersion) software components" Level="1"
+             Title="installation $(var.Pre_ProductName_2nd) $(var.Pre_PlatformPath)" 
+             Description ="$(var.Pre_ProductName_2nd) $(var.Pre_PlatformPath) v$(var.Pre_ProductVersion) software components" Level="1"
              Absent ="disallow"
              AllowAdvertise ="no"
              TypicalDefault ="install"
@@ -134,17 +128,16 @@
       <!-- executable file -->
       <ComponentGroupRef Id="CG_BIN" />
       <ComponentGroupRef Id="CG_DLL_x86" />
-      <ComponentGroupRef Id="CG_DLL_x64" />
-      <ComponentGroupRef Id="CG_SERVICE_DLL_DEF" />
-
+      <?if $(var.Pre_PlatformPath) = "x64" ?>
+        <ComponentGroupRef Id="CG_DLL_x64" />
+      <?endif ?>
+      
       <!-- program data -->
       <ComponentGroupRef Id="CG_SERVICE_INI" />
       <ComponentGroupRef Id="CG_APP_INI" />
-      <ComponentGroupRef Id="CG_APP_FILTER" />
       <ComponentGroupRef Id="CG_APP_SERVER" />
       <ComponentGroupRef Id="CG_APP_ROOT" />
       <ComponentGroupRef Id="CG_APP_TEMP" />
-      <ComponentGroupRef Id="CG_APP_SERVICE_DLL_3TH_FOLDER" />
 
       <!-- document -->
       <ComponentGroupRef Id="CG_LICENSE" />
@@ -177,28 +170,36 @@
     <WixVariable Id="PLATHOME_VAR" Overridable="yes" Value="$(var.Pre_PlatformPath)"/>
 
     <?if $(var.Pre_PlatformPath) = "x86" ?>
-      <WixVariable Id="DIR_BIN" Overridable="yes" Value="$(var.SolutionDir)Release\"  />
-      <WixVariable Id="DIR_DLL" Overridable="yes" Value="$(var.SolutionDir)Release\"  />
-      <WixVariable Id="DIR_DLL_EXTERN" Overridable="yes" Value="$(var.SolutionDir)extern\dll\x86\"  />
+      <WixVariable Id="DIR_SRC_BIN" Overridable="yes" Value="$(var.SolutionDir)Release\"  />
     <?else ?>
-      <WixVariable Id="DIR_BIN" Overridable="yes" Value="$(var.SolutionDir)x64\Release\"  />
-      <WixVariable Id="DIR_DLL" Overridable="yes" Value="$(var.SolutionDir)x64\Release\"  />
-      <WixVariable Id="DIR_DLL_EXTERN" Overridable="yes" Value="$(var.SolutionDir)extern\dll\x64\"  />
+      <WixVariable Id="DIR_SRC_BIN" Overridable="yes" Value="$(var.SolutionDir)x64\Release\"  />
     <?endif ?>
 
-    <WixVariable Id="DIR_DLL_x64" Overridable="yes" Value="$(var.SolutionDir)x64\Release\"  />
-    <WixVariable Id="DIR_DLL_x64_EXTERN" Overridable="yes" Value="$(var.SolutionDir)extern\dll\x64\"  />
+    <WixVariable Id="DIR_SRC_DLL_x86" Overridable="yes" Value="$(var.SolutionDir)Release\"  />
+    <WixVariable Id="DIR_SRC_DLL_x86_EXTERN" Overridable="yes" Value="$(var.SolutionDir)extern\dll\x86\"  />
 
-    <WixVariable Id="DIR_DOC" Overridable="yes" Value="$(var.SolutionDir)doc\"  />
+    <WixVariable Id="DIR_SRC_DLL_x64" Overridable="yes" Value="$(var.SolutionDir)x64\Release\"  />
+    <WixVariable Id="DIR_SRC_DLL_x64_EXTERN" Overridable="yes" Value="$(var.SolutionDir)extern\dll\x64\"  />
 
-    <WixVariable Id="PATH_ICON_COFFEE_MANAGER" Overridable="yes" Value="$(var.SolutionDir)coffee_manager\res\coffee_manager.ico"  />
-    <WixVariable Id="DIR_SERVICE_INI"          Overridable="yes" Value="$(var.SolutionDir)shared\projects\coffee_service\"  />
-    <WixVariable Id="DIR_APP_INI"              Overridable="yes" Value="$(var.SolutionDir)shared\projects\ElpuskHidDaemon\"  />
-    <WixVariable Id="DIR_APP_DATA_FILTER"      Overridable="yes" Value="$(var.SolutionDir)shared\projects\ElpuskHidDaemon\"  />
-    <WixVariable Id="DIR_APP_DATA_SERVER"      Overridable="yes" Value="$(var.SolutionDir)shared\projects\ElpuskHidDaemon\"  />
-    <WixVariable Id="DIR_APP_ROOT"             Overridable="yes" Value="$(var.SolutionDir)shared\projects\ElpuskHidDaemon\vroot\"  />
-    <WixVariable Id="DIR_APP_ROOT_TEMP"        Overridable="yes" Value="$(var.SolutionDir)shared\projects\ElpuskHidDaemon\vroot\temp\"  />
+    <WixVariable Id="DIR_SRC_DOC" Overridable="yes" Value="$(var.SolutionDir)doc\"  />
+
+    <WixVariable Id="PATH_SRC_ICON_COFFEE_MANAGER" Overridable="yes" Value="$(var.SolutionDir)coffee_manager\res\coffee_manager.ico"  />
+    
+    <!-- FOR coffee_service.json -->
+    <WixVariable Id="DIR_SRC_SERVICE_INI"          Overridable="yes" Value="$(var.SolutionDir)shared\projects\coffee_service\"  />
+
+    <!-- FOR elpusk-hid-d.json -->
+    <WixVariable Id="DIR_SRC_APP_INI"              Overridable="yes" Value="$(var.SolutionDir)shared\projects\ElpuskHidDaemon\"  />
+    <WixVariable Id="DIR_SRC_APP_DATA_SERVER"      Overridable="yes" Value="$(var.SolutionDir)shared\projects\ElpuskHidDaemon\"  />
+    <WixVariable Id="DIR_SRC_APP_ROOT"             Overridable="yes" Value="$(var.SolutionDir)shared\projects\ElpuskHidDaemon\vroot\"  />
+    <WixVariable Id="DIR_SRC_APP_ROOT_TEMP"        Overridable="yes" Value="$(var.SolutionDir)shared\projects\ElpuskHidDaemon\vroot\temp\"  />
   </Product>
+  <!-- the end fo Product element -->
+  <!-- ========================== -->
+  <!-- ========================== -->
+  <!-- ========================== -->
+  <!-- ========================== -->
+  <!-- ========================== -->
 
   <Fragment>
     <Directory Id="TARGETDIR" Name="SourceDir">
@@ -208,7 +209,6 @@
             <Directory Id="APPLICATIONFOLDER" Name="$(var.Pre_DirName_ProductName)">
               <Directory Id="DOC_FOLDER" Name="doc"/>
               <Directory Id="BIN_FOLDER" Name="bin"/>
-              <Directory Id="SERVICE_FOLDER" Name="service"/>
               <Directory Id="DLL_BASE_FOLDER" Name="dll">
                 <Directory Id="DLL_x86_FOLDER" Name="x86"/>
                 <Directory Id="DLL_x64_FOLDER" Name="x64"/>
@@ -224,13 +224,11 @@
             <Directory Id="CAD_SERVICE_FOLDER" Name="$(var.Pre_DirName_ServiceName)"/>
             <Directory Id="CAD_APPLICATIONFOLDER" Name="$(var.Pre_DirName_ProductName)">
               <Directory Id="CAD_DATA_FOLDER" Name="data">
-                <Directory Id="CAD_FILTER_FOLDER" Name="filter"/>
                 <Directory Id="CAD_SERVER_FOLDER" Name="server"/>
               </Directory>
               <Directory Id="CAD_ROOT_FOLDER" Name="root">
                 <Directory Id="CAD_TEMP_FOLDER" Name="temp"/>
               </Directory>
-              <Directory Id="CAD_SERVICE_DLL_3TH_FOLDER" Name="service"/>
             </Directory>
           </Directory>
         </Directory>
@@ -247,165 +245,125 @@
 
   <Fragment>
     <ComponentGroup Id="CG_LICENSE" Directory="DOC_FOLDER">
-      <Component Id="co_license_openssl.txt" Guid = "CE048FFC-4D12-4767-9CE7-72A71550CE3C" Win64="$(var.Pre_Win64)" >
-        <File Id="file_license_openssl.txt" Name="license_openssl.txt" Source="!(wix.DIR_DOC)license_openssl.txt" KeyPath="yes" Checksum="yes" ProcessorArchitecture="$(var.Pre_ProcessorArchitecture)"/>
+      <Component Id="co_license.txt" Guid = "E80F57EA-8A0B-49C5-BEFD-B8676AEF2863" >
+        <File Id="file_license_coffee_manager_2nd.txt" Name="license_coffee_manager_2nd.txt" Source="!(wix.DIR_SRC_DOC)license_coffee_manager_2nd.txt" KeyPath="yes"/>
+        <File Id="file_license_openssl.txt" Name="license_openssl.txt" Source="!(wix.DIR_SRC_DOC)license_openssl.txt" />
+        <File Id="file_LICENSE_1_0_boost.txt" Name="LICENSE_1_0_boost.txt" Source="!(wix.DIR_SRC_DOC)LICENSE_1_0_boost.txt" />
+        <File Id="file_license_nlohmann_json.txt" Name="license_nlohmann_json.txt" Source="!(wix.DIR_SRC_DOC)license_nlohmann_json.txt" />
       </Component>
-      <Component Id="co_LICENSE_1_0_boost.txt" Guid = "08333E4E-5E9B-4DAE-A934-9ED572E80B55" Win64="$(var.Pre_Win64)" >
-        <File Id="file_LICENSE_1_0_boost.txt" Name="LICENSE_1_0_boost.txt" Source="!(wix.DIR_DOC)LICENSE_1_0_boost.txt" KeyPath="yes" Checksum="yes" ProcessorArchitecture="$(var.Pre_ProcessorArchitecture)"/>
-      </Component>
-      <Component Id="co_license_nlohmann_json.txt" Guid = "2DA4BF67-F23F-47F0-8EF2-641C3E367D3E" Win64="$(var.Pre_Win64)" >
-        <File Id="file_license_nlohmann_json.txt" Name="license_nlohmann_json.txt" Source="!(wix.DIR_DOC)license_nlohmann_json.txt" KeyPath="yes" Checksum="yes" ProcessorArchitecture="$(var.Pre_ProcessorArchitecture)"/>
+
+      <Component Id="co_manual.md" Guid = "A3DE6B89-4365-4363-9871-D9AE9ECEB3EA" >
+        <File Id="file_lpu237_setting_guide.md" Name="lpu237_setting_guide.md" Source="!(wix.DIR_SRC_DOC)lpu237_setting_guide.md" KeyPath="yes"/>
+        <File Id="file_lpu230_api_user_manual.md" Name="lpu230_api_user_manual.md" Source="!(wix.DIR_SRC_DOC)lpu230_api_user_manual.md" />
+        <File Id="file_lpu237_api_ibutton_user_manual.md" Name="lpu237_api_ibutton_user_manual.md" Source="!(wix.DIR_SRC_DOC)lpu237_api_ibutton_user_manual.md" />
       </Component>
     </ComponentGroup>
   </Fragment>
 
   <Fragment>
     <ComponentGroup Id="CG_BIN" Directory="BIN_FOLDER">
-      <Component Id="co_coffee_manager.exe" Guid = "F16AAD9E-1E22-469D-8632-5C4CAA90CE78" Win64="$(var.Pre_Win64)" >
-        <File Id="file_coffee_manager.exe" Name="coffee_manager.exe" Source="!(wix.DIR_BIN)coffee_manager.exe" KeyPath="yes" Checksum="yes" ProcessorArchitecture="$(var.Pre_ProcessorArchitecture)"/>
+      <Component Id="co_elpusk_hid_d.exe" Guid = "F16AAD9E-1E22-469D-8632-5C4CAA90CE78">
+        <File Id="file_elpusk_hid_d.exe" Name="elpusk-hid-d.exe" Source="!(wix.DIR_SRC_BIN)elpusk-hid-d.exe" KeyPath="yes" Checksum="yes" />
       </Component>
 
-      <Component Id="co_coffee_service.exe" Guid = "F8F945AA-11E9-48B1-BE5E-14B5921E65B3" Win64="$(var.Pre_Win64)" >
-        <File Id="file_coffee_service.exe" Name="coffee_service.exe" Source="!(wix.DIR_BIN)coffee_service.exe" KeyPath="yes" Checksum="yes" ProcessorArchitecture="$(var.Pre_ProcessorArchitecture)"/>
+      <Component Id="co_coffee_service.exe" Guid = "F8F945AA-11E9-48B1-BE5E-14B5921E65B3">
+        <File Id="file_coffee_service.exe" Name="coffee_service.exe" Source="!(wix.DIR_SRC_BIN)coffee_service.exe" KeyPath="yes" Checksum="yes" />
       </Component>
 
-      <Component Id="co_coffee_config.exe" Guid = "28CC7E1C-38FD-4507-8654-381B31B4A832" Win64="$(var.Pre_Win64)" >
-        <File Id="file_coffee_config.exe" Name="coffee_config.exe" Source="!(wix.DIR_BIN)coffee_config.exe" KeyPath="yes" Checksum="yes" ProcessorArchitecture="$(var.Pre_ProcessorArchitecture)"/>
+      <Component Id="co_lpu230_update.exe" Guid = "2F2C1E52-FE5B-49B8-8203-46A4F6990C6F">
+        <File Id="file_lpu230_update.exe" Name="lpu230_update.exe" Source="!(wix.DIR_SRC_BIN)lpu230_update.exe" KeyPath="yes" Checksum="yes" />
       </Component>
 
-      <Component Id="co_coffee_control.exe" Guid = "446366C6-8F3A-43B7-807C-898B45121C7A" Win64="$(var.Pre_Win64)" >
-        <File Id="file_coffee_control.exe" Name="coffee_control.exe" Source="!(wix.DIR_BIN)coffee_control.exe" KeyPath="yes" Checksum="yes" ProcessorArchitecture="$(var.Pre_ProcessorArchitecture)"/>
-      </Component>
-
-      <Component Id="co_cm_boot_manager.exe" Guid = "2F2C1E52-FE5B-49B8-8203-46A4F6990C6F" Win64="$(var.Pre_Win64)" >
-        <File Id="file_cm_boot_manager.exe" Name="cm_boot_manager.exe" Source="!(wix.DIR_BIN)cm_boot_manager.exe" KeyPath="yes" Checksum="yes" ProcessorArchitecture="$(var.Pre_ProcessorArchitecture)"/>
-      </Component>
-
-    </ComponentGroup>
-  </Fragment>
-
-  <Fragment>
-    <ComponentGroup Id="CG_SERVICE_DLL_DEF" Directory="SERVICE_FOLDER">
-      <Component Id="co_sd_helloworld.dll" Guid = "F174C775-2E12-414A-907E-6CDD5F4D74CB" Win64="$(var.Pre_Win64)" >
-        <File Id="file_sd_helloworld.dll" Name="sd_helloworld.dll" Source="!(wix.DIR_BIN)sd_helloworld.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="$(var.Pre_ProcessorArchitecture)"/>
-      </Component>
     </ComponentGroup>
   </Fragment>
 
   <Fragment>
     <ComponentGroup Id="CG_DLL_x86" Directory="DLL_x86_FOLDER">
-      <Component Id="co_coffee_hlp_client.dll" Guid = "42335DD4-DCA5-4136-BA77-0E3F57D00A54" Win64="$(var.Pre_Win64)" >
-        <File Id="file_coffee_hlp_client.dll" Name="coffee_hlp_client.dll" Source="!(wix.DIR_DLL)coffee_hlp_client.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="$(var.Pre_ProcessorArchitecture)"/>
+      <Component Id="co_tg_rom.dll_x86" Guid = "884890D5-D168-4A8B-B5BD-7FB721A5B05C">
+        <File Id="file_tg_rom.dll_x86" Name="tg_rom.dll" Source="!(wix.DIR_SRC_DLL_x86)tg_rom.dll" KeyPath="yes" Checksum="yes" />
       </Component>
 
-      <Component Id="co_coffee_hlp_cert.dll" Guid = "BF1B71DB-7556-4E76-8B39-ED0508920CB7" Win64="$(var.Pre_Win64)" >
-        <File Id="file_coffee_hlp_cert.dll" Name="coffee_hlp_cert.dll" Source="!(wix.DIR_DLL)coffee_hlp_cert.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="$(var.Pre_ProcessorArchitecture)"/>
+      <Component Id="co_tg_lpu237_dll.dll_x86" Guid = "A105FE43-BEFA-43FD-AA74-42DCA656B163">
+        <File Id="file_tg_lpu237_dll.dll_x86" Name="tg_lpu237_dll.dll" Source="!(wix.DIR_SRC_DLL_x86)tg_lpu237_dll.dll" KeyPath="yes" Checksum="yes" />
       </Component>
 
-      <Component Id="co_tg_rom.dll" Guid = "884890D5-D168-4A8B-B5BD-7FB721A5B05C" Win64="$(var.Pre_Win64)" >
-        <File Id="file_tg_rom.dll" Name="tg_rom.dll" Source="!(wix.DIR_DLL_EXTERN)tg_rom.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="$(var.Pre_ProcessorArchitecture)"/>
+      <Component Id="co_tg_lpu237_ibutton.dll_x86" Guid = "13647F11-FD4B-4B38-A245-CA2C41EFC30C">
+        <File Id="file_tg_lpu237_ibutton.dll_x86" Name="tg_lpu237_ibutton.dll" Source="!(wix.DIR_SRC_DLL_x86)tg_lpu237_ibutton.dll" KeyPath="yes" Checksum="yes" />
       </Component>
 
-      <Component Id="co_tg_lpu237_dll.dll" Guid = "A105FE43-BEFA-43FD-AA74-42DCA656B163" Win64="$(var.Pre_Win64)" >
-        <File Id="file_tg_lpu237_dll.dll" Name="tg_lpu237_dll.dll" Source="!(wix.DIR_DLL)tg_lpu237_dll.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="$(var.Pre_ProcessorArchitecture)"/>
-      </Component>
-
-      <Component Id="co_tg_lpu237_fw.dll" Guid = "33B831A9-0363-4B84-A737-58180CD732F3" Win64="$(var.Pre_Win64)" >
-        <File Id="file_tg_lpu237_fw.dll" Name="tg_lpu237_fw.dll" Source="!(wix.DIR_DLL_EXTERN)tg_lpu237_fw.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="$(var.Pre_ProcessorArchitecture)"/>
-      </Component>
-
-      <Component Id="co_cf_bl_elpusk_hid.dll" Guid = "13647F11-FD4B-4B38-A245-CA2C41EFC30C" Win64="$(var.Pre_Win64)" >
-        <File Id="file_cf_bl_elpusk_hid.dll" Name="cf_bl_elpusk_hid.dll" Source="!(wix.DIR_DLL)cf_bl_elpusk_hid.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="$(var.Pre_ProcessorArchitecture)"/>
-      </Component>
-
-      <Component Id="co_cm_bl_hid_elpusk.dll" Guid = "508B7C0A-CBDD-44CB-819E-4A97276305C6" Win64="$(var.Pre_Win64)" >
-        <File Id="file_cm_bl_hid_elpusk.dll" Name="cm_bl_hid_elpusk.dll" Source="!(wix.DIR_DLL)cm_bl_hid_elpusk.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="$(var.Pre_ProcessorArchitecture)"/>
+      <Component Id="co_dev_lib.dll_x86" Guid = "508B7C0A-CBDD-44CB-819E-4A97276305C6">
+        <File Id="file_dev_lib.dll_x86" Name="dev_lib.dll" Source="!(wix.DIR_SRC_DLL_x86)dev_lib.dll" KeyPath="yes" Checksum="yes" />
       </Component>
     </ComponentGroup>
   </Fragment>
 
   <Fragment>
     <ComponentGroup Id="CG_DLL_x64" Directory="DLL_x64_FOLDER">
-      <Component Id="co_coffee_hlp_client.dll_x64" Guid = "2DA2CA76-B07D-4593-AB94-ACFE37F789BF" Win64="$(var.Pre_Win64)" >
-        <File Id="file_coffee_hlp_client.dll_x64" Name="coffee_hlp_client.dll" Source="!(wix.DIR_DLL_x64)coffee_hlp_client.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="$(var.Pre_ProcessorArchitecture)"/>
+      <Component Id="co_tg_rom.dll_x64" Guid = "6D7B46C0-110C-4CE1-BA1E-13072AE2E9DA">
+        <File Id="file_tg_rom.dll_x64" Name="tg_rom.dll" Source="!(wix.DIR_SRC_DLL_x64)tg_rom.dll" KeyPath="yes" Checksum="yes" />
       </Component>
 
-      <Component Id="co_coffee_hlp_cert.dll_x64" Guid = "63B85D25-6E95-47F8-8E62-D9A71F2BC54A" Win64="$(var.Pre_Win64)" >
-        <File Id="file_coffee_hlp_cert.dll_x64" Name="coffee_hlp_cert.dll" Source="!(wix.DIR_DLL_x64)coffee_hlp_cert.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="$(var.Pre_ProcessorArchitecture)"/>
+      <Component Id="co_tg_lpu237_dll.dll_x64" Guid = "E2A96ED5-7610-45A0-ABB9-25D4509FD0A0">
+        <File Id="file_tg_lpu237_dll.dll_x64" Name="tg_lpu237_dll.dll" Source="!(wix.DIR_SRC_DLL_x64)tg_lpu237_dll.dll" KeyPath="yes" Checksum="yes" />
       </Component>
 
-      <Component Id="co_tg_rom.dll_x64" Guid = "6D7B46C0-110C-4CE1-BA1E-13072AE2E9DA" Win64="$(var.Pre_Win64)" >
-        <File Id="file_tg_rom.dll_x64" Name="tg_rom.dll" Source="!(wix.DIR_DLL_x64_EXTERN)tg_rom.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="$(var.Pre_ProcessorArchitecture)"/>
+      <Component Id="co_tg_lpu237_ibutton.dll_x64" Guid = "4BD9DE56-7B5C-478D-A8C7-60FE09A5DA78">
+        <File Id="file_tg_lpu237_ibutton.dll_x64" Name="tg_lpu237_ibutton.dll" Source="!(wix.DIR_SRC_DLL_x64)tg_lpu237_ibutton.dll" KeyPath="yes" Checksum="yes"/>
       </Component>
 
-      <Component Id="co_tg_lpu237_dll.dll_x64" Guid = "E2A96ED5-7610-45A0-ABB9-25D4509FD0A0" Win64="$(var.Pre_Win64)" >
-        <File Id="file_tg_lpu237_dll.dll_x64" Name="tg_lpu237_dll.dll" Source="!(wix.DIR_DLL_x64)tg_lpu237_dll.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="$(var.Pre_ProcessorArchitecture)"/>
+      <Component Id="co_dev_lib.dll_x64" Guid = "B4D3CECF-5928-4094-851A-80422F3B1E81">
+        <File Id="file_dev_lib.dll_x64" Name="dev_lib.dll" Source="!(wix.DIR_SRC_DLL_x64)dev_lib.dll" KeyPath="yes" Checksum="yes" />
       </Component>
     </ComponentGroup>
   </Fragment>
 
   <Fragment>
     <ComponentGroup Id="CG_SERVICE_INI" Directory="CAD_SERVICE_FOLDER">
-      <Component Id="co_coffee_service.xml" Guid = "687B93F4-3EFD-46D1-809B-881F549A9002" Win64="$(var.Pre_Win64)">
-        <File Id="file_coffee_service.xml" Name="coffee_service.xml" Source="!(wix.DIR_SERVICE_INI)coffee_service.xml" KeyPath="yes" Checksum="yes" ProcessorArchitecture="$(var.Pre_ProcessorArchitecture)"/>
+      <Component Id="co_coffee_service.json" Guid = "687B93F4-3EFD-46D1-809B-881F549A9002">
+        <File Id="file_coffee_service.json" Name="coffee_service.json" Source="!(wix.DIR_SRC_SERVICE_INI)coffee_service.json" KeyPath="yes" Checksum="no" />
       </Component>
     </ComponentGroup>
   </Fragment>
 
   <Fragment>
     <ComponentGroup Id="CG_APP_INI" Directory="CAD_APPLICATIONFOLDER">
-      <Component Id="co_coffee_manager.xml" Guid = "4B932BC9-0C7E-4421-8789-86272917148F" Win64="$(var.Pre_Win64)">
-        <File Id="file_coffee_manager.xml" Name="coffee_manager.xml" Source="!(wix.DIR_APP_INI)coffee_manager.xml" KeyPath="yes" Checksum="yes" ProcessorArchitecture="$(var.Pre_ProcessorArchitecture)"/>
-      </Component>
-    </ComponentGroup>
-  </Fragment>
-
-  <Fragment>
-    <ComponentGroup Id="CG_APP_FILTER" Directory="CAD_FILTER_FOLDER">
-      <Component Id="co_device.xml" Guid = "BED1E280-8055-4B13-8962-4C193648EE13" Win64="$(var.Pre_Win64)">
-        <File Id="file_device.xml" Name="device.xml" Source="!(wix.DIR_APP_DATA_FILTER)device.xml" KeyPath="yes" Checksum="yes" ProcessorArchitecture="$(var.Pre_ProcessorArchitecture)"/>
+      <Component Id="co_elpusk_hid_d.json" Guid = "4B932BC9-0C7E-4421-8789-86272917148F">
+        <File Id="file_elpusk_hid_d.json" Name="elpusk-hid-d.json" Source="!(wix.DIR_SRC_APP_INI)elpusk-hid-d.json" KeyPath="yes" Checksum="no" />
       </Component>
     </ComponentGroup>
   </Fragment>
 
   <Fragment>
     <ComponentGroup Id="CG_APP_SERVER" Directory="CAD_SERVER_FOLDER">
-      <Component Id="co_donotdelete.txt" Guid = "93128B0D-3234-4D69-8166-00AD0138BD6A" Win64="$(var.Pre_Win64)">
-        <File Id="file_donotdelete.txt" Name="donotdelete.txt" Source="!(wix.DIR_APP_DATA_SERVER)donotdelete.txt" KeyPath="yes" Checksum="yes" ProcessorArchitecture="$(var.Pre_ProcessorArchitecture)"/>
+      <Component Id="co_donotdelete.txt" Guid = "93128B0D-3234-4D69-8166-00AD0138BD6A">
+        <File Id="file_donotdelete.txt" Name="donotdelete.txt" Source="!(wix.DIR_SRC_APP_DATA_SERVER)donotdelete.txt" KeyPath="yes" Checksum="no" />
       </Component>
     </ComponentGroup>
   </Fragment>
 
   <Fragment>
     <ComponentGroup Id="CG_APP_ROOT" Directory="CAD_ROOT_FOLDER">
-      <Component Id="co_root_this_folder.txt" Guid = "6B0B55DF-8DA0-4A66-9A49-51D55602E271" Win64="$(var.Pre_Win64)">
-        <File Id="file_root_this_folder.txt" Name="this_folder.txt" Source="!(wix.DIR_APP_ROOT)this_folder.txt" KeyPath="yes" Checksum="yes" ProcessorArchitecture="$(var.Pre_ProcessorArchitecture)"/>
+      <Component Id="co_root_this_folder.txt" Guid = "6B0B55DF-8DA0-4A66-9A49-51D55602E271">
+        <File Id="file_root_this_folder.txt" Name="this_folder.txt" Source="!(wix.DIR_SRC_APP_ROOT)this_folder.txt" KeyPath="yes" Checksum="no" />
       </Component>
     </ComponentGroup>
   </Fragment>
 
   <Fragment>
     <ComponentGroup Id="CG_APP_TEMP" Directory="CAD_TEMP_FOLDER">
-      <Component Id="co_temp_this_folder.txt" Guid = "6E1473DB-DAAB-4325-935A-EDAC87CF1D4F" Win64="$(var.Pre_Win64)">
-        <File Id="file_temp_this_folder.txt" Name="this_folder.txt" Source="!(wix.DIR_APP_ROOT_TEMP)this_folder.txt" KeyPath="yes" Checksum="yes" ProcessorArchitecture="$(var.Pre_ProcessorArchitecture)"/>
+      <Component Id="co_temp_this_folder.txt" Guid = "6E1473DB-DAAB-4325-935A-EDAC87CF1D4F">
+        <File Id="file_temp_this_folder.txt" Name="this_folder.txt" Source="!(wix.DIR_SRC_APP_ROOT_TEMP)this_folder.txt" KeyPath="yes" Checksum="no" />
       </Component>
     </ComponentGroup>
   </Fragment>
 
-  <Fragment>
-    <ComponentGroup Id="CG_APP_SERVICE_DLL_3TH_FOLDER" Directory="CAD_SERVICE_DLL_3TH_FOLDER">
-      <Component Id="co_service_dll_readme.txt" Guid = "1A4AE996-E273-48FB-B8D2-37AA7DC2145F" Win64="$(var.Pre_Win64)">
-        <File Id="file_service_dll_readme.txt" Name="readme.txt" Source="!(wix.DIR_APP_SERVICE_DLL_3TH)readme.txt" KeyPath="yes" Checksum="yes" ProcessorArchitecture="$(var.Pre_ProcessorArchitecture)"/>
-      </Component>
-    </ComponentGroup>
-  </Fragment>
   <!-- ======================================= -->
   <!-- short cut part -->
   <!-- ======================================= -->
 
   <Fragment>
     <ComponentGroup Id="CG_SC_PRODUCT" Directory="SC_PRODUCT_FOLDER">
-      <Component Id="co_sc.product" Guid="F1105510-E09D-426C-B9D6-3B6820EC7893" Win64="$(var.Pre_Win64)">
+      <Component Id="co_sc.product" Guid="F1105510-E09D-426C-B9D6-3B6820EC7893">
         <Shortcut Id="sc.coffee_control.exe"
                   Name="coffee_control"
                   Description="vendor defined usb io platform"

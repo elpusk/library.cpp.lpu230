@@ -72,9 +72,6 @@
     <ClInclude Include="..\shared\projects\coffee_service\inc\cini_service.h">
       <Filter>common</Filter>
     </ClInclude>
-    <ClInclude Include="..\shared\common\inc\capi_client.h">
-      <Filter>common</Filter>
-    </ClInclude>
     <ClInclude Include="..\shared\lib\inc\websocket\mp_win_nt.h">
       <Filter>lib\ws</Filter>
     </ClInclude>
@@ -89,9 +86,6 @@
     </ClInclude>
     <ClInclude Include="..\shared\lib\inc\server\mp_cclient_manager.h">
       <Filter>lib\svr</Filter>
-    </ClInclude>
-    <ClInclude Include="csimple_of_client.h">
-      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -109,9 +103,6 @@
     <ClCompile Include="..\shared\lib\inc\mp_cnamed_pipe_.cpp">
       <Filter>lib</Filter>
     </ClCompile>
-    <ClCompile Include="..\shared\common\src\capi_client.cpp">
-      <Filter>common</Filter>
-    </ClCompile>
     <ClCompile Include="..\shared\lib\src\server\mp_cclient.cpp">
       <Filter>lib\svr</Filter>
     </ClCompile>
@@ -119,9 +110,6 @@
       <Filter>lib\svr</Filter>
     </ClCompile>
     <ClCompile Include="crun_service.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="csimple_of_client.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

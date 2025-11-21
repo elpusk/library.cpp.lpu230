@@ -12,7 +12,7 @@ lpu23x device c++ library
 + deb package directory : /home/tester/build_deb/
 + FTXUI 6.1.9 lib - path :/home/tester/FTXUI/
 
-## the current developed version(pkg v2.4)
+## the current developing version(pkg v2.5)
 + dev_lib : v1.0
 + lpu230_update : v2.2
   - at windows, logging folder is equal to lpu230_update.exe_ logging folder.
@@ -24,6 +24,8 @@ lpu23x device c++ library
 + tg_rom_build : v1.2
 + elpusk-hid-d : v2.4
   - Version 2.3 was incorrectly labeled as 2.2; correcting this error.
++ coffee_sevice : 2.0
+  - Windows only service program for running elpusk-hid-d.exe
 
 ## build on debian12.
 + notice

@@ -85,17 +85,19 @@ namespace _mp{
 		{
 			std::wstring s;
 
-#if defined(_WIN32) && !defined(_DEBUG)
+#ifdef _WIN32
+#ifdef _DEBUG
+			//win debug
+			s = _mp::_coffee::CONST_S_COFFEE_SVR_INI_DIR_EXCEPT_BACKSLASH;
+#else
 			//win release
 			s = _mp::cfile::get_path_ProgramData();
 			s += L"\\elpusk\\00000006\\coffee_manager\\coffee_service";
-#else
-			s = _mp::_coffee::CONST_S_COFFEE_SVR_INI_DIR_EXCEPT_BACKSLASH;
 #endif
-
-#ifdef _WIN32
 			s += L"\\coffee_service.json";
 #else
+			//linux
+			s = _mp::_coffee::CONST_S_COFFEE_SVR_INI_DIR_EXCEPT_BACKSLASH;
 			s += L"/coffee_service.json";
 #endif //_WIN32
 			return s;

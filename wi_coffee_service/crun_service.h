@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cini_service.h>
 
 #include <Windows.h>
 #include <winsvc.h>
@@ -13,10 +14,6 @@
 #include <mp_csystem_.h>
 #include <mp_cstring.h>
 #include <mp_cnamed_pipe_.h>
-
-#include <cini_service.h>
-
-#include <manager_of_device_of_client.h>
 
 #include "cwarp.h"
 
@@ -67,9 +64,6 @@ public:
 private:
 	crun_service(void);
 	~crun_service(void);
-
-	bool _connect_wss();
-	bool _disconnect_wss();
 
 private:
 	static void __stdcall _service_main(DWORD dwArgc, LPTSTR* lpszArgv);

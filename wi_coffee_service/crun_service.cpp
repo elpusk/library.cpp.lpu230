@@ -1,28 +1,8 @@
 #include <websocket/mp_win_nt.h>
 
-#include <Windows.h>
-#include <winsvc.h>
-#include <tlhelp32.h>
-
-#include <mutex>
-#include <string>
-
-#define BOOST_JSON_HEADER_ONLY
 #include <boost/json/src.hpp>
-
-#include <mp_type.h>
-#include <mp_clog.h>
-#include <mp_csystem_.h>
-#include <mp_coffee_path.h>
-#include <mp_cstring.h>
-#include <mp_cnamed_pipe_.h>
-
-#include <manager_of_device_of_client.h>
-#include <cini_service.h>
 #include "crun_service.h"
-
 #include "cwarp.h"
-#include "csimple_of_client.h"
 
 #pragma comment(lib, "Userenv.lib")
 #pragma comment(lib, "Wtsapi32.lib")
@@ -433,56 +413,6 @@ crun_service::~crun_service(void)
 
 }
 
-bool crun_service::_connect_wss()
-{
-	bool b_result(false);
-	manager_of_device_of_client<csimple_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<csimple_of_client>::get_instance());
-
-	do {
-		if (!ptr_manager_of_device_of_client) {
-			_mp::clog::get_instance().log_fmt(L"[E] %ls | none manager_of_device_of_client.\n", __WFUNCTION__);
-			continue;
-		}
-
-		if (!ptr_manager_of_device_of_client->connect(
-			ccb_client::get_callbacks()
-			, cini.get_msec_timeout_ws_client_wait_for_connect_api()
-			, cini.get_msec_timeout_ws_client_wait_for_ssl_handshake_complete()
-			, cini.get_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_wss()
-			, cini.get_msec_timeout_ws_client_wait_for_idle_in_wss()
-			, cini.get_msec_timeout_ws_client_wait_for_async_connect_complete_in_wss()
-		)) {
-			_mp::clog::get_instance().log_fmt(L"[E] %ls | manager_of_device_of_client<lpu237_of_client>::get_instance().connect().\n", __WFUNCTION__);
-			continue;
-		}
-
-
-		b_result = true;
-	} while (false);
-	return b_result;
-}
-
-bool crun_service::_disconnect_wss()
-{
-	bool b_result(false);
-	manager_of_device_of_client<csimple_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<csimple_of_client>::get_instance());
-
-	do {
-		if (!ptr_manager_of_device_of_client) {
-			_mp::clog::get_instance().log_fmt(L"[E] %ls | none manager_of_device_of_client.\n", __WFUNCTION__);
-			continue;
-		}
-
-		if (!ptr_manager_of_device_of_client->disconnect()) {
-			_mp::clog::get_instance().log_fmt(L"[E] %ls | manager_of_device_of_client<lpu237_of_client>::get_instance().disconnect().\n", __WFUNCTION__);
-			continue;
-		}
-		//
-		b_result = true;
-	} while (false);
-	return b_result;
-}
-
 void __stdcall crun_service::_service_main(DWORD dwArgc, LPTSTR* lpszArgv)
 {
 	do {
@@ -676,7 +606,7 @@ bool crun_service::_load_ini()
 		std::wstring ws_path_ini(_mp::ccoffee_path::get_path_of_coffee_svr_ini_file());
 		m_s_ini_file_name = cini.get_ini_file_full_path();
 		//
-		m_s_service_exe_file_name = _mp::csystem::get_cur_exe_abs_path();
+		m_s_service_exe_file_name = _mp::cstring::get_unicode_from_mcsc(_mp::cfile::get_cur_exe_abs_path());
 		//
 		m_s_service_name = cini.get_name();
 		m_n_check_process_seconds = cini.get_process_check_interval_sec();

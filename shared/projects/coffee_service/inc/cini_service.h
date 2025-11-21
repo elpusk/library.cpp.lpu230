@@ -7,8 +7,7 @@
 #include <sstream>
 #include <ctime>
 
-#define BOOST_JSON_HEADER_ONLY
-#include <boost/json/src.hpp>
+#include <boost/json.hpp>
 
 #ifdef _WIN32
 #include <Windows.h>

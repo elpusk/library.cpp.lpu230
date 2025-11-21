@@ -72,23 +72,27 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <IncludePath>C:\local\nlohmann\json\include;$(VC_IncludePath);$(WindowsSDK_IncludePath);C:\local\boost_1_80_0;$(SolutionDir)shared/lib/inc;$(SolutionDir)shared/common/inc;$(SolutionDir)shared/projects/coffee_service/inc;C:\local\openssl-1.1.1s\x86\OpenSSL\include</IncludePath>
-    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);C:\local\boost_1_80_0\stage\lib;;C:\local\openssl-1.1.1s\x86\OpenSSL\lib</LibraryPath>
+    <LibraryPath>C:\local\boost_1_80_0\stage\lib;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);C:\local\openssl-1.1.1s\x86\OpenSSL\lib</LibraryPath>
     <TargetName>coffee_service</TargetName>
+    <SourcePath>C:\local\boost_1_80_0\boost;$(VC_SourcePath);</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IncludePath>C:\local\nlohmann\json\include;$(VC_IncludePath);$(WindowsSDK_IncludePath);C:\local\boost_1_80_0;$(SolutionDir)shared/lib/inc;$(SolutionDir)shared/common/inc;$(SolutionDir)shared/projects/coffee_service/inc;C:\local\openssl-1.1.1s\x86\OpenSSL\include</IncludePath>
-    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);C:\local\boost_1_80_0\stage\lib;;C:\local\openssl-1.1.1s\x86\OpenSSL\lib</LibraryPath>
+    <LibraryPath>C:\local\boost_1_80_0\stage\lib;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);C:\local\openssl-1.1.1s\x86\OpenSSL\lib</LibraryPath>
     <TargetName>coffee_service</TargetName>
+    <SourcePath>C:\local\boost_1_80_0\boost;$(VC_SourcePath);</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>C:\local\nlohmann\json\include;$(VC_IncludePath);$(WindowsSDK_IncludePath);C:\local\boost_1_80_0;$(SolutionDir)shared/lib/inc;$(SolutionDir)shared/common/inc;$(SolutionDir)shared/projects/coffee_service/inc;C:\local\openssl-1.1.1s\x64\OpenSSL\include</IncludePath>
-    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);C:\local\boost_1_80_0\stage\lib;C:\local\openssl-1.1.1s\x64\OpenSSL\lib</LibraryPath>
+    <LibraryPath>C:\local\boost_1_80_0\stage\lib;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);C:\local\openssl-1.1.1s\x64\OpenSSL\lib</LibraryPath>
     <TargetName>coffee_service</TargetName>
+    <SourcePath>C:\local\boost_1_80_0\boost;$(VC_SourcePath);</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>C:\local\nlohmann\json\include;$(VC_IncludePath);$(WindowsSDK_IncludePath);C:\local\boost_1_80_0;$(SolutionDir)shared/lib/inc;$(SolutionDir)shared/common/inc;$(SolutionDir)shared/projects/coffee_service/inc;C:\local\openssl-1.1.1s\x64\OpenSSL\include</IncludePath>
-    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);C:\local\boost_1_80_0\stage\lib;C:\local\openssl-1.1.1s\x64\OpenSSL\lib</LibraryPath>
+    <LibraryPath>C:\local\boost_1_80_0\stage\lib;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);C:\local\openssl-1.1.1s\x64\OpenSSL\lib</LibraryPath>
     <TargetName>coffee_service</TargetName>
+    <SourcePath>C:\local\boost_1_80_0\boost;$(VC_SourcePath);</SourcePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -155,7 +159,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\shared\common\inc\capi_client.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cconvert.h" />
     <ClInclude Include="..\shared\lib\inc\mp_clog.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cnamed_pipe_.h" />
@@ -172,7 +175,6 @@
     <ClInclude Include="..\shared\lib\inc\websocket\mp_win_nt.h" />
     <ClInclude Include="..\shared\projects\coffee_service\inc\cini_service.h" />
     <ClInclude Include="crun_service.h" />
-    <ClInclude Include="csimple_of_client.h" />
     <ClInclude Include="cwarp.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
@@ -180,14 +182,12 @@
     <ResourceCompile Include="wi_coffee_service.rc" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\shared\common\src\capi_client.cpp" />
     <ClCompile Include="..\shared\lib\inc\mp_cnamed_pipe_.cpp" />
     <ClCompile Include="..\shared\lib\inc\mp_csystem_.cpp" />
     <ClCompile Include="..\shared\lib\src\server\mp_cclient.cpp" />
     <ClCompile Include="..\shared\lib\src\server\mp_cclient_cb.cpp" />
     <ClCompile Include="coffee_service.cpp" />
     <ClCompile Include="crun_service.cpp" />
-    <ClCompile Include="csimple_of_client.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\shared\projects\coffee_service\coffee_service.json" />
