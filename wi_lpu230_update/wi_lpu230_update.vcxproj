@@ -64,6 +64,7 @@
     <ClInclude Include="..\shared\lib\inc\mp_icprotocol.h" />
     <ClInclude Include="..\shared\lib\inc\mp_os_type.h" />
     <ClInclude Include="..\shared\lib\inc\mp_type.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_win_console_manager.h" />
     <ClInclude Include="..\shared\projects\lpu230_update\cshare.h" />
     <ClInclude Include="..\shared\projects\lpu230_update\cupdater.h" />
     <ClInclude Include="..\shared\projects\lpu230_update\HidBootBuffer.h" />

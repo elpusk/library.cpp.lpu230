@@ -1628,6 +1628,20 @@ namespace _mp{
 			return set_parameters;
 		}
 
+		static type_set_wstring get_command_line_parameters(int argc, wchar_t* argv[])
+		{
+			type_set_wstring set_parameters;
+
+			do {
+				for (int i = 0; i < argc; i++) {
+					if (argv[i]) {
+						set_parameters.insert(argv[i]);
+					}
+				}//end for
+			} while (false);
+			return set_parameters;
+		}
+
 		static type_set_wstring get_command_line_parameters_by_set(int argc, char* argv[])
 		{
 			return _mp::cconvert::get_command_line_parameters(argc, argv);

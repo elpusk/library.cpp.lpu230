@@ -6,7 +6,7 @@
     <ProductVersion>3.10</ProductVersion>
     <ProjectGuid>4ff4cd68-189f-4c6b-8532-b7a9adf0d63b</ProjectGuid>
     <SchemaVersion>2.0</SchemaVersion>
-    <OutputName>coffee_manager</OutputName>
+    <OutputName>coffee_manager_2nd</OutputName>
     <OutputType>Package</OutputType>
     <IncludeSearchPaths>.\inc\</IncludeSearchPaths>
   </PropertyGroup>

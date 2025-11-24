@@ -33,6 +33,9 @@ namespace _mp {
 
 	public:
 		static std::string generated_pipe_name();
+
+		static bool remove_forcelly(const std::string& s_name);
+
 	public:
 		virtual ~cnamed_pipe();
 		cnamed_pipe();

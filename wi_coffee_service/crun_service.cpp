@@ -44,19 +44,14 @@ bool crun_service::start_processes_different_session(DWORD dwSessionId)
 	bool b_result(false);
 
 	do {
-		_mp::cnamed_pipe::type_ptr ptr_ctl_pipe;
-		ptr_ctl_pipe = std::make_shared<_mp::cnamed_pipe>(_mp::_coffee::CONST_S_COFFEE_MGMT_CTL_PIPE_NAME, false);
-		if (!ptr_ctl_pipe) {
-			_mp::clog::get_instance().log_fmt(L"[E] %s | cannot created control pipe.\n", __WFUNCTION__);
-			continue;
+		std::shared_ptr<boost::interprocess::file_lock> ptr_file_lock_for_single_instance;
+		ptr_file_lock_for_single_instance = _mp::csystem::get_file_lock_for_single_instance(_mp::_coffee::CONST_S_COFFEE_MGMT_FILE_LOCK_FOR_SINGLE);
+		if (!ptr_file_lock_for_single_instance) {
+			_mp::clog::get_instance().log_fmt(L"[E] %s | already running elpusk-hid-d.\n", __WFUNCTION__);
+			continue;//Another instance is already running.
 		}
 
-		if (ptr_ctl_pipe->is_ini()) {
-			_mp::clog::get_instance().log_fmt(L"[W] %s | manager is executed already.\n", __WFUNCTION__);
-			ptr_ctl_pipe.reset();
-			continue;
-		}
-		ptr_ctl_pipe.reset();
+		ptr_file_lock_for_single_instance.reset();
 
 		PROCESS_INFORMATION pi;
 		STARTUPINFO si;
@@ -249,6 +244,7 @@ void crun_service::end_process()
 			continue;//check continue
 		}
 		//terminated proccess
+		_mp::cnamed_pipe::remove_forcelly(_mp::_coffee::CONST_S_COFFEE_MGMT_CTL_PIPE_NAME);
 		_mp::clog::get_instance().log_fmt(L"[I] %s | manager is terminated.\n", __WFUNCTION__);
 		b_run = false;
 	} while (b_run);

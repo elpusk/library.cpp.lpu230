@@ -49,6 +49,11 @@ namespace _mp {
 		return "_20240725::_mp::cnamed_pipe::" + boost::uuids::to_string(uuid);
 	}
 
+	bool cnamed_pipe::remove_forcelly(const std::string& s_name)
+	{
+		return boost::interprocess::message_queue::remove(s_name.c_str());
+	}
+
 	cnamed_pipe::~cnamed_pipe()
 	{
 		if (m_b_i_am_creator) {

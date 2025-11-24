@@ -10,7 +10,7 @@ lpu23x device c++ library
 + openssl-1.1.1s lib - path : /usr/local/openssl-1.1.1s/
 + libusb1.0 lib - path : /usr/local/libusb/
 + deb package directory : /home/tester/build_deb/
-+ FTXUI 6.1.9 lib - path :/home/tester/FTXUI/
++ FTXUI 6.1.9 lib - path : /home/tester/FTXUI/
 
 ## the current developing version(pkg v2.5)
 + dev_lib : v1.0

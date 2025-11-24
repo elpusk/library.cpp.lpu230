@@ -11,7 +11,7 @@
 #include <csignal>
 
 #ifdef _WIN32
-#include <windows.h>
+#include <mp_win_console_manager.h>
 #else
 #include <unistd.h>
 #include <syslog.h>
@@ -69,13 +69,31 @@ static void _display_help();
 * "/version" or "--version" - display elpusk-hid-d version.
 * 
 */
+#ifdef _WIN32
+int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR lpCmdLine, int nShowCmd)
+#else
 int main(int argc, char* argv[])
+#endif //_WIN32
 {
-	int n_result(EXIT_FAILURE);
+#ifdef _WIN32
+	_mp::win_console_manager win_console_manager; //윈도우즈에서 자동으로 콘솔 생성 및 제거 창 관리를 위한 객체.
+#endif
 
+	int n_result(EXIT_FAILURE);
 
 	do {
 		//get command line parameters 
+#ifdef _WIN32
+		int argc = 0;
+		wchar_t** argv = NULL;
+		std::tie(argc, argv) = win_console_manager.get_command_line_arguments();
+
+		HWND consoleWindow = GetConsoleWindow();
+		if (consoleWindow) {
+			//ShowWindow(consoleWindow, SW_HIDE); // 콘솔 창 숨기기
+		}
+
+#endif
 		_mp::type_set_wstring set_parameters(_mp::cconvert::get_command_line_parameters(argc, argv));
 
 		if (set_parameters.size()<2) {
@@ -94,6 +112,12 @@ int main(int argc, char* argv[])
 			n_result = main_wss(set_parameters);
 			continue;
 		}
+#ifdef _WIN32
+		if (consoleWindow) {
+			ShowWindow(consoleWindow, SW_SHOW); // 콘솔 창 표시.
+		}
+#endif
+
 		//
 		if (set_parameters.find(L"/bye") != std::end(set_parameters)) {
 			//stop wss server

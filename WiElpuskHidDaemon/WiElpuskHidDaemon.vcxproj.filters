@@ -329,6 +329,9 @@
     <ClInclude Include="..\shared\common\inc\cupdater_param_.h">
       <Filter>common</Filter>
     </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_win_console_manager.h">
+      <Filter>lib</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Xml Include="..\shared\projects\ElpuskHidDaemon\elpusk-hid-d.xml">
@@ -339,7 +342,6 @@
     </Xml>
   </ItemGroup>
   <ItemGroup>
-    <None Include="ClassDiagram.cd" />
     <None Include="..\shared\projects\ElpuskHidDaemon\elpusk-hid-d.json">
       <Filter>common\json</Filter>
     </None>
@@ -348,5 +350,13 @@
     <ResourceCompile Include="WiElpuskHidDaemon.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\coffee_manager\res\coffee_manager.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icon1.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>

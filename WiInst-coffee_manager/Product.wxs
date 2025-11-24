@@ -80,6 +80,7 @@
       InstallerVersion="400"
       Compressed="yes"
       InstallScope="perMachine"
+      InstallPrivileges="elevated"
       Comments="$(var.Pre_ProductName_2nd) v$(var.Pre_ProductVersion) Windows Installer Package $(var.Pre_PlatformPath)"
       Platform="$(var.Pre_PlatformPath)"
       />

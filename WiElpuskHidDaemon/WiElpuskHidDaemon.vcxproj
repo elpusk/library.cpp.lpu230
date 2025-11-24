@@ -99,6 +99,7 @@
     <ClInclude Include="..\shared\lib\inc\mp_type.h" />
     <ClInclude Include="..\shared\lib\inc\mp_vcpacket.h" />
     <ClInclude Include="..\shared\lib\inc\mp_vcworker.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_win_console_manager.h" />
     <ClInclude Include="..\shared\lib\inc\path\mp_cpath.h" />
     <ClInclude Include="..\shared\lib\inc\server\mp_cbase_ctl_fn_.h" />
     <ClInclude Include="..\shared\lib\inc\server\mp_cdev_ctl_.h" />
@@ -128,10 +129,13 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\shared\projects\ElpuskHidDaemon\elpusk-hid-d.json" />
-    <None Include="ClassDiagram.cd" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="WiElpuskHidDaemon.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\coffee_manager\res\coffee_manager.ico" />
+    <Image Include="icon1.ico" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
@@ -226,7 +230,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>libusb-1.0.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
@@ -246,7 +250,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -266,7 +270,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>libusb-1.0.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
@@ -286,7 +290,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
