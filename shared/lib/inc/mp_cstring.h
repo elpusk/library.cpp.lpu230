@@ -174,21 +174,21 @@ namespace _mp{
 			do {
 				if (s_fmt == NULL)
 					continue;
-
+#ifdef _WIN32
 				va_list ap_copy;
 				va_copy(ap_copy, ap);
 
-#ifdef _WIN32
-				// Windows¿¡¼­ _vscprintf ÇÔ¼ö·Î ÇÊ¿äÇÑ ¹öÆÛ Å©±â °è»ê
+				// Windowsì—ì„œ _vscprintf í•¨ìˆ˜ë¡œ í•„ìš”í•œ ë²„í¼ í¬ê¸° ê³„ì‚°
 				int n_len = _vscprintf(s_fmt, ap_copy) + 1; // for '\0'
+				va_end(ap_copy);
 
-				// ¹öÆÛ »ı¼º ¹× vsprintf_s ÇÔ¼ö »ç¿ë
+				// ë²„í¼ ìƒì„± ë° vsprintf_s í•¨ìˆ˜ ì‚¬ìš©
 				type_v_s_buffer v_s_buffer(n_len, 0);
 				if (vsprintf_s(&v_s_buffer[0], v_s_buffer.size(), s_fmt, ap) <= 0)
 					continue;
 
 #else
-				// ¹öÆÛ »ı¼º ¹× vsnprintf ÇÔ¼ö »ç¿ë
+				// ë²„í¼ ìƒì„± ë° vsnprintf í•¨ìˆ˜ ì‚¬ìš©
 				type_v_s_buffer v_s_buffer(2048, 0);
 				if (vsnprintf(&v_s_buffer[0], v_s_buffer.size(), s_fmt, ap) <= 0)
 					continue;
@@ -210,18 +210,21 @@ namespace _mp{
 			do {
 				if (s_fmt == nullptr)
 					continue;
-
 #ifdef _WIN32
-				// Windows¿¡¼­ _vscwprintf ÇÔ¼ö·Î ÇÊ¿äÇÑ ¹öÆÛ Å©±â °è»ê
-				int n_len = _vscwprintf(s_fmt, ap) + 1; // for '\0'
+				va_list ap_copy;
+				va_copy(ap_copy, ap);
 
-				// ¹öÆÛ »ı¼º ¹× vswprintf_s ÇÔ¼ö »ç¿ë
+				// Windowsì—ì„œ _vscwprintf í•¨ìˆ˜ë¡œ í•„ìš”í•œ ë²„í¼ í¬ê¸° ê³„ì‚°
+				int n_len = _vscwprintf(s_fmt, ap_copy) + 1; // for '\0'
+				va_end(ap_copy);
+
+				// ë²„í¼ ìƒì„± ë° vswprintf_s í•¨ìˆ˜ ì‚¬ìš©
 				type_v_ws_buffer v_ws_buffer(n_len, 0);
 				if (vswprintf_s(&v_ws_buffer[0], v_ws_buffer.size(), s_fmt, ap) <= 0)
 					continue;
 
 #else
-				// ¹öÆÛ »ı¼º ¹× vswprintf ÇÔ¼ö »ç¿ë
+				// ë²„í¼ ìƒì„± ë° vswprintf í•¨ìˆ˜ ì‚¬ìš©
 				type_v_ws_buffer v_ws_buffer(2048, 0);
 				if (vswprintf(&v_ws_buffer[0], v_ws_buffer.size(), s_fmt, ap) <= 0)
 					continue;
@@ -247,16 +250,20 @@ namespace _mp{
 					continue;
 
 #ifdef _WIN32
-				// Windows¿¡¼­ _vscwprintf ÇÔ¼ö·Î ÇÊ¿äÇÑ ¹öÆÛ Å©±â °è»ê
-				int n_len = _vscwprintf(s_fmt.c_str(), ap) + 1; // for '\0'
+				va_list ap_copy;
+				va_copy(ap_copy, ap);
 
-				// ¹öÆÛ »ı¼º ¹× vswprintf_s ÇÔ¼ö »ç¿ë
+				// Windowsì—ì„œ _vscwprintf í•¨ìˆ˜ë¡œ í•„ìš”í•œ ë²„í¼ í¬ê¸° ê³„ì‚°
+				int n_len = _vscwprintf(s_fmt.c_str(), ap_copy) + 1; // for '\0'
+				va_end(ap_copy);
+
+				// ë²„í¼ ìƒì„± ë° vswprintf_s í•¨ìˆ˜ ì‚¬ìš©
 				type_v_ws_buffer v_ws_buffer(n_len, 0);
 				if (vswprintf_s(&v_ws_buffer[0], v_ws_buffer.size(), s_fmt.c_str(), ap) <= 0)
 					continue;
 
 #else
-				// ¹öÆÛ »ı¼º ¹× vswprintf ÇÔ¼ö »ç¿ë
+				// ë²„í¼ ìƒì„± ë° vswprintf í•¨ìˆ˜ ì‚¬ìš©
 				type_v_ws_buffer v_ws_buffer(2048, 0);
 				if (vswprintf(&v_ws_buffer[0], v_ws_buffer.size(), s_fmt.c_str(), ap) <= 0)
 					continue;
@@ -281,10 +288,14 @@ namespace _mp{
 					continue;
 				//
 #ifdef _WIN32
-				// Windows¿¡¼­ _vscwprintf ÇÔ¼ö·Î ÇÊ¿äÇÑ ¹öÆÛ Å©±â °è»ê
-				int n_len = _vscwprintf(s_fmt.c_str(), ap) + 1; // for '\0'
+				va_list ap_copy;
+				va_copy(ap_copy, ap);
 
-				// ¹öÆÛ »ı¼º ¹× vswprintf_s ÇÔ¼ö »ç¿ë
+				// Windowsì—ì„œ _vscwprintf í•¨ìˆ˜ë¡œ í•„ìš”í•œ ë²„í¼ í¬ê¸° ê³„ì‚°
+				int n_len = _vscwprintf(s_fmt.c_str(), ap_copy) + 1; // for '\0'
+				va_end(ap_copy);
+
+				// ë²„í¼ ìƒì„± ë° vswprintf_s í•¨ìˆ˜ ì‚¬ìš©
 				type_v_ws_buffer v_ws_buffer(n_len, 0);
 				vswprintf_s(&v_ws_buffer[0], v_ws_buffer.size(), s_fmt.c_str(), ap);
 				s_out = std::wstring(&v_ws_buffer[0]);
@@ -312,23 +323,27 @@ namespace _mp{
 					continue;
 
 #ifdef _WIN32
-				// Windows¿¡¼­ _vscwprintf ÇÔ¼ö·Î ÇÊ¿äÇÑ ¹öÆÛ Å©±â °è»ê
-				int n_len = _vscwprintf(s_fmt.c_str(), ap) + 1; // for '\0'
+				va_list ap_copy;
+				va_copy(ap_copy, ap);
 
-				// ¹öÆÛ »ı¼º ¹× vswprintf_s ÇÔ¼ö »ç¿ë
+				// Windowsì—ì„œ _vscwprintf í•¨ìˆ˜ë¡œ í•„ìš”í•œ ë²„í¼ í¬ê¸° ê³„ì‚°
+				int n_len = _vscwprintf(s_fmt.c_str(), ap_copy) + 1; // for '\0'
+				va_end(ap_copy);
+
+				// ë²„í¼ ìƒì„± ë° vswprintf_s í•¨ìˆ˜ ì‚¬ìš©
 				type_v_ws_buffer v_ws_buffer(n_len, 0);
 				if (vswprintf_s(&v_ws_buffer[0], v_ws_buffer.size(), s_fmt.c_str(), ap) <= 0)
 					continue;
 
 #else
-				// ¹öÆÛ »ı¼º ¹× vswprintf ÇÔ¼ö »ç¿ë
+				// ë²„í¼ ìƒì„± ë° vswprintf í•¨ìˆ˜ ì‚¬ìš©
 				type_v_ws_buffer v_ws_buffer(2048, 0);
 				if (vswprintf(&v_ws_buffer[0], v_ws_buffer.size(), s_fmt.c_str(), ap) <= 0)
 					continue;
 
 #endif
 
-				// ÀüÀ§ ¹× ÈÄÀ§ ¹®ÀÚ¿­°ú Æ÷¸ËµÈ ¹®ÀÚ¿­À» ÇÕÃÄ¼­ s_out¿¡ ÇÒ´ç
+				// ì „ìœ„ ë° í›„ìœ„ ë¬¸ìì—´ê³¼ í¬ë§·ëœ ë¬¸ìì—´ì„ í•©ì³ì„œ s_outì— í• ë‹¹
 				std::wstring prefix = s_prefix;
 				std::wstring postfix = s_postfix;
 				s_out = prefix + std::wstring(&v_ws_buffer[0]) + postfix;

@@ -47,6 +47,7 @@
 * 2025.11.07 - v2.2 : server 종료시, win에서 messge pipe 의 named object 제거 않되는 문제 수정.
 * 2025.11.20 - v2.3 : webapp 에 의한 lpu230_update 실행 지원.
 * 2025.11.20 - v2.4 : 버전이 2.3 인데 2.2 로 미수정한 것 수정.
+* 2025.11.26 - v2.5 : clog missing code 수정.
 * 
 */
 
@@ -186,7 +187,7 @@ int main(int argc, char* argv[])
 			continue;
 		}
 		//
-		std::wstring ws_version(L"2.4");
+		std::wstring ws_version(L"2.5");
 
 		if (set_parameters.find(L"/version") != std::end(set_parameters)) {
 			std::wcout << ws_version << std::endl;

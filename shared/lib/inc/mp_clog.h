@@ -347,7 +347,10 @@ namespace _mp
 					if (s_fmt == NULL)
 						continue;
 #ifdef _WIN32
-					size_t n_len = _vscwprintf(s_fmt, ap) + 1; // for '\0'
+					va_list ap_copy;
+					va_copy(ap_copy, ap);
+					size_t n_len = _vscwprintf(s_fmt, ap_copy) + 1; // for '\0'
+					va_end(ap_copy);
 
 					std::shared_ptr<type_v_ws_buffer> ptr_v_ws_buffer(std::make_shared<type_v_ws_buffer>(n_len, 0));
 					if (!ptr_v_ws_buffer)
@@ -389,7 +392,11 @@ namespace _mp
 					if (s_fmt == NULL)
 						continue;
 #ifdef _WIN32
-					size_t n_len = _vscprintf(s_fmt, ap) + 1; // for '\0'
+					va_list ap_copy;
+					va_copy(ap_copy, ap);
+
+					size_t n_len = _vscprintf(s_fmt, ap_copy) + 1; // for '\0'
+					va_end(ap_copy);
 
 					std::shared_ptr<type_v_s_buffer> ptr_v_s_buffer(std::make_shared<type_v_s_buffer>(n_len, 0));
 					if (!ptr_v_s_buffer)
@@ -431,7 +438,11 @@ namespace _mp
 					if (s_fmt == NULL)
 						continue;
 #ifdef _WIN32
-					size_t n_len = _vscwprintf(s_fmt, ap) + 1; // for '\0'
+					va_list ap_copy;
+					va_copy(ap_copy, ap);
+
+					size_t n_len = _vscwprintf(s_fmt, ap_copy) + 1; // for '\0'
+					va_end(ap_copy);
 
 					std::shared_ptr<type_v_ws_buffer> ptr_v_ws_buffer(std::make_shared<type_v_ws_buffer>(n_len, 0));
 					if (!ptr_v_ws_buffer)
@@ -475,7 +486,11 @@ namespace _mp
 					if (s_fmt == NULL)
 						continue;
 #ifdef _WIN32
-					size_t n_len = _vscprintf(s_fmt, ap) + 1; // for '\0'
+					va_list ap_copy;
+					va_copy(ap_copy, ap);
+
+					size_t n_len = _vscprintf(s_fmt, ap_copy) + 1; // for '\0'
+					va_end(ap_copy);
 
 					std::shared_ptr<type_v_s_buffer> ptr_v_s_buffer(std::make_shared<type_v_s_buffer>(n_len, 0));
 					if (!ptr_v_s_buffer)

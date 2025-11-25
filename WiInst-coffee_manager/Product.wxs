@@ -19,8 +19,8 @@
 *                               : tg_rom.dll - v1.2(external).
 *                               : <?define Pre_ProductCode = "DD7577E8-48DB-40AD-84E9-E77725C8EC31"?>
 *
-* 2025.07 - package v 2.4.0     : coffee manager 2nd project(v2.4) - suuport windows 11 x64.
-*                               : elpusk-hid-d.exe - v2.4(from v2.0, this is a new name of coffee_manager.exe)
+* 2025.11 - package v 2.5.0     : coffee manager 2nd project(v2.5) - suuport windows 11 x64.
+*                               : elpusk-hid-d.exe - v2.5(from v2.0, this is a new name of coffee_manager.exe)
 *                               : tg_lpu237_dll.dll - v6.0
 *                               : tg_lpu237_ibutton.dll - v6.0
 *                               : lpu230_update.exe - v2.2
@@ -42,7 +42,7 @@
 <?define Pre_ProductName_2nd = "coffee_manager_2nd"?>
 
 <!-- Pre_ProductVersion 값이 변경되면, Pre_ProductCode 는 새로 생성해야함.-->
-<?define Pre_ProductVersion = "2.4.0"?>
+<?define Pre_ProductVersion = "2.5.0"?>
 <?define Pre_ProductCode = "56BEB1E3-9FE6-4A25-BA4A-54D1475E100E"?>
 
 <!-- 같은 프로그래은 버전이 달라져도 Pre_ProductUpgradeCode 는 항상 동일해야 함.-->
@@ -70,7 +70,7 @@
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
   <Product
     Id="$(var.Pre_ProductCode)"
-    Name="$(var.Pre_ProductName_2nd)"
+    Name="$(var.Pre_ProductName_2nd) $(var.Pre_PlatformPath)"
     Language="$(var.Pre_LCID)"
     Version="$(var.Pre_ProductVersion)"
     Manufacturer="$(var.Pre_Manufacturer)"
@@ -81,7 +81,7 @@
       Compressed="yes"
       InstallScope="perMachine"
       InstallPrivileges="elevated"
-      Comments="$(var.Pre_ProductName_2nd) v$(var.Pre_ProductVersion) Windows Installer Package $(var.Pre_PlatformPath)"
+      Comments="$(var.Pre_ProductName_2nd) $(var.Pre_PlatformPath) v$(var.Pre_ProductVersion) Windows Installer Package."
       Platform="$(var.Pre_PlatformPath)"
       />
     
@@ -373,7 +373,7 @@
 
         <Shortcut Id="sc_uninstall_Product"
                   Name="Uninstall"
-                  Description="Uninstalls $(var.Pre_ProductName_2nd) software components"
+                  Description="Uninstalls $(var.Pre_ProductName_2nd) $(var.Pre_PlatformPath) software components"
                   Target="[SystemFolder]msiexec.exe"
                   Arguments="/x [ProductCode]"/>
         <RemoveFolder Id="clean_up_short_cut" Directory="SC_PRODUCT_FOLDER" On="uninstall"/>
