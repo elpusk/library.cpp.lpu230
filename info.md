@@ -1,5 +1,5 @@
 # Software components information
-release 2.3
+release 2.4
 
 ## LiMgmtLpu230
 - for Debian 12.(x64)
@@ -33,6 +33,13 @@ release 2.3
 - supports remove self-signed certificate. with /removecert option.
 - display runtime tracking message of the current elpusk-hid-d. with /trace option.
 - supports lpu237-fw update by webapp.
+
+## wi_coffee_service
+- v2.0
+- for windows 11.(x64, x86)
+- executable file name : coffee_service.exe
+- Windows service program.
+- run and stop elpusk-hid-d.exe
 
 ## li_lpu237_dll
 - v6.0

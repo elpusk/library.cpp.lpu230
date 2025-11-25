@@ -90,7 +90,7 @@ int main(int argc, char* argv[])
 
 		HWND consoleWindow = GetConsoleWindow();
 		if (consoleWindow) {
-			//ShowWindow(consoleWindow, SW_HIDE); // 콘솔 창 숨기기
+			ShowWindow(consoleWindow, SW_HIDE); // 콘솔 창 숨기기
 		}
 
 #endif

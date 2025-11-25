@@ -206,6 +206,7 @@ namespace _mp{
     typedef enum : int {
         exit_error_not_supported = 200,
 		exit_error_invalid_command_line_argment = 201,
+        exit_error_clean_up = 202, // remove all remainder.
 
         exit_error_daemonize = 250,
         exit_error_already_running = 251,

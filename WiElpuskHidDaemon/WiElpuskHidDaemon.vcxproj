@@ -135,7 +135,6 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\coffee_manager\res\coffee_manager.ico" />
-    <Image Include="icon1.ico" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

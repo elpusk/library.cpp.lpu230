@@ -23,7 +23,7 @@ lpu23x device c++ library
 + tg_rom : v1.2
 + tg_rom_build : v1.2
 + elpusk-hid-d : v2.4
-  - Version 2.3 was incorrectly labeled as 2.2; correcting this error.
+  - Version 2.3 was incorrectly labeled as 2.2; fixed this error.
 + coffee_sevice : 2.0
   - Windows only service program for running elpusk-hid-d.exe
 
