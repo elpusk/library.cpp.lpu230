@@ -16,12 +16,32 @@
 cupdater_param::cupdater_param(unsigned long n_session_number) :
 	m_n_session_number(n_session_number)
 	, m_p_log(nullptr)
+	, m_b_used(false)
 {
 }
 
 cupdater_param::~cupdater_param()
 {
 	_delete_firmware();
+}
+
+void cupdater_param::set_used()
+{
+	m_b_used = true;
+}
+
+bool cupdater_param::is_used_already() const
+{
+	return m_b_used;
+}
+
+void cupdater_param::reset()
+{
+	m_ptr_runner.reset();
+	m_b_used = false;
+	m_map.clear();
+	m_s_abs_full_exe_path.clear();
+	m_ptr_rsp.reset();
 }
 
 void cupdater_param::set_log_obj(_mp::clog* p_log)
@@ -246,6 +266,11 @@ std::pair<bool, std::wstring> cupdater_param::can_be_start_firmware_update() con
 	return std::make_pair(b_result, s_info);
 }
 
+void cupdater_param::set(const std::wstring& s_key, const std::wstring& s_value)
+{
+	m_map[s_key] = s_value;
+}
+
 bool cupdater_param::insert(const std::wstring& s_key, const std::wstring& s_value)
 {
 	bool b_result(false);
@@ -272,9 +297,9 @@ bool cupdater_param::insert_run_by_cf2_mode()
 void cupdater_param::set_packet_info_for_notify(const _mp::cio_packet& req_act_dev_sub_bootloader)
 {
 	//generate response packet from request packet
-	m_rsp = req_act_dev_sub_bootloader;
+	m_ptr_rsp = std::make_shared<_mp::cio_packet>(req_act_dev_sub_bootloader);
 
-	m_rsp.set_cmd(_mp::cio_packet::cmd_response).set_action(_mp::cio_packet::act_dev_sub_bootloader);
+	m_ptr_rsp->set_cmd(_mp::cio_packet::cmd_response).set_action(_mp::cio_packet::act_dev_sub_bootloader);
 	//set_session_number() already
 	//set_owner() already 
 	//set_in_id(), set_out_id() already
@@ -402,14 +427,19 @@ std::wstring cupdater_param::generate_command_line_arguments_except_exe_by_wstri
 			}
 		}
 		//
-		s_key = std::wstring(L"_cf_bl_window_");
+		s_key = std::wstring(L"_cf_bl_window_"); // 기본값은 quiet
 		it = m_map.find(s_key);
 		if (it != std::end(m_map)) {
-			if (it->second.compare(L"false") == 0) {
+			if (it->second.compare(L"true") != 0) {
 				// quiet
 				s_command_line_arguments += L" --";
 				s_command_line_arguments += std::wstring(_mp::_coffee::CONST_S_CMD_LINE_FW_UPDATE_SET_HIDE_UI);
 			}
+		}
+		else {
+			// quiet
+			s_command_line_arguments += L" --";
+			s_command_line_arguments += std::wstring(_mp::_coffee::CONST_S_CMD_LINE_FW_UPDATE_SET_HIDE_UI);
 		}
 
 
@@ -529,9 +559,9 @@ std::vector<std::string> cupdater_param::generate_command_line_arguments_with_ex
 }
 
 // 이 함수의 응답을 받아 결과와 데이터 필드만 설정해서 서버에게 알림  패킷 보낼때 사용.
-_mp::cio_packet& cupdater_param::get_rsp_packet_before_setting()
+_mp::cio_packet::type_ptr cupdater_param::get_rsp_packet_before_setting()
 {
-	return m_rsp;
+	return m_ptr_rsp;
 }
 
 bool cupdater_param::_delete_firmware()

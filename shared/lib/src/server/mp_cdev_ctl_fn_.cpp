@@ -1102,11 +1102,16 @@ namespace _mp {
 						ptr_result->after_processing_set_rsp_with_error_complete(cio_packet::error_reason_allocation_memory);
 						continue;
 					}
+
+					if (ptr_boot_param->is_used_already()) {
+						// 전에 다운로드에 사용된 파라메타들 이므로 재 할당 받아서 새롭게 저장해야함.
+						ptr_boot_param->reset();
+					}
 					for (size_t i = 0; i < ((deque_s_data.size() - 1) / 2); i++) {
 						std::wstring s_key(deque_s_data[2 * i + 1]);
 
 						std::wstring s_value(deque_s_data[2 * (i + 1)]);
-						ptr_boot_param->insert(s_key, s_value);
+						ptr_boot_param->set(s_key, s_value);
 					}//end for
 
 					ptr_result->after_processing_set_rsp_with_succss_complete(_mp::type_v_buffer());
@@ -1127,6 +1132,7 @@ namespace _mp {
 						continue;
 					}
 					ptr_boot_param->set_log_obj(m_p_ctl_fun_log);
+					ptr_boot_param->set_used();// 다음 사용 전에 재할당 요망.
 
 					std::wstring s_rom_file = ccoffee_path::get_path_of_virtual_drive_root_with_backslash();
 					s_rom_file += ccoffee_path::get_virtual_path_of_temp_rom_file_of_session(ptr_req_new->get_session_number());

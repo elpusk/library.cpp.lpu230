@@ -57,7 +57,11 @@ bool cupdater_mgmt::notify_to_server(const _mp::ccoffee_pipe::type_tuple_notify_
 			continue;
 		}
 
-		_mp::cio_packet response(ptr_param->get_rsp_packet_before_setting());
+		_mp::cio_packet::type_ptr ptr_rsp(ptr_param->get_rsp_packet_before_setting());
+		if (!ptr_rsp) {
+			continue;
+		}
+		_mp::cio_packet response(*ptr_rsp);
 		if (b_step_result) {
 			response.set_data_by_utf8(L"success", false);
 			if (n_step_cur >= n_step_max) {

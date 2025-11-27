@@ -22,7 +22,20 @@ public:
 	cupdater_param(unsigned long n_session_number);
 	virtual ~cupdater_param();
 
+	/**
+	* @brief this parameters is used already, So this must be reset for reusing.
+	*/
+	void set_used();
+
+	bool is_used_already() const;
+
 	void set_log_obj(_mp::clog* p_log);
+
+	/**
+	* @brief reset parameter.
+	* @brief m_n_session_number is maintained.
+	*/
+	void reset();
 
 	/**
 	* @brief check bootloader request parameter existence.
@@ -31,6 +44,16 @@ public:
 	*/
 	std::pair<bool,std::wstring> can_be_start_firmware_update() const;
 
+	/**
+	* @brief set parameter.( insert or relpace )
+	*/
+	void set(const std::wstring& s_key, const std::wstring& s_value);
+
+	/**
+	* @brief insert new parameter.
+	* @return true - inserted OK.
+	* @return false - alreay exist equivalent key
+	*/
 	bool insert(const std::wstring& s_key, const std::wstring& s_value);
 
 	/**
@@ -87,7 +110,7 @@ public:
 	std::vector<std::wstring> generate_command_line_arguments_with_exe_by_vector_wstring() const;
 	std::vector<std::string> generate_command_line_arguments_with_exe_by_vector_string() const;
 
-	_mp::cio_packet& get_rsp_packet_before_setting();
+	_mp::cio_packet::type_ptr get_rsp_packet_before_setting();
 
 
 private:
@@ -99,17 +122,18 @@ private:
 	bool _delete_firmware();
 
 private:
+	bool m_b_used;
 	_mp::clog* m_p_log;
 
 	unsigned long m_n_session_number;
 
 	std::mutex m_mutex; //used in _delete_firmware()
 	cupdater_param::_type_map m_map;
-	std::wstring m_s_abs_full_exe_path;
+	std::wstring m_s_abs_full_exe_path;//lpu230_update, setting in "start" req. 
 
-	_mp::cio_packet m_rsp;
+	_mp::cio_packet::type_ptr m_ptr_rsp;//setting in "start" req.
 
-	std::shared_ptr<cprocess_watcher> m_ptr_runner;
+	std::shared_ptr<cprocess_watcher> m_ptr_runner;//setting in "start" req.
 
 private:
 	cupdater_param() = delete;

@@ -149,35 +149,19 @@ int main(int argc, char* argv[])
 		//
 		if (set_parameters.find(L"/cert") != std::end(set_parameters)) {
 			n_result = main_cert(set_parameters);
-#ifdef _WIN32
-			std::cout << "\npress any key.......";
-			_getch();
-#endif
 			continue;
 		}
 		if (set_parameters.find(L"--cert") != std::end(set_parameters)) {
 			n_result = main_cert(set_parameters);
-#ifdef _WIN32
-			std::cout << "\npress any key.......";
-			_getch();
-#endif
 			continue;
 		}
 		//
 		if (set_parameters.find(L"/removecert") != std::end(set_parameters)) {
 			n_result = main_remove_cert(set_parameters);
-#ifdef _WIN32
-			std::cout << "\npress any key.......";
-			_getch();
-#endif
 			continue;
 		}
 		if (set_parameters.find(L"--removecert") != std::end(set_parameters)) {
 			n_result = main_remove_cert(set_parameters);
-#ifdef _WIN32
-			std::cout << "\npress any key.......";
-			_getch();
-#endif
 			continue;
 		}
 		//
