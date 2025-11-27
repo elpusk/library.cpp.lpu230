@@ -16,9 +16,9 @@
 #define	HIDB_REP_RESULT_SUCCESS		0
 #define	HIDB_REP_RESULT_ERROR		0xff
 
-#ifdef	WIN32
+#ifdef	_WIN32
 #pragma pack(push,1)
-#endif	//WIN32
+#endif	//_WIN32
 
 //this structure must be packed.
 typedef struct tagHidBLRequest {
@@ -80,8 +80,8 @@ typedef struct tagHidBLIOTran {
 
 }_PACK_BYTE HidBLIOTran;
 
-#ifdef	WIN32
+#ifdef	_WIN32
 #pragma pack(pop)
-#endif	//WIN32
+#endif	//_WIN32
 
 #endif//	__PROTOCOL__H__

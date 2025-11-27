@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <functional>
 
-#ifdef	WIN32
+#ifdef	_WIN32
 #include <atldef.h>
 #include <atltrace.h>
 #endif

@@ -124,6 +124,11 @@ public:
 
 private:
 	/**
+	* @brief increase m_n_progress_cur as processing step
+	*/
+	void _process_progress_data();
+
+	/**
 	* @brief processing message and processing counter
 	* @param n_step - positive : normal processing counter. negative : for repaint(ignore this message)
 	* @param b_step_result - the result of step

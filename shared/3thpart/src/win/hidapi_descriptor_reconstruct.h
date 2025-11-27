@@ -143,7 +143,7 @@ typedef struct hid_pp_cap_ {
 	USAGE   UsagePage;
 	UCHAR   ReportID;
 	UCHAR   BitPosition;
-	USHORT  ReportSize; // WIN32 term for this is BitSize
+	USHORT  ReportSize; // _WIN32 term for this is BitSize
 	USHORT  ReportCount;
 	USHORT  BytePosition;
 	USHORT  BitCount;

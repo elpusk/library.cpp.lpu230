@@ -204,30 +204,7 @@ cupdater::cupdater(
 			}
 
 			if (event == ftxui::Event::Custom && m_state == cupdater::AppState::s_ing) {
-				float progress_ratio = 0.0f;
-				int total_steps = m_n_progress_max - m_n_progress_min;
-				if (total_steps == 0) {
-					progress_ratio = 0.0f;
-				}
-				else {
-					progress_ratio = static_cast<float>(m_n_progress_cur - m_n_progress_min) / total_steps;
-				}
-
-				++m_n_progress_cur;
-				if (m_n_progress_cur >= m_n_progress_max) {
-					m_n_progress_cur = m_n_progress_max;
-					//_update_state(cupdater::AppEvent::e_ulstep_s);
-#ifdef _WIN32
-					ATLTRACE(L"Progress update complete: (%d/%d)\n", m_n_progress_cur, m_n_progress_max);
-#endif
-					return false;
-				}
-				else {
-					//_update_state(cupdater::AppEvent::e_ustep_s);
-#ifdef _WIN32
-					ATLTRACE(L"Progress update : (%d/%d)\n", m_n_progress_cur, m_n_progress_max);
-#endif
-				}
+				_process_progress_data();
 			}
 			return false;  // Allow other events to propagate
 			});
@@ -1200,13 +1177,23 @@ void cupdater::_queueed_message_process(
 	m_s_message_in_ing_state += s_msg;
 
 	if (m_s_message_in_ing_state.empty()) {
-		m_log_ref.log_fmt("[I] main_loop : (%d,empty)\n", n_step);
+		if (m_b_display) {
+			m_log_ref.log_fmt("[I] ui_main_loop : (empty)\n");
+		}
+		else {
+			m_log_ref.log_fmt("[I] none_ui_main_loop : (empty)\n");
+		}
 #ifdef _WIN32
 		ATLTRACE("(INT,MSG) - (%d,empty)\n", n_step);
 #endif
 	}
 	else {
-		m_log_ref.log_fmt("[I] main_loop : (%d,%s)\n", n_step, m_s_message_in_ing_state.c_str());
+		if (m_b_display) {
+			m_log_ref.log_fmt("[I] ui_main_loop : (%s)\n", m_s_message_in_ing_state.c_str());
+		}
+		else {
+			m_log_ref.log_fmt("[I] none_ui_main_loop : (%s)\n", m_s_message_in_ing_state.c_str());
+		}
 #ifdef _WIN32
 		ATLTRACE("(INT,MSG) - (%d,%s)\n", n_step, m_s_message_in_ing_state.c_str());
 #endif
@@ -1319,6 +1306,8 @@ void cupdater::non_ui_main_loop()
 			//
 			while (_pop_message(n_step, b_step_result,s_msg)) {
 				_queueed_message_process(n_step, b_step_result,s_msg, ptr_tx_ctl_pipe);
+				//UI 가 없어서 CatchEvent() 에서 처리하는 부분을 여기서 처리해야함.
+				_process_progress_data();
 			}//end while
 			continue;
 		}
@@ -1328,7 +1317,8 @@ void cupdater::non_ui_main_loop()
 				continue;
 			}
 			_queueed_message_process(n_step, b_step_result, s_msg, ptr_tx_ctl_pipe);
-
+			//UI 가 없어서 CatchEvent() 에서 처리하는 부분을 여기서 처리해야함.
+			_process_progress_data();
 		} while (false);
 	}//end while
 
@@ -1600,13 +1590,16 @@ bool cupdater::_updates_sub_thread_backup_system_param(int& n_step)
 			std::tie(b_result, b_complete) = sh.io_save_all_variable_sys_parameter(b_first);
 			b_first = false;
 			if (b_result) {
+#ifdef _WIN32
+				ATLTRACE(L"SUCCESS : %d step : io_save_all_variable_sys_parameter().\n", n_step);
+#endif
 				_push_message(n_step,true,"backup system parameters");
 			}
 			else {
-				_push_message(n_step, false, "backup system parameters");
 #ifdef _WIN32
-				ATLTRACE(L"ERROR : io_save_all_variable_sys_parameter().\n");
+				ATLTRACE(L"ERROR : %d step : io_save_all_variable_sys_parameter().\n", n_step);
 #endif
+				_push_message(n_step, false, "backup system parameters");
 				break;
 			}
 		} while (!b_complete && m_b_is_running);
@@ -2279,4 +2272,31 @@ bool cupdater::_updates_sub_thread_set_iso_mode_after_update(int& n_step, const 
 	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
 	return b_result;
+}
+
+void cupdater::_process_progress_data()
+{
+	float progress_ratio = 0.0f;
+	int total_steps = m_n_progress_max - m_n_progress_min;
+	if (total_steps == 0) {
+		progress_ratio = 0.0f;
+	}
+	else {
+		progress_ratio = static_cast<float>(m_n_progress_cur - m_n_progress_min) / total_steps;
+	}
+
+	++m_n_progress_cur;
+	if (m_n_progress_cur >= m_n_progress_max) {
+		m_n_progress_cur = m_n_progress_max;
+		//_update_state(cupdater::AppEvent::e_ulstep_s);
+#ifdef _WIN32
+		ATLTRACE(L"Progress update complete: (%d/%d)\n", m_n_progress_cur, m_n_progress_max);
+#endif
+	}
+	else {
+		//_update_state(cupdater::AppEvent::e_ustep_s);
+#ifdef _WIN32
+		ATLTRACE(L"Progress update : (%d/%d)\n", m_n_progress_cur, m_n_progress_max);
+#endif
+	}
 }

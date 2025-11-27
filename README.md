@@ -22,8 +22,8 @@ lpu23x device c++ library
 + tg_lpu237_ibutton : v6.0
 + tg_rom : v1.2
 + tg_rom_build : v1.2
-+ elpusk-hid-d : v2.4
-  - Version 2.3 was incorrectly labeled as 2.2; fixed this error.
++ elpusk-hid-d : v2.5
+  - clog miss code; fixed this error.
 + coffee_sevice : 2.0
   - Windows only service program for running elpusk-hid-d.exe
 

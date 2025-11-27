@@ -1,5 +1,5 @@
 # Software components information
-release 2.4
+release 2.5
 
 ## LiMgmtLpu230
 - for Debian 12.(x64)
@@ -12,7 +12,7 @@ release 2.4
 - lpu237 device library test program.
 
 ## LiElpuskHidDaemon
-- v2.4
+- v2.5
 - for Debian 12.(x64)
 - executable file name : elpusk-hid-d
 - secure websoecket server deamon.(only single instance) with /server option or none(default)
@@ -23,7 +23,7 @@ release 2.4
 - supports lpu237-fw update by webapp.
 
 ## WiElpuskHidDaemon
-- v2.4
+- v2.5
 - for windows 11.(x64, x86)
 - executable file name : elpusk-hid-d.exe
 - secure websoecket server exe file.(only single instance) with /server option or none(default)
@@ -80,14 +80,14 @@ release 2.4
 - tg_lpu237_dll.dll test program.(msr test)
 
 ## li_lpu237_update
-- v2.2
+- v2.3
 - for Debian 12.(x64)
 - executable file name : lpu237_update.out or lpu237_update
 - lpu237 firmware update program.
 - can be executed by elpusk-hid-d.
 
 ## wi_lpu237_update
-- v2.2
+- v2.3
 - for windows 11.(x64, x86)
 - executable file name : lpu237_update.exe
 - lpu237 firmware update program.

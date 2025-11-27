@@ -47,9 +47,9 @@ public:
 	}type_msr_response;
 
 private:
-#ifdef	WIN32
+#ifdef	_WIN32
 #pragma pack(push,1)
-#endif	//WIN32
+#endif	//_WIN32
 	typedef	struct _tag_type_response
 	{
 		unsigned char c_prefix;
@@ -57,9 +57,9 @@ private:
 		unsigned char c_size;
 		unsigned char s_data[1];
 	}_PACK_BYTE _type_response;
-#ifdef	WIN32
+#ifdef	_WIN32
 #pragma pack(pop)
-#endif	//WIN32
+#endif	//_WIN32
 public:
 	//interface 
 	~cprotocol_lpu237() {};

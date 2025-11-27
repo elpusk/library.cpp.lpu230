@@ -65,9 +65,9 @@
 #endif
 
 
-#ifdef	WIN32
+#ifdef	_WIN32
 #pragma pack(push,1)
-#endif	//WIN32
+#endif	//_WIN32
 
 typedef struct tagMSR_MAP_TABLE{
 
@@ -405,9 +405,9 @@ typedef struct tagCONTAINER_INFO_MSR_OBJ_OLD{
 
 }COMPILER_ATTRIBUTE_BYTE_ALIGNMENT CONTAINER_INFO_MSR_OBJ_OLD, *PCONTAINER_INFO_MSR_OBJ_OLD,*LPCONTAINER_INFO_MSR_OBJ_OLD;
 
-#ifdef	WIN32
+#ifdef	_WIN32
 #pragma pack(pop)
-#endif	//WIN32
+#endif	//_WIN32
 
 
 #endif	//_INFO_MSR_HEADER_201007260001_

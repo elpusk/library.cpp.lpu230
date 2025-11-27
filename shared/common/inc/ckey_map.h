@@ -9,9 +9,9 @@ class ckey_map
 public:
 	static const unsigned char* get_ascii_to_hid_key_map(unsigned long n_language, unsigned long n_ascii = 0, unsigned n_item = 0)
 	{
-#ifdef	WIN32
+#ifdef	_WIN32
 #pragma pack(push,1)
-#endif	//WIN32
+#endif	//_WIN32
 		//maps ASCII to USB HID-key code.
 		//gASCToHIDKeyMap[i][j][k] ....... index i language map index, index j is ascii code.. editing 200 item
 		static const unsigned char sASCToHIDKeyMap[HIDKEY_MAP_NUMBER][FOR_CVT_MAX_ASCII_CODE][2] = {
@@ -1623,16 +1623,16 @@ public:
 				{ 0,0 }//9
 			}
 		};
-#ifdef	WIN32
+#ifdef	_WIN32
 #pragma pack(pop)
-#endif	//WIN32
+#endif	//_WIN32
 		return &sASCToHIDKeyMap[n_language][n_ascii][n_item];
 	}
 	static const unsigned char* get_ascii_to_ps2_key_map(unsigned long n_language, unsigned long n_ascii = 0, unsigned n_item = 0)
 	{
-#ifdef	WIN32
+#ifdef	_WIN32
 #pragma pack(push,1)
-#endif	//WIN32
+#endif	//_WIN32
 		/////////////////////////////////////////////////////////////////////////////
 		//maps ASCII to PS/2 set2 scan-code.
 		//gAsciiToPS2KeyTable[i][j][k] ....... index i language map index, index j is ascii code.. editing 200 item
@@ -3235,9 +3235,9 @@ public:
 				{ 0,0 }//9
 			}
 		};
-#ifdef	WIN32
+#ifdef	_WIN32
 #pragma pack(pop)
-#endif	//WIN32
+#endif	//_WIN32
 		return &sASCToPS2KeyMap[n_language][n_ascii][n_item];
 	}
 

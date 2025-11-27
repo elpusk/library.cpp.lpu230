@@ -11,10 +11,15 @@
 #include <csignal>
 
 #ifdef _WIN32
+
 #include <mp_win_console_manager.h>
+#include <conio.h> // Windows 전용 (비표준)
+
 #else
+
 #include <unistd.h>
 #include <syslog.h>
+
 #endif
 
 #include <sys/stat.h>
@@ -91,7 +96,9 @@ int main(int argc, char* argv[])
 
 		HWND consoleWindow = GetConsoleWindow();
 		if (consoleWindow) {
+#ifndef _DEBUG
 			ShowWindow(consoleWindow, SW_HIDE); // 콘솔 창 숨기기
+#endif //_DEBUG
 		}
 
 #endif
@@ -142,19 +149,35 @@ int main(int argc, char* argv[])
 		//
 		if (set_parameters.find(L"/cert") != std::end(set_parameters)) {
 			n_result = main_cert(set_parameters);
+#ifdef _WIN32
+			std::cout << "\npress any key.......";
+			_getch();
+#endif
 			continue;
 		}
 		if (set_parameters.find(L"--cert") != std::end(set_parameters)) {
 			n_result = main_cert(set_parameters);
+#ifdef _WIN32
+			std::cout << "\npress any key.......";
+			_getch();
+#endif
 			continue;
 		}
 		//
 		if (set_parameters.find(L"/removecert") != std::end(set_parameters)) {
 			n_result = main_remove_cert(set_parameters);
+#ifdef _WIN32
+			std::cout << "\npress any key.......";
+			_getch();
+#endif
 			continue;
 		}
 		if (set_parameters.find(L"--removecert") != std::end(set_parameters)) {
 			n_result = main_remove_cert(set_parameters);
+#ifdef _WIN32
+			std::cout << "\npress any key.......";
+			_getch();
+#endif
 			continue;
 		}
 		//
@@ -178,11 +201,19 @@ int main(int argc, char* argv[])
 		//
 		if (set_parameters.find(L"/help") != std::end(set_parameters)) {
 			_display_help();
+#ifdef _WIN32
+			std::cout << "\npress any key.......";
+			_getch();
+#endif
 			n_result = EXIT_SUCCESS;
 			continue;
 		}
 		if (set_parameters.find(L"--help") != std::end(set_parameters)) {
 			_display_help();
+#ifdef _WIN32
+			std::cout << "\npress any key.......";
+			_getch();
+#endif
 			n_result = EXIT_SUCCESS;
 			continue;
 		}
@@ -191,11 +222,19 @@ int main(int argc, char* argv[])
 
 		if (set_parameters.find(L"/version") != std::end(set_parameters)) {
 			std::wcout << ws_version << std::endl;
+#ifdef _WIN32
+			std::cout << "\npress any key.......";
+			_getch();
+#endif
 			n_result = EXIT_SUCCESS;
 			continue;
 		}
 		if (set_parameters.find(L"--version") != std::end(set_parameters)) {
 			std::wcout << ws_version << std::endl;
+#ifdef _WIN32
+			std::cout << "\npress any key.......";
+			_getch();
+#endif
 			n_result = EXIT_SUCCESS;
 			continue;
 		}

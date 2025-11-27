@@ -17,6 +17,6 @@
 //gcc
 #define	COMPILER_ATTRIBUTE_BYTE_ALIGNMENT	__attribute__ ((packed))
 
-#endif	//WIN32
+#endif	//_WIN32
 
 #endif	//_COMPILER_201007260001H_

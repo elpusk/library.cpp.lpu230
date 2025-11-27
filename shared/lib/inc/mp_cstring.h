@@ -237,13 +237,11 @@ namespace _mp{
 			va_end(ap);
 		}
 
-		static void format_stl_style(std::wstring& s_out, const std::wstring& s_fmt, ...)
+		static void format_stl_style(std::wstring& s_out, const std::wstring s_fmt, ...)
 		{
 			s_out.clear();
 			va_list ap;
-			const wchar_t* ps_fmt = s_fmt.c_str();
-
-			va_start(ap, ps_fmt);
+			va_start(ap, s_fmt);
 
 			do {
 				if (s_fmt.empty())
@@ -275,13 +273,11 @@ namespace _mp{
 
 			va_end(ap);
 		}
-		static void format(std::wstring& s_out, const std::wstring& s_fmt, ...)
+		static void format(std::wstring& s_out, const std::wstring s_fmt, ...)
 		{
 			s_out.clear();
 			va_list ap;
-			const wchar_t* ps_fmt = s_fmt.c_str();
-
-			va_start(ap, ps_fmt);
+			va_start(ap, s_fmt);
 
 			do {
 				if (s_fmt.empty())
@@ -310,13 +306,11 @@ namespace _mp{
 			va_end(ap);
 		}
 
-		static void format_with_pre_post(std::wstring& s_out, const std::wstring& s_prefix, const std::wstring& s_postfix, const std::wstring& s_fmt, ...)
+		static void format_with_pre_post(std::wstring& s_out, const std::wstring s_prefix, const std::wstring s_postfix, const std::wstring s_fmt, ...)
 		{
 			s_out.clear();
 			va_list ap;
-			const wchar_t* ps_fmt = s_fmt.c_str();
-
-			va_start(ap, ps_fmt);
+			va_start(ap, s_fmt);
 
 			do {
 				if (s_fmt.empty())

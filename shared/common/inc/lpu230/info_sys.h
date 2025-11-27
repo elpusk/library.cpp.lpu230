@@ -16,9 +16,9 @@
 // NOTICE
 // enum size must be byte.  -fshort-enums in gcc
 
-#ifdef	WIN32
+#ifdef	_WIN32
 #pragma pack(push,1)
-#endif	//WIN32
+#endif	//_WIN32
 
 #define	SYSTEM_STATUS_NUMBER		4	//the number of system status
 
@@ -165,22 +165,22 @@ typedef struct tagSYSINFO_STD{
 								//		  sVersion[2]-fix mistake version
 								// 		  sVersion[3]-build version
 								//default: sSysVer[]={1,0,0,0}
-#ifdef	WIN32
+#ifdef	_WIN32
 	unsigned char ModeBL;	//the current boot loader system mode
 	unsigned char ModeAP;	//the current application system mode
 #else
 	enum SYSTEM_MODE ModeBL;	//the current boot loader system mode
 	enum SYSTEM_MODE ModeAP;	//the current application system mode
-#endif	//WIN32
+#endif	//_WIN32
 
 	unsigned char sSN[SYSTEM_SIZE_SN];		// :serial number : use only sSN[0]~[5], [6]~[7]: RFU
 											//default: sSN[]={'0','0','0','0','0','0','0','0'}
 
-#ifdef	WIN32
+#ifdef	_WIN32
 	unsigned char Interface;	//the current active interface.
 #else
 	enum SYSTEM_INTERFACE Interface;	//the current active interface.
-#endif	//WIN32
+#endif	//_WIN32
 
 	uint32_t nBuzzerFrequency;		//buzzer frequency(Hz)
 
@@ -225,22 +225,22 @@ typedef struct tagSYSINFO{
 								//		  sVersion[2]-fix mistake version
 								// 		  sVersion[3]-build version
 								//default: sSysVer[]={1,0,0,0}
-#ifdef	WIN32
+#ifdef	_WIN32
 	unsigned char ModeBL;	//the current boot loader system mode
 	unsigned char ModeAP;	//the current application system mode
 #else
 	enum SYSTEM_MODE ModeBL;	//the current boot loader system mode
 	enum SYSTEM_MODE ModeAP;	//the current application system mode
-#endif	//WIN32
+#endif	//_WIN32
 
 	unsigned char sSN[SYSTEM_SIZE_SN];		// :serial number : use only sSN[0]~[5], [6]~[7]: RFU
 											//default: sSN[]={'0','0','0','0','0','0','0','0'}
 
-#ifdef	WIN32
+#ifdef	_WIN32
 	unsigned char Interface;	//the current active interface.
 #else
 	enum SYSTEM_INTERFACE Interface;	//the current active interface.
-#endif	//WIN32
+#endif	//_WIN32
 
 	uint32_t nBuzzerFrequency;		//buzzer frequency(Hz)
 
@@ -277,22 +277,22 @@ typedef struct tagSYSINFO_OLD{
 								//		  sVersion[2]-fix mistake version
 								// 		  sVersion[3]-build version
 								//default: sSysVer[]={1,0,0,0}
-#ifdef	WIN32
+#ifdef	_WIN32
 	unsigned char ModeBL;	//the current boot loader system mode
 	unsigned char ModeAP;	//the current application system mode
 #else
 	enum SYSTEM_MODE ModeBL;	//the current boot loader system mode
 	enum SYSTEM_MODE ModeAP;	//the current application system mode
-#endif	//WIN32
+#endif	//_WIN32
 
 	unsigned char sSN[SYSTEM_SIZE_SN];		// :serial number : use only sSN[0]~[5], [6]~[7]: RFU
 											//default: sSN[]={'0','0','0','0','0','0','0','0'}
 
-#ifdef	WIN32
+#ifdef	_WIN32
 	unsigned char Interface;	//the current active interface.
 #else
 	enum SYSTEM_INTERFACE Interface;	//the current active interface.
-#endif	//WIN32
+#endif	//_WIN32
 
 	uint32_t nBuzzerFrequency;		//buzzer frequency(Hz)
 
@@ -307,8 +307,8 @@ typedef struct tagSYSINFO_OLD{
 
 }COMPILER_ATTRIBUTE_BYTE_ALIGNMENT SYSINFO_OLD, *PSYSINFO_OLD, *LPSYSINFO_OLD;
 
-#ifdef	WIN32
+#ifdef	_WIN32
 #pragma pack(pop)
-#endif	//WIN32
+#endif	//_WIN32
 
 #endif	//_INFO_SYSTEM_201007026001H_
