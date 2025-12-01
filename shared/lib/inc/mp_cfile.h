@@ -399,7 +399,7 @@ namespace _mp{
 
 					if (boost::filesystem::is_directory(current_path))
 					{
-						if (s_filter == L"\\*" || s_filter == L"*.*")
+						if (s_filter == L"\\*" || s_filter == L"*.*" || s_filter == L"*")
 						{
 							list_found.push_back(current_path_str);
 						}
@@ -461,7 +461,7 @@ namespace _mp{
 					}
 					else if (boost::filesystem::is_regular_file(current_path))
 					{
-						if (s_filter == L"*.*" || boost::algorithm::iends_with(current_path_str, s_filter))
+						if (s_filter == L"*.*" || s_filter == L"*" || boost::algorithm::iends_with(current_path_str, s_filter))
 						{
 							list_pair_found.push_back(std::make_pair(current_path_str, *dir_iter));
 						}

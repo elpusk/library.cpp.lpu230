@@ -740,12 +740,12 @@ namespace _mp {
 						continue;
 					}
 
-					if(_vhid_info_lpu237::is_rx_msr_extension(std::get<1>(rqi))) {
+					if(_vhid_info::is_rx_msr_extension_of_lpu23x(std::get<1>(rqi))) {
 						// 응답값의 각 track len 의 값이 음수로 에러를 표시하는 듯하지만,
 						// himalia 에서 추가된 암호화 응답 구조를 갖는 것으로 확인되어,
 						// 무시하지 말고 계속 처리.
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-						ATLTRACE(L">>>>> [%ls] rx.is_rx_msr_extension = true .\n", __WFUNCTION__);
+						ATLTRACE(L">>>>> [%ls] rx.is_rx_msr_extension_of_lpu23x = true .\n", __WFUNCTION__);
 #endif
 						continue; 
 					}
@@ -836,12 +836,12 @@ namespace _mp {
 						continue;
 					}
 
-					if (_vhid_info_lpu237::is_rx_msr_extension(std::get<1>(rqi))) {
+					if (_vhid_info::is_rx_msr_extension_of_lpu23x(std::get<1>(rqi))) {
 						// 응답값의 각 track len 의 값이 음수로 에러를 표시하는 듯하지만,
 						// himalia 에서 추가된 암호화 응답 구조를 갖는 것으로 확인되어,
 						// 무시하지 말고 계속 처리.
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-						ATLTRACE(L">>>>> [%ls] rx.is_rx_msr_extension = true .\n", __WFUNCTION__);
+						ATLTRACE(L">>>>> [%ls] rx.is_rx_msr_extension_of_lpu23x = true .\n", __WFUNCTION__);
 #endif
 						continue;
 					}

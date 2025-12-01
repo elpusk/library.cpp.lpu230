@@ -25,6 +25,54 @@
 class cprotocol_lpu237 : public _mp::icprotocol
 {
 public:
+	/**
+	 * const_msr_extension is defined for encryption msr data.
+	 * If msr data is started with  tripple const_msr_extension,
+	 * then msr data has a extension format.
+	 * const_msr_extension is defined also in firmware code as C_MSR_EXTENSION(msrbasepbj.h, himalia).
+	 * extension format :
+	 * 0 offset bytes - const_msr_extension
+	 * 1 offset bytes - const_msr_extension
+	 * 2 offset bytes - const_msr_extension
+	 * 3 ~ 6 offset bytes - data field length with hex ascii string
+	 * ( converted from little endian unsigned short type).
+	*/
+	enum : unsigned char {
+		const_msr_extension = 0xe6 //(-26) msr data format is extension format(0xe6)
+	};
+	enum : uint32_t
+	{
+		const_size_min_ms_extension_response = 3 + 4, //triple prefix(3 bytes)  + data field length(4 bytes - hex string of unsigned shotr little-endian.
+		const_size_min_ms_extension_response_of_data_field = 4
+	};
+
+	enum
+	{
+		const_size_random_number = 16,
+		const_size_ksn = 10,
+		const_size_mac4 = 4
+	};
+
+	enum {
+		const_max_pre_pan_value = 6,
+		const_max_post_pan_value = 4,
+		const_max_authenticate_error = 5
+	};
+
+	enum {
+		const_size_get_random_return = 20,
+		const_size_security_key = 16
+	};
+
+	enum {
+		const_size_encryption_key = 16
+	};
+
+	enum {
+		const_buffer_size_security_buffer = 16
+	};
+
+public:
 	enum {
 		msr_response_prefix = 'R'
 	};

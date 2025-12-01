@@ -6,6 +6,7 @@
 #include <mp_elpusk.h>
 #include <mp_cstring.h>
 
+#include <cprotocol_lpu237.h>
 /**
 * An instance of this class corresponds to a single physical device (primitive device).
 */
@@ -89,18 +90,38 @@ public:
 
 	static bool is_support_shared_open(const std::string & s_extra_path )
 	{
-		bool b_support_shared(false);
-
-		for (auto item : _vhid_info::get_extra_paths(
+		static const _vhid_info::type_set_path_type _set_extra_paths_lpu237(_vhid_info::get_extra_paths(
 			_mp::_elpusk::const_usb_vid,
 			_mp::_elpusk::_lpu237::const_usb_pid,
 			_mp::_elpusk::_lpu237::const_usb_inf_hid
-		)) {
+		));
+		static const _vhid_info::type_set_path_type _set_extra_paths_lpu238(_vhid_info::get_extra_paths(
+			_mp::_elpusk::const_usb_vid,
+			_mp::_elpusk::_lpu238::const_usb_pid,
+			_mp::_elpusk::_lpu238::const_usb_inf_hid
+		));
+
+		bool b_support_shared(false);
+		// check lpu237
+		for (auto item : _set_extra_paths_lpu237) {
 			if (s_extra_path.compare(std::get<0>(item)) == 0) {
 				b_support_shared = std::get<2>(item);
 				break;
 			}
 		}//end for
+
+		if (b_support_shared) {
+			return b_support_shared;
+		}
+
+		// check lpu238
+		for (auto item : _set_extra_paths_lpu238) {
+			if (s_extra_path.compare(std::get<0>(item)) == 0) {
+				b_support_shared = std::get<2>(item);
+				break;
+			}
+		}//end for
+
 		return b_support_shared;
 	}
 
@@ -125,6 +146,17 @@ public:
 	*/
 	static std::tuple<bool, _mp::type_bm_dev, std::string, bool> is_path_compositive_type(const std::string& s_path)
 	{
+		static const _vhid_info::type_set_path_type _set_extra_paths_lpu237(_vhid_info::get_extra_paths(
+			_mp::_elpusk::const_usb_vid,
+			_mp::_elpusk::_lpu237::const_usb_pid,
+			_mp::_elpusk::_lpu237::const_usb_inf_hid
+		));
+		static const _vhid_info::type_set_path_type _set_extra_paths_lpu238(_vhid_info::get_extra_paths(
+			_mp::_elpusk::const_usb_vid,
+			_mp::_elpusk::_lpu238::const_usb_pid,
+			_mp::_elpusk::_lpu238::const_usb_inf_hid
+		));
+
 		bool b_compositive(false);
 		_mp::type_bm_dev t(_mp::type_bm_dev_hid);
 		std::string s_primitive;
@@ -134,12 +166,8 @@ public:
 			if (s_path.empty()) {
 				continue;
 			}
-
-			for (auto item : _vhid_info::get_extra_paths(
-				_mp::_elpusk::const_usb_vid,
-				_mp::_elpusk::_lpu237::const_usb_pid,
-				_mp::_elpusk::_lpu237::const_usb_inf_hid
-			)) {
+			//check lpu237
+			for (auto item : _set_extra_paths_lpu237) {
 				if (s_path.size() <= std::get<0>(item).size()) {
 					continue;
 				}
@@ -155,6 +183,29 @@ public:
 					break; //exit for
 				}
 			}//end for
+
+			if (b_compositive) {
+				continue;
+			}
+
+			//check lpu238
+			for (auto item : _set_extra_paths_lpu238) {
+				if (s_path.size() <= std::get<0>(item).size()) {
+					continue;
+				}
+				if (std::get<0>(item).size() == 0) {
+					continue;
+				}
+				if (s_path.compare(s_path.size() - std::get<0>(item).size(), std::get<0>(item).size(), std::get<0>(item)) == 0) {
+					// found compositive type
+					b_compositive = true;
+					t = std::get<1>(item);
+					std::copy(s_path.begin(), s_path.end() - std::get<0>(item).size(), std::back_inserter(s_primitive));
+					b_support_shared_open = std::get<2>(item);
+					break; //exit for
+				}
+			}//end for
+
 
 			if (!b_compositive)
 				s_primitive = s_path;
@@ -249,6 +300,99 @@ public:
 	{
 		return n_map_index_primitive + _vhid_info::_get_additional_value_of_compositive_map_index(type);
 	}
+
+	/**
+	* @brief check that the received data is i-button format.
+	*
+	* @param v_rx - the received data.
+	*
+	* @return
+	*	first - true(the received data is i-button format). false(not~)
+	*
+	*	second - 8 bytes ibutton key code(by defined i-button itself) or remove-key code(by defined user. default are 0,0,0,0,0,0,0,0) .
+	*/
+	static std::pair<bool, _mp::type_v_buffer> is_rx_ibutton_of_lpu23x(const _mp::type_v_buffer& v_rx)
+	{
+		bool b_result(false);
+
+		const std::string s_ibutton_postfix("this_is_ibutton_data");
+		const size_t n_size_button_data(8);
+		const size_t n_len_bytes = 3;
+		_mp::type_v_buffer v_code(0);
+
+		do {
+			if (v_rx.size() < n_len_bytes + s_ibutton_postfix.size() + n_size_button_data) {
+				continue;
+			}
+			if (v_rx[0] != 0 || v_rx[1] != 0 || v_rx[2] != 0) {
+				continue;// ibutton 데이터는 1,2,3 track 의 길이를 나타내는 값이 모두 0 임.
+			}
+			//
+			b_result = true;
+
+			for (auto i = 0; i < s_ibutton_postfix.size(); i++) {
+				if (v_rx[n_len_bytes + n_size_button_data + i] != s_ibutton_postfix[i]) {
+					b_result = false;
+					break;//exit for
+				}
+			}//end for
+
+			if (b_result) {
+				std::copy(v_rx.begin() + n_len_bytes, v_rx.begin() + n_len_bytes + n_size_button_data, std::back_inserter(v_code));
+			}
+
+		} while (false);
+		return std::make_pair(b_result, v_code);
+	}
+
+	static bool is_rx_pair_txrx_of_lpu23x(const _mp::type_v_buffer& v_rx)
+	{
+		bool b_result(false);
+
+		do {
+			if (v_rx.size() < 2) {
+				continue;
+			}
+			if (v_rx[0] != 'R') {
+				continue;
+			}
+			//
+			b_result = true;
+		} while (false);
+		return b_result;
+	}
+
+	/**
+	* @brief check that the received data is msr extension format( for encrypted data).
+	*
+	*	may be the first 3 bytes is 0xe6, 0xe6, 0xe6.
+	*
+	* @return true : msr extension format.
+	*/
+	static bool is_rx_msr_extension_of_lpu23x(const _mp::type_v_buffer& v_rx)
+	{
+		bool b_result(false);
+
+		do {
+			if (v_rx.size() < cprotocol_lpu237::const_size_min_ms_extension_response) {
+				continue;
+			}
+			if (v_rx[0] != cprotocol_lpu237::const_msr_extension) {
+				continue;
+			}
+			if (v_rx[1] != cprotocol_lpu237::const_msr_extension) {
+				continue;
+			}
+			if (v_rx[2] != cprotocol_lpu237::const_msr_extension) {
+				continue;
+			}
+
+			b_result = true;
+
+		} while (false);
+		return b_result;
+	}
+
 public:
 	_vhid_info() : m_b_none_blocking(false), m_c_option(0), m_n_option(0)
 	{
@@ -321,19 +465,42 @@ protected:
 	*/
 	static int _get_additional_value_of_compositive_map_index(_mp::type_bm_dev type)
 	{
+		static const _vhid_info::type_set_path_type _set_extra_paths_lpu237(_vhid_info::get_extra_paths(
+			_mp::_elpusk::const_usb_vid,
+			_mp::_elpusk::_lpu237::const_usb_pid,
+			_mp::_elpusk::_lpu237::const_usb_inf_hid
+		));
+		static const _vhid_info::type_set_path_type _set_extra_paths_lpu238(_vhid_info::get_extra_paths(
+			_mp::_elpusk::const_usb_vid,
+			_mp::_elpusk::_lpu238::const_usb_pid,
+			_mp::_elpusk::_lpu238::const_usb_inf_hid
+		));
 		int n_add(0);
+		bool b_found(false);
 
 		do {
-			for (auto item : _vhid_info::get_extra_paths(
-				_mp::_elpusk::const_usb_vid,
-				_mp::_elpusk::_lpu237::const_usb_pid,
-				_mp::_elpusk::_lpu237::const_usb_inf_hid
-			)) {
+			//check lpu237
+			for (auto item : _set_extra_paths_lpu237) {
 				if (std::get<1>(item) == type) {
 					n_add = std::get<3>(item);
+					b_found = true;
 					break;
 				}
 			}//end for
+
+			if (b_found) {
+				continue;
+			}
+
+			//check lpu238
+			for (auto item : _set_extra_paths_lpu238) {
+				if (std::get<1>(item) == type) {
+					n_add = std::get<3>(item);
+					b_found = true;
+					break;
+				}
+			}//end for
+
 		} while (false);
 
 		return n_add;
@@ -346,6 +513,16 @@ protected:
 	*/
 	static _vhid_info::type_tuple_path_type _get_type_from_compositive_map_index(int n_map_index_compositive)
 	{
+		static const _vhid_info::type_set_path_type _set_extra_paths_lpu237(_vhid_info::get_extra_paths(
+			_mp::_elpusk::const_usb_vid,
+			_mp::_elpusk::_lpu237::const_usb_pid,
+			_mp::_elpusk::_lpu237::const_usb_inf_hid
+		));
+		static const _vhid_info::type_set_path_type _set_extra_paths_lpu238(_vhid_info::get_extra_paths(
+			_mp::_elpusk::const_usb_vid,
+			_mp::_elpusk::_lpu238::const_usb_pid,
+			_mp::_elpusk::_lpu238::const_usb_inf_hid
+		));
 		_vhid_info::type_tuple_path_type data("", _mp::type_bm_dev_unknown, false, 0);
 
 		do {
@@ -365,14 +542,26 @@ protected:
 			//
 			int n_additional_compositive = _vhid_info::const_map_index_mask_additional_compositive & n_map_index_compositive;
 			_mp::type_bm_dev t_compositive = (_mp::type_bm_dev)(_mp::type_bm_dev_hid + n_additional_compositive);
+			bool b_found(false);
 
-			for (auto item : _vhid_info::get_extra_paths(
-				_mp::_elpusk::const_usb_vid,
-				_mp::_elpusk::_lpu237::const_usb_pid,
-				_mp::_elpusk::_lpu237::const_usb_inf_hid
-			)) {
+			// check lpu237.
+			for (auto item : _set_extra_paths_lpu237) {
 				if (std::get<1>(item) == t_compositive) {
 					data = item;
+					b_found = true;
+					break;
+				}
+			}//end for
+
+			if (b_found) {
+				continue;
+			}
+
+			//check lpu238
+			for (auto item : _set_extra_paths_lpu238) {
+				if (std::get<1>(item) == t_compositive) {
+					data = item;
+					b_found = true;
 					break;
 				}
 			}//end for

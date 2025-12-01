@@ -47,7 +47,6 @@ _vhid_api_briage::~_vhid_api_briage()
 
 std::set< std::tuple<std::string, unsigned short, unsigned short, int, std::string> > _vhid_api_briage::hid_enumerate()
 {
-
     /**
     * 1'st - device path, 2'nd - usb vendor id, 3'th - usb product id, 4'th - usb interface number, 5'th - extra data
     */
@@ -125,22 +124,69 @@ int _vhid_api_briage::api_open_path(const char* path)
 #endif
         }
 
-        // here primitive is opened.
+        // here! primitive is opened.
         auto it = m_map_ptr_hid_info_ptr_worker.find(n_primitive_map_index);
         if (it == std::end(m_map_ptr_hid_info_ptr_worker)) {
-            m_map_ptr_hid_info_ptr_worker[n_primitive_map_index] =
-                std::make_pair(
-                    std::make_shared<_vhid_info_lpu237>(t), // in constructure, type open counter is increased.
-                    std::make_shared<_q_worker>(n_primitive_map_index, this, m_b_remove_all_zero_in_report)
-                );
-            //convert primitive index to composite index.
-            n_map_index = _vhid_info::get_compositive_map_index_from_primitive_map_index(t, n_primitive_map_index);
+            std::string s_in_path(path);
+            /**
+            * 1'st - device path, 2'nd - usb vendor id, 3'th - usb product id, 4'th - usb interface number, 5'th - extra data
+            */
+            std::set< std::tuple<std::string, unsigned short, unsigned short, int, std::string> > set_primitive_dev;
 
-#ifdef _WIN32
-#ifdef _DEBUG
-            ATLTRACE(L"_create_new_map_compositive_item : index = 0x%x.\n", n_map_index);
+            // get pysical device list
+            set_primitive_dev = _hid_api_briage::hid_enumerate();//연결된 HID list 를 얻음. 
+
+            for (auto item : set_primitive_dev) {
+                std::string s_path(std::get<0>(item));
+                unsigned short w_vid(std::get<1>(item));
+                unsigned short w_pid(std::get<2>(item));
+                //
+                if (w_vid != _mp::_elpusk::const_usb_vid) {
+                    continue;
+                }
+
+                if (w_pid == _mp::_elpusk::_lpu237::const_usb_pid) {
+                    if (s_in_path.find(s_path) == 0) {
+                        // lpu237 장비면.
+                        m_map_ptr_hid_info_ptr_worker[n_primitive_map_index] =
+                            std::make_pair(
+                                std::make_shared<_vhid_info_lpu237>(t), // in constructure, type open counter is increased.
+                                std::make_shared<_q_worker>(n_primitive_map_index, this, m_b_remove_all_zero_in_report)
+                            );
+                        //convert primitive index to composite index.
+                        n_map_index = _vhid_info::get_compositive_map_index_from_primitive_map_index(t, n_primitive_map_index);
+#if defined(_WIN32) && defined(_DEBUG)
+                        ATLTRACE(L"_create_new_map_compositive_item : index = 0x%x.\n", n_map_index);
 #endif
+                        break; //exit for
+                    }
+                }
+                else if (w_pid == _mp::_elpusk::_lpu238::const_usb_pid) {
+                    if (s_in_path.find(s_path) == 0) {
+                        // lpu238 장비면....... ,아직 lpu238 지원 않함.
+#if defined(_WIN32) && defined(_DEBUG)
+                        ATLTRACE(L"_create_new_map_compositive_item : not support : lpu238 device.\n");
 #endif
+                    }
+                }
+                else if (w_pid == _mp::_elpusk::const_usb_pid_hidbl) {
+                    if (s_in_path.find(s_path) == 0) {
+                        //hid bootloader.
+                        m_map_ptr_hid_info_ptr_worker[n_primitive_map_index] =
+                            std::make_pair(
+                                std::make_shared<_vhid_info_lpu237>(t), // in constructure, type open counter is increased.
+                                std::make_shared<_q_worker>(n_primitive_map_index, this, m_b_remove_all_zero_in_report)
+                            );
+                        //convert primitive index to composite index.
+                        n_map_index = _vhid_info::get_compositive_map_index_from_primitive_map_index(t, n_primitive_map_index);
+#if defined(_WIN32) && defined(_DEBUG)
+                        ATLTRACE(L"_create_new_map_compositive_item hid boot : index = 0x%x.\n", n_map_index);
+#endif
+                        break; //exit for
+                    }
+                }
+            }//end for
+            //
             continue;
         }
 
@@ -948,7 +994,7 @@ bool _vhid_api_briage::_q_worker::_notify_in_single_or_multi_rx_requests(
         int n_map_index = ptr_req->get_map_index();
         _mp::type_bm_dev t = _vhid_info::get_type_from_compositive_map_index(n_map_index);
         bool b_is_ibutton_format(false);
-        std::tie(b_is_ibutton_format,std::ignore) = _vhid_info_lpu237::is_rx_ibutton(v);
+        std::tie(b_is_ibutton_format,std::ignore) = _vhid_info::is_rx_ibutton_of_lpu23x(v);
         _q_worker::_type_pair_result_ptr_rx item(0, _mp::type_ptr_v_buffer());
 
 #ifdef _WIN32
@@ -1063,7 +1109,7 @@ void _vhid_api_briage::_q_worker::_save_rx_to_msr_or_ibutton_buffer_in_single_or
 
         // n_result 가 영 보다 큰 경우, ptr_v_rx 는 무조건 할당되어 값을 가지고 있다.
         bool b_is_ibutton_format(false);
-        std::tie(b_is_ibutton_format,std::ignore) = _vhid_info_lpu237::is_rx_ibutton(*ptr_v_rx);
+        std::tie(b_is_ibutton_format,std::ignore) = _vhid_info::is_rx_ibutton_of_lpu23x(*ptr_v_rx);
         if (b_is_ibutton_format) {
 
 #if defined(_WIN32) && defined(_DEBUG)

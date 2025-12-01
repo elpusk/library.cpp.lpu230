@@ -361,10 +361,10 @@ namespace _test{
 					continue;//more processing
 				case _mp::cqitem_dev::result_success:
 					std::wcout << L" ++ _cb_msr_ibutton : result_success.\n";
-					if (_vhid_info_lpu237::is_rx_ibutton(v).first) {
+					if (_vhid_info::is_rx_ibutton_of_lpu23x(v).first) {
 						tp_hid::_print_ibutton(v);
 					}
-					else if (!_vhid_info_lpu237::is_rx_pair_txrx(v)) {
+					else if (!_vhid_info::is_rx_pair_txrx_of_lpu23x(v)) {
 						tp_hid::_print_msr(v);
 					}
 					else {
@@ -409,10 +409,10 @@ namespace _test{
 					continue;//more processing
 				case _mp::cqitem_dev::result_success:
 					std::wcout << L" ++ _cb_msr_ibutton : result_success.\n";
-					if (_vhid_info_lpu237::is_rx_ibutton(v).first) {
+					if (_vhid_info::is_rx_ibutton_of_lpu23x(v).first) {
 						tp_hid::_print_ibutton(v);
 					}
-					else if (!_vhid_info_lpu237::is_rx_pair_txrx(v)) {
+					else if (!_vhid_info::is_rx_pair_txrx_of_lpu23x(v)) {
 						tp_hid::_print_msr(v);
 					}
 					else {

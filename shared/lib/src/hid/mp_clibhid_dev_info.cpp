@@ -214,6 +214,17 @@ namespace _mp{
 
     type_bm_dev clibhid_dev_info::get_type() const
     {
+        static const _vhid_info::type_set_path_type _set_extra_paths_lpu237(_vhid_info::get_extra_paths(
+            _mp::_elpusk::const_usb_vid,
+            _mp::_elpusk::_lpu237::const_usb_pid,
+            _mp::_elpusk::_lpu237::const_usb_inf_hid
+        ));
+        static const _vhid_info::type_set_path_type _set_extra_paths_lpu238(_vhid_info::get_extra_paths(
+            _mp::_elpusk::const_usb_vid,
+            _mp::_elpusk::_lpu238::const_usb_pid,
+            _mp::_elpusk::_lpu238::const_usb_inf_hid
+        ));
+
         type_bm_dev t(_mp::type_bm_dev_unknown);
 
         do {
@@ -226,13 +237,9 @@ namespace _mp{
 				continue;
 			}
 
-            const _vhid_info::type_set_path_type const_v_extra(_vhid_info::get_extra_paths(
-                _mp::_elpusk::const_usb_vid,
-                _mp::_elpusk::_lpu237::const_usb_pid,
-                _mp::_elpusk::_lpu237::const_usb_inf_hid
-            ));
-
-			for (auto item : const_v_extra) {
+            bool b_found(false);
+            //check lpu237
+			for (auto item : _set_extra_paths_lpu237) {
 				if (m_s_extra_path.size() < std::get<0>(item).size()) {
 					continue;
 				}
@@ -241,9 +248,27 @@ namespace _mp{
 				}
 				if (m_s_extra_path.compare(m_s_extra_path.size() - std::get<0>(item).size(), std::get<0>(item).size(), std::get<0>(item)) == 0) {
 					t = std::get<1>(item);
+                    b_found = true;
 					break;
 				}
 			}//end for
+            if (b_found) {
+                continue;
+            }
+            //check lpu238
+            for (auto item : _set_extra_paths_lpu238) {
+                if (m_s_extra_path.size() < std::get<0>(item).size()) {
+                    continue;
+                }
+                if (std::get<0>(item).size() == 0) {
+                    continue;
+                }
+                if (m_s_extra_path.compare(m_s_extra_path.size() - std::get<0>(item).size(), std::get<0>(item).size(), std::get<0>(item)) == 0) {
+                    t = std::get<1>(item);
+                    b_found = true;
+                    break;
+                }
+            }//end for
 
         } while (false);
         return t;
