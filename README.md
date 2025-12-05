@@ -14,7 +14,7 @@ lpu23x device c++ library
 
 ## the current developed version(pkg v2.5)
 + dev_lib : v1.0
-+ lpu230_update : v2.2
++ lpu230_update : v2.3
   - at windows, logging folder is equal to lpu230_update.exe_ logging folder.
   - run by elpusk-hid-d server.
   
