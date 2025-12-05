@@ -22,7 +22,7 @@ cupdater_param::cupdater_param(unsigned long n_session_number) :
 
 cupdater_param::~cupdater_param()
 {
-	_delete_firmware();
+	_delete_firmware(L"called by ~cupdater_param()");
 }
 
 void cupdater_param::set_used()
@@ -356,7 +356,7 @@ void cupdater_param::callback_update_end(int n_exit_code)
 {
 	//이 콜백은 m_ptr_runner의 _watch_process(thread) 에서 호촐되므로
 	//여기서  m_ptr_runner 에 대한 조작은 불가능하다.
-	_delete_firmware();
+	_delete_firmware(L"called by callback_update_end()");
 #ifdef _WIN32
 	ATLTRACE(L"Exited lpu230_update with %d.\n",n_exit_code);
 #endif
@@ -564,7 +564,7 @@ _mp::cio_packet::type_ptr cupdater_param::get_rsp_packet_before_setting()
 	return m_ptr_rsp;
 }
 
-bool cupdater_param::_delete_firmware()
+bool cupdater_param::_delete_firmware(const std::wstring& s_debug_msg)
 {
 	std::lock_guard<std::mutex> lock(m_mutex);
 	bool b_result(false);
@@ -598,13 +598,24 @@ bool cupdater_param::_delete_firmware()
 	} while (false);
 	if (m_p_log) {
 		if (b_result) {
-			m_p_log->log_fmt(L"[I] - %ls | %ls\n", __WFUNCTION__, s_deb.c_str());
-			m_p_log->trace(L"[I] - %ls | %ls\n", __WFUNCTION__, s_deb.c_str());
+			if (s_debug_msg.empty()) {
+				m_p_log->log_fmt(L"[I] - %ls | %ls\n", __WFUNCTION__, s_deb.c_str());
+				m_p_log->trace(L"[I] - %ls | %ls\n", __WFUNCTION__, s_deb.c_str());
+			}
+			else {
+				m_p_log->log_fmt(L"[I] - %ls | %ls | %ls\n", __WFUNCTION__, s_debug_msg.c_str(), s_deb.c_str());
+				m_p_log->trace(L"[I] - %ls | %ls | %ls\n", __WFUNCTION__, s_debug_msg.c_str(), s_deb.c_str());
+			}
 		}
 		else {
-			m_p_log->log_fmt(L"[E] - %ls | %ls\n", __WFUNCTION__, s_deb.c_str());
-			m_p_log->trace(L"[E] - %ls | %ls\n", __WFUNCTION__, s_deb.c_str());
-
+			if (s_debug_msg.empty()) {
+				m_p_log->log_fmt(L"[E] - %ls | %ls\n", __WFUNCTION__, s_deb.c_str());
+				m_p_log->trace(L"[E] - %ls | %ls\n", __WFUNCTION__, s_deb.c_str());
+			}
+			else {
+				m_p_log->log_fmt(L"[E] - %ls | %ls | %ls\n", __WFUNCTION__, s_debug_msg.c_str(), s_deb.c_str());
+				m_p_log->trace(L"[E] - %ls | %ls | %ls\n", __WFUNCTION__, s_debug_msg.c_str(), s_deb.c_str());
+			}
 		}
 	}
 	return b_result;

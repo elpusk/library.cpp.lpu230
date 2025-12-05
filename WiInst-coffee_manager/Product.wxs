@@ -35,11 +35,11 @@
 <?define Pre_DirName_ProductName = "coffee_manager" ?>
 <?define Pre_DirName_ServiceName = "coffee_service" ?>
 
-<?define Pre_Manufacturer = "Elpusk" ?>
 <!-- Pre_Manufacturer name 은 Pre_Manufacturer 에 설정.-->
-<?define Pre_ProductName = "coffee_manager"?>
+<?define Pre_Manufacturer = "Elpusk" ?>
+
 <!-- product name 은 Pre_ProductName 에 설정.-->
-<?define Pre_ProductName_2nd = "coffee_manager_2nd"?>
+<?define Pre_ProductName = "coffee_manager_2nd"?>
 
 <!-- Pre_ProductVersion 값이 변경되면, Pre_ProductCode 는 새로 생성해야함.-->
 <?define Pre_ProductVersion = "2.5.0"?>
@@ -70,7 +70,7 @@
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
   <Product
     Id="$(var.Pre_ProductCode)"
-    Name="$(var.Pre_ProductName_2nd) $(var.Pre_PlatformPath)"
+    Name="$(var.Pre_ProductName) $(var.Pre_PlatformPath)"
     Language="$(var.Pre_LCID)"
     Version="$(var.Pre_ProductVersion)"
     Manufacturer="$(var.Pre_Manufacturer)"
@@ -81,12 +81,12 @@
       Compressed="yes"
       InstallScope="perMachine"
       InstallPrivileges="elevated"
-      Comments="$(var.Pre_ProductName_2nd) $(var.Pre_PlatformPath) v$(var.Pre_ProductVersion) Windows Installer Package."
+      Comments="$(var.Pre_ProductName) $(var.Pre_PlatformPath) v$(var.Pre_ProductVersion) Windows Installer Package."
       Platform="$(var.Pre_PlatformPath)"
       />
     
     <Media Id="1" Cabinet="$(var.TargetName).cab" EmbedCab="yes" />
-    <Icon Id="ProductIcon" SourceFile="$(var.SolutionDir)coffee_manager\res\coffee_manager.ico"/>
+    <Icon Id="ProductIcon" SourceFile="!(wix.PATH_SRC_ICON_COFFEE_MANAGER)"/>
     <Property Id="ARPPRODUCTICON" Value="ProductIcon"/>
     <Property Id="ARPHELPLINK" Value="$(var.Pre_HomePage)"/>
     <Property Id="ARPURLINFOABOUT" Value="$(var.Pre_HomePage)"/>
@@ -119,8 +119,8 @@
 
     <!-- copy file part -->
     <Feature Id="Complete" 
-             Title="installation $(var.Pre_ProductName_2nd) $(var.Pre_PlatformPath)" 
-             Description ="$(var.Pre_ProductName_2nd) $(var.Pre_PlatformPath) v$(var.Pre_ProductVersion) software components" Level="1"
+             Title="installation $(var.Pre_ProductName) $(var.Pre_PlatformPath)" 
+             Description ="$(var.Pre_ProductName) $(var.Pre_PlatformPath) v$(var.Pre_ProductVersion) software components" Level="1"
              Absent ="disallow"
              AllowAdvertise ="no"
              TypicalDefault ="install"
@@ -302,18 +302,22 @@
     <ComponentGroup Id="CG_DLL_x64" Directory="DLL_x64_FOLDER">
       <Component Id="co_tg_rom.dll_x64" Guid = "6D7B46C0-110C-4CE1-BA1E-13072AE2E9DA">
         <File Id="file_tg_rom.dll_x64" Name="tg_rom.dll" Source="!(wix.DIR_SRC_DLL_x64)tg_rom.dll" KeyPath="yes" Checksum="yes" />
+        <Condition> VersionNT64 </Condition>
       </Component>
 
       <Component Id="co_tg_lpu237_dll.dll_x64" Guid = "E2A96ED5-7610-45A0-ABB9-25D4509FD0A0">
         <File Id="file_tg_lpu237_dll.dll_x64" Name="tg_lpu237_dll.dll" Source="!(wix.DIR_SRC_DLL_x64)tg_lpu237_dll.dll" KeyPath="yes" Checksum="yes" />
+        <Condition> VersionNT64 </Condition>
       </Component>
 
       <Component Id="co_tg_lpu237_ibutton.dll_x64" Guid = "4BD9DE56-7B5C-478D-A8C7-60FE09A5DA78">
         <File Id="file_tg_lpu237_ibutton.dll_x64" Name="tg_lpu237_ibutton.dll" Source="!(wix.DIR_SRC_DLL_x64)tg_lpu237_ibutton.dll" KeyPath="yes" Checksum="yes"/>
+        <Condition> VersionNT64 </Condition>
       </Component>
 
       <Component Id="co_dev_lib.dll_x64" Guid = "B4D3CECF-5928-4094-851A-80422F3B1E81">
         <File Id="file_dev_lib.dll_x64" Name="dev_lib.dll" Source="!(wix.DIR_SRC_DLL_x64)dev_lib.dll" KeyPath="yes" Checksum="yes" />
+        <Condition> VersionNT64 </Condition>
       </Component>
     </ComponentGroup>
   </Fragment>
@@ -365,15 +369,9 @@
   <Fragment>
     <ComponentGroup Id="CG_SC_PRODUCT" Directory="SC_PRODUCT_FOLDER">
       <Component Id="co_sc.product" Guid="F1105510-E09D-426C-B9D6-3B6820EC7893">
-        <Shortcut Id="sc.coffee_control.exe"
-                  Name="coffee_control"
-                  Description="vendor defined usb io platform"
-                  Target="[#file_coffee_control.exe]"
-                  WorkingDirectory="BIN_FOLDER"/>
-
         <Shortcut Id="sc_uninstall_Product"
                   Name="Uninstall"
-                  Description="Uninstalls $(var.Pre_ProductName_2nd) $(var.Pre_PlatformPath) software components"
+                  Description="Uninstalls $(var.Pre_ProductName) $(var.Pre_PlatformPath) software components"
                   Target="[SystemFolder]msiexec.exe"
                   Arguments="/x [ProductCode]"/>
         <RemoveFolder Id="clean_up_short_cut" Directory="SC_PRODUCT_FOLDER" On="uninstall"/>

@@ -12,7 +12,7 @@ lpu23x device c++ library
 + deb package directory : /home/tester/build_deb/
 + FTXUI 6.1.9 lib - path : /home/tester/FTXUI/
 
-## the current developing version(pkg v2.5)
+## the current developed version(pkg v2.5)
 + dev_lib : v1.0
 + lpu230_update : v2.2
   - at windows, logging folder is equal to lpu230_update.exe_ logging folder.

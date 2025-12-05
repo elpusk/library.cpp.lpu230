@@ -55,7 +55,7 @@ bool _clean_all_on_windows()
 
         // 2. idFolder(00000006)가 비었으면 삭제
         if (std::filesystem::exists(idFolder) && std::filesystem::is_empty(idFolder)) {
-            bool removed = std::filesystem::remove(idFolder);
+			bool removed = std::filesystem::remove_all(idFolder);// remove() 하면 idFolder 폴더 자체는 삭제 안됨
             if (removed) {
                 //std::cout << "[INFO] Removed folder: " << idFolder << "\n";
             }
@@ -63,7 +63,7 @@ bool _clean_all_on_windows()
 
         // 3. base(Elpusk) 폴더가 비었으면 삭제
         if (std::filesystem::exists(base) && std::filesystem::is_empty(base)) {
-            bool removed = std::filesystem::remove(base);
+            bool removed = std::filesystem::remove_all(base);
             if (removed) {
                 //std::cout << "[INFO] Removed folder: " << base << "\n";
             }

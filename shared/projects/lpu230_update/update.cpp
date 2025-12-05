@@ -91,10 +91,11 @@ static void _signal_handler(int signum);
 
 /**
 * @param b_display : true - display ui, false - no display ui
+* @param b_demonize (linux only): true - run as daemon, false - run as normal process, this param is cosidered when b_display is false.
 * @return first - success setup display
 * @return second - need to remove pid file when exit
 */
-static std::tuple<bool,bool,unsigned long,bool> setup_display(bool b_display);
+static std::tuple<bool,bool,unsigned long,bool> setup_display(bool b_display,bool b_demonize);
 
 static void setup_log(bool b_run_by_coffee_manager, bool b_enable);
 
@@ -131,7 +132,6 @@ int update_main
 	bool b_notify_progress_to_server
 )
 {
-	std::wstring s_pid_file_full_path;
 	bool b_need_remove_pid_file(false);
 	bool b_result_setup_display(false);
 	bool b_need_restore_console_mode(false);
@@ -153,7 +153,15 @@ int update_main
 			}
 			continue;//error
 		}
-		std::tie(b_result_setup_display,b_need_remove_pid_file, dw_original_console_mode, b_need_restore_console_mode) = setup_display(b_display);
+
+		bool b_demonize(false);
+		if (!b_run_by_cf) {
+			if (!b_display) {
+				// 단독 실행된 경우, ui 가 없으면 daemonize 로 실행.(linux only)
+				b_demonize = true;
+			}
+		}
+		std::tie(b_result_setup_display,b_need_remove_pid_file, dw_original_console_mode, b_need_restore_console_mode) = setup_display(b_display, b_demonize);
 		if(!b_result_setup_display) {
 			log.log_fmt(L"[E] setup_display() failed.\n");
 			gn_result = _mp::exit_error_setup_display;
@@ -267,6 +275,7 @@ int update_main
 #ifndef _WIN32
 	//linux only
 	if (b_need_remove_pid_file) {//normally! removed pid file.
+		std::wstring s_pid_file_full_path(_mp::_coffee::CONST_S_PID_FILE_FULL_PATH_LPU230_UPDATE);
 		std::string s_pid_file = _mp::cstring::get_mcsc_from_unicode(s_pid_file_full_path);
 		remove(s_pid_file.c_str());
 	}
@@ -431,7 +440,7 @@ void _signal_handler(int signum)
 }
 #endif
 
-std::tuple<bool, bool, unsigned long, bool> setup_display(bool b_display)
+std::tuple<bool, bool, unsigned long, bool> setup_display(bool b_display, bool b_demonize)
 {
 	bool b_result(false);
 	bool b_need_remove_pid_file(false);
@@ -447,13 +456,23 @@ std::tuple<bool, bool, unsigned long, bool> setup_display(bool b_display)
 			}
 			ShowWindow(consoleWindow, SW_HIDE); // 콘솔 창 숨기기
 #else
-			// 이후 출력 억제
-			std::cout.setstate(std::ios_base::failbit);
-			std::cerr.setstate(std::ios_base::failbit);
+			// linux. 
+			if (b_demonize) {
+				// 단독으로 숨김 실행시.
+				// 이후 출력 억제
+				std::cout.setstate(std::ios_base::failbit);
+				std::cerr.setstate(std::ios_base::failbit);
 
-			std::wstring s_pid_file_full_path = _mp::_coffee::CONST_S_PID_FILE_FULL_PATH_LPU230_UPDATE;
-			if (_mp::csystem::daemonize_on_linux(s_pid_file_full_path, std::wstring(), _signal_handler)) {
-				b_need_remove_pid_file = true;
+				std::wstring s_pid_file_full_path = _mp::_coffee::CONST_S_PID_FILE_FULL_PATH_LPU230_UPDATE;
+				if (_mp::csystem::daemonize_on_linux(s_pid_file_full_path, std::wstring(), _signal_handler)) {
+					b_need_remove_pid_file = true;
+				}
+			}
+			else {
+				//데몬화를 elpusk - hid - d 에서 posix_spawn() 로 수행하는 경우.
+				signal(SIGINT, _signal_handler);// SIGINT (Ctrl+C) 처리
+				signal(SIGHUP, _signal_handler);// SIGHUP (터미널 창 닫기 또는 세션 종료) 처리
+				signal(SIGTERM, _signal_handler);// SIGTERM (시스템 종료 또는 kill 명령) 처리
 			}
 #endif
 		}
@@ -504,17 +523,11 @@ std::tuple<bool, bool, unsigned long, bool> setup_display(bool b_display)
 			}
 			*/
 #else
-			// SIGINT (Ctrl+C) 처리
-			signal(SIGINT, _signal_handler);
-
-			// SIGHUP (터미널 창 닫기 또는 세션 종료) 처리
-			signal(SIGHUP, _signal_handler);
-
-			// SIGTERM (시스템 종료 또는 kill 명령) 처리
-			signal(SIGTERM, _signal_handler);
-
-			// SIGTSTP (Ctrl+Z, 일시 중지)를 무시하여 백그라운드 전환 방지
-			signal(SIGTSTP, SIG_IGN);
+			
+			signal(SIGINT, _signal_handler);// SIGINT (Ctrl+C) 처리
+			signal(SIGHUP, _signal_handler);// SIGHUP (터미널 창 닫기 또는 세션 종료) 처리
+			signal(SIGTERM, _signal_handler);// SIGTERM (시스템 종료 또는 kill 명령) 처리
+			signal(SIGTSTP, SIG_IGN);// SIGTSTP (Ctrl+Z, 일시 중지)를 무시하여 백그라운드 전환 방지
 #endif
 		}
 

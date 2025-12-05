@@ -17,10 +17,15 @@
 ## 공통
 
 - [web app](https://elpusk.github.io/library.js.coffee/tools_lpu237_full.html)
-  + lpu237 parameters 일고, 쓰고 저장.
+  + lpu237 parameters 읽고, 쓰고 저장.
+  + msr reading.
 - native application(tp_wi_lpu237.exe, tp_li_lpu237.out)
   + tg_lpu37_dll.dll(libtg_lpu237_dll.so) 를 사용한 상호 배타적 MSR 읽기 기능.
   + tg_lpu37_ibutton.dll(libtg_lpu237_ibutton.so) 를 사용한 공유된 i-button 읽기 기능.
+  + x64 elpusk-hid-d 실행 중, x64 dll 를 이용하는 native application 정상 동작.
+  + x64 elpusk-hid-d 실행 중, x86 dll 를 이용하는 native application 정상 동작.
+  + x86 elpusk-hid-d 실행 중, x86 dll 를 이용하는 native application 정상 동작.
+
 
 
 

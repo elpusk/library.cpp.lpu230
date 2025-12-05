@@ -19,6 +19,7 @@
 #endif
 
 #include <mp_clog.h>
+#include <mp_csystem_.h>
 
 class cprocess_watcher {
 public:
@@ -119,67 +120,148 @@ private:
         //std::cout << "[Watcher] stopped before process ended.\n";
 
 #else
-        pid_t pid;
-        extern char** environ;
-        int ret = 0;
+        bool b_daemonize = false;
+        bool b_create_new_console = false;
 
-        // 1. argv 안전하게 복사 (항상 해야 함)
-        /*
-        std::vector<std::string> new_args = {
-            "/usr/bin/systemd-run", "--pty", "--quiet",
-            "--service-type=exec", "--wait" 
-        };
-        */
-        std::vector<std::string> new_args;// 위 코드가 별 효과가 없어서 임시로 위 코드 기능 정지 시킴.
-
-        std::vector<std::string> args_storage;
-        if (b_enable_gui) {
-            args_storage.reserve(new_args.size() + args.size() + 1);
-            for (auto& a : new_args) {
-                args_storage.push_back(std::move(a));
-            }
+        if (!b_enable_gui) {
+            b_daemonize = true;
+            b_create_new_console = false;
         }
         else {
-            args_storage.reserve(args.size() + 1);
+            b_daemonize = false;
+            b_create_new_console = true;
         }
+        //
+        std::string s_cmd(exe);
+        std::vector<std::string> args_storage;
+        std::vector<char*> argv_with_exe;
+        size_t n_args_storage_with_exe = args.size()+1;
 
-        args_storage.push_back(exe);
-        for (auto& a : args) {
-            args_storage.push_back(std::move(a));
+        if (b_create_new_console) {
+            std::string _s_deb_msg;
+            std::string s_new_term_exe = _mp::csystem::get_terminal_on_linux(_s_deb_msg);
+            
+            if (s_new_term_exe.empty()) {
+                std::wstring _ws_deb_msg = _mp::cstring::get_unicode_from_mcsc(_s_deb_msg);
+                if (m_p_log) {
+                    if (_ws_deb_msg.empty()) {
+                        m_p_log->log_fmt(L"[E] - %ls | %ls\n", __WFUNCTION__, L"not found console");
+                        m_p_log->trace(L"[E] - %ls | %ls\n", __WFUNCTION__, L"not found console");
+                    }
+                    else {
+                        m_p_log->log_fmt(L"[E] - %ls | %ls\n", __WFUNCTION__, _ws_deb_msg.c_str());
+                        m_p_log->trace(L"[E] - %ls | %ls\n", __WFUNCTION__, _ws_deb_msg.c_str());
+                    }
+                }
+                // 콘솔이 있어서 그냥 실행.
+				// b_create_new_console 이 true 이므로 b_demonize 은 false 임.
+                args_storage.reserve(n_args_storage_with_exe);
+                args_storage.push_back(exe);
+                for (auto& a : args) {
+                    args_storage.push_back(std::move(a));
+                }
+            }
+            else {
+				s_cmd = s_new_term_exe;
+                std::vector<std::string> v_cmd = _mp::csystem::make_terminal_cmd_on_linux(s_new_term_exe, exe);
+
+                if (m_p_log) {
+                    std::wstring _ws_cmd = _mp::cstring::get_unicode_from_mcsc(s_cmd);
+                    m_p_log->log_fmt(L"[I] - %ls | new console - %ls\n", __WFUNCTION__, _ws_cmd.c_str());
+                    m_p_log->trace(L"[I] - %ls | new console - %ls\n", __WFUNCTION__, _ws_cmd.c_str());
+                }
+
+				n_args_storage_with_exe = v_cmd.size() + args.size(); 
+                args_storage.reserve(n_args_storage_with_exe);
+                for (auto& s : v_cmd) {
+                    args_storage.push_back(std::move(s));
+                }
+                for (auto& a : args) {
+                    args_storage.push_back(std::move(a));
+				}
+
+            }
         }
-
-        std::vector<char*> argv;
-        argv.reserve(args_storage.size() + 1);
+        else {//데몬의 경우.
+            if (m_p_log) {
+                m_p_log->log_fmt(L"[I] - %ls | %ls\n", __WFUNCTION__, L"self-daemonize");
+                m_p_log->trace(L"[I] - %ls | %ls\n", __WFUNCTION__, L"self-daemonize");
+            }
+            args_storage.reserve(n_args_storage_with_exe);
+            args_storage.push_back(exe);
+            for (auto& a : args) {
+                args_storage.push_back(std::move(a));
+			}
+        }
+       
+        argv_with_exe.reserve(args_storage.size() + 1);// +1 for last null
         for (auto& s : args_storage) {
-            argv.push_back(const_cast<char*>(s.c_str()));
+            argv_with_exe.push_back(const_cast<char*>(s.c_str()));
         }
-        argv.push_back(nullptr);
+        argv_with_exe.push_back(nullptr);
 
-        ret = posix_spawn(
-            &pid
-            , exe.c_str()
-            , nullptr
-            , nullptr
-            , argv.data()
-            , environ
-        );
+        bool b_result = false;
+        pid_t pid;
 
-        if (ret != 0) {
+        std::tie(b_result,pid) = _mp::csystem::execute_process_on_linux( s_cmd,argv_with_exe,false,b_daemonize);
+        if (!b_result) {
             if (cb) {
                 cb(-1);
             }
-            // 프로세스 종료에 의해 중단.
+            // 프로세스 실행 실패.
             m_b_stop_worker = true;
             if (m_p_log) {
-                m_p_log->log_fmt(L"[E] - %ls | %ls\n", __WFUNCTION__, L"posix_spawn");
-                m_p_log->trace(L"[E] - %ls | %ls\n", __WFUNCTION__, L"posix_spawn");
+                m_p_log->log_fmt(L"[E] - %ls | %ls\n", __WFUNCTION__, L"execute_process_on_linux");
+                m_p_log->trace(L"[E] - %ls | %ls\n", __WFUNCTION__, L"execute_process_on_linux");
+            }
+			return;
+        }
+
+        m_p_log->log_fmt(L"[I] - %ls | run process %d.\n", __WFUNCTION__, pid);
+        m_p_log->trace(L"[I] - %ls | run process %d.\n", __WFUNCTION__, pid);
+
+        if (pid <= 0) {
+            // deamon 죽음.
+            if (cb) {
+                cb(127);
+            }
+            m_b_stop_worker = true;//exit while
+            if (m_p_log) {
+                m_p_log->log_fmt(L"[E] - %ls | killed updater | %d\n", __WFUNCTION__, pid);
+                m_p_log->trace(L"[E] - %ls | killed updater | %d\n", __WFUNCTION__, pid);
             }
             return;
         }
 
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+        while (!m_b_stop_worker) {
+            if (kill(pid, 0) == 0 || errno == EPERM) {   // EPERM도 살아 있다는 뜻
+				continue; // alive deamon
+            }
+
+			// dead deamon
+            if (cb) {
+                cb(0); // 정상 종료
+			}
+            m_b_stop_worker = true;//exit while
+            if (m_p_log) {
+                m_p_log->log_fmt(L"[I] - %ls | gohome updater | %d\n", __WFUNCTION__, pid);
+                m_p_log->trace(L"[I] - %ls | gohome updater | %d\n", __WFUNCTION__, pid);
+                return;
+            }
+        } // end while
+
+        /*
+		// posix_spawn()이 반환된 직후에 waitpid(..., WNOHANG)을 하면, race condition(반환 -1 + errno = ECHILD) 이 발생할 수 있음.
         // 부모: polling 으로 종료 또는 stop_flag 확인
+		int n_max_try_cnt = 50;
+		int n_try_cnt(n_max_try_cnt); // 100msec * 50 = 5초
+
         int status = 0;
         while (!m_b_stop_worker) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
             pid_t result = waitpid(pid, &status, WNOHANG);
             if (result == pid) {
                 int exit_code = (WIFEXITED(status)) ? WEXITSTATUS(status) : -1;
@@ -206,27 +288,37 @@ private:
                         m_p_log->log_fmt(L"[E] - %ls | %ls\n", __WFUNCTION__, L"waitpid");
                         m_p_log->trace(L"[E] - %ls | %ls\n", __WFUNCTION__, L"waitpid");
                     }
+                    break;//exit while
                 }
-                else {
-                    if (cb) {
-                        cb(127);
-                    }
-                    if (m_p_log) {
-                        m_p_log->log_fmt(L"[E] - %ls | %ls\n", __WFUNCTION__, L"waitpid=ECHILD");
-                        m_p_log->trace(L"[E] - %ls | %ls\n", __WFUNCTION__, L"waitpid=ECHILD");
-                    }
+
+                //posix_spawn() 에 의해 실행된 프로세스가 데몬의 경우는 항상 여기옴.
+				// 부모, 자식 관계가 끊어졌기 때문.
+                if (n_try_cnt > 0) {
+                    --n_try_cnt;
+					// posix_spawn() + waitpid(pid, &status, WNOHANG) 의 조합에 의한 race condition 대응
+                    m_b_stop_worker = false; // retry
+                    continue;
+                }
+                if (cb) {
+                    cb(127);
+                }
+                if (m_p_log) {
+                    m_p_log->log_fmt(L"[E] - %ls | %ls\n", __WFUNCTION__, L"waitpid=ECHILD");
+                    m_p_log->trace(L"[E] - %ls | %ls\n", __WFUNCTION__, L"waitpid=ECHILD");
                 }
                 break;
             }
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        }
-
+            else if (result == 0) {
+                n_try_cnt = n_max_try_cnt; //reset retry counter
+            }
+        }//end while
+        */
         // m_b_stop_worker로 중단됨
         kill(pid, SIGTERM);
         waitpid(pid, nullptr, 0);  // 좀비 회수
         if (m_p_log) {
-            m_p_log->log_fmt(L"[E] - %ls | %ls\n", __WFUNCTION__, L"stopped before process ended");
-            m_p_log->trace(L"[E] - %ls | %ls\n", __WFUNCTION__, L"stopped before process ended");
+            m_p_log->log_fmt(L"[E] - %ls | %ls | %d\n", __WFUNCTION__, L"stopped before process ended", pid);
+            m_p_log->trace(L"[E] - %ls | %ls | %d\n", __WFUNCTION__, L"stopped before process ended", pid);
         }
         //std::cout << "[Watcher] stopped before process ended.\n";
 #endif

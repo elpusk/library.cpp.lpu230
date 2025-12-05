@@ -482,21 +482,47 @@ namespace _mp
 			bool file_firmware(const std::wstring& s_sub, const std::wstring& s_virtual_full_file)
 			{
 				bool b_result(false);
-				clog::get_instance().log_fmt(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
-				clog::get_instance().trace(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
+				if (s_sub.empty()) {
+					if(s_virtual_full_file.empty()) {
+						clog::get_instance().log_fmt(L"[I] - %ls : %u : none : none.\n", __WFUNCTION__, m_n_session);
+						clog::get_instance().trace(L"[I] - %ls : %u : none : none.\n", __WFUNCTION__, m_n_session);
+					}
+					else {
+						clog::get_instance().log_fmt(L"[I] - %ls : %u : none : %ls.\n", __WFUNCTION__, m_n_session, s_virtual_full_file.c_str());
+						clog::get_instance().trace(L"[I] - %ls : %u : none : %ls.\n", __WFUNCTION__, m_n_session, s_virtual_full_file.c_str());
+					}
+				}
+				else {
+					if (s_virtual_full_file.empty()) {
+						clog::get_instance().log_fmt(L"[I] - %ls : %u : %ls : none.\n", __WFUNCTION__, m_n_session, s_sub.c_str());
+						clog::get_instance().trace(L"[I] - %ls : %u : %ls : none.\n", __WFUNCTION__, m_n_session, s_sub.c_str());
+					}
+					else {
+						clog::get_instance().log_fmt(L"[I] - %ls : %u : %ls : %ls.\n", __WFUNCTION__, m_n_session, s_sub.c_str(), s_virtual_full_file.c_str());
+						clog::get_instance().trace(L"[I] - %ls : %u : %ls : %ls.\n", __WFUNCTION__, m_n_session, s_sub.c_str(), s_virtual_full_file.c_str());
+					}
+				}
+
 				do {
 					std::lock_guard<std::mutex> lock(m_mutex_session_files);
 					if (s_sub.empty())
 						continue;
 
 					_mp::type_map_wfilename_ptr_fstream::iterator it = m_map_opened_files.find(s_virtual_full_file);
-					if (it != std::end(m_map_opened_files))
+					if (it != std::end(m_map_opened_files)) {
+						clog::get_instance().log_fmt(L"[E] - %ls : %u : already opend.\n", __WFUNCTION__, m_n_session);
+						clog::get_instance().trace(L"[E] - %ls : %u : already opend.\n", __WFUNCTION__, m_n_session);
 						continue;//already opend
+					}
+					
 #ifdef _WIN32
-					std::string s_file = _mp::cstring::get_mcsc_from_unicode(m_s_root_folder_except_backslash + L"\\" + s_virtual_full_file);
+					std::wstring ws_file = m_s_root_folder_except_backslash + L"\\" + s_virtual_full_file;
 #else
-					std::string s_file = _mp::cstring::get_mcsc_from_unicode(m_s_root_folder_except_backslash + L"/" + s_virtual_full_file);
+					std::wstring ws_file = m_s_root_folder_except_backslash + L"/" + s_virtual_full_file;
 #endif
+					std::string s_file = _mp::cstring::get_mcsc_from_unicode(ws_file);
+					clog::get_instance().log_fmt(L"[I] - %ls : %u : %ls(abs full path).\n", __WFUNCTION__, m_n_session, ws_file.c_str());
+					clog::get_instance().trace(L"[I] - %ls : %u : %ls(abs full path).\n", __WFUNCTION__, m_n_session, ws_file.c_str());
 					//
 					if (s_sub.compare(L"create") == 0) {//create firmware file.
 						//check exist file
@@ -562,8 +588,11 @@ namespace _mp
 #else
 						std::wstring s_del_file = m_s_root_folder_except_backslash + L"/" + s_virtual_full_file;
 #endif
-						if (!cfile::delete_file(s_del_file))
+						if (!cfile::delete_file(s_del_file)) {
+							clog::get_instance().log_fmt(L"[E] - %ls : %u : %ls : delete.\n", __WFUNCTION__, m_n_session, s_del_file.c_str());
+							clog::get_instance().trace(L"[E] - %ls : %u : %ls : delete.\n", __WFUNCTION__, m_n_session, s_del_file.c_str());
 							continue;
+						}
 
 						b_result = true;
 					}
@@ -579,41 +608,59 @@ namespace _mp
 			bool file_create(const std::wstring& s_virtual_full_file)
 			{
 				bool b_result(false);
-				clog::get_instance().log_fmt(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
-				clog::get_instance().trace(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
+				if (!s_virtual_full_file.empty()) {
+					clog::get_instance().log_fmt(L"[I] - %ls : %u : %ls.\n", __WFUNCTION__, m_n_session, s_virtual_full_file.c_str());
+					clog::get_instance().trace(L"[I] - %ls : %u : %ls.\n", __WFUNCTION__, m_n_session, s_virtual_full_file.c_str());
+				}
+
 				do {
 					std::lock_guard<std::mutex> lock(m_mutex_session_files);
-					if (s_virtual_full_file.empty())
+					if (s_virtual_full_file.empty()) {
+						clog::get_instance().log_fmt(L"[E] - %ls : %u : none.\n", __WFUNCTION__, m_n_session);
+						clog::get_instance().trace(L"[E] - %ls : %u : none.\n", __WFUNCTION__, m_n_session);
 						continue;
+					}
 					_mp::type_map_wfilename_ptr_fstream::iterator it = m_map_opened_files.find(s_virtual_full_file);
-					if (it != std::end(m_map_opened_files))
+					if (it != std::end(m_map_opened_files)) {
+						clog::get_instance().log_fmt(L"[E] - %ls : %u : already opend.\n", __WFUNCTION__, m_n_session);
+						clog::get_instance().trace(L"[E] - %ls : %u : already opend.\n", __WFUNCTION__, m_n_session);
 						continue;//already opend
+					}
 #ifdef _WIN32
-					std::string s_file = _mp::cstring::get_mcsc_from_unicode(m_s_root_folder_except_backslash + L"\\" + s_virtual_full_file);
+					std::wstring ws_file = m_s_root_folder_except_backslash + L"\\" + s_virtual_full_file;
 #else
-					std::string s_file = _mp::cstring::get_mcsc_from_unicode(m_s_root_folder_except_backslash + L"/" + s_virtual_full_file);
+					std::wstring ws_file = m_s_root_folder_except_backslash + L"/" + s_virtual_full_file;
 #endif
+					std::string s_file = _mp::cstring::get_mcsc_from_unicode(ws_file);
+					clog::get_instance().log_fmt(L"[I] - %ls : %u : %ls(abs full path).\n", __WFUNCTION__, m_n_session, ws_file.c_str());
+					clog::get_instance().trace(L"[I] - %ls : %u : %ls(abs full path).\n", __WFUNCTION__, m_n_session, ws_file.c_str());
 
 					//check exist file
 					std::ifstream in_f(s_file);
 					if (in_f.is_open()) {
 						in_f.close();
+						clog::get_instance().log_fmt(L"[E] - %ls : %u : already exist.\n", __WFUNCTION__, m_n_session);
+						clog::get_instance().trace(L"[E] - %ls : %u : already exist.\n", __WFUNCTION__, m_n_session);
 						continue;//file already exsit.
 					}
 					//
 					_mp::type_ptr_fstream ptr_fstream(std::make_shared<std::fstream>());
 					// create file
-					ptr_fstream->open(s_file
-						, std::fstream::out | std::fstream::binary | std::fstream::ate);
-					if (!ptr_fstream->is_open())
+					ptr_fstream->open(s_file, std::fstream::out | std::fstream::binary | std::fstream::ate);
+					if (!ptr_fstream->is_open()) {
+						clog::get_instance().log_fmt(L"[E] - %ls : %u : create.\n", __WFUNCTION__, m_n_session);
+						clog::get_instance().trace(L"[E] - %ls : %u : create.\n", __WFUNCTION__, m_n_session);
 						continue;
+					}
 
 					ptr_fstream->close();
 					//reopen for io mode
-					ptr_fstream->open(s_file
-						, std::fstream::in | std::fstream::out | std::fstream::binary | std::fstream::ate);
-					if (!ptr_fstream->is_open())
+					ptr_fstream->open(s_file, std::fstream::in | std::fstream::out | std::fstream::binary | std::fstream::ate);
+					if (!ptr_fstream->is_open()) {
+						clog::get_instance().log_fmt(L"[E] - %ls : %u : open.\n", __WFUNCTION__, m_n_session);
+						clog::get_instance().trace(L"[E] - %ls : %u : open.\n", __WFUNCTION__, m_n_session);
 						continue;
+					}
 
 					m_map_opened_files[s_virtual_full_file] = ptr_fstream;
 					//
@@ -630,33 +677,50 @@ namespace _mp
 			bool file_open(const std::wstring& s_virtual_full_file)
 			{
 				bool b_result(false);
-				clog::get_instance().log_fmt(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
-				clog::get_instance().trace(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
+				if (!s_virtual_full_file.empty()) {
+					clog::get_instance().log_fmt(L"[I] - %ls : %u : %ls.\n", __WFUNCTION__, m_n_session, s_virtual_full_file.c_str());
+					clog::get_instance().trace(L"[I] - %ls : %u : %ls.\n", __WFUNCTION__, m_n_session, s_virtual_full_file.c_str());
+				}
 				do {
 					std::lock_guard<std::mutex> lock(m_mutex_session_files);
-					if (s_virtual_full_file.empty())
+					if (s_virtual_full_file.empty()) {
+						clog::get_instance().log_fmt(L"[E] - %ls : %u : none.\n", __WFUNCTION__, m_n_session);
+						clog::get_instance().trace(L"[E] - %ls : %u : none.\n", __WFUNCTION__, m_n_session);
 						continue;
+					}
 					_mp::type_map_wfilename_ptr_fstream::iterator it = m_map_opened_files.find(s_virtual_full_file);
-					if (it != std::end(m_map_opened_files))
+					if (it != std::end(m_map_opened_files)) {
+						clog::get_instance().log_fmt(L"[E] - %ls : %u : already opend.\n", __WFUNCTION__, m_n_session);
+						clog::get_instance().trace(L"[E] - %ls : %u : already opend.\n", __WFUNCTION__, m_n_session);
 						continue;//already opend
+					}
 
 #ifdef _WIN32
-					std::string s_file = _mp::cstring::get_mcsc_from_unicode(m_s_root_folder_except_backslash + L"\\" + s_virtual_full_file);
+					std::wstring ws_file = m_s_root_folder_except_backslash + L"\\" + s_virtual_full_file;
 #else
-					std::string s_file = _mp::cstring::get_mcsc_from_unicode(m_s_root_folder_except_backslash + L"/" + s_virtual_full_file);
+					std::wstring ws_file = m_s_root_folder_except_backslash + L"/" + s_virtual_full_file;
 #endif
+					std::string s_file = _mp::cstring::get_mcsc_from_unicode(ws_file);
+					clog::get_instance().log_fmt(L"[I] - %ls : %u : %ls(abs full path).\n", __WFUNCTION__, m_n_session, ws_file.c_str());
+					clog::get_instance().trace(L"[I] - %ls : %u : %ls(abs full path).\n", __WFUNCTION__, m_n_session, ws_file.c_str());
+
 					//check exist file
 					std::ifstream in_f(s_file);
-					if (!in_f.is_open())
+					if (!in_f.is_open()) {
+						clog::get_instance().log_fmt(L"[E] - %ls : %u : exist.\n", __WFUNCTION__, m_n_session);
+						clog::get_instance().trace(L"[E] - %ls : %u : exist.\n", __WFUNCTION__, m_n_session);
 						continue;//file not exsit.
+					}
 					in_f.close();
 					//
 					_mp::type_ptr_fstream ptr_fstream(std::make_shared<std::fstream>());
 					// file must be exsit. else will be failed by std::fstream::in.
-					ptr_fstream->open(s_file
-						, std::fstream::in | std::fstream::out | std::fstream::binary | std::fstream::ate);
-					if (!ptr_fstream->is_open())
+					ptr_fstream->open(s_file, std::fstream::in | std::fstream::out | std::fstream::binary | std::fstream::ate);
+					if (!ptr_fstream->is_open()) {
+						clog::get_instance().log_fmt(L"[E] - %ls : %u : open.\n", __WFUNCTION__, m_n_session);
+						clog::get_instance().trace(L"[E] - %ls : %u : open.\n", __WFUNCTION__, m_n_session);
 						continue;
+					}
 
 					m_map_opened_files[s_virtual_full_file] = ptr_fstream;
 					//
@@ -688,17 +752,28 @@ namespace _mp
 			bool file_close(const std::wstring& s_virtual_full_file)
 			{
 				bool b_result(false);
-				clog::get_instance().log_fmt(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
-				clog::get_instance().trace(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
+				if (!s_virtual_full_file.empty()) {
+					clog::get_instance().log_fmt(L"[I] - %ls : %u : %ls.\n", __WFUNCTION__, m_n_session, s_virtual_full_file.c_str());
+					clog::get_instance().trace(L"[I] - %ls : %u : %ls.\n", __WFUNCTION__, m_n_session, s_virtual_full_file.c_str());
+				}
 				do {
 					std::lock_guard<std::mutex> lock(m_mutex_session_files);
-					if (s_virtual_full_file.empty())
+					if (s_virtual_full_file.empty()) {
+						clog::get_instance().log_fmt(L"[E] - %ls : %u : none.\n", __WFUNCTION__, m_n_session);
+						clog::get_instance().trace(L"[E] - %ls : %u : none.\n", __WFUNCTION__, m_n_session);
 						continue;
+					}
 					_mp::type_map_wfilename_ptr_fstream::iterator it = m_map_opened_files.find(s_virtual_full_file);
-					if (it == std::end(m_map_opened_files))
+					if (it == std::end(m_map_opened_files)) {
+						clog::get_instance().log_fmt(L"[E] - %ls : %u : none in map.\n", __WFUNCTION__, m_n_session);
+						clog::get_instance().trace(L"[E] - %ls : %u : none in map.\n", __WFUNCTION__, m_n_session);
 						continue;
-					if (!it->second)
+					}
+					if (!it->second) {
+						clog::get_instance().log_fmt(L"[E] - %ls : %u : none stream.\n", __WFUNCTION__, m_n_session);
+						clog::get_instance().trace(L"[E] - %ls : %u : none stream.\n", __WFUNCTION__, m_n_session);
 						continue;
+					}
 					it->second->close();
 					m_map_opened_files.erase(it);
 					//
@@ -711,8 +786,14 @@ namespace _mp
 			bool file_truncate(const std::wstring& s_virtual_full_file)
 			{
 				bool b_result(false);
-				clog::get_instance().log_fmt(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
-				clog::get_instance().trace(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
+				if (s_virtual_full_file.empty()) {
+					clog::get_instance().log_fmt(L"[E] - %ls : %u : none.\n", __WFUNCTION__, m_n_session);
+					clog::get_instance().trace(L"[E] - %ls : %u : none.\n", __WFUNCTION__, m_n_session);
+				}
+				else {
+					clog::get_instance().log_fmt(L"[I] - %ls : %u : %ls.\n", __WFUNCTION__, m_n_session, s_virtual_full_file.c_str());
+					clog::get_instance().trace(L"[I] - %ls : %u : %ls.\n", __WFUNCTION__, m_n_session, s_virtual_full_file.c_str());
+				}
 				do {
 					std::lock_guard<std::mutex> lock(m_mutex_session_files);
 					if (s_virtual_full_file.empty())
@@ -740,19 +821,33 @@ namespace _mp
 			bool file_write(const std::wstring& s_virtual_full_file, const _mp::type_v_buffer& v_data)
 			{
 				bool b_result(false);
-				clog::get_instance().log_fmt(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
-				clog::get_instance().trace(L"[I] - %ls : %u.\n", __WFUNCTION__, m_n_session);
+				if (!s_virtual_full_file.empty()) {
+					clog::get_instance().log_fmt(L"[I] - %ls : %u : %ls.\n", __WFUNCTION__, m_n_session, s_virtual_full_file.c_str());
+					clog::get_instance().trace(L"[I] - %ls : %u : %ls.\n", __WFUNCTION__, m_n_session, s_virtual_full_file.c_str());
+				}
 				do {
 					std::lock_guard<std::mutex> lock(m_mutex_session_files);
-					if (s_virtual_full_file.empty())
+					if (s_virtual_full_file.empty()) {
+						clog::get_instance().log_fmt(L"[E] - %ls : %u : none.\n", __WFUNCTION__, m_n_session);
+						clog::get_instance().trace(L"[E] - %ls : %u : none.\n", __WFUNCTION__, m_n_session);
 						continue;
-					if (v_data.empty())
+					}
+					if (v_data.empty()) {
+						clog::get_instance().log_fmt(L"[E] - %ls : %u : none data.\n", __WFUNCTION__, m_n_session);
+						clog::get_instance().trace(L"[E] - %ls : %u : none data.\n", __WFUNCTION__, m_n_session);
 						continue;
+					}
 					_mp::type_map_wfilename_ptr_fstream::iterator it = m_map_opened_files.find(s_virtual_full_file);
-					if (it == std::end(m_map_opened_files))
+					if (it == std::end(m_map_opened_files)) {
+						clog::get_instance().log_fmt(L"[E] - %ls : %u : none in map.\n", __WFUNCTION__, m_n_session);
+						clog::get_instance().trace(L"[E] - %ls : %u : none in map.\n", __WFUNCTION__, m_n_session);
 						continue;
-					if (!it->second)
+					}
+					if (!it->second) {
+						clog::get_instance().log_fmt(L"[E] - %ls : %u : none stream.\n", __WFUNCTION__, m_n_session);
+						clog::get_instance().trace(L"[E] - %ls : %u : none stream.\n", __WFUNCTION__, m_n_session);
 						continue;
+					}
 					it->second->write((const char*)&v_data[0], v_data.size()).flush();
 					//
 					b_result = true;

@@ -5,6 +5,7 @@
 #include <fstream>
 #include <stdexcept>
 #include <memory>
+#include <thread>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -12,10 +13,13 @@
 #include <shellapi.h> // For ShellExecuteEx()
 #else
 #include <unistd.h>
+#include <stdlib.h>
 #include <termios.h>  // For terminal manipulation
 #include <sys/select.h>// For select()
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
+#include <spawn.h>
 #include <signal.h>
 #include <fcntl.h>
 #include <cstdio>  
@@ -25,48 +29,12 @@
 #include <mp_csystem_.h>
 #include <mp_cfile.h>
 
+#ifndef _WIN32
+// in linux, environ is defined in unistd.h, but not declared in any header files.
+extern char** environ;
+#endif // !_WIN32
+
 namespace _mp {
-
-	bool is_running_as_sudo_or_admin()
-	{
-#ifdef _WIN32
-		BOOL b_admin = FALSE;
-		PSID admin_group = NULL;
-
-		do {
-			// Create a SID for the BUILTIN\Administrators group
-			SID_IDENTIFIER_AUTHORITY nt_authority = SECURITY_NT_AUTHORITY;
-			if (!AllocateAndInitializeSid(&nt_authority, 2,
-				SECURITY_BUILTIN_DOMAIN_RID,
-				DOMAIN_ALIAS_RID_ADMINS,
-				0, 0, 0, 0, 0, 0,
-				&admin_group)) {
-				continue;
-			}
-
-			// Check if the current process is a member of the admin group
-			if (!CheckTokenMembership(NULL, admin_group, &b_admin)) {
-				b_admin = FALSE;
-			}
-
-			// Free the SID created
-			if (admin_group) {
-				FreeSid(admin_group);
-			}
-		} while (false);
-
-		if (b_admin) {
-			return true;
-		}
-		else {
-			return false;
-		}
-#else
-		uid_t uid = getuid();    // 실제 사용자 ID
-		uid_t euid = geteuid();  // 유효 사용자 ID
-		return (uid != euid && euid == 0);
-#endif
-	}
 
 	std::shared_ptr<boost::interprocess::file_lock> csystem::get_file_lock_for_single_instance(const std::wstring& s_name)
 	{
@@ -289,6 +257,132 @@ namespace _mp {
 #endif
 		return b_result;
 	}
+
+#ifndef _WIN32
+	std::pair<bool, pid_t> csystem::execute_process_on_linux(
+		const std::string& s_abs_fullpath_of_exe
+		, const std::vector<char*>& v_command_line_arguments_with_exe
+		, bool b_wait_for_termination_created_process
+		, bool b_daemonize_created_process
+	)
+	{
+		bool b_reult(false);
+		pid_t pid(-1);
+
+		int n_result(-1);
+		posix_spawn_file_actions_t actions;
+
+		do {
+			if(s_abs_fullpath_of_exe.empty()){
+				continue;
+			}
+
+			if (!b_daemonize_created_process) {
+				n_result = posix_spawn(&pid, s_abs_fullpath_of_exe.c_str(), nullptr, nullptr, v_command_line_arguments_with_exe.data(), environ);
+			}
+			else {
+				//deamonize created process
+				posix_spawn_file_actions_init(&actions);
+				// /dev/null to FD rediect(stdin, stdout, stderr)
+				posix_spawn_file_actions_addopen(&actions, 0, "/dev/null", O_RDONLY, 0);
+				posix_spawn_file_actions_addopen(&actions, 1, "/dev/null", O_WRONLY, 0);
+				posix_spawn_file_actions_addopen(&actions, 2, "/dev/null", O_WRONLY, 0);
+
+				n_result = posix_spawn(&pid, s_abs_fullpath_of_exe.c_str(), &actions, nullptr, v_command_line_arguments_with_exe.data(), environ);
+				posix_spawn_file_actions_destroy(&actions);
+			}
+
+			if (n_result != 0) {
+				continue; //error
+			}
+			//
+			b_reult = true;
+		} while (false);
+
+		if (b_reult && b_wait_for_termination_created_process) {
+			do {
+				std::this_thread::sleep_for(std::chrono::milliseconds(100));
+				if (kill(pid, 0) == 0 || errno == EPERM) { 
+					continue; // alive deamon
+				}
+				break;
+			} while (true);
+		}
+
+		return std::make_pair(b_reult,pid);
+	}
+
+	std::string csystem::get_terminal_on_linux(std::string& s_out_deb_msg)
+	{
+		const std::vector<std::string> terms = {
+					"/usr/bin/gnome-terminal"
+					, "/usr/bin/konsole"
+					, "/usr/bin/mate-terminal"
+					, "/usr/bin/xfce4-terminal"
+					, "/usr/bin/lxterminal"
+					,"/usr/bin/xterm"
+		};
+
+		std::string s_terminal;
+		s_out_deb_msg.clear();
+
+		do {
+			if (!std::getenv("DISPLAY")) {
+				// daemon 에서 호출하면 항상 환경변수 없어서 GUI 터미널 못찾음.
+				s_out_deb_msg = "no GUI environment";
+				continue; //no GUI environment
+			}
+			for (const auto& s : terms) {
+				if (access(s.c_str(), X_OK) == 0) {
+					s_terminal = s;
+					break; // exit for
+				}
+				else {
+					s_out_deb_msg += "\n:";
+					s_out_deb_msg += s;
+					s_out_deb_msg += '-';
+					if (errno == ENOENT) {
+						s_out_deb_msg += "not found";
+					}
+					else if (errno == EACCES) {
+						s_out_deb_msg += "none exe right";
+					}
+					else {
+						s_out_deb_msg += "error access()";
+					}
+					s_out_deb_msg += L':';
+				}
+			}//end for
+		} while (false);
+		return s_terminal;
+	}
+
+	std::vector<std::string> csystem::make_terminal_cmd_on_linux(const std::string& s_term, const std::string& exe)
+	{
+		if (s_term.find("gnome-terminal") != std::string::npos) {
+			// gnome-terminal은 -e 사용 불가
+			return { s_term, "--", exe };
+		}
+		else if (s_term.find("konsole") != std::string::npos) {
+			return { s_term, "-e", exe };
+		}
+		else if (s_term.find("mate-terminal") != std::string::npos) {
+			return { s_term, "-e", exe };
+		}
+		else if (s_term.find("xfce4-terminal") != std::string::npos) {
+			return { s_term, "-e", exe };
+		}
+		else if (s_term.find("lxterminal") != std::string::npos) {
+			return { s_term, "-e", exe };
+		}
+		else if (s_term.find("xterm") != std::string::npos) {
+			return { s_term, "-e", exe };
+		}
+		else {
+			return { exe };//no terminal
+		}
+	}
+#endif !_WIN32
 
 	csystem::~csystem()
 	{

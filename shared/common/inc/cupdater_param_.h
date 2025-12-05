@@ -117,9 +117,10 @@ private:
 	/**
 	* @brief delete firmware file which is created for updating temporarily.
 	* @brief this function is guard by mutex.
+	* @param s_debug_msg - debug message
 	* @return true : delete success.
 	*/
-	bool _delete_firmware();
+	bool _delete_firmware(const std::wstring& s_debug_msg);
 
 private:
 	bool m_b_used;
