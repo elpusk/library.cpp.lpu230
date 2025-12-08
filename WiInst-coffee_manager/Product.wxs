@@ -95,12 +95,50 @@
     <Property Id="ApplicationFolderName" Value="$(var.Pre_DirName_Manufacturer)\$(var.Pre_DirName_developer_id)\$(var.Pre_DirName_ProductName)" />
     <Property Id="WixAppFolder" Value="WixPerMachineFolder" />
 
+    <!-- stop self reinstall -->
     <Upgrade Id="$(var.Pre_ProductUpgradeCode)">
       <UpgradeVersion Minimum="$(var.Pre_ProductVersion)" OnlyDetect="yes" Property="NEWERVERSIONDETECTED"/>
       <UpgradeVersion Minimum="0.0.0" Maximum="$(var.Pre_ProductVersion)" IncludeMinimum="yes" IncludeMaximum="no" Property="OLDERVERSIONBEINGUPGRADED"/>
     </Upgrade>
     <Condition Message="A newer version of this software is already installed.">NOT NEWERVERSIONDETECTED</Condition>
 
+    <!-- detect NDM x86 full -->
+    <Upgrade Id="520E69D1-21AB-496F-88AE-1653E9AACF6E">
+      <UpgradeVersion
+        Property="NDM_X86_FULL"
+        Minimum="0.0.0"
+        IncludeMinimum="yes"
+        OnlyDetect="yes"/>
+    </Upgrade>
+    <Condition Message="this software cannot be installed because lpu230_x_y_z.msi or lpu230_msr_only_x_y_z.msi is installed.">
+      <![CDATA[Installed OR (NOT NDM_X86_FULL)]]>
+    </Condition>
+
+    <!-- detect NDM x64 full -->
+    <Upgrade Id="626FD28F-1969-4519-8209-B8203146D7E7">
+      <UpgradeVersion
+        Property="NDM_X64"
+        Minimum="0.0.0"
+        IncludeMinimum="yes"
+        OnlyDetect="yes"/>
+    </Upgrade>
+    <Condition Message="this software cannot be installed because lpu230_x64_x_y_z.msi is installed.">
+      <![CDATA[Installed OR (NOT NDM_X64)]]>
+    </Condition>
+
+    <!-- detect NDM mapper only full -->
+    <Upgrade Id="BDBCAE52-F662-42E1-A603-D6A3BC924C1B">
+      <UpgradeVersion
+        Property="NDM_ONLY_MAPPER"
+        Minimum="0.0.0"
+        IncludeMinimum="yes"
+        OnlyDetect="yes"/>
+    </Upgrade>
+    <Condition Message="this software cannot be installed because lpu237_mapper_only_x_y_z.msi or lpu237_mapper_only_x64_x_y_z.msi is installed.">
+      <![CDATA[Installed OR (NOT NDM_ONLY_MAPPER)]]>
+    </Condition>
+
+    <!-- only windows 10 or later -->
     <Condition Message="This application is only supported on Windows 10 or higher.">
       <![CDATA[Installed OR (VersionNT >= 603)]]>
     </Condition>
