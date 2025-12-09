@@ -38,6 +38,17 @@ int main_cert(const _mp::type_set_wstring &set_parameters)
 				continue;
 			}
 
+#ifdef _WIN32
+			std::wstring s_debug_msg;
+			if (!_mp::ccoffee_hlp_cert::set_file_permissions_to_system_and_admins_only(s_file_server_key, s_debug_msg)) {
+				_mp::clog::get_instance().trace(L"[E] - %ls - %ls - set pk file permissions to system and admins only : %ls.\n", __WFILE__, __WFUNCTION__, s_debug_msg.c_str());
+				continue;
+			}
+			if(!_mp::ccoffee_hlp_cert::set_file_permissions_to_system_and_admins_only(s_file_server_cert, s_debug_msg)) {
+				_mp::clog::get_instance().trace(L"[E] - %ls - %ls - set cert file permissions to system and admins only : %ls.\n", __WFILE__, __WFUNCTION__, s_debug_msg.c_str());
+				continue;
+			}
+#endif !_WIN32
 			b_result = true;
 		} while (false);
 		return b_result;

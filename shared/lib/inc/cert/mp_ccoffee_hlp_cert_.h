@@ -21,6 +21,10 @@ namespace _mp {
 			const std::wstring& s_file_server_cert
 		);
 
+#ifdef _WIN32
+		static bool set_file_permissions_to_system_and_admins_only(const std::wstring& s_abs_full_path_file, std::wstring& s_deb_msg);
+		static bool expand_file_permissions_to_everyone(const std::wstring& s_abs_full_path_file, std::wstring& s_deb_msg);
+#endif
 		~ccoffee_hlp_cert()
 		{
 		}

@@ -26,6 +26,10 @@
 *                               : lpu230_update.exe - v2.2
 *                               : dev_lib.dll - v1.0
 *                               : tg_rom.dll - v1.2
+*
+* 2025.12 - package v 2.6.0     : coffee manager 2nd project(v2.6)
+*                               : elpusk-hid-d.exe - v2.6(upgrade security action)
+*
 -->
 
 <!-- 기본적으로 %ProgramFiles%\Pre_DirName_ProductName\Pre_DirName_Manufacturer 형식으로 설치됨.-->
@@ -42,8 +46,8 @@
 <?define Pre_ProductName = "coffee_manager_2nd"?>
 
 <!-- Pre_ProductVersion 값이 변경되면, Pre_ProductCode 는 새로 생성해야함.-->
-<?define Pre_ProductVersion = "2.5.0"?>
-<?define Pre_ProductCode = "56BEB1E3-9FE6-4A25-BA4A-54D1475E100E"?>
+<?define Pre_ProductVersion = "2.6.0"?>
+<?define Pre_ProductCode = "44A389AD-8364-4147-BF79-C209221CB66C"?>
 
 <!-- 같은 프로그래은 버전이 달라져도 Pre_ProductUpgradeCode 는 항상 동일해야 함.-->
 <?define Pre_ProductUpgradeCode = "B9BF3037-BD17-4F00-BA59-C5CE301723D6"?>
