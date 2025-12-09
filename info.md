@@ -1,5 +1,5 @@
 # Software components information
-release 2.5
+release 2.6
 
 ## LiMgmtLpu230
 - for Debian 12.(x64)
@@ -12,7 +12,7 @@ release 2.5
 - lpu237 device library test program.
 
 ## LiElpuskHidDaemon
-- v2.5
+- v2.6
 - for Debian 12.(x64)
 - executable file name : elpusk-hid-d
 - secure websoecket server deamon.(only single instance) with /server option or none(default)
@@ -21,9 +21,10 @@ release 2.5
 - supports remove self-signed certificate. with /removecert option.
 - display runtime tracking message of the current elpusk-hid-d. with /trace option.
 - supports lpu237-fw update by webapp.
+- "In Linux package version 2.6, after stopping the service with systemctl stop, running elpusk-hid-d --removecert followed by elpusk-hid-d --cert generates a certificate. However, executing it results in an authentication certificate error."
 
 ## WiElpuskHidDaemon
-- v2.5
+- v2.6
 - for windows 11.(x64, x86)
 - executable file name : elpusk-hid-d.exe
 - secure websoecket server exe file.(only single instance) with /server option or none(default)

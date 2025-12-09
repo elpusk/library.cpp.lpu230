@@ -1,7 +1,5 @@
 #include <websocket/mp_win_nt.h>
 
-
-
 #include <mp_cstring.h>
 #include <mp_clog.h>
 
@@ -15,6 +13,11 @@
 #pragma comment(lib, "libcrypto.lib")
 #pragma comment(lib, "libssl.lib")
 #pragma comment(lib, "advapi32.lib")
+
+#else
+#include <sys/types.h>
+#include <unistd.h>
+#include <cstring>
 #endif
 
 namespace _mp {
@@ -184,6 +187,30 @@ namespace _mp {
 		if (pSD) LocalFree(pSD);
 		if (pNewDACL) LocalFree(pNewDACL);
 		return b_result;
+	}
+#else
+	//linux
+	bool ccoffee_hlp_cert::set_file_permissions_with_own_root_on_linux(const std::string& s_abs_full_path_file, mode_t mode, std::string& s_deb_msg)
+	{
+		bool b_result(false);
+
+		do {
+			// 1. 소유권 변경: root:root (uid=0, gid=0)
+			if (chown(s_abs_full_path_file.c_str(), 0, 0) != 0) {
+				s_deb_msg = "chown failed";
+				continue;
+			}
+
+			// 2. 권한 변경: mode 전달 (private key=0600, cert=0644)
+			if (chmod(s_abs_full_path_file.c_str(), mode) != 0) {
+				s_deb_msg = "chmod failed";
+				continue;
+			}
+
+			b_result = true;
+		} while (false);
+
+		return 0;  // 성공
 	}
 #endif
 

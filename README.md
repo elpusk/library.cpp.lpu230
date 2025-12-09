@@ -12,7 +12,7 @@ lpu23x device c++ library
 + deb package directory : /home/tester/build_deb/
 + FTXUI 6.1.9 lib - path : /home/tester/FTXUI/
 
-## the current developed version(pkg v2.5)
+## the current developed version(pkg v2.6)
 + dev_lib : v1.0
 + lpu230_update : v2.3
   - at windows, logging folder is equal to lpu230_update.exe_ logging folder.
@@ -22,8 +22,8 @@ lpu23x device c++ library
 + tg_lpu237_ibutton : v6.0
 + tg_rom : v1.2
 + tg_rom_build : v1.2
-+ elpusk-hid-d : v2.5
-  - clog miss code; fixed this error.
++ elpusk-hid-d : v2.6
+  - certificate and key file permission are changed.
 + coffee_sevice : 2.0
   - Windows only service program for running elpusk-hid-d.exe
 

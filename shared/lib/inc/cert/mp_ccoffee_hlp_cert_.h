@@ -22,8 +22,18 @@ namespace _mp {
 		);
 
 #ifdef _WIN32
+		/**
+		* @brief set file permissions to system and admins only(windows).
+		* @param s_abs_full_path_file : absolute full path file.
+		* @param s_deb_msg : debug message.
+		* @return true if success, otherwise false.
+		*/
 		static bool set_file_permissions_to_system_and_admins_only(const std::wstring& s_abs_full_path_file, std::wstring& s_deb_msg);
 		static bool expand_file_permissions_to_everyone(const std::wstring& s_abs_full_path_file, std::wstring& s_deb_msg);
+#else
+		//linux
+		static bool set_file_permissions_with_own_root_on_linux(const std::string& s_abs_full_path_file, mode_t mode, std::string& s_deb_msg);
+
 #endif
 		~ccoffee_hlp_cert()
 		{

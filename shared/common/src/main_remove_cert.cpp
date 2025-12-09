@@ -4,6 +4,7 @@
 
 #include <mp_type.h>
 #include <mp_clog.h>
+#include <mp_cfile.h>
 #include <cert/mp_ccoffee_hlp_cert_.h>
 
 /**
@@ -34,6 +35,9 @@ int main_remove_cert(const _mp::type_set_wstring& set_parameters)
 
 				continue;
 			}
+
+			_mp::cfile::delete_file(s_file_server_cert);
+			_mp::cfile::delete_file(s_file_server_key);
 
 			b_result = true;
 		} while (false);
