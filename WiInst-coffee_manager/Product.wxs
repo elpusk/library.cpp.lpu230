@@ -28,7 +28,14 @@
 *                               : tg_rom.dll - v1.2
 *
 * 2025.12 - package v 2.6.0     : coffee manager 2nd project(v2.6)
+*                               : 44A389AD-8364-4147-BF79-C209221CB66C
 *                               : elpusk-hid-d.exe - v2.6(upgrade security action)
+*
+* 2026.02.05 - package v 2.7.0  : coffee manager 2nd project(v2.7)
+*                               : 7EEE6616-C8A2-4946-8799-AB48DE22361D
+*                               : lpu230_update.exe - v2.4
+*                               :  - run_by_cf 일때만 3 일전 로그 삭제로 변경.
+*                               :  - bin(raw) 파일이 경우 파일의 시작 읽기 offset 이 1 sector 밀려서 시작 되는 것 수정.
 *
 -->
 
@@ -46,8 +53,8 @@
 <?define Pre_ProductName = "coffee_manager_2nd"?>
 
 <!-- Pre_ProductVersion 값이 변경되면, Pre_ProductCode 는 새로 생성해야함.-->
-<?define Pre_ProductVersion = "2.6.0"?>
-<?define Pre_ProductCode = "44A389AD-8364-4147-BF79-C209221CB66C"?>
+<?define Pre_ProductVersion = "2.7.0"?>
+<?define Pre_ProductCode = "7EEE6616-C8A2-4946-8799-AB48DE22361D"?>
 
 <!-- 같은 프로그래은 버전이 달라져도 Pre_ProductUpgradeCode 는 항상 동일해야 함.-->
 <?define Pre_ProductUpgradeCode = "B9BF3037-BD17-4F00-BA59-C5CE301723D6"?>

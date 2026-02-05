@@ -265,6 +265,7 @@ private:
 	size_t m_n_size_fw; // the selected firmware size or raw firmware file size
 	std::vector<int> m_v_erase_sec_index; //app area(erase sequence). except system variable , local storage control and area 
 	std::vector<int> m_v_write_sec_index; //write sequence
+	std::vector<int> m_v_write_sec_index_for_bin_file; //for reading sequence of bin file 
 
 private:
 	cshare(const cshare&) = delete;

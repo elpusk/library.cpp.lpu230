@@ -106,7 +106,7 @@ int cshare::get_app_area_zero_based_start_sector_from_sector_number(int n_sector
 		//
 		if(m_v_write_sec_index.empty())
 			continue;
-		// 에러 확률를 높이기 위해 app area 첫 sector 번호를 wrtite 순서를 나타내는 m_v_write_sec_index 의
+		// 에러 확률를 낮추기 위해 app area 첫 sector 번호를 wrtite 순서를 나타내는 m_v_write_sec_index 의
 		// 가장 마지막에 저장하므로, 마지막 값이 곧 app area 첫 sector 번호가 된다.
 		n_zero_base_sector_number = n_sector_number - m_v_write_sec_index[m_v_write_sec_index.size()-1];
 	} while (false);
@@ -152,6 +152,7 @@ void cshare::_ini()
 	m_n_size_fw = 0;
 	m_v_erase_sec_index.resize(0);
 	m_v_write_sec_index.resize(0);
+	m_v_write_sec_index_for_bin_file.resize(0);
 }
 
 cshare::cshare()
@@ -285,6 +286,17 @@ cshare& cshare::set_erase_sec_index(const std::vector<int>& v_sec_index/* = std:
 cshare& cshare::set_write_sec_index(const std::vector<int>& v_sec_index /* = std::vector<int>(0) */)
 {
 	m_v_write_sec_index = v_sec_index;
+
+	if (!v_sec_index.empty()) {
+		int n_start = v_sec_index[v_sec_index.size() - 1];
+		for (auto n_sec : v_sec_index) {//bin 파일은 시작 데이터가 0 부터 시작이므로.
+			m_v_write_sec_index_for_bin_file.push_back(n_sec - n_start);
+		}//end for
+	}
+	else {
+		m_v_write_sec_index_for_bin_file.resize(0);
+	}
+	
 	return *this;
 }
 
@@ -1000,7 +1012,7 @@ _mp::type_pair_bool_result_bool_complete cshare::get_one_sector_fw_data
 
 		if (m_n_selected_fw_in_firmware_list < 0) {
 			// 순수 raw binary file 인 경우.
-			n_write_sector = m_v_write_sec_index[n_write_sector_index];
+			n_write_sector = m_v_write_sec_index_for_bin_file[n_write_sector_index];
 			if (dw_last_readdone < CHidBootBuffer::C_SECTOR_SIZE) {
 				dw_offset = 0;
 			}

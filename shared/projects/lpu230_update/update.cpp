@@ -594,7 +594,9 @@ void setup_log(bool b_run_by_coffee_manager, bool b_enable)
 	}
 
 	log.enable(b_enable);
-	log.remove_log_files_older_then_now_day(3);
+	if (b_run_by_coffee_manager) {
+		log.remove_log_files_older_then_now_day(3);
+	}
 
 }
 
