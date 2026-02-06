@@ -66,11 +66,43 @@ int main(int argc, char** argv)
         //////////////////////////////////////////
         //get command line parameters 
 #ifdef _WIN32
+		//windows _mp::cstring::get_mcsc_from_unicode() 함수 문제로 임시로 람다 함수로 대체함.
         int argc = 0;
         wchar_t** argv = NULL;
 		std::tie(argc, argv) = win_console_manager.get_command_line_arguments();
-#endif
+
+        list_parameters = [&](int _c,wchar_t**_v)->_mp::type_list_string{
+            _mp::type_list_string _l;
+
+            for (int _i = 0; _i < _c; _i++) {
+                if (!_v[_i]) {
+                    continue;
+                }
+                std::wstring _s_unicode(_v[_i]);
+                if(_s_unicode.empty()) {
+                    continue;
+				}
+                int _size_needed = WideCharToMultiByte(CP_ACP, 0, _s_unicode.c_str(),
+                    static_cast<int>(_s_unicode.length()),
+                    nullptr, 0, nullptr, nullptr);
+                if (_size_needed <= 0) {
+                    continue;
+                }
+
+                std::string _strTo(_size_needed, 0);
+                WideCharToMultiByte(CP_ACP, 0, _s_unicode.c_str(),
+                    static_cast<int>(_s_unicode.length()),
+                    &_strTo[0], _size_needed, nullptr, nullptr);
+				_l.push_back(_strTo);
+            }//end for
+            return _l;
+
+        }(argc, argv);
+#else
+        //windows 버전에서 get_command_line_parameters_by_mcsc_list() 의 경우. 한글이 입력으로 들어 가면 문제 발생하여. 사용 중지함.
+        // 근본적으로는 _mp::cstring::get_mcsc_from_unicode() 함수 문제임.
         list_parameters = _mp::cconvert::get_command_line_parameters_by_mcsc_list(argc, argv);
+#endif
 
         if (list_parameters.size() <= 1) {
             n_result = EXIT_SUCCESS;

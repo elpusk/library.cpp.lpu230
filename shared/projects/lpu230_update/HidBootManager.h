@@ -96,6 +96,12 @@ public:
 	std::shared_ptr<CRom> get_rom_library() { return m_ptr_rom; }
 
 	/**
+	* @brief check rom file format is ok.
+	* @return true : ok, false : nok.
+	*/
+	bool is_rom_file_format_ok(const std::string& s_rom_file) const;
+
+	/**
 	* @brief add notify callback function.
 	* @param cb : callback function.
 	* @param uNotifyMsg : user defined message type.

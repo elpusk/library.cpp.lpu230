@@ -369,7 +369,9 @@ std::vector<std::filesystem::path> _find_rom_files()
 	// 디렉터리 순회
 	for (const auto& entry : std::filesystem::directory_iterator(current_dir)) {
 		if (entry.is_regular_file() && entry.path().extension() == ".rom") {
-			rom_files.push_back(entry.path());
+			if (CHidBootManager::GetInstance()->is_rom_file_format_ok(entry.path().string())) {
+				rom_files.push_back(entry.path());
+			}
 		}
 	}
 

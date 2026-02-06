@@ -2,6 +2,7 @@
 #include <memory>
 #include <algorithm>
 #include <functional>
+#include <filesystem>
 
 #ifdef	_WIN32
 #include <atldef.h>
@@ -152,6 +153,66 @@ bool CHidBootManager::load_rom_library(const std::filesystem::path& path_abs_ful
 
 	} while (false);
 	return b_result;
+}
+
+bool CHidBootManager::is_rom_file_format_ok(const std::string& s_rom_file) const
+{
+	bool b_ok(false);
+	std::ifstream fw;
+
+	do {
+		if (!m_ptr_rom) {
+			continue;
+		}
+		if (s_rom_file.empty()) {
+			continue;
+		}
+		
+		fw.open(s_rom_file.c_str(), std::ios::binary | std::ios::in);
+
+		if (!fw) {
+			continue;
+		}
+
+		fw.seekg(0, fw.end);
+		unsigned long n_file_size = (unsigned long)fw.tellg();
+		if (n_file_size < (unsigned long)sizeof(CRom::ROMFILE_HEAD)) {
+			continue;
+		}
+		if(n_file_size > CRom::MAX_SIZE_APP + sizeof(CRom::ROMFILE_HEAD)){
+			continue;
+		}
+
+		fw.seekg(0);
+
+		CRom::ROMFILE_HEAD header = { 0, };
+		fw.read(reinterpret_cast<char*>(&header), (std::streamsize)sizeof(CRom::ROMFILE_HEAD));
+		//
+		if(header.dwHeaderSize != sizeof(CRom::ROMFILE_HEAD)){
+			continue;
+		}
+		if(header.dwItem == 0 || header.dwItem > CRom::MAX_ROMFILE_HEAD_ITEAM){
+			continue;
+		}
+
+		unsigned long n_cal_file_size = sizeof(CRom::ROMFILE_HEAD);
+
+		for (uint32_t i = 0; i < header.dwItem; i++) {
+			n_cal_file_size += header.Item[i].dwSize;//dwSize 는 sizeof(CRom::ROMFILE_HEAD_ITEAM) 를 포함한 크기임.
+		}//end for
+
+		if(n_file_size != n_cal_file_size){
+			continue;
+		}
+
+		b_ok = true;
+
+	} while (false);
+
+	if (fw.is_open()) {
+		fw.close();
+	}
+	return b_ok;
 }
 
 size_t CHidBootManager::add_notify_cb(CHidBootManager::type_cb cb, int uNotifyMsg)

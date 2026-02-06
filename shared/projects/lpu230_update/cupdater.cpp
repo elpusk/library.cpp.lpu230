@@ -348,12 +348,18 @@ std::shared_ptr<ftxui::Component> cupdater::_create_sub_ui1_select_file()
 		m_n_progress_max = cshare::get_instance().calculate_update_step();
 
 		if (std::filesystem::path(selected_path).extension() == ".rom") {
-			// rom 파일 선택 후, OK
-			cshare::get_instance().update_fw_list_of_selected_rom(CHidBootManager::GetInstance()->get_rom_library());
-			m_n_progress_max = cshare::get_instance().calculate_update_step();
-			std::tie(m_n_selected_fw_for_ui, m_v_firmware_list_for_ui) = cshare::get_instance().get_firmware_list_of_rom_file();
+			if (CHidBootManager::GetInstance()->is_rom_file_format_ok(selected_path.string()) ){
+				// rom 파일 선택 후, OK
+				cshare::get_instance().update_fw_list_of_selected_rom(CHidBootManager::GetInstance()->get_rom_library());
+				m_n_progress_max = cshare::get_instance().calculate_update_step();
+				std::tie(m_n_selected_fw_for_ui, m_v_firmware_list_for_ui) = cshare::get_instance().get_firmware_list_of_rom_file();
 
-			_update_state(cupdater::AppEvent::e_sfile_or, selected_path.string());
+				_update_state(cupdater::AppEvent::e_sfile_or, selected_path.string());
+			}
+			else {
+				// 이름만 rom 인 파일
+				_update_state(cupdater::AppEvent::e_sfile_ob, selected_path.string());
+			}
 		}
 		else {
 			// 그 외 파일 선택 후 OK.
@@ -603,7 +609,9 @@ std::vector<std::filesystem::path> cupdater::_find_rom_files()
 	// 디렉터리 순회
 	for (const auto& entry : std::filesystem::directory_iterator(current_dir)) {
 		if (entry.is_regular_file() && entry.path().extension() == ".rom") {
-			rom_files.push_back(entry.path());
+			if(CHidBootManager::GetInstance()->is_rom_file_format_ok(entry.path().string()) ){
+				rom_files.push_back(entry.path());
+			}
 		}
 	}
 
@@ -838,10 +846,18 @@ std::pair<std::string, bool> cupdater::_check_target_file_path_in_initial()
 
 			std::filesystem::path p(s_target_rom_file);
 			if (p.extension() == ".rom") {
-				b_rom_type = true;
+				if (CHidBootManager::GetInstance()->is_rom_file_format_ok(s_target_rom_file)) {
+					// 확장자가 .rom 이면 내용도 rom 포멧인지 확인 필요.
+					b_rom_type = true;
+				}
 			}
 
-			m_log_ref.log_fmt("[I] target file - %s\n", s_target_rom_file.c_str());
+			if (b_rom_type) {
+				m_log_ref.log_fmt("[I] target file (rom type)- %s\n", s_target_rom_file.c_str());
+			}
+			else {
+				m_log_ref.log_fmt("[I] target file (bin type)- %s\n", s_target_rom_file.c_str());
+			}
 			continue;
 		}
 
@@ -873,14 +889,22 @@ std::pair<int, int> cupdater::_check_target_fw_of_selected_rom_in_initial()
 	std::filesystem::path fp_target_file(s_target_rom_file);
 	if (fp_target_file.extension() == ".rom") {
 		// 이 경우 rom 내에 있는 fw 를 확인 필요.
-		std::tie(n_total_fw, n_updatable_index) = cshare::get_instance().update_fw_list_of_selected_rom(CHidBootManager::GetInstance()->get_rom_library());
-		if (n_updatable_index < 0) {
-			m_log_ref.log_fmt("[E] not valied firmware in %s\n", s_target_rom_file.c_str());
-			//ERROR
+		if (CHidBootManager::GetInstance()->is_rom_file_format_ok(fp_target_file.string())) {
+			std::tie(n_total_fw, n_updatable_index) = cshare::get_instance().update_fw_list_of_selected_rom(CHidBootManager::GetInstance()->get_rom_library());
+			if (n_updatable_index < 0) {
+				m_log_ref.log_fmt("[E] not valied firmware in %s\n", s_target_rom_file.c_str());
+				//ERROR
+			}
+			else {
+				// 유효한 조건을 만족하는 firmware 가 존재
+				m_log_ref.log_fmt("[I] valied firmware index (%d/%d) in %s\n", n_updatable_index, n_total_fw, s_target_rom_file.c_str());
+			}
 		}
 		else {
-			// 유효한 조건을 만족하는 firmware 가 존재
-			m_log_ref.log_fmt("[I] valied firmware index (%d/%d) in %s\n", n_updatable_index, n_total_fw, s_target_rom_file.c_str());
+			// rom 이 외의 주어진 파일 또는 자동 탐지된 bin 파일
+			// 이 경우 강제로 하나의 파일이 그대로 fw 이므로, 
+			n_total_fw = 1; //n_updatable_index 는 -1 이다.
+			m_log_ref.log_fmt("[W] firmware tyie binary in %s\n", s_target_rom_file.c_str());
 		}
 	}
 	else {
@@ -1003,8 +1027,14 @@ std::tuple<bool, cupdater::AppState, std::string> cupdater::_update_state(cupdat
 					std::filesystem::path fp(s_rom_or_bin_file);
 					if (fp.extension() == ".rom") {
 						// s_rom_or_bin_file 확장자가 rom 인 경우.	
-						new_value.first = (int)cupdater::AppState::s_selfirm;
-						new_value.second = std::string("select a firmware in the selected rom file");
+						if (CHidBootManager::GetInstance()->is_rom_file_format_ok(fp.string())) {
+							new_value.first = (int)cupdater::AppState::s_selfirm;
+							new_value.second = std::string("select a firmware in the selected rom file");
+						}
+						else {//이름만 rom 인 파일.
+							new_value.first = (int)cupdater::AppState::s_sellast;
+							new_value.second = std::string("confirm the selected firmware");
+						}
 					}
 					else if (fp.extension() == ".bin") {
 						// s_rom_or_bin_file 확장자가 bin 인 경우.	

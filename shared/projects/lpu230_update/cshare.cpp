@@ -12,6 +12,7 @@
 
 #include "cshare.h"
 #include "HidBootBuffer.h"
+#include "HidBootManager.h"
 
 #ifdef _WIN32
 #include <atltrace.h>
@@ -137,7 +138,7 @@ void cshare::_ini()
 	m_lpu23x_interface_after_update = cshare::Lpu237Interface::nc;
 
 	m_v_firmware_list.resize(0);
-	m_n_selected_fw_in_firmware_list = -1;
+	m_n_selected_fw_in_firmware_list = -1;//default firmware file type is binary(raw) file.
 	m_n_index_updatable_fw_in_firmware_list = -1;
 	memset(&m_rom_header, 0, sizeof(m_rom_header));
 
@@ -218,11 +219,18 @@ cshare& cshare::set_rom_file_abs_full_path(const std::string& s_abs_full_rom_fil
 		else {
 			m_current_dir = current_dir;
 		}
+
 		if (p.extension() != ".rom") {
 			_set_firmware_size((size_t)std::filesystem::file_size(p));
 		}
 		else {
-			_set_firmware_size(0);
+			if (CHidBootManager::GetInstance()->is_rom_file_format_ok(p.string())) {
+				_set_firmware_size(0);
+			}
+			else {
+				// 이름만 rom 인 파일.
+				_set_firmware_size((size_t)std::filesystem::file_size(p));
+			}
 		}
 	}
 	return *this;
@@ -1105,6 +1113,9 @@ std::pair<int, int> cshare::update_fw_list_of_selected_rom(std::shared_ptr<CRom>
 		if (p.extension() != ".rom") {
 			continue;
 		}
+		if (!CHidBootManager::GetInstance()->is_rom_file_format_ok(p.string())) {
+			continue; // 확장자가 .rom 이지만, rom 파일 포맷이 아닌 경우는 무시함.
+		}
 
 		std::wstring ws_abs_full_path_of_rom = get_rom_file_abs_full_wpath();
 
@@ -1206,11 +1217,15 @@ void cshare::update_files_list_of_cur_dir(const std::filesystem::path& current_d
 				continue;
 			}
 			if (path_ext == ".rom") {
-				//m_v_rom_files_in_current_dir.push_back(entry.path().filename().string());
-				m_v_rom_files_in_current_dir.push_back(entry.path().string());
+				if (CHidBootManager::GetInstance()->is_rom_file_format_ok(entry.path().string())) {
+					m_v_rom_files_in_current_dir.push_back(entry.path().string());
+				}
+				else {
+					// 확장자가 .rom 이지만, rom 파일 포맷이 아닌 경우는 bin 파일로 간주함.
+					m_v_bin_files_in_current_dir.push_back(entry.path().string());
+				}
 			}
 			else if (path_ext == ".bin") {
-				//m_v_bin_files_in_current_dir.push_back(entry.path().filename().string());
 				m_v_bin_files_in_current_dir.push_back(entry.path().string());
 			}
 
