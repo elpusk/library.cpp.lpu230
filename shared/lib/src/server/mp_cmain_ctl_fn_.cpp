@@ -35,6 +35,14 @@ namespace _mp {
 			return true;//complete
 		}
 
+		bool cmain_ctl_fn::_execute_mgmt_get_version(clog* p_log, cio_packet& request, cio_packet& response)
+		{
+			response = request;
+			response.set_cmd(cio_packet::cmd_response);
+			response.set_data_by_utf8(_mp::_coffee::CONST_WS_COFFEE_MGMT_VERSION);
+			return true;//complete
+		}
+
 		bool cmain_ctl_fn::_execute_mgmt_get_device_list(
 			clog* p_log,
 			const type_list_wstring& list_wstring_filter,

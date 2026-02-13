@@ -32,6 +32,7 @@ public:
 	enum type_act : char {
 		//Don't use 'C' charactor. this charactor is used in JS library only.
 		act_mgmt_unknown = 'U',
+		act_mgmt_get_version = 'V', //from v2.7
 		act_mgmt_get_echo = 'E',
 		act_mgmt_get_device_list = 'L',
 		act_mgmt_ctl_show = 'S',
@@ -124,6 +125,7 @@ public:
 		switch (a)
 		{
 		case cio_packet::act_mgmt_unknown: s = L"act_mgmt_unknown";	break;
+		case cio_packet::act_mgmt_get_version: s = L"act_mgmt_get_version";	break;
 		case cio_packet::act_mgmt_get_echo: s = L"act_mgmt_get_echo";	break;
 		case cio_packet::act_mgmt_get_device_list: s = L"act_mgmt_get_device_list";	break;
 		case cio_packet::act_mgmt_ctl_show: s = L"act_mgmt_ctl_show";	break;
@@ -1189,6 +1191,7 @@ private:
 			switch (p_packet->c_act) {
 			case cio_packet::act_mgmt_unknown:
 			case cio_packet::act_mgmt_get_device_list:
+			case cio_packet::act_mgmt_get_version:
 			case cio_packet::act_mgmt_get_echo:
 			case cio_packet::act_mgmt_ctl_show:
 			case cio_packet::act_mgmt_file_operation:
@@ -1538,6 +1541,7 @@ private:
 		switch (c_act)
 		{
 		case cio_packet::act_mgmt_unknown:
+		case cio_packet::act_mgmt_get_version:
 		case cio_packet::act_mgmt_get_echo:
 		case cio_packet::act_mgmt_get_device_list:
 		case cio_packet::act_mgmt_ctl_show:

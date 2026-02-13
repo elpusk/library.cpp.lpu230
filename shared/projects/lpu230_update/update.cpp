@@ -118,18 +118,31 @@ static std::pair<bool, int> setup_rom_dll(bool b_run_by_coffee_manager,_mp::clog
 *	GUI 를 생성하고, 업데이트 manager 를 실행.
 *	
 *	software component 검증.
+* @param n_session : session number for coffee manager.
+* @param s_abs_full_rom_file : rom file full path. if empty, auto detect rom file.
+* @param n_fw_index : -1 is auto detect, greater equal 0 is fw index.
+* @param s_device_path : device path to update. if empty, auto detect device.
+* @param b_display : true - display ui, false - no display ui
+* @param b_log_file : true - enable log file, false - disable log file.
+* @param b_mmd1100_iso_mode : true - after update, set mmd1100 to iso mode.
+* @param lpu237_interface_after_update : lpu237 interface after update.
+* @param b_run_by_cf : true - executed by coffee manager 2'nd, false - normal execution.
+* @param b_notify_progress_to_server : true - notify progress to coffee manager server, false - do not notify.
+* @param list_commandline_options_for_debug : command line options for debug.
 */
 int update_main
 (
 	unsigned long n_session,
 	const std::string& s_abs_full_rom_file,
+	int n_fw_index, // -1 is auto detect, greater equal 0 is fw index.
 	const std::string& s_device_path,
 	bool b_display,
 	bool b_log_file,
 	bool b_mmd1100_iso_mode,
 	cshare::Lpu237Interface lpu237_interface_after_update,
 	bool b_run_by_cf,
-	bool b_notify_progress_to_server
+	bool b_notify_progress_to_server,
+	const _mp::type_list_string& list_commandline_options_for_debug
 )
 {
 	bool b_need_remove_pid_file(false);
@@ -153,6 +166,10 @@ int update_main
 			}
 			continue;//error
 		}
+
+		for( auto s : list_commandline_options_for_debug ) {
+			log.log_fmt(L"[I] command line option for debug: %ls\n", _mp::cstring::get_unicode_from_mcsc(s).c_str());
+		}//end for.
 
 		bool b_demonize(false);
 		if (!b_run_by_cf) {
@@ -186,6 +203,8 @@ int update_main
 			gn_result = result_rom_dll.second;
 			continue;
 		}
+
+		cshare::get_instance().set_firmware_index_by_user(n_fw_index);
 
 		// from this line, CHidBootManager::GetInstance() can be used.
 		// from this line, cshare::get_instance() can be used. because cshare use CHidBootManager.

@@ -62,6 +62,9 @@ namespace _mp {
 				}
 				switch (ptr_req_new->get_action())
 				{
+				case cio_packet::act_mgmt_get_version:
+					b_complete = _execute_mgmt_get_version(m_p_log, *ptr_req_new, response);
+					break;
 				case cio_packet::act_mgmt_get_echo:
 					b_complete = _execute_mgmt_get_echo(m_p_log, *ptr_req_new, response);
 					break;

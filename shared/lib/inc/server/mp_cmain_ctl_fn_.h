@@ -27,7 +27,11 @@ namespace _mp {
 	protected:
 		cmain_ctl_fn(clog* p_log);
 
-		//
+		/**
+		* @brief execute get coffee manager version action.
+		*/
+		bool _execute_mgmt_get_version(clog* p_log, cio_packet& request, cio_packet& response); //from v2.7
+
 		bool _execute_mgmt_get_echo(clog* p_log, cio_packet& request, cio_packet& response);
 		
 		bool _execute_mgmt_get_device_list(clog* p_log, const type_list_wstring& list_wstring_filter, cio_packet& request, cio_packet& response);

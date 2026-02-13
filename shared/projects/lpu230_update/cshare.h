@@ -68,6 +68,7 @@ public:
 	cshare& set_run_by_cf(bool b_yes);
 
 	cshare& set_rom_file_abs_full_path(const std::string &s_abs_full_rom_file);
+	cshare& set_firmware_index_by_user(int n_fw_index); // fw index by user assigned value.
 	cshare& set_device_path(const std::string& s_device_path);
 	cshare& set_bootloader_path(const std::string& s_bootloader_path);
 	cshare& set_target_vid(int n_vid = 0); //default is reset
@@ -107,6 +108,7 @@ public:
 	bool is_run_by_cf() const;
 	std::string get_rom_file_abs_full_path() const;
 	std::wstring get_rom_file_abs_full_wpath() const;
+	int get_firmware_index_by_user() const;
 	std::string get_device_path() const;
 	std::wstring get_device_wpath() const;
 	int get_target_vid() const;
@@ -234,6 +236,7 @@ private:
 	bool m_b_run_by_cf; // this updater is run by coffee manager.
 	bool m_b_start_from_bootloader;
 	std::string m_s_rom_file_abs_full_path;//rom or bin file path.
+	int m_n_fw_index_by_user; // fw index by user assigned value. -1 means not assigned.(auto)
 	std::string m_s_device_path;// if the given device is bootloader, then m_s_device_path can be eqaul to m_s_bootloader_path.
 	std::string m_s_bootloader_path;// if the given device is bootloader, then m_s_device_path can be eqaul to m_s_bootloader_path.
 	int m_n_target_vid;

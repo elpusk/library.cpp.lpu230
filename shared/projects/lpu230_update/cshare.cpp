@@ -129,6 +129,7 @@ void cshare::_ini()
 	m_s_stopped_usb_pis.clear();
 
 	m_b_run_by_cf = false;
+	m_n_fw_index_by_user = -1;
 	m_n_target_vid = m_n_target_pid = 0;
 	m_s_target_pis.clear();
 
@@ -235,6 +236,13 @@ cshare& cshare::set_rom_file_abs_full_path(const std::string& s_abs_full_rom_fil
 	}
 	return *this;
 }
+
+cshare& cshare::set_firmware_index_by_user(int n_fw_index)
+{
+	m_n_fw_index_by_user = n_fw_index;
+	return *this;
+}
+
 cshare& cshare::set_device_path(const std::string& s_device_path)
 {
 	m_s_device_path = s_device_path;
@@ -851,6 +859,11 @@ bool cshare::is_run_by_cf() const
 std::string cshare::get_rom_file_abs_full_path() const
 {
 	return m_s_rom_file_abs_full_path;
+}
+
+int cshare::get_firmware_index_by_user() const
+{
+	return m_n_fw_index_by_user;
 }
 
 std::wstring cshare::get_rom_file_abs_full_wpath() const

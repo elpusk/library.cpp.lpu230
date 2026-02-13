@@ -261,6 +261,39 @@ std::pair<bool, std::wstring> cupdater_param::can_be_start_firmware_update() con
 			s_info += L"\n";
 		}
 
+		//"firmware_index" zero-base firmware index of rom file.
+		s_key = std::wstring(_mp::_coffee::CONST_S_CMD_LINE_FW_UPDATE_SET_FW_INDEX);
+		it = m_map.find(s_key);
+		if (it != std::end(m_map)) {
+			try {
+				int num = std::stoi(it->second);
+				if (num < 0) {
+					s_info = L"none ";
+					s_info += s_key;
+					s_info += L" key value - must be zero or positive integer.";
+					s_info += L"\n";
+					continue;
+				}
+			}
+			catch (...) {
+				//error
+				s_info = L"none ";
+				s_info += s_key;
+				s_info += L" key value - stoi() error";
+				s_info += L"\n";
+				continue;// exit while
+			}
+			s_info += s_key;
+			s_info += L" - ";
+			s_info += it->second;
+			s_info += L"\n";
+		}
+		else {
+			s_info += L"none ";
+			s_info += s_key;
+			s_info += L"\n";
+		}
+
 		b_result = true;
 	} while (false);
 	return std::make_pair(b_result, s_info);
@@ -441,6 +474,15 @@ std::wstring cupdater_param::generate_command_line_arguments_except_exe_by_wstri
 			s_command_line_arguments += L" --";
 			s_command_line_arguments += std::wstring(_mp::_coffee::CONST_S_CMD_LINE_FW_UPDATE_SET_HIDE_UI);
 		}
+		//
+		s_key = std::wstring(_mp::_coffee::CONST_S_CMD_LINE_FW_UPDATE_SET_FW_INDEX);
+		it = m_map.find(s_key);
+		if (it != std::end(m_map)) {
+			s_command_line_arguments += L" --";
+			s_command_line_arguments += s_key;
+			s_command_line_arguments += L" ";
+			s_command_line_arguments += it->second;
+		}
 
 
 	} while (false);
@@ -521,6 +563,15 @@ std::vector<std::wstring> cupdater_param::generate_command_line_arguments_except
 				s_p += std::wstring(_mp::_coffee::CONST_S_CMD_LINE_FW_UPDATE_SET_HIDE_UI);
 				v.push_back(s_p);
 			}
+		}
+		//
+		s_key = std::wstring(_mp::_coffee::CONST_S_CMD_LINE_FW_UPDATE_SET_FW_INDEX);
+		it = m_map.find(s_key);
+		if (it != std::end(m_map)) {
+			s_p = L"--";
+			s_p += s_key;
+			v.push_back(s_p);
+			v.push_back(it->second);
 		}
 
 	} while (false);

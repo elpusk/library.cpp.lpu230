@@ -54,6 +54,7 @@
 * 2025.11.20 - v2.4 : 버전이 2.3 인데 2.2 로 미수정한 것 수정.
 * 2025.11.26 - v2.5 : clog missing code 수정.
 * 2025.12.09 - v2.6 : certificate , key file 보안 강화.
+* 2026.02.13 - v2.7 : lpu230_update 를 위한 "firmware_index" 파라미터 지원. & cf 버전 읽기 명령 추가.(V)
 * 
 */
 
@@ -203,7 +204,7 @@ int main(int argc, char* argv[])
 			continue;
 		}
 		//
-		std::wstring ws_version(L"2.6");
+		std::wstring ws_version(_mp::_coffee::CONST_WS_COFFEE_MGMT_VERSION);
 
 		if (set_parameters.find(L"/version") != std::end(set_parameters)) {
 			std::wcout << ws_version << std::endl;

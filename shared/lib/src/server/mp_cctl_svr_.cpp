@@ -384,6 +384,7 @@ namespace _mp {
 				if (ptr_request->is_owner_manager()) {
 					switch (ptr_request->get_action())
 					{
+					case cio_packet::act_mgmt_get_version:
 					case cio_packet::act_mgmt_get_echo:
 					case cio_packet::act_mgmt_get_device_list:
 					case cio_packet::act_mgmt_ctl_show:

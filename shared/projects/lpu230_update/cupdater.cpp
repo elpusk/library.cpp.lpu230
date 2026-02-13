@@ -96,10 +96,14 @@ cupdater::cupdater(
 				if (n_total_fw <= 0) {
 					continue;// error잘못된 파일
 				}
-				if (n_updatable_index < 0) {
-					// FW 있는데, 적절한 것이 없음.
-					if (!m_b_display) {
-						continue; // 에러 ... UI 가 숨겨져
+				int n_fw_index_by_user = cshare::get_instance().get_firmware_index_by_user();
+				if (n_fw_index_by_user < 0) {
+					// 자동 선택.
+					if (n_updatable_index < 0) {
+						// FW 있는데, 적절한 것이 없음.
+						if (!m_b_display) {
+							continue; // 에러 ... UI 가 숨겨져
+						}
 					}
 				}
 			}
@@ -1440,6 +1444,12 @@ void cupdater::_updates_thread_function()
 		if (!m_b_is_running)
 			break; // 종료 직전 체크
 		//
+		if (sh.get_firmware_index_by_user() >= 0) {
+			// 사용자에 의해 선택된 firmware 가 있는 경우. 선택을 강제로 변경함.
+			std::vector<std::string> fw_list;
+			std::tie(std::ignore, fw_list ) = sh.get_firmware_list_of_rom_file();
+			sh.set_firmware_list_of_rom_file(sh.get_firmware_index_by_user(), fw_list);
+		}
 
 		bool b_result(false), b_complete(false);
 		_mp::type_v_buffer v_sector;
@@ -1886,7 +1896,7 @@ bool cupdater::_updates_sub_thread_erase_sector(int& n_step)
 				_push_message(n_step, true, s_msg);
 			}
 
-			std::this_thread::sleep_for(std::chrono::milliseconds(500));
+			std::this_thread::sleep_for(std::chrono::milliseconds(5));
 		}//end for
 
 	} while (false);
@@ -1913,11 +1923,6 @@ _mp::type_pair_bool_result_bool_complete cupdater::_updates_sub_thread_read_one_
 	do {
 		++n_step;
 
-		s_msg = "read sector ";
-		s_msg += std::to_string(n_out_zero_base_sector_number);
-		s_msg += " from file.";
-		_push_message(n_step, true, s_msg);
-
 		std::tie(b_result, b_complete) = sh.get_one_sector_fw_data(
 			CHidBootManager::GetInstance()->get_rom_library()
 			, v_out_sector
@@ -1925,13 +1930,15 @@ _mp::type_pair_bool_result_bool_complete cupdater::_updates_sub_thread_read_one_
 			,b_first_read
 		
 		);
+		s_msg = "read sector ";
+		s_msg += std::to_string(n_out_zero_base_sector_number);
+		s_msg += " from file.";
+
 		if (!b_result) {
-			s_msg = "read sector ";
-			s_msg += std::to_string(n_out_zero_base_sector_number);
-			s_msg += " from file.";
 			_push_message(n_step, false, s_msg);
 			continue;
 		}
+		_push_message(n_step, true, s_msg);
 
 	} while (false);
 

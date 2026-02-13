@@ -59,6 +59,7 @@ int main(int argc, char** argv)
 
     unsigned long n_session = 0;
     std::string s_rom_file;
+	int n_fw_index = -1;// fw index is auto detect by default.
     std::string s_device_path;
 
     _mp::type_list_string list_parameters;
@@ -270,6 +271,26 @@ int main(int argc, char** argv)
             }
         }
 
+        if (b_rom_file) {
+            it = std::find(list_parameters.begin(), list_parameters.end(), "--firmware_index");
+            if(it != std::end(list_parameters)){
+                ++it;
+                if (it == std::end(list_parameters)) {
+                    // --firmware_index 다음은 zero-base firmware index of rom file.
+                    continue;//error
+                }
+                try {
+                    n_fw_index = std::stoi(*it);
+					if (n_fw_index < -1) { // -1 은 auto detect
+                        continue;//error
+                    }
+                }
+                catch (...) {
+                    continue; // format 에러
+                }
+			}
+        }
+
         ///////////////////////////////////////////
         // -m option
         it = std::find(list_parameters.begin(), list_parameters.end(), "-m");
@@ -356,6 +377,25 @@ int main(int argc, char** argv)
 
             s_rom_file = *it;
             b_rom_file = true;
+            if (b_rom_file) {
+				it = std::find(list_parameters.begin(), list_parameters.end(), "--firmware_index");
+                if (it != std::end(list_parameters)) {
+                    ++it;
+                    if (it == std::end(list_parameters)) {
+                        // --firmware_index 다음은 zero-base firmware index of rom file.
+                        continue;//error
+                    }
+                    try {
+                        n_fw_index = std::stoi(*it);
+                        if(n_fw_index < -1) { // -1 은 auto detect
+                            continue;//error
+						}
+                    }
+                    catch (...) {
+                        continue; // format 에러
+                    }
+                }
+            }
 
             // --device 필수. : s_device_path
             it = std::find(list_parameters.begin(), list_parameters.end(), "--device");
@@ -426,13 +466,15 @@ int main(int argc, char** argv)
         n_result = update_main(
             n_session,
             s_rom_file,
+            n_fw_index,
             s_device_path,
             b_display,
             b_log,
             b_mmd1100_iso_mode,
             lpu237_interface_after_update,
             b_run_by_cf,
-            b_notify
+            b_notify,
+            list_parameters
         );
 
     } while (false);
@@ -444,7 +486,7 @@ int main(int argc, char** argv)
 void _print_help(const std::string& program_name)
 {
     std::cout <<
-        "Usage: v2.4\n"
+        "Usage: v2.5\n"
         "  " << program_name << " [OPTIONS]\n"
         "\n"
         "Options:\n"
