@@ -230,6 +230,19 @@ private:
 	std::vector<std::filesystem::path> _find_rom_files();
 
 	/**
+	* @brief request to server that all hidboot using clients stop using.
+	* @return first - true : success, false - error or none hidbootloader.
+	*
+	*	second - the number of stopped hidbbotoader.
+	*/
+	std::pair<bool,int> _request_server_stop_using_all_hidboot();
+	
+	/**
+	* @brief request to server that the target device stop using.
+	*/
+	bool _request_server_stop_using_device(int n_vid, int n_pid, const std::wstring& s_pis, const std::string & s_target_dev_path);
+
+	/**
 	* @brief cheks tagrget device validation.
 	* 
 	* @return target device path. if return is empty, error

@@ -62,6 +62,11 @@ namespace _mp {
 				}
 				switch (ptr_req_new->get_action())
 				{
+				case cio_packet::act_mgmt_recover_operation:
+					b_complete = _execute_mgmt_recover_operation(m_p_log, *ptr_req_new, response);
+					//이 action 은 항상 complete 이므로
+					assert(b_complete);
+					break;
 				case cio_packet::act_mgmt_get_version:
 					b_complete = _execute_mgmt_get_version(m_p_log, *ptr_req_new, response);
 					break;

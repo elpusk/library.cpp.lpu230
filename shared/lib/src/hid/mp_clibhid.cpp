@@ -259,7 +259,7 @@ namespace _mp{
             //default - support lpu237, lpu238, hidbootloader
             m_set_usb_filter.emplace(_elpusk::const_usb_vid, _elpusk::_lpu237::const_usb_pid, _elpusk::_lpu237::const_usb_inf_hid); //lpu237
             m_set_usb_filter.emplace(_elpusk::const_usb_vid, _elpusk::_lpu238::const_usb_pid, _elpusk::_lpu238::const_usb_inf_hid); //lpu238
-            //m_set_usb_filter.emplace(_elpusk::const_usb_vid, _elpusk::const_usb_pid_hidbl, _elpusk::const_usb_inf_hidbl); //hidbootloader
+            m_set_usb_filter.emplace(_elpusk::const_usb_vid, _elpusk::const_usb_pid_hidbl, _elpusk::const_usb_inf_hidbl); //hidbootloader
 
             _ini(); //ptr_briage instance will ne created in _ini()
         }

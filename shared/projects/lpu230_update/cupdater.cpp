@@ -51,20 +51,22 @@ cupdater::cupdater(
 	//setup boot manager
 	m_p_mgmt = CHidBootManager::GetInstance();
 
+	cshare& sh(cshare::get_instance());
+
 	// 현재 디렉토리를 얻음.
 	std::filesystem::path current_dir = _mp::cfile::get_cur_exe_abs_path_except_backslah_file_name_extension();
-	if(!cshare::get_instance().get_rom_file_abs_full_path().empty()) {
+	if(!sh.get_rom_file_abs_full_path().empty()) {
 		//사용자가 커맨트 라인 옵션으로 rom/bin 파일을 지정한 경우, 그 파일이 있는 디렉토리를 현재 디렉토리로 설정. 
-		current_dir = std::filesystem::path(cshare::get_instance().get_rom_file_abs_full_path()).parent_path();
+		current_dir = std::filesystem::path(sh.get_rom_file_abs_full_path()).parent_path();
 		m_log_ref.log_fmt("[I] user defined : current dir = %s\n", current_dir.string().c_str());
 	}
 	else {
 		m_log_ref.log_fmt("[I] auto detected : current dir = %s\n", current_dir.string().c_str());
 	}
 
-	cshare::get_instance().update_files_list_of_cur_dir(current_dir);//m_current_dir 에 있는 file 를 m_v_files_in_current_dir 에 설정.
+	sh.update_files_list_of_cur_dir(current_dir);//m_current_dir 에 있는 file 를 m_v_files_in_current_dir 에 설정.
 
-	//parameter valied check
+	//parameter valid check
 	do {
 		m_ptr_hid_api_briage = std::make_shared<chid_briage>(true); //remove_all_zero_in_report
 		_mp::clibhid& mlibhid(_mp::clibhid::get_manual_instance());
@@ -81,7 +83,7 @@ cupdater::cupdater(
 		bool b_file_is_rom_type(false);
 		std::string s_target_rom_file;
 		std::tie(s_target_rom_file, b_file_is_rom_type) = _check_target_file_path_in_initial();
-		if (!cshare::get_instance().get_rom_file_abs_full_path().empty()) {
+		if (!sh.get_rom_file_abs_full_path().empty()) {
 			if (s_target_rom_file.empty()) {
 				continue; //ERROR. 주어진 파일이 있으니 실제 존재하지 않음.
 			}
@@ -96,7 +98,7 @@ cupdater::cupdater(
 				if (n_total_fw <= 0) {
 					continue;// error잘못된 파일
 				}
-				int n_fw_index_by_user = cshare::get_instance().get_firmware_index_by_user();
+				int n_fw_index_by_user = sh.get_firmware_index_by_user();
 				if (n_fw_index_by_user < 0) {
 					// 자동 선택.
 					if (n_updatable_index < 0) {
@@ -104,6 +106,15 @@ cupdater::cupdater(
 						if (!m_b_display) {
 							continue; // 에러 ... UI 가 숨겨져
 						}
+					}
+				}
+				else{ //사용자에 의해 fw index 가 지정된 경우.
+					if (n_fw_index_by_user >= n_total_fw) {
+						// 잘못된 index 지정.
+						continue; // error
+					}
+					else {
+						sh.set_firmware_list_of_rom_file(n_fw_index_by_user);
 					}
 				}
 			}
@@ -117,7 +128,7 @@ cupdater::cupdater(
 			if (s_target_rom_file.empty()) {
 				// 현재 폴더에도 없는데.
 				if (!m_b_display) {
-					// UI 까지 숨겨서 선택 할 수 없으로 에러.
+					// UI 까지 숨겨서 선택 할 수 없으로 에러.(cf2 에 의해 실행한 경우도 여기에 해당함.)
 					continue;
 				}
 			}
@@ -628,6 +639,124 @@ std::vector<std::filesystem::path> cupdater::_find_rom_files()
 	return rom_files;
 }
 
+std::pair<bool, int> cupdater::_request_server_stop_using_all_hidboot()
+{
+	bool b_result(false);
+	int n_stopped_hidboot(0);
+
+	do {
+		_mp::type_set_usb_filter set_usb_filter;
+		set_usb_filter.emplace(_mp::_elpusk::const_usb_vid, _mp::_elpusk::const_usb_pid_hidbl, _mp::_elpusk::const_usb_inf_hidbl); //hidbootloader
+		_mp::clibhid& mlibhid(_mp::clibhid::get_manual_instance());
+		mlibhid.set_usb_filter(set_usb_filter);
+
+		mlibhid.update_dev_set_in_manual();
+		_mp::clibhid_dev_info::type_set set_dev_info_boot = mlibhid.get_cur_device_set();
+
+		if (set_dev_info_boot.empty()) {
+			continue;// 연결된 hidboot 이 없음.
+		}
+
+		b_result = true;
+
+		for (const auto& dev_info : set_dev_info_boot) {
+			std::string s_path = dev_info.get_path_by_string();
+			std::wstring s_pis = dev_info.get_port_id_string();
+		
+			if (_request_server_stop_using_device( //called by _request_server_stop_using_all_hidboot()
+				dev_info.get_vendor_id(),
+				dev_info.get_product_id(),
+				s_pis,
+				s_path
+			)) {
+				n_stopped_hidboot++;
+			}
+			else {
+				b_result = false;
+				continue; // server 에 요청 실패. 하지만, 다른 hidboot 이 있을 수 있으므로, 계속 진행.
+			}
+		}
+
+	} while (false);
+
+	return std::make_pair(b_result,n_stopped_hidboot);
+}
+
+bool cupdater::_request_server_stop_using_device(int n_vid, int n_pid, const std::wstring& s_pis, const std::string& s_target_dev_path)
+{
+	bool b_result(false);
+	uint32_t n_server_rsp_check_interval_mm = 10;
+	int n_n_server_rsp_check_times = 300; // n_server_rsp_check_interval_mm 를 몇번 검사 할 건지.
+
+	// lpu237 or kpu238 생성 전에, coffee-manager-2nd(server) 이 동작 중이면, server 에서 해당 device 사용 중지를 요청해야함.
+	do {
+		_mp::cnamed_pipe::type_ptr ptr_tx_ctl_pipe, ptr_rx_ctl_pipe;
+		//setup controller
+		ptr_tx_ctl_pipe = std::make_shared<_mp::cnamed_pipe>(_mp::_coffee::CONST_S_COFFEE_MGMT_CTL_PIPE_NAME, false);
+		if (!ptr_tx_ctl_pipe) {
+			m_log_ref.log_fmt("[E] server control pip getting.\n");
+			continue;
+		}
+		if (!ptr_tx_ctl_pipe->is_ini()) {
+			m_log_ref.log_fmt("[E] server control pip ini.\n");
+			continue;
+		}
+
+		ptr_rx_ctl_pipe = std::make_shared<_mp::cnamed_pipe>(_mp::_coffee::CONST_S_COFFEE_MGMT_CTL_PIPE_NAME_OF_SERVER_RESPONSE, false);
+		if (!ptr_rx_ctl_pipe) {
+			m_log_ref.log_fmt("[E] server rx control pip getting.\n");
+			continue;
+		}
+		if (!ptr_rx_ctl_pipe->is_ini()) {
+			m_log_ref.log_fmt("[E] server rx control pip ini.\n");
+			continue;
+		}
+
+		// 서버 control pipe 에 연결 설공.
+		std::wstring s_req_ctl_pip = _mp::ccoffee_pipe::generate_ctl_request_for_consider_to_removed(
+			n_vid, n_pid, s_pis
+		);
+		if (s_req_ctl_pip.empty()) {
+			m_log_ref.log_fmt("[E] generating request for stopping %s\n", s_target_dev_path.c_str());
+			continue;
+		}
+		if (!ptr_tx_ctl_pipe->write(s_req_ctl_pip)) {
+			m_log_ref.log_fmt("[E] request is sent to server for stopping %s\n", s_target_dev_path.c_str());
+			continue;
+		}
+
+		std::wstring s_rx;
+		int i = 0;
+		for (; i < n_n_server_rsp_check_times; i++) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(n_server_rsp_check_interval_mm)); // 서버의 작업 시간을 위한 sleep.
+			if (!ptr_rx_ctl_pipe->read(s_rx)) {
+				continue;
+			}
+			if (s_rx.compare(_mp::_coffee::CONST_S_COFFEE_MGMT_CTL_RSP_STOP_DEV) == 0) {
+				m_log_ref.log_fmt("[I] request is sent to server for stopping %s\n", s_target_dev_path.c_str());
+
+				cshare::get_instance().set_executed_server_stop_use_target_dev(
+					true,
+					(int)n_vid,
+					(int)n_pid,
+					s_pis
+				);
+				std::this_thread::sleep_for(std::chrono::milliseconds(500)); // 서버의 작업 시간을 위한 sleep.
+				break; //exit for
+			}
+		}//end for
+
+		if (i == n_n_server_rsp_check_times) {
+			m_log_ref.log_fmt("[E] response timeout from server for stopping %s\n", s_target_dev_path.c_str());
+			continue;
+		}
+
+		b_result = true;
+	} while (false);
+
+	return b_result;
+}
+
 std::string cupdater::_check_target_device_path_in_initial()
 {
 	// 현재 연결된 장비를 얻는다.
@@ -693,11 +822,14 @@ std::string cupdater::_check_target_device_path_in_initial()
 		}
 
 		// 주어진 장비가 없는 경우. 자동 선택.
-		if (!set_primitive_dev_info_lpu.empty()) {
-			it_dev = set_primitive_dev_info_lpu.begin();
-			s_target_dev_path = it_dev->get_path_by_string();
-			m_log_ref.log_fmt("[I] auto target is  %s\n", s_target_dev_path.c_str());
-			continue;
+		// cf2에 의해 실행하면, bootloader 에서만 찾기.
+		if (!sh.is_run_by_cf()) {
+			if (!set_primitive_dev_info_lpu.empty()) {
+				it_dev = set_primitive_dev_info_lpu.begin();
+				s_target_dev_path = it_dev->get_path_by_string();
+				m_log_ref.log_fmt("[I] auto target is  %s\n", s_target_dev_path.c_str());
+				continue;
+			}
 		}
 		if (!set_dev_info_boot.empty()) {
 			it_boot = set_dev_info_boot.begin();
@@ -715,81 +847,27 @@ std::string cupdater::_check_target_device_path_in_initial()
 		return s_target_dev_path; //ERROR
 	}
 
-	if (cshare::get_instance().get_start_from_bootloader()) {
+	if (sh.get_start_from_bootloader()) {
 		sh.set_target_vid().set_target_pid().set_target_pis(); //reset
-		cshare::get_instance().set_device_path(s_target_dev_path);// 시작 장비가 hidboot loader 로 장비가 설정됨
-		cshare::get_instance().set_bootloader_path(s_target_dev_path);
+		sh.set_device_path(s_target_dev_path);// 시작 장비가 hidboot loader 로 장비가 설정됨
+		sh.set_bootloader_path(s_target_dev_path);
 		return s_target_dev_path;
 	}
 
-	//target devie 가 lpu237 or kpu238 이면 open 해서 정보를 얻어와서 
+	// 시작을 bootloader 에서 한 것이 아닌 경우(즉 recover 이 아님).
+	//target devie 가 lpu237 or lpu238 이면 open 해서 정보를 얻어와서 
 	// version & name 설정.
 	// 를 해야함.
-	uint32_t n_server_rsp_check_interval_mm = 10;
-	int n_n_server_rsp_check_times = 300; // n_server_rsp_check_interval_mm 를 몇번 검사 할 건지.
 
-	// lpu237 or kpu238 생성 전에, coffee-manager-2nd(server) 이 동작 중이면, server 에서 해당 device 사용 중지를 요청해야함.
-	do{
-		_mp::cnamed_pipe::type_ptr ptr_tx_ctl_pipe, ptr_rx_ctl_pipe;
-		//setup controller
-		ptr_tx_ctl_pipe = std::make_shared<_mp::cnamed_pipe>(_mp::_coffee::CONST_S_COFFEE_MGMT_CTL_PIPE_NAME, false);
-		if (!ptr_tx_ctl_pipe) {
-			m_log_ref.log_fmt("[E] server control pip getting.\n");
-			continue;
-		}
-		if (!ptr_tx_ctl_pipe->is_ini()) {
-			m_log_ref.log_fmt("[E] server control pip ini.\n");
-			continue;
-		}
 
-		ptr_rx_ctl_pipe = std::make_shared<_mp::cnamed_pipe>(_mp::_coffee::CONST_S_COFFEE_MGMT_CTL_PIPE_NAME_OF_SERVER_RESPONSE, false);
-		if (!ptr_rx_ctl_pipe) {
-			m_log_ref.log_fmt("[E] server rx control pip getting.\n");
-			continue;
-		}
-		if (!ptr_rx_ctl_pipe->is_ini()) {
-			m_log_ref.log_fmt("[E] server rx control pip ini.\n");
-			continue;
-		}
-
-		// 서버 control pipe 에 연결 설공.
-		std::wstring s_req_ctl_pip = _mp::ccoffee_pipe::generate_ctl_request_for_consider_to_removed(
-			it_dev->get_vendor_id(), it_dev->get_product_id(), it_dev->get_port_id_string()
-		);
-		if (s_req_ctl_pip.empty()) {
-			m_log_ref.log_fmt("[E] generating request for stopping %s\n", s_target_dev_path.c_str());
-			continue;
-		}
-		if (!ptr_tx_ctl_pipe->write(s_req_ctl_pip)) {
-			m_log_ref.log_fmt("[E] request is sent to server for stopping %s\n", s_target_dev_path.c_str());
-			continue;
-		}
-
-		std::wstring s_rx;
-		int i = 0;
-		for (; i < n_n_server_rsp_check_times; i++) {
-			std::this_thread::sleep_for(std::chrono::milliseconds(n_server_rsp_check_interval_mm)); // 서버의 작업 시간을 위한 sleep.
-			if (!ptr_rx_ctl_pipe->read(s_rx)) {
-				continue;
-			}
-			if (s_rx.compare(_mp::_coffee::CONST_S_COFFEE_MGMT_CTL_RSP_STOP_DEV) == 0) {
-				m_log_ref.log_fmt("[I] request is sent to server for stopping %s\n", s_target_dev_path.c_str());
-
-				cshare::get_instance().set_executed_server_stop_use_target_dev(
-					true,
-					(int)it_dev->get_vendor_id(),
-					(int)it_dev->get_product_id(),
-					it_dev->get_port_id_string()
-				);
-				std::this_thread::sleep_for(std::chrono::milliseconds(500)); // 서버의 작업 시간을 위한 sleep.
-				break; //exit for
-			}
-		}//end for
-
-		if (i == n_n_server_rsp_check_times) {
-			m_log_ref.log_fmt("[E] response timeout from server for stopping %s\n", s_target_dev_path.c_str());
-		}
-	} while (false);
+	// lpu237 or lpu238 생성 전에, coffee-manager-2nd(server) 이 동작 중이면, server 에서 해당 device 사용 중지를 요청해야함.
+	// 이 request 가 실패하면, 서버에 문제 있다고 가정하고, 계속 진행.
+	_request_server_stop_using_device( // called by _check_target_device_path_in_initial()
+		(int)it_dev->get_vendor_id(),
+		(int)it_dev->get_product_id(),
+		it_dev->get_port_id_string(),
+		s_target_dev_path
+	);
 
 	// create & open clibhid_dev.
 	_mp::clibhid_dev::type_ptr ptr_dev = std::make_shared<_mp::clibhid_dev>(*it_dev, m_ptr_hid_api_briage.get());
@@ -828,7 +906,9 @@ std::pair<std::string, bool> cupdater::_check_target_file_path_in_initial()
 {
 	////////////////////////////////////////////////////////////////////////////
 	// 주어진 rom file 검증
-	std::string s_target_rom_file = cshare::get_instance().get_rom_file_abs_full_path();
+	cshare& sh(cshare::get_instance());
+
+	std::string s_target_rom_file = sh.get_rom_file_abs_full_path();
 	bool b_rom_type(false);
 
 	// 우선순위
@@ -865,15 +945,22 @@ std::pair<std::string, bool> cupdater::_check_target_file_path_in_initial()
 			continue;
 		}
 
+		if(sh.is_run_by_cf()){
+			// cf2에 의해 실행되었는데, 주어진 파일이 없는 경우. 자동 탐지도 하지 않음.
+			m_log_ref.log_fmt("[E] none given file. but it's run by cf2, so no auto detection.\n"); // ERROR
+			s_target_rom_file.clear(); //for error maker
+			continue;
+		}
+
 		// 주어진 파일이 없음(auto). 이미 읽은 리스트 있음.
-		std::vector<std::string> v_s_rom = cshare::get_instance().get_vector_rom_files_in_current_dir();
+		std::vector<std::string> v_s_rom = sh.get_vector_rom_files_in_current_dir();
 		if (!v_s_rom.empty()) {
 			s_target_rom_file = *v_s_rom.begin();
 			b_rom_type = true;
 			m_log_ref.log_fmt("[I] auto target file - %s\n", s_target_rom_file.c_str());
 			continue;
 		}
-		std::vector<std::string> v_s_bin = cshare::get_instance().get_vector_bin_files_in_current_dir();
+		std::vector<std::string> v_s_bin = sh.get_vector_bin_files_in_current_dir();
 		if (!v_s_bin.empty()) {
 			s_target_rom_file = *v_s_bin.begin();
 			m_log_ref.log_fmt("[I] auto target file - %s\n", s_target_rom_file.c_str());
@@ -887,17 +974,18 @@ std::pair<std::string, bool> cupdater::_check_target_file_path_in_initial()
 
 std::pair<int, int> cupdater::_check_target_fw_of_selected_rom_in_initial()
 {
+	cshare& sh(cshare::get_instance());
 	int n_updatable_index = -1;
 	int n_total_fw(0);
-	std::string s_target_rom_file(cshare::get_instance().get_rom_file_abs_full_path());
+	std::string s_target_rom_file(sh.get_rom_file_abs_full_path());
 	std::filesystem::path fp_target_file(s_target_rom_file);
 	if (fp_target_file.extension() == ".rom") {
 		// 이 경우 rom 내에 있는 fw 를 확인 필요.
 		if (CHidBootManager::GetInstance()->is_rom_file_format_ok(fp_target_file.string())) {
-			std::tie(n_total_fw, n_updatable_index) = cshare::get_instance().update_fw_list_of_selected_rom(CHidBootManager::GetInstance()->get_rom_library());
+			std::tie(n_total_fw, n_updatable_index) = sh.update_fw_list_of_selected_rom(CHidBootManager::GetInstance()->get_rom_library());
 			if (n_updatable_index < 0) {
-				m_log_ref.log_fmt("[E] not valied firmware in %s\n", s_target_rom_file.c_str());
-				//ERROR
+				m_log_ref.log_fmt("[W] not valied firmware in %s\n", s_target_rom_file.c_str());
+				// 경고, 호환성 있는 firmware 발견 못함.
 			}
 			else {
 				// 유효한 조건을 만족하는 firmware 가 존재
@@ -908,7 +996,7 @@ std::pair<int, int> cupdater::_check_target_fw_of_selected_rom_in_initial()
 			// rom 이 외의 주어진 파일 또는 자동 탐지된 bin 파일
 			// 이 경우 강제로 하나의 파일이 그대로 fw 이므로, 
 			n_total_fw = 1; //n_updatable_index 는 -1 이다.
-			m_log_ref.log_fmt("[W] firmware tyie binary in %s\n", s_target_rom_file.c_str());
+			m_log_ref.log_fmt("[W] firmware type binary in %s\n", s_target_rom_file.c_str());
 		}
 	}
 	else {
@@ -1248,7 +1336,13 @@ void cupdater::_queueed_message_process(
 				, _mp::cstring::get_unicode_from_mcsc(s_msg)
 			);
 
-			ptr_tx->write(s_request); // notify
+			// notify
+			if (ptr_tx->write(s_request)) {
+				m_log_ref.log_fmt(L"[I] send notification to server : %ls\n", s_request.c_str());
+			}
+			else{
+				m_log_ref.log_fmt("[E] failed to send progress notification to server.\n");
+			}
 		}
 	}
 
@@ -1421,6 +1515,8 @@ void cupdater::_updates_thread_function()
 				break; // 종료 직전 체크
 		}
 
+		_request_server_stop_using_all_hidboot(); // bootloader 에서도 hidboot 사용 중지 요청. 서버에 문제 있으면 계속 진행.
+
 		////////////////////////////////////////////////////
 		// 부트로더 설정 실시.
 		if (!_updates_sub_thread_setup_bootloader(n_step)) {
@@ -1446,9 +1542,7 @@ void cupdater::_updates_thread_function()
 		//
 		if (sh.get_firmware_index_by_user() >= 0) {
 			// 사용자에 의해 선택된 firmware 가 있는 경우. 선택을 강제로 변경함.
-			std::vector<std::string> fw_list;
-			std::tie(std::ignore, fw_list ) = sh.get_firmware_list_of_rom_file();
-			sh.set_firmware_list_of_rom_file(sh.get_firmware_index_by_user(), fw_list);
+			sh.set_firmware_list_of_rom_file(sh.get_firmware_index_by_user());
 		}
 
 		bool b_result(false), b_complete(false);
@@ -1690,7 +1784,7 @@ bool cupdater::_updates_sub_thread_run_bootloader(int& n_step)
 	}
 
 	_mp::clibhid_dev::type_ptr ptr_null;
-	cshare::get_instance().set_target_lpu23x(ptr_null); // clear dev
+	sh.set_target_lpu23x(ptr_null); // clear dev
 
 	return b_result;
 }
@@ -1919,11 +2013,12 @@ _mp::type_pair_bool_result_bool_complete cupdater::_updates_sub_thread_read_one_
 	bool b_complete(false);
 	cshare& sh(cshare::get_instance());
 	std::string s_msg;
+	std::string s_error;
 
 	do {
 		++n_step;
 
-		std::tie(b_result, b_complete) = sh.get_one_sector_fw_data(
+		std::tie(b_result, b_complete, s_error) = sh.get_one_sector_fw_data(
 			CHidBootManager::GetInstance()->get_rom_library()
 			, v_out_sector
 			, n_out_zero_base_sector_number
@@ -1933,6 +2028,7 @@ _mp::type_pair_bool_result_bool_complete cupdater::_updates_sub_thread_read_one_
 		s_msg = "read sector ";
 		s_msg += std::to_string(n_out_zero_base_sector_number);
 		s_msg += " from file.";
+		s_msg += s_error;
 
 		if (!b_result) {
 			_push_message(n_step, false, s_msg);

@@ -25,6 +25,10 @@ public:
 
 	typedef _mp::cversion<unsigned char>	type_version;
 
+	//1'st - true : executed stop_use_target_dev- request. 2'nd - stopped usb vid, 3'rd - stopped usb pid, 4'th - stopped usb pis.
+	typedef std::tuple<bool, int, int, std::wstring> type_tuple_executed_server_stop_use_target_dev;
+	typedef std::vector<cshare::type_tuple_executed_server_stop_use_target_dev> type_v_tuple_executed_server_stop_use_target_dev;
+
 public:
 	_mp::type_pair_bool_result_bool_complete io_save_all_variable_sys_parameter(bool b_first);
 	bool io_load_basic_sys_parameter(_mp::clibhid_dev::type_ptr& ptr_recoverd_dev);
@@ -67,6 +71,21 @@ public:
 	*/
 	cshare& set_run_by_cf(bool b_yes);
 
+	/**
+	* @brief 롬파일의 절대 경로를 설정.(m_s_rom_file_abs_full_path)
+	* 
+	*   롬파일의 절대 경로가 유효하면, m_current_dir 를 롬파일의 directory 로 설정.
+	* 
+	*   롬파일의 절대 경로가 유효라지 않으면	, m_current_dir 는 현재 실행 파일의 절대 경로로 설정.
+	* 
+	*   롬파일이 binary(raw) 파일이면, 펨웨어 크기 설정(m_n_size_fw).
+	* 
+	*   롬파일이 rom 구조의 파일이면, 펨웨어 크기를 0 으로 설정.(선택되는 fw 마다 펨웨어 크기가 달라지기 때문.)
+	* 
+	* @param s_abs_full_rom_file - 롬파일의 절대 경로. 예시) "C:\update\romfile.rom"
+	*   
+	*   s_abs_full_rom_file 가 empty 이면, 아무 것도 하지 않는다.
+	*/
 	cshare& set_rom_file_abs_full_path(const std::string &s_abs_full_rom_file);
 	cshare& set_firmware_index_by_user(int n_fw_index); // fw index by user assigned value.
 	cshare& set_device_path(const std::string& s_device_path);
@@ -78,7 +97,17 @@ public:
 	cshare& set_iso_mode_after_update(bool b_enable_iso_mode_after_update);
 	cshare& set_lpu23x_interface_change_after_update(cshare::Lpu237Interface inf_new);
 
-	cshare& set_firmware_list_of_rom_file(int n_fw_index, const std::vector<std::string>& v_s_fw);
+	/**
+	* @brief set firmware list of the selected rom file.
+	* 
+	* @param n_fw_index : the selected firmware index of the selected rom file. if n_fw_index is greater than or equal to 0.
+	* 
+	* @parm  v_s_fw : 만약 v_s_fw 가 empty 가 아니면, m_v_firmware_list 를 v_s_fw 로 설정하고, m_n_size_fw 를 선택된 펌웨어의 크기로 설정한다.
+	* 
+	*   empty 이면 m_v_firmware_list 는 변경하지 않고 m_n_size_fw 는 변경.
+	* 
+	*/
+	cshare& set_firmware_list_of_rom_file(int n_fw_index, const std::vector<std::string>& v_s_fw = std::vector<std::string>(0));
 
 	cshare& set_erase_sec_index(const std::vector<int>& v_sec_index = std::vector<int>(0));
 	cshare& set_write_sec_index(const std::vector<int>& v_sec_index = std::vector<int>(0));
@@ -91,11 +120,12 @@ public:
 
 	bool get_display_ui() const;
 	/**
-	* @return get<0> - trure : executed stop_use_target_dev- request.
-	* @return get<1> - stopped usb vid
-	* @return get<2> - stopped usb pid
+	* @return get<0> of vector item - trure : executed stop_use_target_dev- request.
+	* @return get<1> of vector item - stopped usb vid
+	* @return get<2> of vector item - stopped usb pid
+	* @return get<3> of vector item - stopped usb pis
 	*/
-	std::tuple<bool,int,int,std::wstring> is_executed_server_stop_use_target_dev() const;
+	const cshare::type_v_tuple_executed_server_stop_use_target_dev & get_executed_server_stop_use_target_devs() const;
 
 	std::string get_target_device_model_name_by_string() const;
 	std::string get_target_device_version_by_string() const;
@@ -147,8 +177,10 @@ public:
 	* 
 	*	second - true : all read done, false : remain more data.
 	* 
+	*	third - std::string - error message when read error, or empty string when read OK.
+	* 
 	*/
-	_mp::type_pair_bool_result_bool_complete get_one_sector_fw_data(
+	std::tuple<bool,bool,std::string> get_one_sector_fw_data(
 		std::shared_ptr<CRom> ptr_rom_dll
 		, _mp::type_v_buffer& v_out_sector
 		, int& n_out_zero_base_sector_number
@@ -220,18 +252,16 @@ private:
 	void _set_firmware_size(size_t n_size_fw);
 
 private:
-	_mp::clibhid_dev_info m_plugin_dev_info_after_update; // device ingo after update.
+	_mp::clibhid_dev_info m_plugin_dev_info_after_update; // device info after update.
 
 	bool m_b_display; // display(default) ui or not
 	// exitable or not
 	std::atomic_bool m_b_is_possible_exit;
 
+	// devices of executed stop_use_target_dev- request.
 	// Indicate that a stop request for device usage has been sent to the server.
-	// If this value is true, request to resume usage once the update is completed.
-	bool m_b_executed_server_stop_use_target_dev;
-	int m_n_stopped_usb_vid; // stopped usb vid by m_b_executed_server_stop_use_target_dev flag
-	int m_n_stopped_usb_pid; // stopped usb pid by m_b_executed_server_stop_use_target_dev flag
-	std::wstring m_s_stopped_usb_pis; // usb port id string
+	// If this first value is true, request to resume usage once the update is completed.
+	cshare::type_v_tuple_executed_server_stop_use_target_dev m_v_tuple_executed_server_stop_use_target_dev; 
 
 	bool m_b_run_by_cf; // this updater is run by coffee manager.
 	bool m_b_start_from_bootloader;

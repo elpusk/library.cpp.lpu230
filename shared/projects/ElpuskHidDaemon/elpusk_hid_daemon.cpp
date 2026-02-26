@@ -55,6 +55,7 @@
 * 2025.11.26 - v2.5 : clog missing code 수정.
 * 2025.12.09 - v2.6 : certificate , key file 보안 강화.
 * 2026.02.13 - v2.7 : lpu230_update 를 위한 "firmware_index" 파라미터 지원. & cf 버전 읽기 명령 추가.(V)
+* 2026.02.23 - v2.8 : recover system with hidbootloader 지원을 위한 명령 추가. (R)
 * 
 */
 

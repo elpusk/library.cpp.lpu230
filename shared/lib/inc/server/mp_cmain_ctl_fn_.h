@@ -30,6 +30,8 @@ namespace _mp {
 		/**
 		* @brief execute get coffee manager version action.
 		*/
+		bool _execute_mgmt_recover_operation(clog* p_log, cio_packet& request, cio_packet& response); //from v2.8
+
 		bool _execute_mgmt_get_version(clog* p_log, cio_packet& request, cio_packet& response); //from v2.7
 
 		bool _execute_mgmt_get_echo(clog* p_log, cio_packet& request, cio_packet& response);

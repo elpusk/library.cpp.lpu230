@@ -397,17 +397,19 @@ int main(int argc, char** argv)
                 }
             }
 
-            // --device 필수. : s_device_path
+            // --device 옵션. : s_device_path
             it = std::find(list_parameters.begin(), list_parameters.end(), "--device");
-            if (it == std::end(list_parameters)) {
-                continue;//error
+            if (it != std::end(list_parameters)) {
+                ++it;
+                if (it == std::end(list_parameters)) {
+                    // --device 다음은 device path.
+                    continue;//error
+                }
+                s_device_path = *it;
             }
-            ++it;
-            if (it == std::end(list_parameters)) {
-                // --device 다음은 device path.
-                continue;//error
+            else {
+				// recover 목적의 cf2 실행인 경우, device path 가 없는 경우도 허용. device path 가 없는 경우, updater 에서 auto detect 함.
             }
-            s_device_path = *it;
 
             b_run_by_cf = true;
 
@@ -486,7 +488,7 @@ int main(int argc, char** argv)
 void _print_help(const std::string& program_name)
 {
     std::cout <<
-        "Usage: v2.5\n"
+        "Usage: v2.6\n"
         "  " << program_name << " [OPTIONS]\n"
         "\n"
         "Options:\n"

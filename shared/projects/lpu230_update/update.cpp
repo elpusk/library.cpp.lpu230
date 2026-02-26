@@ -31,6 +31,13 @@
 #include <cdev_lib.h>
 #include "update.h"
 
+static bool _request_server_cancel_stop_using_device(
+	_mp::cnamed_pipe::type_ptr& ptr_tx_ctl_pipe,
+	_mp::cnamed_pipe::type_ptr& ptr_rx_ctl_pipe,
+	int n_vid,
+	int n_pid,
+	const std::wstring& s_pis
+);
 static void _notify_cleanup_to_server_on_exit();
 
 class _cleanup_anager {
@@ -204,32 +211,41 @@ int update_main
 			continue;
 		}
 
-		cshare::get_instance().set_firmware_index_by_user(n_fw_index);
+		if (b_run_by_cf && s_abs_full_rom_file.empty()) {
+			// b_run_by_cf 조건 조사, b_run_by_cf 가 enable 되어 있으면 rom 파일 path 가 주어져야 한다.
+			log.log_fmt(L"[E] b_run_by_cf is set, but none rom file.\n");
+			gn_result = _mp::exit_error_run_by_cf_rom_file;
+			continue;
+		}
 
 		// from this line, CHidBootManager::GetInstance() can be used.
 		// from this line, cshare::get_instance() can be used. because cshare use CHidBootManager.
-
-		// b_run_by_cf 조건 조사, b_run_by_cf 가 enable 되어 있으면 아래의 조건을 만족해야 한다.
-		// 1. rom 파일 path 가 주어져야 한다.
-		// 2. device path 가 주어져야 한다.
-		if (b_run_by_cf) {
-			if (s_abs_full_rom_file.empty()) {
-				log.log_fmt(L"[E] b_run_by_cf is set, but none rom file.\n");
-				gn_result = _mp::exit_error_run_by_cf_rom_file;
-				continue;
-			}
-			if (s_device_path.empty()) {
-				log.log_fmt(L"[E] b_run_by_cf is set, but none devie.\n");
-				gn_result = _mp::exit_error_run_by_cf_device;
-				continue;
-			}
-			log.log_fmt(L"[I] run by cf is on.\n");
-			cshare::get_instance().set_run_by_cf(b_run_by_cf);
-		}
-
-		cshare::get_instance().set_display_ui(b_display);
+		cshare& sh(cshare::get_instance());
+		sh.set_firmware_index_by_user(n_fw_index);
+		sh.set_run_by_cf(b_run_by_cf);
+		sh.set_rom_file_abs_full_path(s_abs_full_rom_file);//커맨드라인에서 주어지는 rom/bin 파일 저장.
+		sh.set_display_ui(b_display);
+		sh.set_lpu23x_interface_change_after_update(lpu237_interface_after_update);
+		sh.set_device_path(s_device_path);//사용자로 부터 받은 장비 경로 저장.
+		sh.set_iso_mode_after_update(b_mmd1100_iso_mode);
+		
 		///////////////////////////////////////////////////
 		// setup info
+
+		// run by cf
+		if (b_run_by_cf) {
+			log.log_fmt(L"[I] run by cf is on.\n");
+		}
+
+		// rom file info
+		if (s_abs_full_rom_file.empty()) {
+			log.log_fmt(L"[I] rom file : auto detected rom.\n");
+		}
+		else {
+			log.log_fmt("[I] rom file : %s.\n", s_abs_full_rom_file.c_str());
+		}
+
+		// display ui or not.
 		if (b_display) {
 			log.log_fmt(L"[I] Enable UI\n");
 		}
@@ -240,28 +256,17 @@ int update_main
 		log.log_fmt(L"[I] after done,change interface %ls.\n",
 			_mp::cstring::get_unicode_from_mcsc(cshare::get_string(lpu237_interface_after_update)).c_str()
 			);
-		cshare::get_instance().set_lpu23x_interface_change_after_update(lpu237_interface_after_update);
-
-		
-		if (s_abs_full_rom_file.empty()) {
-			log.log_fmt(L"[I] rom file : auto detected rom.\n");
-		}
-		else {
-			log.log_fmt("[I] rom file : %s.\n", s_abs_full_rom_file.c_str());
-			cshare::get_instance().set_rom_file_abs_full_path(s_abs_full_rom_file);//커맨드라인에서 주어지는 rom/bin 파일 저장.
-		}
-		//
+	
+		// device path info
 		if (s_device_path.empty()) {
 			log.log_fmt(L"[I] target device : auto detected device.\n");
 		}
 		else{
 			log.log_fmt("[I] target device : %s.\n",s_device_path.c_str());
-			cshare::get_instance().set_device_path(s_device_path);//사용자로 부터 받은 장비 경로 저장.
 		}
 
 		if (b_mmd1100_iso_mode) {
 			log.log_fmt(L"[I] after updating,mmd1100 is set to iso mode.\n");
-			cshare::get_instance().set_iso_mode_after_update(b_mmd1100_iso_mode);
 		}
 
 		//
@@ -303,51 +308,27 @@ int update_main
 	return gn_result;
 }
 
-void _notify_cleanup_to_server_on_exit()
+/**
+* @bried  서버에 장비 사용 중지 취소 요청을 보내고 응답 받음.
+* @param ptr_tx_ctl_pipe : server control pipe for request, must be ini.
+* @param ptr_rx_ctl_pipe : server control pipe for response, must be ini.
+* @param n_vid : target device vid for stopping using device in server.
+* @param n_pid : target device pid for stopping using device in server.
+* @param s_pis : target device pis for stopping using device in server.
+* @return true if server responded successfully, otherwise false.
+*/
+bool _request_server_cancel_stop_using_device(
+	_mp::cnamed_pipe::type_ptr & ptr_tx_ctl_pipe, 
+	_mp::cnamed_pipe::type_ptr& ptr_rx_ctl_pipe,
+	int n_vid,
+	int n_pid,
+	const std::wstring & s_pis
+)
 {
-	// 프로그램 종료 시 반드시 실행되어야 하는 클린업 코드
+	bool b_result(false);
 	do {
-
-		cshare& sh(cshare::get_instance());
-
-		int n_vid(0), n_pid(0);
-		std::wstring s_pis;
-		bool b_stop(false);
-
-		std::tie(b_stop, n_vid, n_pid, s_pis) = sh.is_executed_server_stop_use_target_dev();
-		if (!b_stop) {
-			_mp::clibhid_dev_info plugin_dev_info_after_update = sh.get_plugin_device_info_after_update();
-			if(plugin_dev_info_after_update.is_valid()){
-				n_vid = (int)plugin_dev_info_after_update.get_vendor_id();
-				n_pid = (int)plugin_dev_info_after_update.get_product_id();
-				s_pis = plugin_dev_info_after_update.get_port_id_string();
-			}
-			else {
-				continue;
-			}
-		}
-		
-		sh.clear_executed_server_stop_use_target_dev();
-		//
-		_mp::cnamed_pipe::type_ptr ptr_tx_ctl_pipe, ptr_rx_ctl_pipe;
-		ptr_tx_ctl_pipe = std::make_shared<_mp::cnamed_pipe>(_mp::_coffee::CONST_S_COFFEE_MGMT_CTL_PIPE_NAME, false);
-		if (!ptr_tx_ctl_pipe) {
-			continue;
-		}
-		if (!ptr_tx_ctl_pipe->is_ini()) {
-			continue;
-		}
-		ptr_rx_ctl_pipe = std::make_shared<_mp::cnamed_pipe>(_mp::_coffee::CONST_S_COFFEE_MGMT_CTL_PIPE_NAME_OF_SERVER_RESPONSE, false);
-		if (!ptr_rx_ctl_pipe) {
-			continue;
-		}
-		if (!ptr_rx_ctl_pipe->is_ini()) {
-			continue;
-		}
-
-		// 서버 control pipe 에 연결 설공.
 		std::wstring s_req_ctl_pip = _mp::ccoffee_pipe::generate_ctl_request_for_cancel_considering_dev_as_removed(
-			n_vid,n_pid, s_pis
+			n_vid, n_pid, s_pis
 		);
 		if (s_req_ctl_pip.empty()) {
 			continue;
@@ -368,10 +349,68 @@ void _notify_cleanup_to_server_on_exit()
 			}
 			if (s_rx.compare(_mp::_coffee::CONST_S_COFFEE_MGMT_CTL_RSP_START_DEV) == 0) {
 				// 정상 응답 성공.
-				_mp::clog::get_instance().log_fmt(L"[D]_cleanup : (vid:pid:pis) = (0x%x,0x%x,%ls).\n", n_vid,n_pid, s_pis.c_str());
+				b_result = true;
+				_mp::clog::get_instance().log_fmt(L"[D]_cleanup : (vid:pid:pis) = (0x%x,0x%x,%ls).\n", n_vid, n_pid, s_pis.c_str());
 				break; //exit for
 			}
 		}//end for
+	} while (false);
+
+	return b_result;
+}
+
+void _notify_cleanup_to_server_on_exit()
+{
+	// 프로그램 종료 시 반드시 실행되어야 하는 클린업 코드
+	do {
+
+		cshare& sh(cshare::get_instance());
+
+		int n_vid(0), n_pid(0);
+		std::wstring s_pis;
+		bool b_stop(false);
+
+		_mp::cnamed_pipe::type_ptr ptr_tx_ctl_pipe, ptr_rx_ctl_pipe;
+		ptr_tx_ctl_pipe = std::make_shared<_mp::cnamed_pipe>(_mp::_coffee::CONST_S_COFFEE_MGMT_CTL_PIPE_NAME, false);
+		if (!ptr_tx_ctl_pipe) {
+			continue;
+		}
+		if (!ptr_tx_ctl_pipe->is_ini()) {
+			continue;
+		}
+		ptr_rx_ctl_pipe = std::make_shared<_mp::cnamed_pipe>(_mp::_coffee::CONST_S_COFFEE_MGMT_CTL_PIPE_NAME_OF_SERVER_RESPONSE, false);
+		if (!ptr_rx_ctl_pipe) {
+			continue;
+		}
+		if (!ptr_rx_ctl_pipe->is_ini()) {
+			continue;
+		}
+
+		// 서버 control pipe 에 연결 설공.
+
+		const cshare::type_v_tuple_executed_server_stop_use_target_dev& v = sh.get_executed_server_stop_use_target_devs();
+		if (v.empty()) {
+			_mp::clibhid_dev_info plugin_dev_info_after_update = sh.get_plugin_device_info_after_update();
+			if (!plugin_dev_info_after_update.is_valid()) {
+				continue;
+			}
+			n_vid = (int)plugin_dev_info_after_update.get_vendor_id();
+			n_pid = (int)plugin_dev_info_after_update.get_product_id();
+			s_pis = plugin_dev_info_after_update.get_port_id_string();
+
+			_request_server_cancel_stop_using_device(
+				ptr_tx_ctl_pipe, ptr_rx_ctl_pipe, n_vid, n_pid, s_pis
+			);
+		}
+		else {
+			for (auto item : v) {
+				std::tie(std::ignore, n_vid, n_pid, s_pis) = item;
+				_request_server_cancel_stop_using_device(
+					ptr_tx_ctl_pipe, ptr_rx_ctl_pipe, n_vid, n_pid, s_pis
+				);
+			}//end for
+		}
+		sh.clear_executed_server_stop_use_target_dev();
 
 	} while (false);
 }

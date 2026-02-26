@@ -3,6 +3,7 @@
 #include <memory>
 
 #include <mp_coffee_pipe.h>
+#include <mp_clog.h>
 #include <cupdater_param_.h>
 
 /**
@@ -48,7 +49,7 @@ public:
 	/**
 	* @brief start update process
 	*/
-	bool run_update(unsigned long n_session);
+	bool run_update(unsigned long n_session,bool b_recover_mode = false);
 
 	/**
 	* @brief notify to server about update-progressing
@@ -61,7 +62,7 @@ public:
 	* @param tuple.seventh : operation error resaon
 	* @return sent result
 	*/
-	bool notify_to_server(const _mp::ccoffee_pipe::type_tuple_notify_info & nf);
+	bool notify_to_server(const _mp::ccoffee_pipe::type_tuple_notify_info & nf, _mp::clog& log);
 
 private:
 	cupdater_mgmt();

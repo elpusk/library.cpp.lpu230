@@ -45,9 +45,10 @@ namespace _mp{
     )
     {
         do {
+			clibhid_dev_info::type_set in_temp(in);
             out.clear();
 
-            std::for_each(std::begin(in), std::end(in), [&](const clibhid_dev_info &info) {
+            std::for_each(std::begin(in_temp), std::end(in_temp), [&](const clibhid_dev_info &info) {
                 int fvid, fpid, finf;
                 int n_vid, n_pid, n_inf;
                 std::tie(n_vid, n_pid, n_inf) = t_filter;
@@ -100,6 +101,82 @@ namespace _mp{
                     out.insert(info);
                 }
                 });
+
+        } while (false);
+        return out.size();
+    }
+
+    size_t clibhid_dev_info::filter_dev_info_set(clibhid_dev_info::type_set& out, const clibhid_dev_info::type_set& in, const type_set_wstring& set_wstring_filter)
+    {
+        do {
+            clibhid_dev_info::type_set in_temp(in);
+
+            if (set_wstring_filter.empty()) {
+				out = in_temp;//all
+                continue;
+            }
+
+            out.clear();
+
+			// _mp::type_set_wstring type filter 를 _mp::type_set_usb_filter type filer로 변환.
+			_mp::type_set_usb_filter set_usb_filter;
+            for(auto& s_item : set_wstring_filter){
+                int n_vid = -1, n_pid = -1, n_inf = -1;
+
+                size_t nfound = s_item.find(L"vid_");
+                if (nfound == std::wstring::npos) {
+                    continue;
+                }
+                nfound += 4;
+                std::wstring sVal = s_item.substr(nfound, 4);
+                if (!sVal.empty()) {
+                    n_vid = std::wcstol(sVal.c_str(), NULL, 16);
+                }
+                else {
+                    continue;
+                }
+
+                //pid
+                nfound = s_item.find(L"pid_");
+                if (nfound == std::wstring::npos) {
+					set_usb_filter.insert(std::make_tuple(n_vid, n_pid, n_inf));//vid only filter
+                    continue;
+                }
+                nfound += 4;
+                sVal = s_item.substr(nfound, 4);
+                if (!sVal.empty()) {
+                    n_pid = std::wcstol(sVal.c_str(), NULL, 16);
+                }
+                else {
+                    set_usb_filter.insert(std::make_tuple(n_vid, n_pid, n_inf));//vid only filter
+					continue;
+                }
+
+                //inf
+                nfound = s_item.find(L"mi_");
+                if (nfound == std::wstring::npos) {
+					set_usb_filter.insert(std::make_tuple(n_vid, n_pid, n_inf));//vid & pid filter
+                    continue;
+                }
+                nfound += 3;
+                sVal = s_item.substr(nfound, 2);
+                if (!sVal.empty()) {
+                    n_inf = std::wcstol(sVal.c_str(), NULL, 16);
+                }
+                set_usb_filter.insert(std::make_tuple(n_vid, n_pid, n_inf));//vid & pid & inf or none inf filter
+
+            }//end for
+
+            if(set_usb_filter.empty()){
+                out = in_temp;//all
+                continue;
+			}
+
+            for( auto & t_item : set_usb_filter){
+                clibhid_dev_info::type_set st_filtered;
+                clibhid_dev_info::filter_dev_info_set(st_filtered, in_temp, t_item);
+                out.insert(st_filtered.begin(), st_filtered.end());
+			}//end for
 
         } while (false);
         return out.size();

@@ -6,8 +6,8 @@ namespace _mp{
     * namespace of coffee manager
     */
     namespace _coffee{
-		constexpr const char* CONST_S_COFFEE_MGMT_VERSION = "2.7.0";
-        constexpr const wchar_t* CONST_WS_COFFEE_MGMT_VERSION = L"2.7.0";
+		constexpr const char* CONST_S_COFFEE_MGMT_VERSION = "2.8.0";
+        constexpr const wchar_t* CONST_WS_COFFEE_MGMT_VERSION = L"2.8.0";
         /**
         * The name used to identify an interprocess mechanism is not portable, even between UNIX systems. For this reason, Boost.Interprocess limits this name to a C++ variable identifier or keyword:
         * Starts with a letter, lowercase or uppercase, such as a letter from a to z or from A to Z. Examples: Sharedmemory, sharedmemory, sHaReDmEmOrY...

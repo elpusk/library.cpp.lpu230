@@ -42,6 +42,11 @@
 *                               : elpusk-hid-d.exe - v2.7(update param "firmware_index" 를 추가)
 *                               : lpu230_update.exe - v2.5(commnd line parameter "firmware_index" 추가)
 *
+* 2026.02.27 - package v 2.9.0  : coffee manager 2nd project(v2.9)
+*                               : 0DB9CDDD-AF68-4C9A-8C18-9EDC7F8BB5A2
+*                               : elpusk-hid-d.exe - v2.8(recover 기능 추가.)
+*                               : lpu230_update.exe - v2.6(recover 기능 추가.)
+*
 -->
 
 <!-- 기본적으로 %ProgramFiles%\Pre_DirName_ProductName\Pre_DirName_Manufacturer 형식으로 설치됨.-->
@@ -58,8 +63,8 @@
 <?define Pre_ProductName = "coffee_manager_2nd"?>
 
 <!-- Pre_ProductVersion 값이 변경되면, Pre_ProductCode 는 새로 생성해야함.-->
-<?define Pre_ProductVersion = "2.8.0"?>
-<?define Pre_ProductCode = "37B99C8A-FEE0-4F63-BE7E-E0453C413AEF"?>
+<?define Pre_ProductVersion = "2.9.0"?>
+<?define Pre_ProductCode = "0DB9CDDD-AF68-4C9A-8C18-9EDC7F8BB5A2"?>
 
 <!-- 같은 프로그래은 버전이 달라져도 Pre_ProductUpgradeCode 는 항상 동일해야 함.-->
 <?define Pre_ProductUpgradeCode = "B9BF3037-BD17-4F00-BA59-C5CE301723D6"?>

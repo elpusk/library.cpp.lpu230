@@ -13,6 +13,7 @@
 
 #include <server/mp_cmain_ctl_fn_.h>
 #include <server/mp_cserver_.h>
+#include <cupdater_mgmt_.h>
 
 #include <server/mp_cctl_svr_.h>
 #include <hid/mp_clibhid.h>
@@ -33,6 +34,125 @@ namespace _mp {
 			response = request;
 			response.set_cmd(cio_packet::cmd_response);
 			return true;//complete
+		}
+
+
+		bool cmain_ctl_fn::_execute_mgmt_recover_operation(
+			clog* p_log
+			, cio_packet& request
+			, cio_packet& response
+		)
+		{
+			response = request;
+			response.set_cmd(cio_packet::cmd_response);
+			//
+			do {
+				_mp::type_deque_wstring deque_s_data;
+				cio_packet::type_data_field data_field_type(request.get_data_field_type());
+
+				if (data_field_type == cio_packet::data_field_binary) {//may be run bootloader commnad.
+					response.set_data_error(cio_packet::get_error_message(cio_packet::error_reason_device_misformat));
+					continue;//bootloader request dosen't support binary data.
+				}
+				if (request.get_data_field(deque_s_data) <= 0) {
+					response.set_data_error(cio_packet::get_error_message(cio_packet::error_reason_device_misformat));
+					continue;
+				}
+
+				if (deque_s_data[0].compare(L"set") == 0) {
+					//firmware update 를 위한 parameter setting
+					if (deque_s_data.size() < 3) {
+						response.set_data_error(cio_packet::get_error_message(cio_packet::error_reason_device_misformat));
+						continue;
+					}
+					if ((deque_s_data.size() - 1) % 2 != 0) {//"set", key0, value0, key1, value1, .......
+						response.set_data_error(cio_packet::get_error_message(cio_packet::error_reason_device_misformat));
+						continue;
+					}
+
+					cupdater_param::type_ptr ptr_boot_param;
+					std::tie(std::ignore, ptr_boot_param) = cupdater_mgmt::get_instance().insert(request.get_session_number());
+					if (!ptr_boot_param) {
+						response.set_data_error(cio_packet::get_error_message(cio_packet::error_reason_allocation_memory));
+						continue;
+					}
+
+					if (ptr_boot_param->is_used_already()) {
+						// 전에 다운로드에 사용된 파라메타들 이므로 재 할당 받아서 새롭게 저장해야함.
+						ptr_boot_param->reset();
+					}
+					for (size_t i = 0; i < ((deque_s_data.size() - 1) / 2); i++) {
+						std::wstring s_key(deque_s_data[2 * i + 1]);
+
+						std::wstring s_value(deque_s_data[2 * (i + 1)]);
+						ptr_boot_param->set(s_key, s_value);
+					}//end for
+
+					response.set_data_sucesss();
+					continue;
+				}
+
+				if (deque_s_data[0].compare(L"start") == 0) {
+					if (deque_s_data.size() != 1) {
+						response.set_data_error(cio_packet::get_error_message(cio_packet::error_reason_device_misformat));
+						continue;
+					}
+
+					cupdater_mgmt& update_param_mgmt(cupdater_mgmt::get_instance());
+
+					cupdater_param::type_ptr ptr_boot_param = update_param_mgmt.get(request.get_session_number());
+					if (!ptr_boot_param) {
+						response.set_data_error(cio_packet::get_error_message(cio_packet::error_reason_allocation_memory));
+						continue;
+					}
+					ptr_boot_param->set_log_obj(m_p_ctl_fun_log);
+					ptr_boot_param->set_used();// 다음 사용 전에 재할당 요망.
+
+					std::wstring s_rom_file = ccoffee_path::get_path_of_virtual_drive_root_with_backslash();
+					s_rom_file += ccoffee_path::get_virtual_path_of_temp_rom_file_of_session(request.get_session_number());
+					if (!_mp::cfile::is_exist_file(s_rom_file)) {
+						response.set_data_error(cio_packet::get_error_message(cio_packet::error_reason_file_none_file));
+						continue;
+					}
+
+					ptr_boot_param->insert_run_by_cf2_mode();
+					ptr_boot_param->insert_file(s_rom_file);
+
+					ptr_boot_param->set_packet_info_for_notify_in_recover(request);//?
+
+					ptr_boot_param->set_exe_full_abs_path(ccoffee_path::get_abs_full_path_of_updater());
+
+					bool b_ok(false);
+					std::wstring s_info;
+					std::tie(b_ok, s_info) = ptr_boot_param->can_be_start_firmware_update(true);
+					m_p_ctl_fun_log->log_fmt(L"[I] - %ls | %ls\n", __WFUNCTION__, s_info.c_str());
+					m_p_ctl_fun_log->trace(L"[I] - %ls | %ls\n", __WFUNCTION__, s_info.c_str());
+					if (!b_ok) {
+						// bootloader start command 에 필요한 parameter 가 설정되지 않음.
+						response.set_data_error(cio_packet::get_error_message(cio_packet::error_reason_bootload_mismatch_condition));
+						m_p_ctl_fun_log->log_fmt(L"[E] - %ls | %ls\n", __WFUNCTION__, L"bootload_mismatch_condition");
+						m_p_ctl_fun_log->trace(L"[E] - %ls | %ls\n", __WFUNCTION__, L"bootload_mismatch_condition");
+						continue;
+					}
+					// 
+					if (!update_param_mgmt.run_update(request.get_session_number(),true)) {
+						response.set_data_error(cio_packet::get_error_message(cio_packet::error_reason_bootload_mismatch_condition));
+						m_p_ctl_fun_log->log_fmt(L"[E] - %ls | %ls\n", __WFUNCTION__, L"update_param_mgmt.run_update(recover)");
+						m_p_ctl_fun_log->trace(L"[E] - %ls | %ls\n", __WFUNCTION__, L"update_param_mgmt.run_update(recover)");
+						continue;
+					}
+
+					response.set_data_sucesss();
+					continue;
+				}
+
+				// unknown recover command
+				// now, only "set", "start" command supported.
+				response.set_data_error(cio_packet::get_error_message(cio_packet::error_reason_device_misformat));
+
+			} while (false);
+
+			return true;//complete. 이 요청은 항상 complete 이어야. 한다.
 		}
 
 		bool cmain_ctl_fn::_execute_mgmt_get_version(clog* p_log, cio_packet& request, cio_packet& response)
@@ -82,6 +202,7 @@ namespace _mp {
 
 				bool b_lpu200_filter(false);
 				std::wstring s_first, s_second;
+				// coffee framework 1'st edition 과 호환성 유지를 위해서 lpu200 filter 인지 확인하는 절차가 필요함. (lpu200 filter 는 "lpu200" 로 시작하는 형태의 filter)
 				std::tie(b_lpu200_filter, s_first, s_second) = cdev_util::is_lpu200_filter(list_wstring_filter);
 				if (b_lpu200_filter) {
 					//lpu200 filter
@@ -94,6 +215,7 @@ namespace _mp {
 					set_dev_path = clibhid_dev_info::get_dev_path_by_wstring(set_dev);
 					continue;
 				}
+				//filter 의 문자를 소문자로 바꿔서 비교하기 위해서 소문자로 바꿔서 저장.
 				if (!cio_packet::adjust_device_filter(out_set_wstring_filter))
 					continue;
 				//
@@ -101,8 +223,15 @@ namespace _mp {
 
 
 				clibhid_dev_info::type_set set_dev = lib_hid.get_cur_device_set();
-				n_dev = set_dev.size();
-				set_dev_path = clibhid_dev_info::get_dev_path_by_wstring(set_dev);
+				if (out_set_wstring_filter.empty()) {
+					n_dev = set_dev.size();
+					set_dev_path = clibhid_dev_info::get_dev_path_by_wstring(set_dev);
+				}
+				else {
+					clibhid_dev_info::type_set filtered_set_dev;
+					n_dev = clibhid_dev_info::filter_dev_info_set(filtered_set_dev, set_dev, out_set_wstring_filter); // filtering 된 device set 얻음.
+					set_dev_path = clibhid_dev_info::get_dev_path_by_wstring(filtered_set_dev);
+				}
 				//n_dev = _ns_tools::ct_universal_dev_manager::get_instance().get_dev_set_except_compositive_type(set_dev_path, out_set_wstring_filter, v_type);
 
 			} while (false);

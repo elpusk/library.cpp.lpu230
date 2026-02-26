@@ -124,9 +124,7 @@ void cshare::_ini()
 	m_b_display = true;
 	m_b_is_possible_exit = true;
 
-	m_b_executed_server_stop_use_target_dev = false;
-	m_n_stopped_usb_vid = m_n_stopped_usb_pid = 0;
-	m_s_stopped_usb_pis.clear();
+	m_v_tuple_executed_server_stop_use_target_dev.clear();
 
 	m_b_run_by_cf = false;
 	m_n_fw_index_by_user = -1;
@@ -185,18 +183,13 @@ cshare& cshare::set_start_from_bootloader(bool b_start_from_bootloader)
 
 cshare& cshare::set_executed_server_stop_use_target_dev(bool b_executed, int n_vid, int n_pid,const std::wstring &s_pis)
 {
-	m_b_executed_server_stop_use_target_dev = b_executed;
-	m_n_stopped_usb_vid = n_vid;
-	m_n_stopped_usb_pid = n_pid;
-	m_s_stopped_usb_pis = s_pis;
+	m_v_tuple_executed_server_stop_use_target_dev.push_back(std::make_tuple(b_executed, n_vid, n_pid, s_pis));
 	return *this;
 }
 
 void cshare::clear_executed_server_stop_use_target_dev()
 {
-	m_b_executed_server_stop_use_target_dev = false;
-	m_n_stopped_usb_vid = m_n_stopped_usb_pid = 0;
-	m_s_stopped_usb_pis.clear();
+	m_v_tuple_executed_server_stop_use_target_dev.clear();
 }
 
 cshare& cshare::set_run_by_cf(bool b_yes)
@@ -285,11 +278,18 @@ cshare& cshare::set_lpu23x_interface_change_after_update(cshare::Lpu237Interface
 	return *this;
 }
 
-cshare& cshare::set_firmware_list_of_rom_file(int n_fw_index, const std::vector<std::string>& v_s_fw)
+cshare& cshare::set_firmware_list_of_rom_file(int n_fw_index, const std::vector<std::string>& v_s_fw/*= std::vector<std::string>(0)*/)
 {
 	m_n_selected_fw_in_firmware_list = n_fw_index;
-	m_v_firmware_list = v_s_fw;
-	_set_firmware_size(m_rom_header.Item[n_fw_index].dwSize);
+	if (!v_s_fw.empty()) {
+		m_v_firmware_list = v_s_fw;
+		_set_firmware_size(m_rom_header.Item[n_fw_index].dwSize);
+	}
+	else {
+		if (n_fw_index >= 0 && n_fw_index < m_v_firmware_list.size()) {
+			_set_firmware_size(m_rom_header.Item[n_fw_index].dwSize);
+		}
+	}
 	return *this;
 }
 
@@ -339,9 +339,9 @@ bool cshare::get_display_ui() const
 	return m_b_display;
 }
 
-std::tuple<bool,int,int,std::wstring> cshare::is_executed_server_stop_use_target_dev() const
+const cshare::type_v_tuple_executed_server_stop_use_target_dev& cshare::get_executed_server_stop_use_target_devs() const
 {
-	return std::make_tuple( m_b_executed_server_stop_use_target_dev, m_n_stopped_usb_vid, m_n_stopped_usb_pid, m_s_stopped_usb_pis);
+	return m_v_tuple_executed_server_stop_use_target_dev;
 }
 
 _mp::type_pair_bool_result_bool_complete cshare::io_save_all_variable_sys_parameter(bool b_first)
@@ -971,7 +971,7 @@ bool cshare::is_possible_exit() const
 	return m_b_is_possible_exit;
 }
 
-_mp::type_pair_bool_result_bool_complete cshare::get_one_sector_fw_data
+std::tuple<bool, bool, std::string> cshare::get_one_sector_fw_data
 (
 	std::shared_ptr<CRom> ptr_rom_dll
 	, _mp::type_v_buffer& v_out_sector
@@ -984,6 +984,7 @@ _mp::type_pair_bool_result_bool_complete cshare::get_one_sector_fw_data
 	static uint32_t dw_last_readdone(CHidBootBuffer::C_SECTOR_SIZE);
 
 	bool b_result(false), b_complete(true);
+	std::string s_error; //for debugging
 
 	
 	uint32_t dw_read(CHidBootBuffer::C_SECTOR_SIZE);
@@ -991,12 +992,15 @@ _mp::type_pair_bool_result_bool_complete cshare::get_one_sector_fw_data
 
 	do {
 		if (!ptr_rom_dll) {
+			s_error = "ptr_rom_dll is null.";
 			continue;
 		}
 		if (m_s_rom_file_abs_full_path.empty()) {
+			s_error = "rom file path is empty.";
 			continue;
 		}
 		if (m_v_write_sec_index.empty()) {
+			s_error = "write sector index is empty.";
 			continue;
 		}
 
@@ -1006,6 +1010,7 @@ _mp::type_pair_bool_result_bool_complete cshare::get_one_sector_fw_data
 			dw_last_readdone = CHidBootBuffer::C_SECTOR_SIZE;
 		}
 		if (n_write_sector_index >= m_v_write_sec_index.size()) {
+			s_error = "all sector read done.";
 			continue;//모두 읽음.
 		}
 
@@ -1043,11 +1048,13 @@ _mp::type_pair_bool_result_bool_complete cshare::get_one_sector_fw_data
 
 			std::ifstream file_raw(m_s_rom_file_abs_full_path, std::ios::binary);
 			if(!file_raw){
+				s_error = "failed to open rom file as binary.";
 				continue; //error
 			}
 
 			file_raw.seekg(dw_offset, std::ios::beg);
 			if (!file_raw) {
+				s_error = "failed to seek rom file as binary.";
 				continue; //error
 			}
 
@@ -1058,6 +1065,7 @@ _mp::type_pair_bool_result_bool_complete cshare::get_one_sector_fw_data
 			ATLTRACE(" :::::::: %u = file_raw.read([%x,%x,%x,%x],%u[read],%u[offset],item)", dw_last_readdone,v_out_sector[0], v_out_sector[1], v_out_sector[2], v_out_sector[3], dw_read, dw_offset);
 #endif
 			if (dw_last_readdone == 0) {
+				s_error = "failed to read rom file as binary.";
 				continue; //error
 			}
 		}
@@ -1077,6 +1085,7 @@ _mp::type_pair_bool_result_bool_complete cshare::get_one_sector_fw_data
 			//ATLTRACE(" :::::::: %u = ReadBinaryOfItem([%x,%x,%x,%x],%u[read],%u[offset],item)", dw_last_readdone,v_out_sector[0], v_out_sector[1], v_out_sector[2], v_out_sector[3], dw_read, dw_offset);
 #endif
 			if (dw_last_readdone ==0) {
+				s_error = "failed to read rom file by ptr_rom_dll.";
 				continue; //error
 			}
 		}
@@ -1090,7 +1099,7 @@ _mp::type_pair_bool_result_bool_complete cshare::get_one_sector_fw_data
 		b_result = true;
 	} while (false);
 
-	return std::make_pair(b_result,b_complete);
+	return std::make_tuple(b_result,b_complete, s_error);
 }
 
 std::pair<int, std::vector<std::string>> cshare::get_firmware_list_of_rom_file() const

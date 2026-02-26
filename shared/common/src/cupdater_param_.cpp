@@ -49,7 +49,7 @@ void cupdater_param::set_log_obj(_mp::clog* p_log)
 	m_p_log = p_log;
 }
 
-std::pair<bool, std::wstring> cupdater_param::can_be_start_firmware_update() const
+std::pair<bool, std::wstring> cupdater_param::can_be_start_firmware_update(bool b_recover_mode /*= false*/) const
 {
 	bool b_result(false);
 	std::wstring s_info;
@@ -75,7 +75,9 @@ std::pair<bool, std::wstring> cupdater_param::can_be_start_firmware_update() con
 		s_info += m_s_abs_full_exe_path;
 		s_info += L"\n";
 
+		////////////////////////////
 		// mandatory parameters
+		// run_by_coffee_manager_2nd
 		s_key = std::wstring(_mp::_coffee::CONST_S_CMD_LINE_FW_UPDATE_INDICATOR);
 		auto it = m_map.find(s_key);
 		if (it == std::end(m_map)) {
@@ -95,92 +97,96 @@ std::pair<bool, std::wstring> cupdater_param::can_be_start_firmware_update() con
 		s_info += s_key;
 		s_info += L"\n";
 
-		s_key = std::wstring(L"model_name");
-		it = m_map.find(s_key);
-		if (it == std::end(m_map)) {
-			s_info = L"none ";
-			s_info += s_key;
-			s_info += L"\n";
-			continue;
-		}
-		if(it->second.size() > 16){
-			// too long
-			s_info = L"none ";
-			s_info += s_key;
-			s_info += L" key value over length";
-			s_info += L"\n";
-			continue;
-		}
-		s_info += s_key;
-		s_info += L" - ";
-		s_info += it->second;
-		s_info += L"\n";
-
-		//
-		s_key = std::wstring(L"system_version");
-		it = m_map.find(s_key);
-		if (it == std::end(m_map)) {
-			s_info = L"none ";
-			s_info += s_key;
-			s_info += L"\n";
-			continue;
-		}
-		// 정규 표현식: 숫자.숫자.숫자.숫자 (각 숫자는 1~3자리)
-		static const std::wregex ipv4Pattern(LR"(^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$)");
-		if (!std::regex_match(it->second, ipv4Pattern)) {
-			// format error
-			s_info = L"none ";
-			s_info += s_key;
-			s_info += L" key value isn't a.b.c.d format";
-			s_info += L"\n";
-			continue;
-		}
-
-		std::wistringstream ss(it->second);
-		std::wstring token;
-		int count = 0;
-
-		b_result = true;
-
-		while (std::getline(ss, token, L'.')) {
-			try {
-				int num = std::stoi(token);
-				if (num < 0 || num > 255) {
-					s_info = L"none ";
-					s_info += s_key;
-					s_info += L" key value - each number 0~255, but over range.";
-					s_info += L"\n";
-					return std::make_pair(false, s_info);
-				}
-			}
-			catch (...) {
-				//error
-				b_result = false;
+		if (!b_recover_mode) {
+			// b_recover_mode 가 아닐때만 필수 요소. 
+			//model_name
+			s_key = std::wstring(L"model_name");
+			it = m_map.find(s_key);
+			if (it == std::end(m_map)) {
 				s_info = L"none ";
 				s_info += s_key;
-				s_info += L" key value - stoi() error";
 				s_info += L"\n";
-				break;// exit while
+				continue;
 			}
-			++count;
-		}
-
-		if(!b_result) {
-			continue;
-		}
-		b_result = false;
-		if (count != 4) {
-			s_info = L"none ";
+			if (it->second.size() > 16) {
+				// too long
+				s_info = L"none ";
+				s_info += s_key;
+				s_info += L" key value over length";
+				s_info += L"\n";
+				continue;
+			}
 			s_info += s_key;
-			s_info += L" key value isn't a.b.c.d format(only 4 digit)";
+			s_info += L" - ";
+			s_info += it->second;
 			s_info += L"\n";
-			continue;
-		}
 
-		s_info += s_key;
-		s_info += L" - ";
-		s_info += it->second;
-		s_info += L"\n";
+			//system_version
+			s_key = std::wstring(L"system_version");
+			it = m_map.find(s_key);
+			if (it == std::end(m_map)) {
+				s_info = L"none ";
+				s_info += s_key;
+				s_info += L"\n";
+				continue;
+			}
+			// 정규 표현식: 숫자.숫자.숫자.숫자 (각 숫자는 1~3자리)
+			static const std::wregex ipv4Pattern(LR"(^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$)");
+			if (!std::regex_match(it->second, ipv4Pattern)) {
+				// format error
+				s_info = L"none ";
+				s_info += s_key;
+				s_info += L" key value isn't a.b.c.d format";
+				s_info += L"\n";
+				continue;
+			}
+
+			std::wistringstream ss(it->second);
+			std::wstring token;
+			int count = 0;
+
+			b_result = true;
+
+			while (std::getline(ss, token, L'.')) {
+				try {
+					int num = std::stoi(token);
+					if (num < 0 || num > 255) {
+						s_info = L"none ";
+						s_info += s_key;
+						s_info += L" key value - each number 0~255, but over range.";
+						s_info += L"\n";
+						return std::make_pair(false, s_info);
+					}
+				}
+				catch (...) {
+					//error
+					b_result = false;
+					s_info = L"none ";
+					s_info += s_key;
+					s_info += L" key value - stoi() error";
+					s_info += L"\n";
+					break;// exit while
+				}
+				++count;
+			}
+
+			if (!b_result) {
+				continue;
+			}
+			b_result = false;
+			if (count != 4) {
+				s_info = L"none ";
+				s_info += s_key;
+				s_info += L" key value isn't a.b.c.d format(only 4 digit)";
+				s_info += L"\n";
+				continue;
+			}
+
+			s_info += s_key;
+			s_info += L" - ";
+			s_info += it->second;
+			s_info += L"\n";
+		}
 
 		s_key = std::wstring(_mp::_coffee::CONST_S_CMD_LINE_FW_UPDATE_SET_FW_FILE);
 		it = m_map.find(s_key);
@@ -196,18 +202,20 @@ std::pair<bool, std::wstring> cupdater_param::can_be_start_firmware_update() con
 		s_info += L"\n";
 
 		//
-		s_key = std::wstring(_mp::_coffee::CONST_S_CMD_LINE_FW_UPDATE_SET_DEV_PATH);
-		it = m_map.find(s_key);
-		if (it == std::end(m_map)) {
-			s_info = L"none ";
+		if (!b_recover_mode) {
+			s_key = std::wstring(_mp::_coffee::CONST_S_CMD_LINE_FW_UPDATE_SET_DEV_PATH);
+			it = m_map.find(s_key);
+			if (it == std::end(m_map)) {
+				s_info = L"none ";
+				s_info += s_key;
+				s_info += L"\n";
+				continue;
+			}
 			s_info += s_key;
+			s_info += L" - ";
+			s_info += it->second;
 			s_info += L"\n";
-			continue;
 		}
-		s_info += s_key;
-		s_info += L" - ";
-		s_info += it->second;
-		s_info += L"\n";
 
 		//////////////////////////////////////////////
 		// optional parameters
@@ -338,7 +346,18 @@ void cupdater_param::set_packet_info_for_notify(const _mp::cio_packet& req_act_d
 	//set_in_id(), set_out_id() already
 }
 
-bool cupdater_param::start_update()
+void cupdater_param::set_packet_info_for_notify_in_recover(const _mp::cio_packet& req_act_dev_recover_operation)
+{
+	//generate response packet from request packet
+	m_ptr_rsp = std::make_shared<_mp::cio_packet>(req_act_dev_recover_operation);
+
+	m_ptr_rsp->set_cmd(_mp::cio_packet::cmd_response).set_action(_mp::cio_packet::act_mgmt_recover_operation);
+	//set_session_number() already
+	//set_owner() already 
+	//set_in_id(), set_out_id() already
+}
+
+bool cupdater_param::start_update(bool b_recover_mode /*=false*/)
 {
 	bool b_result(false);
 	bool b_gui(false);
@@ -376,7 +395,7 @@ bool cupdater_param::start_update()
 			m_p_log
 			, b_gui
 			, get_exe_full_abs_path_by_string()
-			, generate_command_line_arguments_except_exe_by_vector_string()
+			, generate_command_line_arguments_except_exe_by_vector_string(b_recover_mode)
 			, std::bind(&cupdater_param::callback_update_end,this, std::placeholders::_1)
 		);
 
@@ -411,14 +430,14 @@ std::string cupdater_param::get_exe_full_abs_path_by_string() const
 	return _mp::cstring::get_mcsc_from_unicode(m_s_abs_full_exe_path);
 }
 
-std::wstring cupdater_param::generate_command_line_arguments_except_exe_by_wstring() const
+std::wstring cupdater_param::generate_command_line_arguments_except_exe_by_wstring(bool b_recover_mode /*= false*/) const
 {
 	std::wstring s_command_line_arguments;
 	
 	do {
 		bool b_ok(false);
 		std::wstring s_info;
-		std::tie(b_ok, s_info) = can_be_start_firmware_update();
+		std::tie(b_ok, s_info) = can_be_start_firmware_update(b_recover_mode);
 		if (!b_ok) {
 			continue;
 		}
@@ -444,10 +463,12 @@ std::wstring cupdater_param::generate_command_line_arguments_except_exe_by_wstri
 		//
 		s_key = std::wstring(_mp::_coffee::CONST_S_CMD_LINE_FW_UPDATE_SET_DEV_PATH);
 		it = m_map.find(s_key);
-		s_command_line_arguments += L" --";
-		s_command_line_arguments += s_key;
-		s_command_line_arguments += L" ";
-		s_command_line_arguments += it->second;
+		if (it != std::end(m_map)) {
+			s_command_line_arguments += L" --";
+			s_command_line_arguments += s_key;
+			s_command_line_arguments += L" ";
+			s_command_line_arguments += it->second;
+		}
 
 		// optional parameters
 		s_key = std::wstring(L"_cf_bl_progress_");
@@ -489,30 +510,30 @@ std::wstring cupdater_param::generate_command_line_arguments_except_exe_by_wstri
 	return s_command_line_arguments;
 }
 
-std::string cupdater_param::generate_command_line_arguments_except_exe_by_string() const
+std::string cupdater_param::generate_command_line_arguments_except_exe_by_string(bool b_recover_mode /*= false*/) const
 {
-	return _mp::cstring::get_mcsc_from_unicode(generate_command_line_arguments_except_exe_by_wstring());
+	return _mp::cstring::get_mcsc_from_unicode(generate_command_line_arguments_except_exe_by_wstring(b_recover_mode));
 }
 
-std::wstring cupdater_param::generate_command_line_arguments_with_exe_by_wstring() const
+std::wstring cupdater_param::generate_command_line_arguments_with_exe_by_wstring(bool b_recover_mode /*= false*/) const
 {
-	return( m_s_abs_full_exe_path + generate_command_line_arguments_except_exe_by_wstring() );
+	return( m_s_abs_full_exe_path + generate_command_line_arguments_except_exe_by_wstring(b_recover_mode) );
 }
 
-std::string cupdater_param::generate_command_line_arguments_with_exe_by_string() const
+std::string cupdater_param::generate_command_line_arguments_with_exe_by_string(bool b_recover_mode /*=false*/) const
 {
 	std::string s = _mp::cstring::get_mcsc_from_unicode(m_s_abs_full_exe_path);
-	return(s + generate_command_line_arguments_except_exe_by_string());
+	return(s + generate_command_line_arguments_except_exe_by_string(b_recover_mode));
 }
 
-std::vector<std::wstring> cupdater_param::generate_command_line_arguments_except_exe_by_vector_wstring() const
+std::vector<std::wstring> cupdater_param::generate_command_line_arguments_except_exe_by_vector_wstring(bool b_recover_mode /*= false*/) const
 {
 	std::vector<std::wstring> v;
 
 	do {
 		bool b_ok(false);
 		std::wstring s_info;
-		std::tie(b_ok, s_info) = can_be_start_firmware_update();
+		std::tie(b_ok, s_info) = can_be_start_firmware_update(b_recover_mode);
 		if (!b_ok) {
 			continue;
 		}
@@ -540,10 +561,12 @@ std::vector<std::wstring> cupdater_param::generate_command_line_arguments_except
 		//
 		s_key = std::wstring(_mp::_coffee::CONST_S_CMD_LINE_FW_UPDATE_SET_DEV_PATH);
 		it = m_map.find(s_key);
-		s_p = L"--";
-		s_p += s_key;
-		v.push_back(s_p);
-		v.push_back(it->second);
+		if (it != std::end(m_map)) {
+			s_p = L"--";
+			s_p += s_key;
+			v.push_back(s_p);
+			v.push_back(it->second);
+		}
 		//
 		s_key = std::wstring(L"_cf_bl_progress_");
 		it = m_map.find(s_key);
@@ -578,11 +601,11 @@ std::vector<std::wstring> cupdater_param::generate_command_line_arguments_except
 	return v;
 }
 
-std::vector<std::string> cupdater_param::generate_command_line_arguments_except_exe_by_vector_string() const
+std::vector<std::string> cupdater_param::generate_command_line_arguments_except_exe_by_vector_string(bool b_recover_mode /*= false*/) const
 {
 	std::vector<std::string> v;
 
-	auto wv = generate_command_line_arguments_except_exe_by_vector_wstring();
+	auto wv = generate_command_line_arguments_except_exe_by_vector_wstring(b_recover_mode);
 
 	for (auto ws : wv) {
 		v.push_back(_mp::cstring::get_mcsc_from_unicode(ws));
@@ -590,18 +613,18 @@ std::vector<std::string> cupdater_param::generate_command_line_arguments_except_
 	return v;
 }
 
-std::vector<std::wstring> cupdater_param::generate_command_line_arguments_with_exe_by_vector_wstring() const
+std::vector<std::wstring> cupdater_param::generate_command_line_arguments_with_exe_by_vector_wstring(bool b_recover_mode /*= false*/) const
 {
-	auto wv = generate_command_line_arguments_except_exe_by_vector_wstring();
+	auto wv = generate_command_line_arguments_except_exe_by_vector_wstring(b_recover_mode);
 	wv.insert(wv.begin(), m_s_abs_full_exe_path);
 	return wv;
 }
 
-std::vector<std::string> cupdater_param::generate_command_line_arguments_with_exe_by_vector_string() const
+std::vector<std::string> cupdater_param::generate_command_line_arguments_with_exe_by_vector_string(bool b_recover_mode /*= false*/) const
 {
 	std::vector<std::string> v;
 
-	auto wv = generate_command_line_arguments_with_exe_by_vector_wstring();
+	auto wv = generate_command_line_arguments_with_exe_by_vector_wstring(b_recover_mode);
 
 	for (auto ws : wv) {
 		v.push_back(_mp::cstring::get_mcsc_from_unicode(ws));

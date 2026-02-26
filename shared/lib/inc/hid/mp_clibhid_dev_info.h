@@ -20,7 +20,7 @@ namespace _mp{
 
         static type_set_wstring get_dev_path_by_wstring(const clibhid_dev_info::type_set& in);
         static type_set_string get_dev_path_by_string(const clibhid_dev_info::type_set& in);
-
+        
         static size_t filter_dev_info_set(
             clibhid_dev_info::type_set& out,
             const clibhid_dev_info::type_set& in,
@@ -32,6 +32,12 @@ namespace _mp{
             const clibhid_dev_info::type_set& in,
             const type_v_bm_dev& v_type_filter
         );
+
+        static size_t filter_dev_info_set(
+            clibhid_dev_info::type_set& out,
+            const clibhid_dev_info::type_set& in,
+            const type_set_wstring& set_wstring_filter
+		);
 
         static clibhid_dev_info::type_set::iterator find(clibhid_dev_info::type_set& in, const std::wstring& sw_path);
         static clibhid_dev_info::type_set::iterator find(clibhid_dev_info::type_set& in, const std::string& sw_path);

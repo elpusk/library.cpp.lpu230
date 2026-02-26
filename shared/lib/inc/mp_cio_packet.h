@@ -40,6 +40,7 @@ public:
 		act_mgmt_dev_plug_in = 'P',
 		act_mgmt_advance_operation = 'A',//from v1.8
 		act_mgmt_dev_kernel_operation = 'K',//from v1.8
+		act_mgmt_recover_operation = 'R',//from v2.8
 		act_dev_independent_bootloader = 'b',//from v1.8
 		act_dev_open = 'o',
 		act_dev_close = 'c',
@@ -125,6 +126,7 @@ public:
 		switch (a)
 		{
 		case cio_packet::act_mgmt_unknown: s = L"act_mgmt_unknown";	break;
+		case cio_packet::act_mgmt_recover_operation: s = L"act_mgmt_recover_operation";	break;
 		case cio_packet::act_mgmt_get_version: s = L"act_mgmt_get_version";	break;
 		case cio_packet::act_mgmt_get_echo: s = L"act_mgmt_get_echo";	break;
 		case cio_packet::act_mgmt_get_device_list: s = L"act_mgmt_get_device_list";	break;
@@ -1191,6 +1193,7 @@ private:
 			switch (p_packet->c_act) {
 			case cio_packet::act_mgmt_unknown:
 			case cio_packet::act_mgmt_get_device_list:
+			case cio_packet::act_mgmt_recover_operation:
 			case cio_packet::act_mgmt_get_version:
 			case cio_packet::act_mgmt_get_echo:
 			case cio_packet::act_mgmt_ctl_show:
@@ -1541,6 +1544,7 @@ private:
 		switch (c_act)
 		{
 		case cio_packet::act_mgmt_unknown:
+		case cio_packet::act_mgmt_recover_operation:
 		case cio_packet::act_mgmt_get_version:
 		case cio_packet::act_mgmt_get_echo:
 		case cio_packet::act_mgmt_get_device_list:

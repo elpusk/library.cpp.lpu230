@@ -39,10 +39,11 @@ public:
 
 	/**
 	* @brief check bootloader request parameter existence.
+	* @oaram b_recover_mode - true : check parameter for recover mode, false : check parameter for normal mode.
 	* @return first - true : exist bootloader request parameter.
 	* @return second - parameter info
 	*/
-	std::pair<bool,std::wstring> can_be_start_firmware_update() const;
+	std::pair<bool,std::wstring> can_be_start_firmware_update(bool b_recover_mode = false) const;
 
 	/**
 	* @brief set parameter.( insert or relpace )
@@ -77,10 +78,15 @@ public:
 	void set_packet_info_for_notify(const _mp::cio_packet& req_act_dev_sub_bootloader);
 
 	/**
+	* @set information for generating response packet of progress nortification.
+	*/
+	void set_packet_info_for_notify_in_recover(const _mp::cio_packet& req_act_dev_recover_operation);
+
+	/**
 	* @brief remove all item of map.
 	*/
 
-	bool start_update();
+	bool start_update(bool b_recover_mode = false);
 
 	/**
 	* @brief called by cprocess_watcher() thread.
@@ -100,15 +106,15 @@ public:
 	/**
 	* @brief generate command line arguments from stored parameters.
 	*/
-	std::wstring generate_command_line_arguments_except_exe_by_wstring() const;
-	std::string generate_command_line_arguments_except_exe_by_string() const;
-	std::wstring generate_command_line_arguments_with_exe_by_wstring() const;
-	std::string generate_command_line_arguments_with_exe_by_string() const;
+	std::wstring generate_command_line_arguments_except_exe_by_wstring(bool b_recover_mode = false) const;
+	std::string generate_command_line_arguments_except_exe_by_string(bool b_recover_mode = false) const;
+	std::wstring generate_command_line_arguments_with_exe_by_wstring(bool b_recover_mode = false) const;
+	std::string generate_command_line_arguments_with_exe_by_string(bool b_recover_mode = false) const;
 
-	std::vector<std::wstring> generate_command_line_arguments_except_exe_by_vector_wstring() const;
-	std::vector<std::string> generate_command_line_arguments_except_exe_by_vector_string() const;
-	std::vector<std::wstring> generate_command_line_arguments_with_exe_by_vector_wstring() const;
-	std::vector<std::string> generate_command_line_arguments_with_exe_by_vector_string() const;
+	std::vector<std::wstring> generate_command_line_arguments_except_exe_by_vector_wstring(bool b_recover_mode = false) const;
+	std::vector<std::string> generate_command_line_arguments_except_exe_by_vector_string(bool b_recover_mode = false) const;
+	std::vector<std::wstring> generate_command_line_arguments_with_exe_by_vector_wstring(bool b_recover_mode = false) const;
+	std::vector<std::string> generate_command_line_arguments_with_exe_by_vector_string(bool b_recover_mode = false) const;
 
 	_mp::cio_packet::type_ptr get_rsp_packet_before_setting();
 

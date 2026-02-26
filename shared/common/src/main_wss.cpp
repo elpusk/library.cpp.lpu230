@@ -269,7 +269,7 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 			std::tie(b_req, ni) = _mp::ccoffee_pipe::is_ctl_request_for_notify_progress(s_data);
 			if (b_req) {
 				//처리 필요.
-				cupdater_mgmt::get_instance().notify_to_server(ni);
+				cupdater_mgmt::get_instance().notify_to_server(ni,log);
 				continue;
 			}
 
