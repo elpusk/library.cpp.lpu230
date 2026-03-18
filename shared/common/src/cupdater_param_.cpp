@@ -7,6 +7,7 @@
 #include <mp_type.h>
 #include <mp_cfile.h>
 #include <mp_coffee.h>
+#include <mp_coffee_path.h>
 #include <cupdater_param_.h>
 
 #ifdef _WIN32
@@ -17,12 +18,13 @@ cupdater_param::cupdater_param(unsigned long n_session_number) :
 	m_n_session_number(n_session_number)
 	, m_p_log(nullptr)
 	, m_b_used(false)
+	, m_b_file_key_is_set_automatically(false)
 {
 }
 
 cupdater_param::~cupdater_param()
 {
-	_delete_firmware(L"called by ~cupdater_param()");
+	_delete_firmware(false,L"called by ~cupdater_param()");
 }
 
 void cupdater_param::set_used()
@@ -307,6 +309,20 @@ std::pair<bool, std::wstring> cupdater_param::can_be_start_firmware_update(bool 
 	return std::make_pair(b_result, s_info);
 }
 
+bool cupdater_param::is_exist_file_key() const
+{
+	bool b_found(false);
+	std::wstring s_key, s_value;
+
+	s_key = std::wstring(_mp::_coffee::CONST_S_CMD_LINE_FW_UPDATE_SET_FW_FILE);
+	auto it = m_map.find(s_key);
+	if (it != std::end(m_map)) {
+		b_found = true;
+	}
+
+	return b_found;
+}
+
 void cupdater_param::set(const std::wstring& s_key, const std::wstring& s_value)
 {
 	m_map[s_key] = s_value;
@@ -319,9 +335,22 @@ bool cupdater_param::insert(const std::wstring& s_key, const std::wstring& s_val
 	return b_result;
 }
 
-bool cupdater_param::insert_file(const std::wstring& s_value_file_full_abs_path)
+bool cupdater_param::insert_file(const std::wstring& s_value_file_full_abs_path/*= std::wstring()*/)
 {
-	return insert(std::wstring(_mp::_coffee::CONST_S_CMD_LINE_FW_UPDATE_SET_FW_FILE), s_value_file_full_abs_path);
+	std::wstring s_rom_file;
+	if (s_value_file_full_abs_path.empty()) {
+		s_rom_file = _mp::ccoffee_path::get_path_of_virtual_drive_root_with_backslash();
+		s_rom_file += _mp::ccoffee_path::get_virtual_path_of_temp_rom_file_of_session(m_n_session_number);
+		if (!_mp::cfile::is_exist_file(s_rom_file)) {
+			return false;
+		}
+		m_b_file_key_is_set_automatically = true;
+	}
+	else {
+		s_rom_file = s_value_file_full_abs_path;
+		m_b_file_key_is_set_automatically = false;
+	}
+	return insert(std::wstring(_mp::_coffee::CONST_S_CMD_LINE_FW_UPDATE_SET_FW_FILE), s_rom_file);
 }
 
 bool cupdater_param::insert_device(const std::wstring& s_value_device_path)
@@ -408,7 +437,7 @@ void cupdater_param::callback_update_end(int n_exit_code)
 {
 	//이 콜백은 m_ptr_runner의 _watch_process(thread) 에서 호촐되므로
 	//여기서  m_ptr_runner 에 대한 조작은 불가능하다.
-	_delete_firmware(L"called by callback_update_end()");
+	_delete_firmware(false, L"called by callback_update_end()");
 #ifdef _WIN32
 	ATLTRACE(L"Exited lpu230_update with %d.\n",n_exit_code);
 #endif
@@ -638,12 +667,18 @@ _mp::cio_packet::type_ptr cupdater_param::get_rsp_packet_before_setting()
 	return m_ptr_rsp;
 }
 
-bool cupdater_param::_delete_firmware(const std::wstring& s_debug_msg)
+bool cupdater_param::_delete_firmware(bool b_force_delete, const std::wstring& s_debug_msg)
 {
 	std::lock_guard<std::mutex> lock(m_mutex);
 	bool b_result(false);
 	std::wstring s_deb;
 	do {
+		if (!b_force_delete) {
+			if(!m_b_file_key_is_set_automatically) {
+				s_deb += L"file key isn't set automatically, so skip delete firmware file.";
+				continue;
+			}
+		}
 
 		std::wstring s_key = std::wstring(_mp::_coffee::CONST_S_CMD_LINE_FW_UPDATE_SET_FW_FILE);
 		auto it = m_map.find(s_key);

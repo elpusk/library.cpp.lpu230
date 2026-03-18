@@ -68,7 +68,6 @@ public:
 
 	void unload()
 	{
-		//std::lock_guard<std::mutex> lock(m_mutex);
 		if (m_hMode) {
 			if (m_dev_lib_off) {
 				m_dev_lib_off();
@@ -81,7 +80,6 @@ public:
 
 	bool load(const std::wstring& s_lib,void* p_log)
 	{
-		//std::lock_guard<std::mutex> lock(m_mutex);
 		bool b_result(false);
 		do {
 			m_p_clog = (_mp::clog*)p_log;
@@ -255,7 +253,6 @@ public:
 	void* constructor(bool b_remove_all_zero_in_report)
 	{
 		void* p(NULL);
-		//std::lock_guard<std::mutex> lock(m_mutex);
 		if (m_dev_lib_constrcutor) {
 			if (b_remove_all_zero_in_report) {
 				p = m_dev_lib_constrcutor(1);
@@ -280,7 +277,6 @@ public:
 	{
 		static std::mutex dummy_mutex;
 
-		//std::lock_guard<std::mutex> lock(m_mutex);
 		if (m_dev_lib_get_mutex == NULL) {
 			return dummy_mutex;
 		}
@@ -296,7 +292,6 @@ public:
 	{
 		bool b_result(false);
 		do {
-			//std::lock_guard<std::mutex> lock(m_mutex);
 			if (m_dev_lib_is_ini == NULL) {
 				continue;
 			}
@@ -312,7 +307,6 @@ public:
 		type_set_tuple_dev_lib_usb_id set_result;
 
 		do {
-			//std::lock_guard<std::mutex> lock(m_mutex);
 			if (m_dev_lib_hid_enumerate == NULL) {
 				continue;
 			}
@@ -334,7 +328,6 @@ public:
 	{
 		std::tuple<bool, int, bool> tuple_result(false, -1, false);
 		do {
-			//std::lock_guard<std::mutex> lock(m_mutex);
 			if (m_dev_lib_is_open == NULL) {
 				continue;
 			}
@@ -355,7 +348,6 @@ public:
 	{
 		int n_result(-1);
 		do {
-			//std::lock_guard<std::mutex> lock(m_mutex);
 			if (m_dev_lib_api_open_path == NULL) {
 				continue;
 			}
@@ -367,7 +359,6 @@ public:
 	void api_close(void* p_instance, int n_primitive_map_index)
 	{
 		do {
-			//std::lock_guard<std::mutex> lock(m_mutex);
 			if (m_dev_lib_api_close == NULL) {
 				continue;
 			}
@@ -379,7 +370,6 @@ public:
 	{
 		int n_result(-1);
 		do {
-			//std::lock_guard<std::mutex> lock(m_mutex);
 			if (m_dev_lib_api_set_nonblocking == NULL) {
 				continue;
 			}
@@ -392,7 +382,6 @@ public:
 	{
 		int n_result(-1);
 		do {
-			//std::lock_guard<std::mutex> lock(m_mutex);
 			if (m_dev_lib_api_get_report_descriptor == NULL) {
 				continue;
 			}
@@ -405,7 +394,6 @@ public:
 	{
 		int n_result(-1);
 		do {
-			//std::lock_guard<std::mutex> lock(m_mutex);
 			if (m_dev_lib_api_write == NULL) {
 				continue;
 			}
@@ -418,7 +406,6 @@ public:
 	{
 		int n_result(-1);
 		do {
-			//std::lock_guard<std::mutex> lock(m_mutex);
 			if (m_dev_lib_api_read == NULL) {
 				continue;
 			}
@@ -432,7 +419,6 @@ public:
 		const wchar_t* p_s(NULL);
 
 		do {
-			//std::lock_guard<std::mutex> lock(m_mutex);
 			if (m_dev_lib_api_error == NULL) {
 				continue;
 			}
@@ -444,7 +430,6 @@ public:
 	void set_req_q_check_interval_in_child(void* p_instance, long long n_interval_mmsec)
 	{
 		do {
-			//std::lock_guard<std::mutex> lock(m_mutex);
 			if (m_dev_lib_set_req_q_check_interval_in_child == NULL) {
 				continue;
 			}
@@ -456,7 +441,6 @@ public:
 	void set_hid_write_interval_in_child(void* p_instance, long long n_interval_mmsec)
 	{
 		do {
-			//std::lock_guard<std::mutex> lock(m_mutex);
 			if (m_dev_lib_set_hid_write_interval_in_child == NULL) {
 				continue;
 			}
@@ -468,7 +452,6 @@ public:
 	void set_hid_read_interval_in_child(void* p_instance, long long n_interval_mmsec)
 	{
 		do {
-			//std::lock_guard<std::mutex> lock(m_mutex);
 			if (m_dev_lib_set_hid_read_interval_in_child == NULL) {
 				continue;
 			}
@@ -482,7 +465,6 @@ public:
 		long long ll_result(-1);
 
 		do {
-			//std::lock_guard<std::mutex> lock(m_mutex);
 			if (m_dev_lib_get_req_q_check_interval_in_child == NULL) {
 				continue;
 			}
@@ -497,7 +479,6 @@ public:
 		long long ll_result(-1);
 
 		do {
-			//std::lock_guard<std::mutex> lock(m_mutex);
 			if (m_dev_lib_get_hid_write_interval_in_child == NULL) {
 				continue;
 			}
@@ -512,7 +493,6 @@ public:
 		long long ll_result(-1);
 
 		do {
-			//std::lock_guard<std::mutex> lock(m_mutex);
 			if (m_dev_lib_get_hid_read_interval_in_child == NULL) {
 				continue;
 			}

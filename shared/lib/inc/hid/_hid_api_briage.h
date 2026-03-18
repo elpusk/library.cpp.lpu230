@@ -42,10 +42,12 @@ public:
 protected:
 
 	/**
-	* second lock(exclusive using after opening device)
+	* get<0> hid_device pointer
+	* get<1> true - exclusive using after opening device.
+	* get<2> device path
 	*/
-	typedef	std::pair< hid_device*, bool > _type_pair_hid_dev_lock;
-	typedef std::map<int, _hid_api_briage::_type_pair_hid_dev_lock> _type_map_hid_dev;
+	typedef	std::tuple< hid_device*, bool,std::string > _type_tuple_hid_dev_lock_path;
+	typedef std::map<int, _hid_api_briage::_type_tuple_hid_dev_lock_path> _type_map_hid_dev;
 
 private:
 	typedef std::map<hid_device*, bool> _type_map_lpu237_disable_ibutton;

@@ -14,20 +14,6 @@
 #endif
 
 namespace _mp{
-    std::set<std::tuple<std::string, unsigned short, unsigned short, int, std::string>> clibhid::get_connected_device(const chid_briage::type_ptr& ptr_hid_api_briage)
-    {
-        std::set<std::tuple<std::string, unsigned short, unsigned short, int, std::string>> set_connected_dev;
-        do {
-            if (!ptr_hid_api_briage) {
-                continue;
-            }
-
-            std::lock_guard<std::mutex> lock(ptr_hid_api_briage->get_mutex_for_hidapi());
-            set_connected_dev = ptr_hid_api_briage->hid_enumerate();
-        } while (false);
-        return set_connected_dev;
-    }
-
 
     clibhid& clibhid::get_instance(const _mp::type_set_usb_filter& set_usb_filter /*= _mp::type_set_usb_filter()*/)
     {
@@ -416,12 +402,12 @@ namespace _mp{
                 clog::get_instance().trace(L"T[I] - %ls - removed : (%ls) %ls.\n", __WFUNCTION__, item.get_port_id_string().c_str(), item.get_path_by_wstring().c_str());
                 clog::get_instance().log_fmt(L"[I] - %ls - removed : (%ls) %ls.\n", __WFUNCTION__, item.get_port_id_string().c_str(), item.get_path_by_wstring().c_str());
             }
-            /*
+            
             for (auto item : m_set_inserted_dev_info) {
                 clog::get_instance().trace(L"T[I] - %ls - inserted : %ls.\n", __WFUNCTION__, item.get_path_by_wstring().c_str());
                 clog::get_instance().log_fmt(L"[I] - %ls - inserted : %ls.\n", __WFUNCTION__, item.get_path_by_wstring().c_str());
             }
-            */
+            
             if (m_set_cur_dev_info.empty()) {
                 clog::get_instance().trace(L"T[I] - current : none.\n");
             }

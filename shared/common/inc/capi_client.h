@@ -37,7 +37,8 @@ public:
 		act_advance_get_session_name,
 		act_advance_send_data_to_session,
 		act_advance_send_data_to_all_session,
-		act_kernel
+		act_kernel,
+		act_sub_bootloader
 	} type_action;
 
 	typedef	std::function< void(const wchar_t*) > type_this_class_log_function;
@@ -145,6 +146,8 @@ public:
 
 	void unload();
 
+	unsigned long get_session_number(unsigned long n_client_index) const;
+
 	unsigned long get_last_result(unsigned long n_device_index) const;
 	capi_client::type_action get_last_action(unsigned long n_device_index) const;
 	void set_last_action_and_result(unsigned long n_device_index, const capi_client::type_action last_action, const unsigned long dw_last_result);
@@ -182,6 +185,15 @@ public:
 
 	bool get_device_list_multi_sync(std::set<std::wstring>& set_s_path, unsigned long n_client_index, const std::list<std::wstring>& list_s_filter = std::list<std::wstring>());
 
+	bool bootloader_operation(unsigned long n_client_index, unsigned long n_device_index, const std::wstring& s_run_type, const std::wstring & s_key, const std::wstring& s_value);
+
+	bool bootloader_operation_sync(
+		unsigned long n_client_index
+		, unsigned long n_device_index
+		, const std::wstring& s_run_type
+		, const std::wstring& s_key
+		, const std::wstring& s_value
+	);
 
 	bool open(unsigned long n_client_index, const std::wstring& s_device_path,bool b_shared_mode);
 

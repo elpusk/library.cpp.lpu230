@@ -386,8 +386,8 @@ void  _hid_free_enumeration(struct hid_device_info* devs)
 _hid_api_briage::_hid_api_briage() :
     m_p_clog(nullptr)
     , m_atll_req_q_check_interval_mmsec(_hid_api_briage::const_default_req_q_check_interval_mmsec_of_child)
-	, m_atll_hid_write_interval_mmsec(_hid_api_briage::const_default_hid_write_interval_mmsec)
-	, m_atll_hid_read_interval_mmsec(_hid_api_briage::const_default_hid_read_interval_mmsec)
+    , m_atll_hid_write_interval_mmsec(_hid_api_briage::const_default_hid_write_interval_mmsec)
+    , m_atll_hid_read_interval_mmsec(_hid_api_briage::const_default_hid_read_interval_mmsec)
     , m_s_class_name(L"_hid_api_briage")
     , m_b_ini(false)
     , m_n_map_index(_vhid_info::const_map_index_invalid)
@@ -451,8 +451,8 @@ _hid_api_briage::~_hid_api_briage()
 		}//end for
 
         for (auto item : m_map_hid_dev) {
-            item.second.second = false;
-            hid_close(item.second.first);
+            std::get<1>(item.second) = false;
+            hid_close(std::get<0>(item.second));
         }//end for
 
         hid_exit();
@@ -516,7 +516,7 @@ std::tuple<bool, int, bool> _hid_api_briage::is_open(const char* path) const
             continue;
         }
         for (auto item : m_map_hid_dev) {
-            hid_device* p_hid = item.second.first;
+            hid_device* p_hid = std::get<0>(item.second);
             if (p_hid == nullptr) {
                 continue;
             }
@@ -532,7 +532,7 @@ std::tuple<bool, int, bool> _hid_api_briage::is_open(const char* path) const
             std::string s(p_info->path);
             if (s.compare(path) == 0) {
                 n_index = item.first;
-                b_exclusive_open = item.second.second;
+                b_exclusive_open = std::get<1>(item.second);
                 b_result = true;
                 break; //opened device exit while
             }
@@ -569,8 +569,9 @@ int _hid_api_briage::api_open_path(const char* path)
             //hid_close(m_map_hid_dev[n_map_index].first);
             //m_map_hid_dev.erase(n_map_index);
         }
-        m_map_hid_dev[n_map_index].first = p_dev;
-        m_map_hid_dev[n_map_index].second = false;//primitive device always exclusive mode
+
+        //primitive device always exclusive mode
+		m_map_hid_dev[n_map_index] = std::make_tuple(p_dev, false, std::string(path));
         m_n_map_index = n_map_index;
 
         // this is dregon.
@@ -603,6 +604,7 @@ int _hid_api_briage::api_open_path(const char* path)
 #endif
             }
         }
+
         return n_map_index;
     }
     else {
@@ -619,8 +621,9 @@ void _hid_api_briage::api_close(int n_primitive_map_index)
     }
 
     hid_device* p_dev = nullptr;
-    if (m_map_hid_dev.find(n_primitive_map_index) != std::end(m_map_hid_dev)) {
-        p_dev = m_map_hid_dev[n_primitive_map_index].first;
+	auto it = m_map_hid_dev.find(n_primitive_map_index);
+    if (it != std::end(m_map_hid_dev)) {
+        p_dev = std::get<0>(it->second);
         m_map_hid_dev.erase(n_primitive_map_index);
 
         // this is dregon.
@@ -655,9 +658,9 @@ void _hid_api_briage::api_close(int n_primitive_map_index)
                 );
 #endif
             }
-        }
 
-        hid_close(p_dev);
+            hid_close(p_dev);
+        }
     }
 }
 
@@ -754,7 +757,7 @@ int _hid_api_briage::api_set_nonblocking(int n_primitive_map_index, int nonblock
 
     hid_device* p_dev = nullptr;
     if (m_map_hid_dev.find(n_primitive_map_index) != std::end(m_map_hid_dev)) {
-        p_dev = m_map_hid_dev[n_primitive_map_index].first;
+        p_dev = std::get<0>(m_map_hid_dev[n_primitive_map_index]);
         return hid_set_nonblocking(p_dev, nonblock);
     }
     else {
@@ -774,7 +777,7 @@ int _hid_api_briage::api_get_report_descriptor(int n_primitive_map_index, unsign
 
     hid_device* p_dev = nullptr;
     if (m_map_hid_dev.find(n_primitive_map_index) != std::end(m_map_hid_dev)) {
-        p_dev = m_map_hid_dev[n_primitive_map_index].first;
+        p_dev = std::get<0>(m_map_hid_dev[n_primitive_map_index]);
     }
     return hid_get_report_descriptor(p_dev, buf, buf_size);
 }
@@ -783,30 +786,45 @@ int _hid_api_briage::api_write(int n_primitive_map_index, const unsigned char* d
 {
     std::lock_guard<std::mutex> lock(_hid_api_briage::get_mutex_for_hidapi());
 
-    if (!m_b_ini) {
-        return -1;
-    }
+    int n_written(-1);
 
-    hid_device* p_dev = nullptr;
-    if (m_map_hid_dev.find(n_primitive_map_index) != std::end(m_map_hid_dev)) {
-        p_dev = m_map_hid_dev[n_primitive_map_index].first;
-    }
+    do{
+        if (!m_b_ini) {
+            if (m_p_clog) {
+                m_p_clog->log_fmt(L"[E] %ls : not m_b_ini.\n", __WFUNCTION__);
+            }
+            continue;
+        }
 
-    int n_written = hid_write(p_dev, data, length);
+        hid_device* p_dev = nullptr;
+        if (m_map_hid_dev.find(n_primitive_map_index) != std::end(m_map_hid_dev)) {
+            p_dev = std::get<0>(m_map_hid_dev[n_primitive_map_index]);
+        }
 
-#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-    if (n_written > 0) {
-        ATLTRACE(L" !!!!! api_write(n_primitive_map_index:%d,length:%u)->written:%d.\n", n_primitive_map_index, length, n_written);
-    
-        std::wstringstream woss;
-        for (int i = 0; i < n_written; i++) {
-            woss << std::hex << data[i];
-            woss << L'.';
-        }//end for
+        n_written = hid_write(p_dev, data, length);
+        if (n_written == 0) {
+			continue; // no data written, but no error. it can be treated as success.
+        }
 
-        ATLTRACE(L" !!!!! %ls.\n", woss.str().c_str());
-    }
+        if (n_written < 0) {
+            const wchar_t* err = hid_error(p_dev);
+
+            if (m_p_clog) {
+                m_p_clog->log_fmt(L"[E] %ls : n_result = %d(%ls).\n", __WFUNCTION__, n_written, err);
+            }
+#if defined(_WIN32) && defined(_DEBUG)
+            ATLTRACE(L"[E] %ls : n_result = %d(%ls).\n", __WFUNCTION__, n_written, err);
 #endif
+            continue;
+        }
+#if defined(_WIN32) && defined(_DEBUG)
+        if (next == _mp::next_io_write) {
+            ATLTRACE(L"[E] %ls : next IO is write.\n", __WFUNCTION__);
+        }
+#endif
+
+    }while (false);
+
     return n_written;
 }
 
@@ -814,93 +832,46 @@ int _hid_api_briage::api_read(int n_primitive_map_index, unsigned char* data, si
 {
     std::lock_guard<std::mutex> lock(_hid_api_briage::get_mutex_for_hidapi());
 
-    if (!m_b_ini) {
-        if (m_p_clog)
-            m_p_clog->log_fmt(L"[E] %ls : not m_b_ini.\n", __WFUNCTION__);
-        return -1;
-    }
+	int n_result = -1;
 
-    hid_device* p_dev = nullptr;
-    if (m_map_hid_dev.find(n_primitive_map_index) != std::end(m_map_hid_dev)) {
-        p_dev = m_map_hid_dev[n_primitive_map_index].first;
-    }
+    do {
+        if (!m_b_ini) {
+            if (m_p_clog) {
+                m_p_clog->log_fmt(L"[E] %ls : not m_b_ini.\n", __WFUNCTION__);
+            }
+            continue;
+        }
+        hid_device* p_dev = nullptr;
+        if (m_map_hid_dev.find(n_primitive_map_index) != std::end(m_map_hid_dev)) {
+            p_dev = std::get<0>(m_map_hid_dev[n_primitive_map_index]);
+        }
+        else {
+            if (m_p_clog)
+                m_p_clog->log_fmt(L"[E] %ls : not found device handle in map.\n", __WFUNCTION__);
 
-    int n_result = hid_read(p_dev, data, length);
-    if (n_result < 0) {
-        if (m_p_clog)
-            m_p_clog->log_fmt(L"[E] %ls : n_result = %d.\n", __WFUNCTION__, n_result);
-    }
-    
-#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-    if (n_result > 0) {
-        ATLTRACE(L" !!!!! api_read(n_primitive_map_index:%d,length:%u,n_report:%u)->read:%d.\n", n_primitive_map_index, length, n_report, n_result);
-    
-        std::wstringstream woss;
-        for (int i = 0; i < n_result; i++) {
-            woss << std::hex << data[i];
-            woss << L'.';
-        }//end for
-
-        //ATLTRACE(L" !!!!! %ls.\n", woss.str().c_str());
-    }
+#if defined(_WIN32) && defined(_DEBUG)
+            ATLTRACE(L"[E] %ls : not found device handle in map.\n", __WFUNCTION__);
 #endif
+            continue;
+        }
 
-#if defined(_DEBUG) && defined(__VIRTUAL_IBUTTON_DATA__)
-    else {
-        do {
-            // 빠른 실행을 위한 코드
-            if (n_result <= 0) {
-                continue;
-            }
-            if (data == NULL) {
-                continue;
-            }
+        n_result = hid_read(p_dev, data, length);
+        if(n_result == 0) {
+            continue; // no data read, but no error. it can be treated as success.
+		}
+        if (n_result < 0) {
+            const wchar_t* err = hid_error(p_dev);
 
-            // debugging 을 위해, i-button 가상 응답 설정.
-            const std::string s_ibutton_postfix("this_is_ibutton_data");
-            const size_t n_size_button_data(8);
-            const size_t n_len_bytes = 3;
-            _mp::type_v_buffer v_code(0);
-            if (n_result < (n_len_bytes + n_size_button_data + s_ibutton_postfix.size())) {
-                continue;
-            }
-            if (length < n_len_bytes + n_size_button_data + s_ibutton_postfix.size()) {
-                continue;
+            if (m_p_clog) {
+                m_p_clog->log_fmt(L"[E] %ls : n_result = %d(%ls).\n", __WFUNCTION__, n_result, err);
             }
 
-            std::array<char, 3> ar{ data[0], data[1] ,data[2] };
-            if (ar[0] >= 0) {
-                continue;
-            }
-            if (ar[1] >= 0) {
-                continue;
-            }
-            if (ar[2] >= 0) {
-                continue;
-            }
-
-            // ISO 1,2,3 모두 에러이거나 msr extension format 일때, 가상 ibutton 응답 전송. 
-            // ibutton rsp
-            // 0 0 0 + 8 bytes + "this_is_ibutton_data"
-            size_t i = 0;
-            for (i = 0; i < n_len_bytes; i++) {
-                data[i] = 0;
-            }
-            for (; i < n_len_bytes + n_size_button_data; i++) {
-                data[i] = 0xF0 + i - n_len_bytes;
-            }
-
-            for (; i < n_len_bytes + n_size_button_data + s_ibutton_postfix.size(); i++) {
-                data[i] = s_ibutton_postfix[i - (n_len_bytes + n_size_button_data)];
-            }
-            // n_result 를 변경 할 필요 없음.
-            
-            std::fill(&data[i], &data[length], 0);// clear remainder buffer.
-
-        } while (false);
-    }
-
-#endif// _DEBUG && __VIRTUAL_IBUTTON_DATA__
+#if defined(_WIN32) && defined(_DEBUG)
+            ATLTRACE(L"[E] %ls : n_result = %d(%ls).\n", __WFUNCTION__, n_result, err);
+#endif
+        }
+    } while (false);
+    
 	return n_result;
 }
 
@@ -914,7 +885,7 @@ const wchar_t* _hid_api_briage::api_error(int n_primitive_map_index)
 
     hid_device* p_dev = nullptr;
     if (m_map_hid_dev.find(n_primitive_map_index) != std::end(m_map_hid_dev)) {
-        p_dev = m_map_hid_dev[n_primitive_map_index].first;
+        p_dev = std::get<0>(m_map_hid_dev[n_primitive_map_index]);
     }
     return hid_error(p_dev);
 }

@@ -15,6 +15,16 @@ void capi_client::unload()
 {
 
 }
+unsigned long capi_client::get_session_number(unsigned long n_client_index) const
+{
+	unsigned long n_session_number(_MP_TOOLS_INVALID_SESSION_NUMBER);
+	_mp::cclient* p_client(_mp::cclient_manager::get_instance().get_client(n_client_index));
+	if (p_client) {
+		n_session_number = p_client->get_session_number_from_server();
+	}
+
+	return n_session_number;
+}
 void capi_client::_sync_before(unsigned long n_client_index, unsigned long n_device_index, unsigned char c_in_id, char unsigned c_out_id)//need thread safety
 {
 	capi_client::_get_in_id_for_sync() = c_in_id;
@@ -594,6 +604,101 @@ bool capi_client::get_device_list_multi_sync(std::set<std::wstring>&set_s_path, 
 	if (b_result) {
 		capi_client::help_strings_from_response(set_s_path, v_rx);
 	}
+	return b_result;
+}
+
+bool capi_client::bootloader_operation(unsigned long n_client_index, unsigned long n_device_index, const std::wstring& s_run_type, const std::wstring& s_key, const std::wstring& s_value)
+{
+	unsigned long n_result(_mp::cclient::RESULT_ERROR);
+	do {
+		_mp::cclient* p_client(_mp::cclient_manager::get_instance().get_client(n_client_index));
+		if (p_client == nullptr)
+			continue;
+
+		_mp::cio_packet packet;
+		packet.set_cmd(_mp::cio_packet::cmd_request)
+			.set_session_number(p_client->get_session_number_from_server())
+			.set_owner(_mp::cio_packet::owner_device, n_device_index)
+			.set_action(_mp::cio_packet::act_dev_sub_bootloader);
+		if (!s_run_type.empty()) {
+			packet.set_data_by_utf8(s_run_type);
+			if (!s_key.empty()) {
+				packet.set_data_by_utf8(s_key, true);
+			}
+			if (!s_value.empty()) {
+				packet.set_data_by_utf8(s_value, true);
+			}
+		}
+		else {
+			if (!s_key.empty()) {
+				packet.set_data_by_utf8(s_key);
+				if (!s_value.empty()) {
+					packet.set_data_by_utf8(s_value, true);
+				}
+			}
+			else {
+				if (!s_value.empty()) {
+					packet.set_data_by_utf8(s_value);
+				}
+			}
+		}
+
+		_mp::type_v_buffer v_tx;
+		packet.get_packet_by_json_format(v_tx);
+		if (!p_client->send_data_to_server_by_ip4(v_tx))
+			continue;
+		n_result = _mp::cclient::RESULT_SUCCESS;
+	} while (false);
+	//
+	set_last_action_and_result(n_device_index, capi_client::act_sub_bootloader, n_result);
+	if (n_result == _mp::cclient::RESULT_SUCCESS)	return true;
+	else	return false;
+}
+
+bool capi_client::bootloader_operation_sync(
+	unsigned long n_client_index
+	, unsigned long n_device_index
+	, const std::wstring& s_run_type
+	, const std::wstring& s_key
+	, const std::wstring& s_value
+)
+{
+	unsigned long n_result(_mp::cclient::RESULT_SUCCESS);
+	bool b_result(false);
+	std::vector<unsigned char> v_rx;
+	std::lock_guard<std::mutex> lock(m_mutex_for_sync);
+	_sync_before(n_client_index, n_device_index, 0, 0);
+
+	do {
+		std::future<bool> future_write = capi_client::_get_promise_bool_tx_for_sync()->get_future();
+		std::future<unsigned long> future_read = capi_client::_get_promise_dword_rx_for_sync()->get_future();
+
+		std::thread thread_read([&] {
+			_set_callback_write(n_client_index, capi_client::_write_cb, nullptr);
+			_set_callback_read(n_client_index, capi_client::_read_cb, nullptr);
+			do {
+				if (!bootloader_operation(n_client_index, n_device_index, s_run_type, s_key, s_value)) //send request
+					continue;
+				b_result = future_write.get();//get tx ok?
+				if (!b_result)
+					continue;
+				n_result = future_read.get();//get response
+				if (n_result == _mp::cclient::RESULT_SUCCESS)	b_result = true;
+				else	b_result = false;
+			} while (false);
+			});
+
+		thread_read.join();
+	} while (false);
+
+	unsigned char c_in_id = 0, c_out_id = 0;
+	_sync_after(n_client_index, n_device_index, c_in_id, v_rx);
+
+	if (b_result) {
+		//the analysis of response in manager request.
+		b_result = capi_client::help_reponse_contain_success(v_rx);
+	}
+
 	return b_result;
 }
 

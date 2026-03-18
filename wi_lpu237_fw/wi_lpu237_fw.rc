@@ -51,8 +51,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 2,9,0,0
- PRODUCTVERSION 2,9,0,0
+ FILEVERSION 6,0,0,0
+ PRODUCTVERSION 6,0,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -60,38 +60,28 @@ VS_VERSION_INFO VERSIONINFO
  FILEFLAGS 0x0L
 #endif
  FILEOS 0x40004L
- FILETYPE 0x1L
+ FILETYPE 0x2L
  FILESUBTYPE 0x0L
 BEGIN
     BLOCK "StringFileInfo"
     BEGIN
-        BLOCK "040904b0"
+        BLOCK "041204b0"
         BEGIN
             VALUE "CompanyName", "Elpusk.Co.,Ltd"
-            VALUE "FileDescription", "coffee manager 2nd"
-            VALUE "FileVersion", "2.9.0.0"
-            VALUE "InternalName", "elpusk-hid-d.exe"
+            VALUE "FileDescription", "lpu237fw"
+            VALUE "FileVersion", "6.0.0.0"
+            VALUE "InternalName", "wi_lpu23.dll"
             VALUE "LegalCopyright", "Copyright (C) 2026 Elpusk.Co.,Ltd"
-            VALUE "OriginalFilename", "elpusk-hid-d.exe"
-            VALUE "ProductName", "coffee manager 2nd"
-            VALUE "ProductVersion", "2.9.0.0"
+            VALUE "OriginalFilename", "wi_lpu23.dll"
+            VALUE "ProductName", "tg_lpu237_fw.dll"
+            VALUE "ProductVersion", "6.0.0.0"
         END
     END
     BLOCK "VarFileInfo"
     BEGIN
-        VALUE "Translation", 0x409, 1200
+        VALUE "Translation", 0x412, 1200
     END
 END
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Icon
-//
-
-// Icon with lowest ID value placed first to ensure application icon
-// remains consistent on all systems.
-IDI_ICON1               ICON                    "C:\\job\\library.cpp.lpu230\\coffee_manager\\res\\coffee_manager.ico"
 
 #endif    // Korean (Korea) resources
 /////////////////////////////////////////////////////////////////////////////

@@ -6,8 +6,8 @@ namespace _mp{
     * namespace of coffee manager
     */
     namespace _coffee{
-		constexpr const char* CONST_S_COFFEE_MGMT_VERSION = "2.8.0";
-        constexpr const wchar_t* CONST_WS_COFFEE_MGMT_VERSION = L"2.8.0";
+		constexpr const char* CONST_S_COFFEE_MGMT_VERSION = "2.9.0";
+        constexpr const wchar_t* CONST_WS_COFFEE_MGMT_VERSION = L"2.9.0";
         /**
         * The name used to identify an interprocess mechanism is not portable, even between UNIX systems. For this reason, Boost.Interprocess limits this name to a C++ variable identifier or keyword:
         * Starts with a letter, lowercase or uppercase, such as a letter from a to z or from A to Z. Examples: Sharedmemory, sharedmemory, sHaReDmEmOrY...
@@ -86,6 +86,7 @@ namespace _mp{
 
         constexpr const wchar_t* CONST_S_COFFEE_LPU237_MSR_DLL_INI_DIR_EXCEPT_BACKSLASH = L"C:\\job\\library.cpp.lpu230\\shared\\projects\\lpu237_dll";
         constexpr const wchar_t* CONST_S_COFFEE_LPU237_IBUTTON_DLL_INI_DIR_EXCEPT_BACKSLASH = L"C:\\job\\library.cpp.lpu230\\shared\\projects\\lpu237_ibutton";
+        constexpr const wchar_t* CONST_S_COFFEE_LPU237_FW_DLL_INI_DIR_EXCEPT_BACKSLASH = L"C:\\job\\library.cpp.lpu230\\shared\\projects\\lpu237_fw";
 
 #ifdef _M_IX86
         //WIN x86
@@ -109,6 +110,7 @@ namespace _mp{
 
         //constexpr const wchar_t* CONST_S_COFFEE_LPU237_MSR_DLL_INI_DIR_EXCEPT_BACKSLASH = L"%ProgramData%\\elpusk\\00000006\\coffee_manager\\tg_lpu237_dll";
         //constexpr const wchar_t* CONST_S_COFFEE_LPU237_IBUTTON_DLL_INI_DIR_EXCEPT_BACKSLASH = L"%ProgramData%\\elpusk\\00000006\\coffee_manager\\tg_lpu237_ibutton";
+        //constexpr const wchar_t* CONST_S_COFFEE_LPU237_FW_DLL_INI_DIR_EXCEPT_BACKSLASH = L"%ProgramData%\\elpusk\\00000006\\coffee_manager\\tg_lpu237_fw";
         // constexpr const wchar_t* CONST_S_MGMT_ABS_FULL_PATH = L"%ProgramFiles%\\elpusk\\00000006\\coffee_manager\\bin\\elpusk-hid-d.exe";
         //constexpr const wchar_t* CONST_S_DIR_MGMT_EXCEPT_BACKSLASH = L"%ProgramFiles%\\elpusk\\00000006\\coffee_manager\\bin";
         //constexpr const wchar_t* CONST_S_DIR_DLL_EXCEPT_BACKSLASH = L"%ProgramFiles%\\elpusk\\00000006\\coffee_manager\\dll";
@@ -129,6 +131,7 @@ namespace _mp{
 
         constexpr const wchar_t* CONST_S_COFFEE_LPU237_MSR_DLL_INI_DIR_EXCEPT_BACKSLASH = L"/home/tester/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/projects/tg_lpu237_dll";
         constexpr const wchar_t* CONST_S_COFFEE_LPU237_IBUTTON_DLL_INI_DIR_EXCEPT_BACKSLASH = L"/home/tester/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/projects/tg_lpu237_ibutton";
+        constexpr const wchar_t* CONST_S_COFFEE_LPU237_FW_DLL_INI_DIR_EXCEPT_BACKSLASH = L"/home/tester/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/projects/tg_lpu237_fw";
 
         constexpr const wchar_t* CONST_S_MGMT_ABS_FULL_PATH = L"/home/tester/projects/LiElpuskHidDaemon/bin/x64/Debug/elpusk-hid-d";
         constexpr const wchar_t* CONST_S_DIR_MGMT_EXCEPT_BACKSLASH = L"/home/tester/projects/LiElpuskHidDaemon/bin/x64/Debug";
@@ -150,6 +153,7 @@ namespace _mp{
 
         constexpr const wchar_t* CONST_S_COFFEE_LPU237_MSR_DLL_INI_DIR_EXCEPT_BACKSLASH = L"/usr/share/elpusk/programdata/00000006/coffee_manager/tg_lpu237_dll";
         constexpr const wchar_t* CONST_S_COFFEE_LPU237_IBUTTON_DLL_INI_DIR_EXCEPT_BACKSLASH = L"/usr/share/elpusk/programdata/00000006/coffee_manager/tg_lpu237_ibutton";
+        constexpr const wchar_t* CONST_S_COFFEE_LPU237_FW_DLL_INI_DIR_EXCEPT_BACKSLASH = L"/usr/share/elpusk/programdata/00000006/coffee_manager/tg_lpu237_fw";
 
         constexpr const wchar_t* CONST_S_MGMT_ABS_FULL_PATH = L"/usr/share/elpusk/program/00000006/coffee_manager/bin/elpusk-hid-d";
         constexpr const wchar_t* CONST_S_DIR_MGMT_EXCEPT_BACKSLASH = L"/usr/share/elpusk/program/00000006/coffee_manager/bin";

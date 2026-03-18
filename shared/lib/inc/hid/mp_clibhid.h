@@ -11,7 +11,7 @@
 #include <mp_elpusk.h>
 #include <mp_coperation.h>
 #include <hid/mp_clibhid_dev.h>
-#include <chid_briage.h>
+//#include <chid_briage.h>
 
 
 namespace _mp{
@@ -43,23 +43,6 @@ namespace _mp{
             _const_default_dev_pluginout_check_interval_mmsec = 100
         };
     public:
-         
-        /**
-        * @brief get connected devices. static indepent fcuntion
-        *
-        * @return  each item's
-        *
-        *	1'st - std::string, device path,
-        *
-        *	2'nd - unsigned short, usb vendor id,
-        *
-        *	3'th - unsigned short, usb product id,
-        *
-        *	4'th - int, usb interface number,
-        *
-        *	5'th - std::string, extra data
-        */
-        static std::set< std::tuple<std::string, unsigned short, unsigned short, int, std::string> > get_connected_device(const chid_briage::type_ptr& ptr_hid_api_briage);
 
         /**
         * @brief create singleton instance of clibhid class.(device manager)

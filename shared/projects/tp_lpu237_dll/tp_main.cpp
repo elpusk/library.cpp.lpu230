@@ -6,12 +6,15 @@
 #include <stdlib.h>
 #include <string>
 #include <set>
+#include <list>
 #include <iostream>
 #include <vector>
 
 #include "tp_main.h"
 
 static std::set<std::wstring> _get_command_line_parameters(int argc, char* argv[]);
+static std::list<std::wstring> _get_command_line_parameters_by_list(int argc, char* argv[]);
+
 static std::wstring _get_unicode_from_mcsc(const std::string& s_mcsc);
 
 std::set<std::wstring> _get_command_line_parameters(int argc, char* argv[])
@@ -26,6 +29,20 @@ std::set<std::wstring> _get_command_line_parameters(int argc, char* argv[])
 		}//end for
 	} while (false);
 	return set_parameters;
+}
+
+std::list<std::wstring> _get_command_line_parameters_by_list(int argc, char* argv[])
+{
+	std::list<std::wstring> list_parameters;
+
+	do {
+		for (int i = 0; i < argc; i++) {
+			if (argv[i]) {
+				list_parameters.push_back(_get_unicode_from_mcsc(argv[i]));
+			}
+		}//end for
+	} while (false);
+	return list_parameters;
 }
 
 static std::wstring _get_unicode_from_mcsc(const std::string& s_mcsc)
@@ -79,6 +96,7 @@ int main(int argc, char* argv[])
 	do {
 		//get command line parameters 
 		std::set<std::wstring> set_parameters(_get_command_line_parameters(argc, argv));
+		std::list<std::wstring> list_parameters(_get_command_line_parameters_by_list(argc, argv));
 
 		if (set_parameters.size() < 2) {
 			b_help = true;
@@ -103,6 +121,11 @@ int main(int argc, char* argv[])
 			}
 			// default thread safty code style
 			n_result = main_lpu237_dll_threadsafty(set_parameters);
+			continue;
+		}
+		if (set_parameters.find(L"/fw") != std::end(set_parameters)) {
+			// firmware update test
+			n_result = main_lpu237_fw(list_parameters);
 			continue;
 		}
 

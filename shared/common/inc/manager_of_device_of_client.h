@@ -246,6 +246,24 @@ public:
 		else
 			return ptr_null_device;
 	}
+	manager_of_device_of_client<_T_SUB_DEVICE_OF_CLIENT>::type_ptr_device_of_client& get_device(const _mp::type_v_buffer& v_id)
+	{
+		static manager_of_device_of_client<_T_SUB_DEVICE_OF_CLIENT>::type_ptr_device_of_client ptr_null_device(new _T_SUB_DEVICE_OF_CLIENT());
+
+		std::lock_guard<std::mutex> lock(m_mutex_for_dev_manager);
+		//
+		typename manager_of_device_of_client<_T_SUB_DEVICE_OF_CLIENT>::_type_map_device_index_ptr_device_of_client::iterator it = std::begin(m_map_device_index_ptr_device_of_client);
+		//
+		for (; it != std::end(m_map_device_index_ptr_device_of_client); ++it) {
+			if (it->second->is_equal_to_your_device_id(v_id))
+				break;
+		}//end for
+
+		if (it != std::end(m_map_device_index_ptr_device_of_client))
+			return it->second;
+		else
+			return ptr_null_device;
+	}
 	unsigned long create_device(const std::wstring& s_path, bool b_shared_mode = false)
 	{
 		unsigned long n_device_index(i_device_of_client::const_invalied_device_index);

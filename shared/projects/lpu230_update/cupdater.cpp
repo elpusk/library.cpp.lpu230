@@ -1506,6 +1506,7 @@ void cupdater::_updates_thread_function()
 		//
 		if (pair_bout_bin.second) {
 			++n_step; // 이미 plugin detected
+			std::this_thread::sleep_for(std::chrono::milliseconds(3000));// bootloader 가 plug in 된 후, 바로 통신 시도 하면, 통신 실패할 가능성이 있어서, 3초 정도 기다림.
 		}
 		else {
 			if (!_updates_sub_thread_wait_plugin_bootloader(n_step)) {
@@ -1516,7 +1517,7 @@ void cupdater::_updates_thread_function()
 		}
 
 		_request_server_stop_using_all_hidboot(); // bootloader 에서도 hidboot 사용 중지 요청. 서버에 문제 있으면 계속 진행.
-
+		std::this_thread::sleep_for(std::chrono::milliseconds(2000));// 서버에 요청 후 바로 진행하면, 서버가 아직 장비 사용 중지 처리 안 했을 가능성이 있어서, 2초 정도 기다림.
 		////////////////////////////////////////////////////
 		// 부트로더 설정 실시.
 		if (!_updates_sub_thread_setup_bootloader(n_step)) {
@@ -1892,6 +1893,7 @@ bool cupdater::_updates_sub_thread_wait_plugin_bootloader(int& n_step)
 			sh.set_bootloader_path(it_in->get_path_by_string());
 			b_wait = false;
 			b_result = true; // plug in 검출.
+			std::this_thread::sleep_for(std::chrono::milliseconds(1000));// bootloader 가 plug in 된 후, 바로 통신 시도 하면, 통신 실패할 가능성이 있어서, 3초 정도 기다림.
 			continue;
 		}
 
@@ -1950,6 +1952,7 @@ bool cupdater::_updates_sub_thread_setup_bootloader(int& n_step)
 	else {
 		//
 		_push_message(n_step, true,"setup bootloader.");
+		std::this_thread::sleep_for(std::chrono::milliseconds(500));
 	}
 
 	return b_result;
@@ -1968,6 +1971,7 @@ bool cupdater::_updates_sub_thread_erase_sector(int& n_step)
 	do {
 		std::string s_error;
 
+		std::this_thread::sleep_for(std::chrono::milliseconds(5));
 		// 이미 fw 크기에 맞게 erase_sec_index 가 설정되어 있음.
 		auto v_sec_index = sh.get_erase_sec_index();
 
@@ -2201,6 +2205,7 @@ std::pair<bool, _mp::clibhid_dev_info> cupdater::_updates_sub_thread_wait_plugin
 			dev_plug_in = *it_in;
 			b_wait = false;
 			b_result = true; // lpu237 plug in 검출.
+			std::this_thread::sleep_for(std::chrono::milliseconds(1000));// lpu237 가 plug in 된 후, 바로 통신 시도 하면, 통신 실패할 가능성이 있어서, 3초 정도 기다림.
 			continue;
 		}
 		it_in = _mp::clibhid_dev_info::find(set_i, _mp::_elpusk::const_usb_vid, _mp::_elpusk::_lpu238::const_usb_pid);
@@ -2208,6 +2213,7 @@ std::pair<bool, _mp::clibhid_dev_info> cupdater::_updates_sub_thread_wait_plugin
 			dev_plug_in = *it_in;
 			b_wait = false;
 			b_result = true; // lpu238 plug in 검출.
+			std::this_thread::sleep_for(std::chrono::milliseconds(000));// lpu238 가 plug in 된 후, 바로 통신 시도 하면, 통신 실패할 가능성이 있어서, 3초 정도 기다림.
 			continue;
 		}
 
@@ -2273,6 +2279,7 @@ bool cupdater::_updates_sub_thread_recover_system_param(int& n_step, const _mp::
 			b_first = false;
 			if (b_result) {
 				_push_message(n_step,true, "recovering system parameters");
+				std::this_thread::sleep_for(std::chrono::milliseconds(250));//
 			}
 			else {
 				_push_message(n_step, false,"recovering system parameters");

@@ -486,10 +486,7 @@ int _vhid_api_briage::api_read(int n_map_index, unsigned char* data, size_t leng
             m_p_clog->log_fmt(L"[E] %ls : n_result = %d.\n", __WFUNCTION__, n_result);
 #ifdef _WIN32
 #ifdef _DEBUG
-        ATLTRACE(L"0x%08X(%s)-ERROR-RX (n_result) = (%d)\n",
-            n_map_index,
-            _vhid_info::get_type_wstring_from_compositive_map_index(n_map_index).c_str(),
-            n_result);
+        ATLTRACE(L"0x%08X-ERROR-RX (n_result) = (%d)\n", n_map_index, n_result);
 #endif
 #endif
     }
@@ -617,37 +614,7 @@ void _vhid_api_briage::_q_worker::_worker(_vhid_api_briage* p_api_briage)
             if (!b_exsit_data) {
                 continue;
             }
-/*
-#ifdef _WIN32
-#ifdef _DEBUG
-            if (ptr_list) {
-                std::wstring s;
 
-                s = L"POP REQ = [";
-                for (auto ptr_d : *ptr_list) {
-                    if( !ptr_d){
-                        continue;
-                    }
-                    auto ws_type = _vhid_info::get_type_wstring_from_compositive_map_index( ptr_d->get_map_index() );
-                    if (ws_type.empty()) {
-                        s += L"#hid";
-                    }
-                    else {
-                        s += ws_type;
-                    }
-                    s += L".";
-                    
-                }//end for
-
-                s += L"]\n";
-                if(b_canceled)
-                    ATLTRACE(L"CANCEL + %s",s.c_str());
-                else
-                    ATLTRACE(L"%s", s.c_str());
-            }
-#endif
-#endif
-*/
             if (b_canceled) {
                 b_result = _process_cancel(ptr_list, p_api_briage);
             }
@@ -1125,6 +1092,7 @@ void _vhid_api_briage::_q_worker::_save_rx_to_msr_or_ibutton_buffer_in_single_or
         }
 
 #if defined(_WIN32) && defined(_DEBUG)
+        /*
         if (ptr_req) {
             ATLTRACE(L" MSR [0x%08X] : pushed rx.(q size = %u)\n", ptr_req->get_map_index(), m_q_result_msr.size() + 1);
             if (ptr_v_rx) {
@@ -1137,6 +1105,7 @@ void _vhid_api_briage::_q_worker::_save_rx_to_msr_or_ibutton_buffer_in_single_or
         else {
             ATLTRACE(L" MSR [none] : pushed rx.(q size = %u)\n", m_q_result_msr.size() + 1);
         }
+        */
 #endif
         m_q_result_msr.push_back(std::make_pair(n_result, ptr_v_rx));
 
@@ -1195,30 +1164,33 @@ int _vhid_api_briage::_q_worker::_rx(_mp::type_v_buffer& v_rx, _hid_api_briage* 
                 if (it == std::end(v_rx)) {
                     std::fill(v_rx.begin(), v_rx.begin() + n_result, 0); // reset for re-read
                     n_offset = n_result = 0;
-
+/*
 #if defined(_WIN32) && defined(_DEBUG)
                     ATLTRACE(L" ++ ignored zeros in-report\n");
 #endif
+*/
                 }
                 else {
-                    //
+                    /*
                     if (p_api_briage->get_clog())
                         p_api_briage->get_clog()->log_fmt_in_debug_mode(L"[D%d] RX-OK : (n_offset, n_read)=(%d,%d,%u).\n", n_loop, n_offset, n_result, v_rx.size());
+                    */
                     break; // read complete
                 }
             }
             else {
-                //
+                /*
                 if (p_api_briage->get_clog())
                     p_api_briage->get_clog()->log_fmt_in_debug_mode(L"[D%d] RX-OK : (n_offset, n_read)=(%d,%d,%u).\n", n_loop, n_offset, n_result, v_rx.size());
+                */
                 break; // read complete
             }
         }
         else {
-            //
+            /*
             if (p_api_briage->get_clog())
                 p_api_briage->get_clog()->log_fmt_in_debug_mode(L"[D%d] RX : (n_offset, n_read)=(%d,%d,%u).\n", n_loop, n_offset, n_result, v_rx.size());
-
+            */
             n_offset = n_offset + n_result;
             n_len = n_len - n_result;
         }
@@ -1424,8 +1396,12 @@ _vhid_api_briage::_q_item& _vhid_api_briage::_q_item::set_result(int n_result, c
 #ifdef _WIN32
 #ifdef _DEBUG
     if (n_result <0 ) {
-        ATLTRACE(L"error set_result - %s.\n", s_debug_msg.c_str());
-        //std::wcout << L"error set_result - " << s_debug_msg << std::endl;
+        if(!s_debug_msg.empty()) {
+            ATLTRACE(L"error set_result - %s.\n", s_debug_msg.c_str());
+		}
+        else {
+            ATLTRACE(L"error set_result - emptys string.\n");
+        }
     }
 #endif
 #endif

@@ -24,6 +24,40 @@ lpu237_of_client::lpu237_of_client(const lpu237_of_client& src) : i_device_of_cl
 {
 }
 
+_mp::type_v_buffer lpu237_of_client::get_name() const
+{
+    return m_v_name;
+}
+
+std::string lpu237_of_client::get_name_by_string() const
+{
+    std::string s;
+    for (auto item : m_v_name) {
+        if (item == ' ' || item == 0) {
+            break;
+        }
+        s.push_back((char)item);
+    }//end for
+    return s;
+}
+
+std::wstring lpu237_of_client::get_name_by_wstring() const
+{
+    std::wstring s;
+    for (auto item : m_v_name) {
+        if (item == ' ' || item == 0) {
+            break;
+        }
+        s.push_back((wchar_t)item);
+    }//end for
+    return s;
+}
+
+cprotocol_lpu237::type_version lpu237_of_client::get_system_version() const
+{
+    return m_system_version;
+}
+
 bool lpu237_of_client::cmd_enter_config()
 {
     std::lock_guard<std::mutex> lock(m_mutex);
@@ -260,6 +294,99 @@ int lpu237_of_client::_cmd_async_waits_rx(_mp::casync_parameter_result::type_cal
         }
     } while (false);
     return n_result_index;
+}
+
+void lpu237_of_client::_set_name(const _mp::type_v_buffer& v_name)
+{
+    m_v_name = v_name;
+}
+
+void lpu237_of_client::_set_system_version(const cprotocol_lpu237::type_version& version)
+{
+	m_system_version = version;
+}
+
+bool lpu237_of_client::cmd_get_system_information_with_name()
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    bool b_result(false);
+
+    do {
+        if (is_null_device()) {
+            _mp::clog::get_instance().log_fmt_in_debug_mode(L" : DEB : %ls : error : is_null_device().\n", __WFUNCTION__);
+            continue;
+        }
+
+        if (!_mp::casync_result_manager::get_instance(get_class_name()).empty_queue(m_n_device_index)) {
+            //cancel operation.
+            if (!_reset()) {
+                _mp::clog::get_instance().log_fmt_in_debug_mode(L" : DEB : %ls : error : _reset().\n", __WFUNCTION__);
+                continue;
+            }
+        }
+        if (!m_protocol.generate_get_system_information_with_name()) {
+            _mp::clog::get_instance().log_fmt_in_debug_mode(L" : DEB : %ls : error : generate_x().\n", __WFUNCTION__);
+            continue;
+        }
+
+        _mp::type_v_buffer v_tx(0);
+        _mp::type_v_buffer v_rx(0);
+        size_t n_remainder_transaction(0);
+        int n_result_index(-1);
+
+        do {
+			v_tx.resize(0); v_rx.resize(0);
+            n_remainder_transaction = m_protocol.get_tx_transaction(v_tx);
+            if (n_remainder_transaction == 0) {
+                b_result = true;
+				continue;//complete all transaction.
+            }
+            if (v_tx.size() == 0) {
+                _mp::clog::get_instance().log_fmt_in_debug_mode(L" : DEB : %ls : error : v_tx is empty().\n", __WFUNCTION__);
+                break;
+            }
+            n_result_index = _create_async_result_for_transaction(nullptr, nullptr, NULL, 0);
+            if (n_result_index < 0) {
+                _mp::clog::get_instance().log_fmt_in_debug_mode(L" : DEB : %ls : error : _create_async_result_for_transaction().\n", __WFUNCTION__);
+                break;
+            }
+            if (!capi_client::get_instance().transmit(m_n_client_index, m_n_device_index, 0, 0, v_tx)) {
+                _mp::clog::get_instance().log_fmt_in_debug_mode(L" : DEB : %ls : error : transmit().\n", __WFUNCTION__);
+                break;
+            }
+            _mp::casync_parameter_result::type_ptr_ct_async_parameter_result& ptr_async_parameter_result = _mp::casync_result_manager::get_instance(get_class_name()).get_async_parameter_result(m_n_device_index, n_result_index);
+            if (!ptr_async_parameter_result->waits(lpu237_of_client::_const_default_mmsec_timeout_of_response)) {
+                _mp::clog::get_instance().log_fmt_in_debug_mode(L" : DEB : %ls : error : waits().\n", __WFUNCTION__);
+                continue;
+            }
+            if (!ptr_async_parameter_result->get_result(v_rx)) {
+                _mp::clog::get_instance().log_fmt_in_debug_mode(L" : DEB : %ls : error : get_result().\n", __WFUNCTION__);
+                continue;
+            }
+            if (!m_protocol.set_rx_transaction(v_rx)) {
+                _mp::clog::get_instance().log_fmt_in_debug_mode(L" : DEB : %ls : error : set_rx_transaction().\n", __WFUNCTION__);
+                _mp::clog::get_instance().log_data_in_debug_mode(v_rx, L"v_rx = ", L"\n");
+                continue;
+            }
+            if (!m_protocol.set_from_rx()) {
+                _mp::clog::get_instance().log_fmt_in_debug_mode(L" : DEB : %ls : error : set_from_rx().\n", __WFUNCTION__);
+                continue;
+            }
+
+        } while (n_remainder_transaction > 0);
+
+        if (b_result) {
+            _set_name(m_protocol.get_name());
+			_set_system_version(m_protocol.get_system_version());
+        }
+
+        m_protocol.clear_transaction();
+        _mp::casync_result_manager::get_instance(get_class_name()).remove_async_result(m_n_device_index, n_result_index);
+
+    }while(false);
+
+
+    return b_result;
 }
 
 bool lpu237_of_client::cmd_get_id()

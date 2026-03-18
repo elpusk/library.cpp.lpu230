@@ -46,6 +46,12 @@ public:
 	std::pair<bool,std::wstring> can_be_start_firmware_update(bool b_recover_mode = false) const;
 
 	/**
+	* @brief check file path parameter existence.
+	* @return true - exist file path parameter.
+	*/
+	bool is_exist_file_key() const;
+
+	/**
 	* @brief set parameter.( insert or relpace )
 	*/
 	void set(const std::wstring& s_key, const std::wstring& s_value);
@@ -59,8 +65,11 @@ public:
 
 	/**
 	* @brief insert file path parameter(key).
+	* @param s_value_file_full_abs_path - file full abs path
+	*   
+	*   if s_value_file_full_abs_path is empty, try set automatically.
 	*/
-	bool insert_file(const std::wstring& s_value_file_full_abs_path);
+	bool insert_file(const std::wstring& s_value_file_full_abs_path = std::wstring());
 
 	/**
 	* @brief insert device path parameter(key).
@@ -123,10 +132,11 @@ private:
 	/**
 	* @brief delete firmware file which is created for updating temporarily.
 	* @brief this function is guard by mutex.
+	* @param b_force_delete - true : even if file key is set by user, this file will be deleted.
 	* @param s_debug_msg - debug message
 	* @return true : delete success.
 	*/
-	bool _delete_firmware(const std::wstring& s_debug_msg);
+	bool _delete_firmware(bool b_force_delete, const std::wstring& s_debug_msg);
 
 private:
 	bool m_b_used;
@@ -141,6 +151,10 @@ private:
 	_mp::cio_packet::type_ptr m_ptr_rsp;//setting in "start" req.
 
 	std::shared_ptr<cprocess_watcher> m_ptr_runner;//setting in "start" req.
+
+	// file key is set automatically.
+	// if file key is set automatically, this file remove by _delete_firmware()
+	bool m_b_file_key_is_set_automatically;
 
 private:
 	cupdater_param() = delete;

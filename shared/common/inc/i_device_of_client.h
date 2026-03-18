@@ -106,6 +106,25 @@ public:
 		return false;
 	}
 
+	unsigned long get_session_number()
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+		return capi_client::get_instance().get_session_number(m_n_client_index);
+	}
+
+	bool bootloader_operation(const std::wstring& s_run_type, const std::wstring& s_key, const std::wstring& s_value)
+	{
+		bool b_result(false);
+		do {
+			std::lock_guard<std::mutex> lock(m_mutex);
+			if (m_n_client_index == _mp::cclient::UNDEFINED_INDEX)
+				continue;
+			if (m_n_device_index == const_invalied_device_index)
+				continue;
+			b_result = _bootloader_operation(s_run_type,s_key, s_value);
+		} while (false);
+		return b_result;
+	}
 	// getter
 	unsigned long get_device_index() const
 	{
@@ -241,6 +260,33 @@ protected:
 			//
 			m_n_device_index = const_invalied_device_index;
 			remove_async_result_for_transaction();
+			b_result = true;
+		} while (false);
+		remove_async_result_for_transaction(n_result_index);
+		return b_result;
+	}
+
+	bool _bootloader_operation(const std::wstring& s_run_type,const std::wstring& s_key,const std::wstring& s_value)
+	{
+		bool b_result(false);
+		unsigned long n_device_index(const_invalied_device_index);
+		int n_result_index(_mp::casync_result_manager::const_invalied_result_index);
+		do {
+			if (is_null_device())
+				continue;
+			//
+			n_result_index = _create_async_result_for_transaction();
+			if (n_result_index < 0)
+				continue;
+			if (!capi_client::get_instance().bootloader_operation(m_n_client_index, m_n_device_index, s_run_type, s_key,s_value)) {
+				continue;
+			}
+			_mp::casync_parameter_result::type_ptr_ct_async_parameter_result& ptr_async_parameter_result = get_async_parameter_result_for_transaction(n_result_index);
+			if (!ptr_async_parameter_result->waits())
+				continue;
+			if (!ptr_async_parameter_result->get_result())
+				continue;
+			remove_async_result_for_transaction(n_result_index);
 			b_result = true;
 		} while (false);
 		remove_async_result_for_transaction(n_result_index);

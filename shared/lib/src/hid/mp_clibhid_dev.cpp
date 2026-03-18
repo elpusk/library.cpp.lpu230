@@ -559,7 +559,7 @@ namespace _mp {
             if (ptr_req->get_request_type() == cqitem_dev::req_tx_rx) {
                 b_req_is_tx_rx_pair = true;
             }
-
+            
             _clear_rx_q_with_lock();//flush rx q
 
             if (!_write_with_lock(ptr_req->get_tx(), b_req_is_tx_rx_pair)) {//ERROR TX
@@ -790,8 +790,14 @@ namespace _mp {
                     // warning
                     b_need_deep_recover = true;//this case - recover is impossible!
 
-                    std::wstring s_error(m_p_hid_api_briage->api_error(m_n_dev));
-                    _mp::clog::get_instance().log_fmt_in_debug_mode(L"[D] rx return = %d. - %ls.\n", n_result, s_error.c_str());
+                    auto pe = m_p_hid_api_briage->api_error(m_n_dev);
+                    if (pe) {
+                        std::wstring s_error(pe);
+                        _mp::clog::get_instance().log_fmt_in_debug_mode(L"[D] rx return = %d. - %ls.\n", n_result, s_error.c_str());
+                    }
+                    else {
+                        _mp::clog::get_instance().log_fmt_in_debug_mode(L"[D] rx return = %d. - without error message\n", n_result);
+					}
 
                     m_q_rx_ptr_v.push(_mp::type_ptr_v_buffer());//indicate error of device usb io.
                     continue;

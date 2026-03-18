@@ -479,6 +479,11 @@ public:
 		the_size_of_uid = 4 * 4
 	};
 	enum {
+		the_size_of_name = 16, // 16 byte from fw name. callisto, ganymede, himalia, europa, and so on.
+		the_size_of_version = 4, // 4 byte from fw version. major(1 byte), minor(1 byte), fix(1 byte), build(1 byte).
+	};
+
+	enum {
 		the_size_of_system_blank = 4,
 		the_size_of_host_packet_header =3,	//the sum of size(cCmd, cSub ,cLen)
 		the_size_of_out_report_except_id = 64,
@@ -1520,6 +1525,18 @@ public:
 				break;
 			}
 			s.push_back((char)item);
+		}//end for
+		return s;
+	}
+
+	std::wstring get_name_by_wstring() const
+	{
+		std::wstring s;
+		for (auto item : m_v_name) {
+			if (item == ' ' || item == 0) {
+				break;
+			}
+			s.push_back((wchar_t)item);
 		}//end for
 		return s;
 	}

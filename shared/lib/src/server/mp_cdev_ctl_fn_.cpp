@@ -1134,15 +1134,15 @@ namespace _mp {
 					ptr_boot_param->set_log_obj(m_p_ctl_fun_log);
 					ptr_boot_param->set_used();// 다음 사용 전에 재할당 요망.
 
-					std::wstring s_rom_file = ccoffee_path::get_path_of_virtual_drive_root_with_backslash();
-					s_rom_file += ccoffee_path::get_virtual_path_of_temp_rom_file_of_session(ptr_req_new->get_session_number());
-					if(!_mp::cfile::is_exist_file(s_rom_file)){
-						ptr_result->after_processing_set_rsp_with_error_complete(cio_packet::error_reason_file_none_file);
-						continue;
-					}
-
 					ptr_boot_param->insert_run_by_cf2_mode();
-					ptr_boot_param->insert_file(s_rom_file);
+
+					if (!ptr_boot_param->is_exist_file_key()) {
+						// file option 이 주어지 않은 경우, 임시 rom file 을 사용하도록 함. session 당 1개씩 생성되고, bootloader start 명령이 들어올 때 존재 여부 확인.
+						if (!ptr_boot_param->insert_file()) {
+							ptr_result->after_processing_set_rsp_with_error_complete(cio_packet::error_reason_file_none_file);
+							continue;
+						}
+					}
 
 					ptr_boot_param->insert_device(m_s_dev_path);
 

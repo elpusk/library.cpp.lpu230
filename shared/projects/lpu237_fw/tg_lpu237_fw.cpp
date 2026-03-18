@@ -1,0 +1,939 @@
+#include <websocket/mp_win_nt.h>
+
+#include <iostream>
+#include <algorithm>
+#include <tuple>
+#include <type_traits>
+#include <list>
+#include <vector>
+#include <map>
+#include <memory>
+#include <iterator>
+#include <string>
+#include <atomic>
+#include <thread>
+#include <mutex>
+#include <filesystem>
+
+#include <mp_clog.h>
+#include <mp_cconvert.h>
+#include <cprotocol_lpu237.h>
+#include <tg_lpu237_fw.h>
+#include <mp_coffee.h>
+#include <mp_coffee_path.h>
+
+#include <manager_of_device_of_client.h>
+#include <ccb_client.h>
+#include <lpu237_of_client.h>
+#include <cdef.h>
+#include <cdll_ini.h>
+#include <cmap_user_cb.h>
+#include <tg_rom.h>
+
+#define	LPU237_VID		0x134b
+#define	LPU237_PID		0x0206
+#define	LPU237_INF		1
+
+#ifndef _WIN32
+//linux only
+static void _so_init(void) __attribute__((constructor));
+static void _so_fini(void) __attribute__((destructor));
+//when calls dlopen().
+void _so_init(void)
+{
+	//printf("Shared library loaded\n");
+	// NOT executed
+}
+
+//when calls dlclose().
+void _so_fini(void)
+{
+	//printf("Shared library unloaded\n");
+	// NOT executed
+}
+#endif // _WIN32
+
+/////////////////////////////////////////////////////////////////////////
+// global variable
+/////////////////////////////////////////////////////////////////////////
+static cmap_user_cb g_map_user_cb; //global user callback map
+
+/////////////////////////////////////////////////////////////////////////
+// local class
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+// local function prototype
+/////////////////////////////////////////////////////////////////////////
+static unsigned long _fw_msr_update_ex_w(const unsigned char* sId,
+	unsigned long dwWaitTime
+	, type_lpu237_fw_callback cbUpdate
+	, void* pUser
+	, HWND hWnd
+	, UINT uMsg
+	, const wchar_t* sRomFileName
+	, unsigned long dwFwIndex
+);
+
+
+/**
+* @brief Callback function for _fw_msr_update_ex_w().
+* 
+* the user defined callback function will be called by this function.
+*/
+static void __stdcall _cb_fw(void*p_user);
+
+/////////////////////////////////////////////////////////////////////////
+// local function body
+/////////////////////////////////////////////////////////////////////////
+void __stdcall _cb_fw(void* p_user)
+{
+	long n_item_index = (long)p_user; // item index of callback function in g_map_user_cb
+	bool b_get_param(false);
+	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
+
+	do {
+		int n_result_index(-1);
+		_mp::type_v_buffer v_dev_id(0);
+		type_lpu237_fw_callback p_fun(nullptr);
+		void* p_para(nullptr);
+		HWND h_win(nullptr);
+		UINT n_msg(0);
+		std::wstring s_rom_file_name;
+		unsigned long dw_fw_index(-1);
+
+		if (!g_map_user_cb.get_callback(
+			n_item_index
+			, false // 계속 콜백 가능성이	있기 때문에 콜백 정보를 얻은 후에도 콜백 정보를 유지한다. (예를 들어, 콜백이 여러번 호출되는 경우)
+			, n_result_index
+			, v_dev_id
+			, p_fun
+			, p_para
+			, h_win
+			, n_msg
+			, s_rom_file_name
+			, dw_fw_index
+		)) {
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : get_callback fail for item index %d.\n", __WFUNCTION__, n_item_index);
+			continue;
+		}
+		//
+		
+		if (!ptr_manager_of_device_of_client) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : none manager_of_device_of_client.\n", __WFUNCTION__);
+			continue;
+		}
+		_mp::casync_parameter_result::type_ptr_ct_async_parameter_result& ptr_result = ptr_manager_of_device_of_client->get_async_parameter_result_for_manager_from_all_device(n_result_index);
+		if (!ptr_result) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : INVALID_HANDLE_VALUE\n", __WFUNCTION__);
+			continue;
+		}
+
+		unsigned long dw_client_result(LPU237_FW_RESULT_ERROR);
+		_mp::type_v_buffer v_out_rx(0);
+
+		if (!ptr_result->get_result(v_out_rx)) {
+			ptr_result->get_result(dw_client_result);
+			//dw_client_result = LPU237_DLL_RESULT_ERROR;
+			ptr_manager_of_device_of_client->remove_async_result_for_manager(n_result_index);
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : error\n", __WFUNCTION__);
+			continue;
+		}
+		ptr_result->get_result(dw_client_result);
+		ptr_manager_of_device_of_client->remove_async_result_for_manager(n_result_index);
+
+		if (p_fun) {
+			unsigned long dw_w_param(LPU237_FW_WPARAM_ERROR);
+
+			switch (dw_client_result) {
+			case LPU237_FW_RESULT_SUCCESS:
+				dw_w_param = LPU237_FW_WPARAM_SUCCESS;
+				break;
+			case LPU237_FW_RESULT_ERROR:
+				dw_w_param = LPU237_FW_WPARAM_ERROR;
+				break;
+			case LPU237_FW_RESULT_CANCEL:
+				dw_w_param = LPU237_FW_WPARAM_SUCCESS;
+				break;
+			default:
+				dw_client_result = LPU237_FW_RESULT_ERROR;
+				dw_w_param = LPU237_FW_WPARAM_ERROR;
+				break;
+			}//end switch
+			// 1'st - user defined data.
+			// 2'nd - current processing result : LPU237_FW_RESULT_x
+			// 3'th - LPU237_FW_WPARAM_x.
+			
+			p_fun(p_para, dw_client_result, dw_w_param);
+		}
+
+		_mp::clog::get_instance().log_fmt(L" : INF : %ls : callbacked for item index %d.\n", __WFUNCTION__, n_item_index);
+
+		b_get_param = true;
+
+	} while (false);
+
+	if (!b_get_param) {// 파라메터 얻기를 실패하면 콜백을 제거한다. (예를 들어, 콜백이 이미 제거된 경우)
+		g_map_user_cb.remove_callback(n_item_index); // remove invalid callback
+	}
+}
+
+unsigned long _fw_msr_update_ex_w(
+	const unsigned char* sId,
+	unsigned long dwWaitTime
+	, type_lpu237_fw_callback cbUpdate
+	, void* pUser
+	, HWND hWnd
+	, UINT uMsg
+	, const wchar_t* sRomFileName
+	, unsigned long dwFwIndex
+)
+{
+	unsigned long dw_result(ccb_client::const_dll_result_error);
+	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
+
+	do {
+		if (sId == NULL) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : ID is NULL.\n", __WFUNCTION__);
+			continue;
+		}
+		std::error_code ec;
+		std::filesystem::path abs_path_rom_file = std::filesystem::absolute(sRomFileName, ec);
+		if (ec) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : ERR change abs path. - %ls.\n", __WFUNCTION__, sRomFileName);
+			continue;
+		}
+		if (!std::filesystem::exists(abs_path_rom_file) || !std::filesystem::is_regular_file(abs_path_rom_file)) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : ROM file not found - %ls.\n", __WFUNCTION__, sRomFileName);
+			continue;
+		}
+
+		if (!ptr_manager_of_device_of_client) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : none manager_of_device_of_client.\n", __WFUNCTION__);
+			continue;
+		}
+		
+		_mp::type_v_buffer v_id(0);
+		std::copy(&sId[0], &sId[cprotocol_lpu237::the_size_of_uid], std::back_inserter(v_id));
+
+		lpu237_of_client::type_ptr_lpu237_of_client& ptr_device = ptr_manager_of_device_of_client->get_device(v_id);
+		if (ptr_device->is_null_device()) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : not found device is\n", __WFUNCTION__);
+			continue;
+		}
+		if (!ptr_device->reset()) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : reset.\n", __WFUNCTION__);
+			continue;
+		}
+
+		std::wstring s_name = ptr_device->get_name_by_wstring();
+		if (!ptr_device->bootloader_operation(L"set",L"model_name", s_name)) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : error bootloader_operation for model_name.\n", __WFUNCTION__);
+			continue;
+		}
+		cprotocol_lpu237::type_version version = ptr_device->get_system_version();
+		std::wstring s_version = version.get_by_string();
+		if (!ptr_device->bootloader_operation(L"set", L"system_version", s_version)) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : error bootloader_operation for system_version.\n", __WFUNCTION__);
+			continue;
+		}
+		if (!ptr_device->bootloader_operation(L"set", L"_cf_bl_progress_", L"true")) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : error bootloader_operation for _cf_bl_progress_.\n", __WFUNCTION__);
+			continue;
+		}
+		if (!ptr_device->bootloader_operation(L"set", L"_cf_bl_window_", L"true")) {// for debugging - true, must be false in release 
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : error bootloader_operation for _cf_bl_window_.\n", __WFUNCTION__);
+			continue;
+		}
+		
+		if (!ptr_device->bootloader_operation(L"set", L"file", abs_path_rom_file.wstring())) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : error bootloader_operation for file.\n", __WFUNCTION__);
+			continue;
+		}
+		
+
+		if (dwFwIndex != -1) {
+			if (!ptr_device->bootloader_operation(L"set", L"firmware_index", std::to_wstring(dwFwIndex))) {
+				_mp::clog::get_instance().log_fmt(L" : RET : %ls : %u : error bootloader_operation for firmware_index.\n", __WFUNCTION__, dwFwIndex);
+				continue;
+			}
+		}
+
+
+		long n_item_index(-1);
+		n_item_index = g_map_user_cb.add_callback(
+			-1
+			, v_id
+			, cbUpdate
+			, pUser
+			, hWnd
+			, uMsg
+			, sRomFileName
+			, dwFwIndex
+		);
+		if (n_item_index < 0) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : [critical error]add_callback error.\n", __WFUNCTION__);
+			continue;
+		}
+
+		if (!ptr_device->bootloader_operation(L"start", L"", L"")) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : error bootloader_operation for starting.\n", __WFUNCTION__);
+			continue;
+		}
+		dw_result = ccb_client::const_dll_result_success;
+		/*
+		int n_result_index = ptr_device->cmd_async_waits_data(_cb_fw, (void*)n_item_index);
+		if (n_result_index < 0) {
+			g_map_user_cb.remove_callback(n_item_index);
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : error cmd_async_waits_ms_card.\n", __WFUNCTION__);
+			continue;
+		}
+
+		g_map_user_cb.change_result_index(n_item_index, n_result_index);
+
+		dw_result = (unsigned long)n_item_index;
+		*/
+	} while (false);
+
+	if (dw_result == ccb_client::const_dll_result_error) {
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : error - %u.\n", __WFUNCTION__, dw_result);
+	}
+	else {
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : success - %u.\n", __WFUNCTION__, dw_result);
+	}
+	return dw_result;
+}
+
+/////////////////////////////////////////////////////////////////////////
+// exported function body
+/////////////////////////////////////////////////////////////////////////
+unsigned long _CALLTYPE_ LPU237_fw_on()
+{
+	cdll_ini& cini(cdll_ini::get_instance());
+
+#ifndef _WIN32
+	std::wstring s_log_root_folder_except_backslash = _mp::ccoffee_path::get_path_of_coffee_logs_root_folder_except_backslash();
+	std::string s_pipe_name_of_trace(_mp::_coffee::CONST_S_COFFEE_MGMT_TRACE_PIPE_NAME);
+
+	bool b_ini = cini.load_definition_file(_mp::ccoffee_path::get_path_of_coffee_lpu237_fw_ini_file());
+
+	//setup tracing system
+	_mp::clog& log(_mp::clog::get_instance());
+	log.enable_trace(s_pipe_name_of_trace, false); //enable trace by client mode
+
+	//setup logging system
+	log.config(s_log_root_folder_except_backslash, 6, std::wstring(L"coffee_manager"), std::wstring(L"tg_lpu237_fw"), std::wstring(L"tg_lpu237_fw"));
+	log.remove_log_files_older_then_now_day(cini.get_log_days_to_keep());
+	log.enable(cini.get_log_enable());
+
+	log.log_fmt(L"[I] START tg_lpu237_fw so or dll.\n");
+	log.log_fmt(L"%ls", cini.get_string().c_str());
+#endif
+	unsigned long dwResult(ccb_client::const_dll_result_error);
+	_mp::clog::get_instance().log_fmt(L" : CAL : %ls.\n", __WFUNCTION__);
+	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
+
+	do {
+		if (!ptr_manager_of_device_of_client) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : none manager_of_device_of_client.\n", __WFUNCTION__);
+			continue;
+		}
+
+		if (!ptr_manager_of_device_of_client->connect(
+			ccb_client::get_callbacks()
+			, cini.get_msec_timeout_ws_client_wait_for_connect_api()
+			, cini.get_msec_timeout_ws_client_wait_for_ssl_handshake_complete()
+			, cini.get_msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_wss()
+			, cini.get_msec_timeout_ws_client_wait_for_idle_in_wss()
+			, cini.get_msec_timeout_ws_client_wait_for_async_connect_complete_in_wss()
+		)) {
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : manager_of_device_of_client<lpu237_of_client>::get_instance().connect().\n", __WFUNCTION__);
+			continue;
+		}
+		dwResult = ccb_client::const_dll_result_success;
+	} while (false);
+
+	_mp::clog::get_instance().log_fmt(L" : RET : %ls.\n", __WFUNCTION__);
+	return dwResult;
+}
+
+unsigned long _CALLTYPE_ LPU237_fw_off()
+{
+	unsigned long dwResult(ccb_client::const_dll_result_error);
+	_mp::clog::get_instance().log_fmt(L" : CAL : %ls.\n", __WFUNCTION__);
+	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
+
+	do {
+		if (!ptr_manager_of_device_of_client) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : none manager_of_device_of_client.\n", __WFUNCTION__);
+			continue;
+		}
+
+		if (!ptr_manager_of_device_of_client->disconnect()) {
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : manager_of_device_of_client<lpu237_of_client>::get_instance().disconnect().\n", __WFUNCTION__);
+			continue;
+		}
+
+		dwResult = ccb_client::const_dll_result_success;
+	} while (false);
+
+	manager_of_device_of_client<lpu237_of_client>::get_instance(true);//remove manager
+	_mp::clog::get_instance().log_fmt(L" : RET : %ls.\n", __WFUNCTION__);
+	return dwResult;
+}
+
+
+
+//
+// ssDevPaths == NULL : return need size of ssDevPaths. [ unit : byte ]
+// ssDevPaths != NULL : return the number of device path.
+// wchar_t* ssDevPaths : [in/out] Multi string of devices
+unsigned long _CALLTYPE_ LPU237_fw_get_list_w(wchar_t* ssDevPaths)
+{
+	_mp::clog::get_instance().log_fmt(L" : CAL : LPU237_fw_get_list_w\n");
+	const std::wstring s_filter(L"hid#vid_134b&pid_0206&mi_01");
+	//_mp::type_list_wstring list_filter{ L"lpu200" };
+	_mp::type_list_wstring list_dev_path;
+	unsigned long dw_dev(0);
+	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
+
+	do {
+		if (!ptr_manager_of_device_of_client) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : none manager_of_device_of_client.\n", __WFUNCTION__);
+			continue;
+		}
+
+		list_dev_path = ptr_manager_of_device_of_client->get_device_list(s_filter);
+
+		// 받은 리스트에서 특정 suffix로 끝나는 항목을 제거한다. (예를 들어, msr, ibutton, scr0, switch0 등으로 끝나는 항목을 제거한다.)
+		std::vector<std::wstring> v_suffix{ L"&msr",L"&ibutton",L"&scr0",L"&switch0" };
+		list_dev_path.remove_if([&v_suffix](const std::wstring& s) {
+			bool b_remove = false;
+
+			for (auto ssuffix : v_suffix) {
+				if (s.length() < ssuffix.length()) {
+					continue;
+				}
+				if (s.compare(s.length() - ssuffix.length(), ssuffix.length(), ssuffix) == 0) {
+					b_remove = true;
+					break;	//exit for
+				}
+			}
+			return b_remove;
+			});
+		if (list_dev_path.size() == 0) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : no device.\n", __WFUNCTION__);
+			continue;
+		}
+
+		//
+		if (ssDevPaths == NULL) {
+			size_t n = _mp::cconvert::change(NULL, list_dev_path);
+			dw_dev = (unsigned long)n;
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : device = %u bytes.\n", __WFUNCTION__, dw_dev);
+			continue;
+		}
+
+		dw_dev = (unsigned long)_mp::cconvert::change(ssDevPaths, list_dev_path);
+		for (auto item : list_dev_path) {
+			_mp::clog::get_instance().log_fmt(L" : INF : %ls : device = %ls.\n", __WFUNCTION__, item.c_str());
+		}//end for
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : device = %u strings.\n", __WFUNCTION__, dw_dev);
+	} while (0);
+
+	return dw_dev;
+}
+
+
+unsigned long _CALLTYPE_ LPU237_fw_get_list_a(char* ssDevPaths)
+{
+	if (ssDevPaths) {
+		std::vector<wchar_t> vDevPaths(2048, 0);
+		unsigned long dwResult = LPU237_fw_get_list_w(&vDevPaths[0]);
+
+		if (dwResult > 0) {
+			auto two = 0;
+			for (size_t i = 0; i < vDevPaths.size(); i++) {
+				ssDevPaths[i] = (char)vDevPaths[i];
+				if (vDevPaths[i] == NULL) {
+					two++;
+					if (two == 2)
+						break;	//exit for
+				}
+				else {
+					two = 0;
+				}
+			}//end for
+		}
+
+		return dwResult;
+	}
+	else {
+		return (LPU237_fw_get_list_w(NULL) / sizeof(wchar_t));
+	}
+}
+
+HANDLE _CALLTYPE_ LPU237_fw_open_w(const wchar_t* sDevPath)
+{
+	HANDLE h_dev(INVALID_HANDLE_VALUE);
+	unsigned long dwResult(0);
+	bool b_need_close(false);
+	unsigned long n_device_index(i_device_of_client::const_invalied_device_index);
+	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
+
+	do {
+		_mp::clog::get_instance().log_fmt(L" : CAL : %ls.\n", __WFUNCTION__);
+		_mp::clog::get_instance().log_fmt(L" : INF : %ls : %ls\n", __WFUNCTION__, sDevPath);
+
+		if (!ptr_manager_of_device_of_client) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : none manager_of_device_of_client.\n", __WFUNCTION__);
+			continue;
+		}
+
+		if (!ptr_manager_of_device_of_client->get_device(std::wstring(sDevPath))->is_null_device()) {
+			//alreay open.
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : already open\n", __WFUNCTION__);
+			continue;
+		}
+
+		n_device_index = ptr_manager_of_device_of_client->create_device(std::wstring(sDevPath), false); // exclusive open
+		if (n_device_index == i_device_of_client::const_invalied_device_index) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : error : create_device.\n", __WFUNCTION__);
+			continue;
+		}
+
+		b_need_close = true;
+		lpu237_of_client::type_ptr_lpu237_of_client& ptr_new_device = ptr_manager_of_device_of_client->get_device(n_device_index);
+		if (ptr_new_device->is_null_device()) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : error : get_device.\n", __WFUNCTION__);
+			continue;
+		}
+
+		if (!ptr_new_device->reset()) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : error : reset.\n", __WFUNCTION__);
+			continue;
+		}
+
+		if (!ptr_new_device->cmd_get_system_information_with_name()) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : error : cmd_get_system_information_with_name.\n", __WFUNCTION__);
+			continue;
+		}
+		_mp::clog::get_instance().log_fmt_in_debug_mode(L" : DEB : %ls : success : cmd_get_system_information_with_name.\n", __WFUNCTION__);
+
+		if (!ptr_new_device->cmd_get_id()) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : error : cmd_get_id.\n", __WFUNCTION__);
+			continue;
+		}
+		_mp::clog::get_instance().log_fmt_in_debug_mode(L" : DEB : %ls : success : cmd_get_id.\n", __WFUNCTION__);
+
+		b_need_close = false;
+		h_dev = (HANDLE)(ptr_new_device->get_device_index());
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : 0x%x\n", __WFUNCTION__, h_dev);
+	} while (0);
+
+	if (b_need_close) {
+		if (ptr_manager_of_device_of_client)
+			ptr_manager_of_device_of_client->remove_device(n_device_index);
+		//
+		h_dev = INVALID_HANDLE_VALUE;
+	}
+
+	return h_dev;
+}
+
+
+HANDLE _CALLTYPE_ LPU237_fw_open_a(const char* sDevPath)
+{
+	if (sDevPath) {
+		std::string dev(sDevPath);
+		std::wstring tdev;
+
+		std::for_each(std::begin(dev), std::end(dev), [&](std::string::value_type c) {
+			tdev.push_back(static_cast<std::wstring::value_type>(c));
+			});
+
+		return LPU237_fw_open_w(tdev.c_str());
+	}
+	else {
+		return LPU237_fw_open_w(NULL);
+	}
+}
+
+unsigned long _CALLTYPE_ LPU237_fw_close(HANDLE hDev)
+{
+	unsigned long dwResult(ccb_client::const_dll_result_error);
+	unsigned long n_device_index(PtrToUlong(hDev));
+	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
+
+	do {
+		_mp::clog::get_instance().log_fmt(L" : CAL : %ls : 0x%x\n", __WFUNCTION__, hDev);
+		if (!ptr_manager_of_device_of_client) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : none manager_of_device_of_client.\n", __WFUNCTION__);
+			continue;
+		}
+
+		lpu237_of_client::type_ptr_lpu237_of_client& ptr_device = ptr_manager_of_device_of_client->get_device(n_device_index);
+		if (ptr_device->is_null_device()) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : INVALID_HANDLE_VALUE\n", __WFUNCTION__);
+			continue;
+		}
+		/*
+		if (!ptr_device->cmd_leave_opos()) {
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : cmd_leave_opos\n", __WFUNCTION__);
+		}
+		*/
+		/*
+		if (!ptr_device->cmd_enter_config()) {//for redetecting decoder.
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : cmd_enter_config\n", __WFUNCTION__);
+		}
+		if (!ptr_device->cmd_leave_config()) {//for redetecting decoder.
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : cmd_leave_config\n", __WFUNCTION__);
+		}
+		*/
+		if (!ptr_manager_of_device_of_client->remove_device(n_device_index)) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : remove_device\n", __WFUNCTION__);
+			continue;
+		}
+
+		dwResult = ccb_client::const_dll_result_success;
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : success\n", __WFUNCTION__);
+	} while (0);
+
+	return dwResult;
+}
+
+unsigned long _CALLTYPE_ LPU237_fw_msr_save_setting(HANDLE hDev)
+{
+	// 과거 버전과 호환성을 위해서 남겨둔 API로, 현재는 별도의 설정이 없으므로 항상 성공을 반환한다.
+	return LPU237_FW_RESULT_SUCCESS;
+}
+
+unsigned long _CALLTYPE_ LPU237_fw_msr_recover_setting(HANDLE hDev)
+{
+	// 과거 버전과 호환성을 위해서 남겨둔 API로, 현재는 별도의 설정이 없으므로 항상 성공을 반환한다.
+	return LPU237_FW_RESULT_SUCCESS;
+}
+
+unsigned long _CALLTYPE_ LPU237_fw_msr_get_id(HANDLE hDev, unsigned char* sId)
+{
+	unsigned long dwResult(ccb_client::const_dll_result_error);
+	unsigned long n_device_index(PtrToUlong(hDev));
+	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
+
+	do {
+		_mp::clog::get_instance().log_fmt(L" : CAL : %ls : 0x%x\n", __WFUNCTION__, hDev);
+		if (!ptr_manager_of_device_of_client) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : none manager_of_device_of_client.\n", __WFUNCTION__);
+			continue;
+		}
+
+		lpu237_of_client::type_ptr_lpu237_of_client& ptr_device = ptr_manager_of_device_of_client->get_device(n_device_index);
+		if (ptr_device->is_null_device()) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : INVALID_HANDLE_VALUE\n", __WFUNCTION__);
+			continue;
+		}
+		//
+		if (sId == NULL) {
+			dwResult = cprotocol_lpu237::the_size_of_uid;
+			continue;
+		}
+		_mp::type_v_buffer v_uid = ptr_device->get_device_id();
+		//
+		std::for_each(std::begin(v_uid), std::end(v_uid), [&](unsigned char id) {
+			*sId = id;
+			sId++;
+			});
+
+		dwResult = cprotocol_lpu237::the_size_of_uid;
+	} while (0);
+
+	_mp::clog::get_instance().log_fmt(L" : RET : %ls : %d\n", __WFUNCTION__, cprotocol_lpu237::the_size_of_uid);
+
+	return dwResult;
+}
+
+unsigned long _CALLTYPE_ LPU237_fw_msr_get_name(HANDLE hDev, unsigned char* sName)
+{
+	unsigned long dwResult(ccb_client::const_dll_result_error);
+	unsigned long n_device_index(PtrToUlong(hDev));
+	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
+
+	do {
+		_mp::clog::get_instance().log_fmt(L" : CAL : %ls : 0x%x\n", __WFUNCTION__, hDev);
+		if (!ptr_manager_of_device_of_client) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : none manager_of_device_of_client.\n", __WFUNCTION__);
+			continue;
+		}
+
+		lpu237_of_client::type_ptr_lpu237_of_client& ptr_device = ptr_manager_of_device_of_client->get_device(n_device_index);
+		if (ptr_device->is_null_device()) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : INVALID_HANDLE_VALUE\n", __WFUNCTION__);
+			continue;
+		}
+		//
+		_mp::type_v_buffer v_name = ptr_device->get_name();
+
+		if (sName == NULL) {
+			dwResult = cprotocol_lpu237::the_size_of_name;
+			continue;
+		}
+		//
+		std::for_each(std::begin(v_name), std::end(v_name), [&](unsigned char n) {
+			*sName = n;
+			sName++;
+			});
+
+		dwResult = cprotocol_lpu237::the_size_of_name;
+	} while (0);
+
+	_mp::clog::get_instance().log_fmt(L" : RET : %ls : %d\n", __WFUNCTION__, cprotocol_lpu237::the_size_of_name);
+
+	return dwResult;
+}
+
+unsigned long _CALLTYPE_ LPU237_fw_msr_get_version(HANDLE hDev, unsigned char* sVersion)
+{
+	unsigned long dwResult(ccb_client::const_dll_result_error);
+	unsigned long n_device_index(PtrToUlong(hDev));
+	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
+
+	do {
+		_mp::clog::get_instance().log_fmt(L" : CAL : %ls : 0x%x\n", __WFUNCTION__, hDev);
+		if (!ptr_manager_of_device_of_client) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : none manager_of_device_of_client.\n", __WFUNCTION__);
+			continue;
+		}
+
+		lpu237_of_client::type_ptr_lpu237_of_client& ptr_device = ptr_manager_of_device_of_client->get_device(n_device_index);
+		if (ptr_device->is_null_device()) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : INVALID_HANDLE_VALUE\n", __WFUNCTION__);
+			continue;
+		}
+		//
+		_mp::type_v_buffer v_version = ptr_device->get_system_version().get_by_vector();
+
+		if (sVersion == NULL) {
+			dwResult = cprotocol_lpu237::the_size_of_version;
+			continue;
+		}
+		//
+		std::for_each(std::begin(v_version), std::end(v_version), [&](unsigned char n) {
+			*sVersion = n;
+			sVersion++;
+			});
+
+		dwResult = cprotocol_lpu237::the_size_of_version;
+	} while (0);
+
+	_mp::clog::get_instance().log_fmt(L" : RET : %ls : %d\n", __WFUNCTION__, cprotocol_lpu237::the_size_of_version);
+
+	return dwResult;
+}
+
+unsigned long _CALLTYPE_ LPU237_fw_msr_get_version_major(const unsigned char* sVersion)
+{
+	unsigned long dw_result(LPU237_FW_RESULT_ERROR);
+	_mp::clog::get_instance().log_fmt(L" : CAL : %ls : 0x%x\n", __WFUNCTION__, sVersion);
+	do {
+		if (sVersion == 0)
+			continue;
+		dw_result = sVersion[0];
+	} while (0);
+	_mp::clog::get_instance().log_fmt(L" : RET : %ls\n", __WFUNCTION__);
+	return dw_result;
+}
+
+unsigned long _CALLTYPE_ LPU237_fw_msr_get_version_minor(const unsigned char* sVersion)
+{
+	unsigned long dw_result(LPU237_FW_RESULT_ERROR);
+	_mp::clog::get_instance().log_fmt(L" : CAL : %ls : 0x%x\n", __WFUNCTION__, sVersion);
+	do {
+		if (sVersion == 0)
+			continue;
+		dw_result = sVersion[1];
+	} while (0);
+	_mp::clog::get_instance().log_fmt(L" : RET : %ls\n", __WFUNCTION__);
+	return dw_result;
+}
+
+// 과거 버전 호환성을	위해 남겨둔 API로, 현재는 별도의 업데이트 과정이 없으므로 항상 성공을 반환한다.
+unsigned long _CALLTYPE_ LPU237_fw_msr_cancel_update()
+{
+	unsigned long dwResult(ccb_client::const_dll_result_error);
+	_mp::clog::get_instance().log_fmt(L" : CAL : %ls\n", __WFUNCTION__);
+	_mp::clog::get_instance().log_fmt(L" : RET : %ls : not support. if update is canceled, fw is blocked.\n", __WFUNCTION__);
+	return dwResult;
+}
+
+unsigned long _CALLTYPE_ LPU237_fw_msr_update_w(const unsigned char* sId, unsigned long dwWaitTime, const wchar_t* sRomFileName, unsigned long dwIndex)
+{
+	return _fw_msr_update_ex_w(sId, dwWaitTime, nullptr, nullptr, nullptr, 0, sRomFileName, dwIndex);
+}
+
+unsigned long _CALLTYPE_ LPU237_fw_msr_update_a(const unsigned char* sId, unsigned long dwWaitTime, const char* sRomFileName, unsigned long dwIndex)
+{
+	if (sRomFileName) {
+		std::string s(sRomFileName);
+		std::wstring ws;
+
+		std::for_each(std::begin(s), std::end(s), [&](std::string::value_type c) {
+			ws.push_back(static_cast<std::wstring::value_type>(c));
+			});
+
+		return LPU237_fw_msr_update_w(sId, dwWaitTime, ws.c_str(), dwIndex);
+	}
+	else {
+		return LPU237_FW_RESULT_ERROR;
+	}
+}
+
+unsigned long _CALLTYPE_ LPU237_fw_msr_update_callback_w(const unsigned char* sId, type_lpu237_fw_callback cbUpdate, void* pUser, const wchar_t* sRomFileName, unsigned long dwIndex)
+{
+	return _fw_msr_update_ex_w(sId, 0, cbUpdate, pUser, nullptr, 0, sRomFileName, dwIndex);
+}
+
+unsigned long _CALLTYPE_ LPU237_fw_msr_update_callback_a(const unsigned char* sId, type_lpu237_fw_callback cbUpdate, void* pUser, const char* sRomFileName, unsigned long dwIndex)
+{
+	if (sRomFileName) {
+		std::string s(sRomFileName);
+		std::wstring ws;
+
+		std::for_each(std::begin(s), std::end(s), [&](std::string::value_type c) {
+			ws.push_back(static_cast<std::wstring::value_type>(c));
+			});
+
+		return LPU237_fw_msr_update_callback_w(sId, cbUpdate, pUser, ws.c_str(), dwIndex);
+	}
+	else {
+		return LPU237_FW_RESULT_ERROR;
+	}
+}
+
+unsigned long _CALLTYPE_ LPU237_fw_msr_update_wnd_w(const unsigned char* sId, HWND hWnd, UINT uMsg, const wchar_t* sRomFileName, unsigned long dwIndex)
+{
+	return _fw_msr_update_ex_w(sId, 0, nullptr, nullptr, hWnd, uMsg, sRomFileName, dwIndex);
+}
+
+unsigned long _CALLTYPE_ LPU237_fw_msr_update_wnd_a(const unsigned char* sId, HWND hWnd, UINT uMsg, const char* sRomFileName, unsigned long dwIndex)
+{
+	if (sRomFileName) {
+		std::string s(sRomFileName);
+		std::wstring ws;
+
+		std::for_each(std::begin(s), std::end(s), [&](std::string::value_type c) {
+			ws.push_back(static_cast<std::wstring::value_type>(c));
+			});
+
+		return LPU237_fw_msr_update_wnd_w(sId, hWnd, uMsg, ws.c_str(), dwIndex);
+	}
+	else {
+		return LPU237_FW_RESULT_ERROR;
+	}
+}
+
+unsigned long _CALLTYPE_ LPU237_fw_rom_load_w(const wchar_t* sRomFileName)
+{
+	unsigned long dw_result(LPU237_FW_RESULT_ERROR);
+
+	CRom::type_result result_rom(CRom::result_success);
+	std::wstring s_romfile;
+
+	do {
+		_mp::clog::get_instance().log_fmt(L" : CAL : %ls : %ls\n", __WFUNCTION__, sRomFileName);
+
+		if (sRomFileName == NULL) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : none rom file path\n", __WFUNCTION__);
+			continue;
+		}
+
+		//
+		CRom dll_rom(L"tg_tom.dll");
+		CRom::ROMFILE_HEAD Header = { 0, };
+		result_rom = dll_rom.LoadHeader(sRomFileName, &Header);
+		if (result_rom != CRom::result_success) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : LoadHeader() ERR\n", __WFUNCTION__);
+			continue;
+		}
+		dw_result = LPU237_FW_RESULT_SUCCESS;
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : success\n", __WFUNCTION__);
+	} while (0);
+
+	return dw_result;
+}
+
+unsigned long _CALLTYPE_ LPU237_fw_rom_load_a(const char* sRomFileName)
+{
+	if (sRomFileName) {
+		std::string s(sRomFileName);
+		std::wstring ws;
+
+		std::for_each(std::begin(s), std::end(s), [&](std::string::value_type c) {
+			ws.push_back(static_cast<std::wstring::value_type>(c));
+			});
+
+		return LPU237_fw_rom_load_w(ws.c_str());
+	}
+	else {
+		return LPU237_FW_RESULT_ERROR;
+	}
+}
+
+unsigned long _CALLTYPE_ LPU237_fw_rom_get_index_w(const wchar_t* sRomFileName, const unsigned char* sName, const unsigned char* sVersion)
+{
+	unsigned long dw_result(LPU237_FW_RESULT_ERROR);
+	CRom::type_result result_rom(CRom::result_success);
+
+	do {
+		_mp::clog::get_instance().log_fmt(L" : CAL : %ls : %ls \n", __WFUNCTION__, sRomFileName);
+
+		if (sName == NULL || sVersion == NULL) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %s : sName or sVersion\n", __WFUNCTION__);
+			continue;
+		}
+		//
+		CRom dll_rom(L"tg_rom.dll");
+		CRom::ROMFILE_HEAD Header = { 0, };
+
+		if (sRomFileName != NULL) {
+			result_rom = dll_rom.LoadHeader(sRomFileName, &Header);
+			if (result_rom != CRom::result_success) {
+				_mp::clog::get_instance().log_fmt(" : RET : %s : LPU237_fw_rom_load_w : ERR\n", __WFUNCTION__);
+				continue;
+			}
+		}
+		//
+		//
+		int nIndex = dll_rom.GetUpdatableItemIndex(sName, sVersion[0], sVersion[1], sVersion[2], sVersion[3]);
+		if (nIndex < 0) {
+			_mp::clog::get_instance().log_fmt(" : RET : %s : grom.GetUpdatableItemIndex\n", __WFUNCTION__);
+			continue;
+		}
+
+		dw_result = nIndex;
+		_mp::clog::get_instance().log_fmt(" : RET : %s : success : %d\n", __WFUNCTION__, dw_result);
+	} while (0);
+
+	return dw_result;
+}
+
+unsigned long _CALLTYPE_ LPU237_fw_rom_get_index_a(const char* sRomFileName, const unsigned char* sName, const unsigned char* sVersion)
+{
+	if (sRomFileName) {
+		std::string s(sRomFileName);
+		std::wstring ws;
+
+		std::for_each(std::begin(s), std::end(s), [&](std::string::value_type c) {
+			ws.push_back(static_cast<std::wstring::value_type>(c));
+			});
+
+		return LPU237_fw_rom_get_index_w(ws.c_str(), sName, sVersion);
+	}
+	else {
+		return LPU237_FW_RESULT_ERROR;
+	}
+}
+
+
+
+
+
+

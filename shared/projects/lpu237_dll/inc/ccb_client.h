@@ -202,6 +202,13 @@ private:
 					ptr_result->notify();
 				}
 				break;
+			case capi_client::act_sub_bootloader:
+				n_result_index = _mp::casync_result_manager::get_instance(std::wstring(L"lpu237_of_client")).pop_result_index(n_device_index);
+				if (n_result_index >= 0) {
+					_mp::casync_parameter_result::type_ptr_ct_async_parameter_result& ptr_result = _mp::casync_result_manager::get_instance(std::wstring(L"lpu237_of_client")).get_async_parameter_result(n_device_index, n_result_index);
+					ptr_result->set_result(b_result, n_result_code, v_rx);
+					ptr_result->notify();
+				}
 			default:
 				break;
 			}
