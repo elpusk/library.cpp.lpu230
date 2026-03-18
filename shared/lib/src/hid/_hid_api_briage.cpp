@@ -807,8 +807,15 @@ int _hid_api_briage::api_write(int n_primitive_map_index, const unsigned char* d
         }
 
         n_written = hid_write(p_dev, data, length);
-        if (n_written == 0) {
-			continue; // no data written, but no error. it can be treated as success.
+        if (length != n_written) {
+            if (m_p_clog) {
+                m_p_clog->log_fmt(L"[E] %ls : (write_len,n_written) = (%d,%d).\n", __WFUNCTION__, length, n_written);
+            }
+#if defined(_WIN32) && defined(_DEBUG)
+            ATLTRACE(L"[E] %ls : (write_len,n_written) = (%d,%d).\n", __WFUNCTION__, length, n_written);
+#endif
+			n_written = -1; // treat as error
+            continue;
         }
 
         if (n_written < 0) {
