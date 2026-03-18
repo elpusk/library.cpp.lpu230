@@ -530,7 +530,12 @@ std::tuple<bool, int, bool> _hid_api_briage::is_open(const char* path) const
             }
             //
             std::string s(p_info->path);
-            if (s.compare(path) == 0) {
+            std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return std::tolower(c); });
+
+			std::string spath(path);
+            std::transform(spath.begin(), spath.end(), spath.begin(), [](unsigned char c) { return std::tolower(c); });
+
+            if (s.compare(spath) == 0) {
                 n_index = item.first;
                 b_exclusive_open = std::get<1>(item.second);
                 b_result = true;
