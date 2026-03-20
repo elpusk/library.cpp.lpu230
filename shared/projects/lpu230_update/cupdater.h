@@ -17,7 +17,7 @@
 #include <mp_cwait.h>
 #include <mp_clog.h>
 
-#include <chid_briage.h>
+#include <chid_bridge.h>
 #include "HidBootManager.h"
 
 class cupdater {
@@ -276,7 +276,6 @@ private:
 	bool m_b_ini;
 
 	CHidBootManager* m_p_mgmt;
-	chid_briage::type_ptr m_ptr_hid_api_briage;
 
 	std::atomic<cupdater::AppState> m_state;
 

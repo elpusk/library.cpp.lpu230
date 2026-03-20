@@ -21,15 +21,15 @@
 #include <mp_cwait.h>
 #include <mp_cqueue.h>
 #include <hid/_vhid_info.h>
-#include <hid/_hid_api_briage.h>
+#include <hid/_hid_api_bridge.h>
 
 /**
 * the instance of this class must be created only one in the process.
 */
-class _vhid_api_briage: public _hid_api_briage
+class _vhid_api_bridge: public _hid_api_bridge
 {
 public:
-	typedef	std::shared_ptr<_vhid_api_briage>	type_ptr;
+	typedef	std::shared_ptr<_vhid_api_bridge>	type_ptr;
 
 private:
 	class _q_item {
@@ -42,7 +42,7 @@ private:
 			cmd_read
 		}	type_cmd;
 	public:
-		typedef	std::shared_ptr<_vhid_api_briage::_q_item>	type_ptr;
+		typedef	std::shared_ptr<_vhid_api_bridge::_q_item>	type_ptr;
 
 	public:
 		_q_item(int n_compositive_map_index);
@@ -58,16 +58,16 @@ private:
 		void setup_for_write(const unsigned char* data, size_t length, _mp::type_next_io next);
 		void setup_for_read(unsigned char* data, size_t length, size_t n_report);
 
-		_vhid_api_briage::_q_item::type_cmd get_cmd() const;
+		_vhid_api_bridge::_q_item::type_cmd get_cmd() const;
 		std::wstring get_cmd_by_string() const;
 		_mp::type_v_buffer get_tx() const;
 		_mp::type_next_io get_next_io_type() const;
 
 		size_t get_rx_size() const;
-		_vhid_api_briage::_q_item& set_rx(const _mp::type_ptr_v_buffer& ptr_v_rx);
-		_vhid_api_briage::_q_item& set_rx(const _mp::type_v_buffer& v_rx);
-		_vhid_api_briage::_q_item& append_rx(const _mp::type_v_buffer& v_rx,bool b_add_to_head = false);
-		_vhid_api_briage::_q_item& set_result(int n_result,const std::wstring & s_debug_msg = std::wstring());
+		_vhid_api_bridge::_q_item& set_rx(const _mp::type_ptr_v_buffer& ptr_v_rx);
+		_vhid_api_bridge::_q_item& set_rx(const _mp::type_v_buffer& v_rx);
+		_vhid_api_bridge::_q_item& append_rx(const _mp::type_v_buffer& v_rx,bool b_add_to_head = false);
+		_vhid_api_bridge::_q_item& set_result(int n_result,const std::wstring & s_debug_msg = std::wstring());
 
 		size_t get_user_rx_buffer_size() const;
 		unsigned char* get_user_rx_buffer() const;
@@ -130,9 +130,9 @@ private:
 		} type_req_list_status;
 
 	public:
-		typedef std::deque<_vhid_api_briage::_q_item::type_ptr> type_q;
-		typedef std::shared_ptr<_vhid_api_briage::_q_container::type_q> type_ptr_q;
-		typedef std::map<int, _vhid_api_briage::_q_container::type_ptr_q> type_map_ptr_q;//key-compositive index
+		typedef std::deque<_vhid_api_bridge::_q_item::type_ptr> type_q;
+		typedef std::shared_ptr<_vhid_api_bridge::_q_container::type_q> type_ptr_q;
+		typedef std::map<int, _vhid_api_bridge::_q_container::type_ptr_q> type_map_ptr_q;//key-compositive index
 
 		//
 		typedef std::list< _q_item::type_ptr > type_list;
@@ -154,7 +154,7 @@ private:
 		* @return true:success push, false:error
 		*
 		*/
-		bool push( const _vhid_api_briage::_q_item::type_ptr& ptr_item);
+		bool push( const _vhid_api_bridge::_q_item::type_ptr& ptr_item);
 
 		void pop_all(int n_result, const _mp::type_v_buffer& v_rx = _mp::type_v_buffer(0));
 
@@ -201,7 +201,7 @@ private:
 
 	class _q_worker {
 	public:
-		typedef	std::shared_ptr<_vhid_api_briage::_q_worker>	type_ptr;
+		typedef	std::shared_ptr<_vhid_api_bridge::_q_worker>	type_ptr;
 	private:
 		typedef	std::pair<int, _mp::type_ptr_v_buffer> _type_pair_result_ptr_rx;
 		typedef std::deque< _q_worker::_type_pair_result_ptr_rx > _type_q_result;
@@ -212,7 +212,7 @@ private:
 		};
 
 	public:
-		_q_worker(int n_primitive_map_index, _vhid_api_briage* p_api_briage,bool b_remove_all_zero_in_report);
+		_q_worker(int n_primitive_map_index, _vhid_api_bridge* p_api_bridge,bool b_remove_all_zero_in_report);
 		~_q_worker();
 		
 		/**
@@ -223,7 +223,7 @@ private:
 		* @return true:success push, false:error
 		* 
 		*/
-		bool push(const _vhid_api_briage::_q_item::type_ptr &ptr_item);
+		bool push(const _vhid_api_bridge::_q_item::type_ptr &ptr_item);
 
 	private:
 		void _pop_all(int n_result, const _mp::type_v_buffer& v_rx = _mp::type_v_buffer(0));
@@ -241,7 +241,7 @@ private:
 		std::pair<bool,bool> _try_pop(_q_container::type_ptr_list& ptr_list);
 		
 
-		void _worker(_vhid_api_briage* p_api_briage);
+		void _worker(_vhid_api_bridge* p_api_bridge);
 
 		/**
 		* @brief process list of requestes. with nottification of result.
@@ -255,7 +255,7 @@ private:
 		*/
 		std::pair<bool, _mp::type_v_buffer> _process(
 			_q_container::type_ptr_list& ptr_list,
-			_hid_api_briage* p_api_briage
+			_hid_api_bridge* p_api_bridge
 		);
 
 		/**
@@ -268,7 +268,7 @@ private:
 		*/
 		bool _process_cancel(
 			_q_container::type_ptr_list& ptr_list,
-			_hid_api_briage* p_api_briage
+			_hid_api_bridge* p_api_bridge
 		);
 
 		/**
@@ -276,7 +276,7 @@ private:
 		*
 		* @param ptr_q_item - in/out request.
 		*
-		* @param p_api_briage - pointer of _hid_api_briage instance.
+		* @param p_api_bridge - pointer of _hid_api_bridge instance.
 		* 
 		* @param ptr_v_rx[in,out] - receved data, this shared_ptr must be allocated to a new memory( if none rx, allocated as _mp:type_v_buffer(0) ) 
 		* 
@@ -289,8 +289,8 @@ private:
 		* 
 		*/
 		std::tuple<bool, int> _process_req(
-			const _vhid_api_briage::_q_item::type_ptr& ptr_q_item,
-			_hid_api_briage* p_api_briage,
+			const _vhid_api_bridge::_q_item::type_ptr& ptr_q_item,
+			_hid_api_bridge* p_api_bridge,
 			_mp::type_ptr_v_buffer& v_ptr_rx,
 			const std::wstring& s_debug_msg = std::wstring(L"")
 			);
@@ -331,24 +331,24 @@ private:
 		);
 
 		/**
-		* @brief recevive data by _hid_api_briage::api_read. 
+		* @brief recevive data by _hid_api_bridge::api_read. 
 		* 
 		* @param v_rx[in/out] - v_rx.size() must be eqaul to in-report size, the receved data will be save to this buffer,
 		* 
-		* @param p_api_briage - pointer of _hid_api_briage instance.
+		* @param p_api_bridge - pointer of _hid_api_bridge instance.
 		*
-		* @return return value of _hid_api_briage::api_read() in zero or negative.
+		* @return return value of _hid_api_bridge::api_read() in zero or negative.
 		* 
-		*	if _hid_api_briage::api_read() return partial value, this function concates the received all data to v_rx by the size of v_rx. 
+		*	if _hid_api_bridge::api_read() return partial value, this function concates the received all data to v_rx by the size of v_rx. 
 		*
 		*/
-		int _rx(_mp::type_v_buffer& v_rx, _hid_api_briage* p_api_briage);
+		int _rx(_mp::type_v_buffer& v_rx, _hid_api_bridge* p_api_bridge);
 
 	private:
 		std::shared_ptr<std::thread> m_ptr_worker; // inner worker thread
 		std::atomic<bool> m_b_run_worker;//self killing flag of m_ptr_worker.
 
-		_vhid_api_briage::_q_container m_q;
+		_vhid_api_bridge::_q_container m_q;
 
 		// received msr data queue.
 		// this queue must be reset on txrx request.
@@ -373,11 +373,11 @@ private:
 	typedef std::map<int, std::pair<_vhid_info::type_ptr, _q_worker::type_ptr> > _type_map_ptr_vhid_info_ptr_worker;
 
 public:
-	_vhid_api_briage();
-	_vhid_api_briage(_mp::clog* p_clog);
-	_vhid_api_briage(_mp::clog* p_clog, bool b_remove_all_zero_in_report);
+	_vhid_api_bridge();
+	_vhid_api_bridge(_mp::clog* p_clog);
+	_vhid_api_bridge(_mp::clog* p_clog, bool b_remove_all_zero_in_report);
 
-	virtual ~_vhid_api_briage();
+	virtual ~_vhid_api_bridge();
 
 	/**
 	* @brief get connected information of devices.
@@ -437,7 +437,9 @@ public:
 	/**
 	* @brief close device. 
 	*
-	* @param n_map_index int - primitive or compositive type map index(m_map_hid_dev)
+	* @param n_map_index int - primitive or compositive type map index.
+	* 
+	*  if the map index is compositive type, this index will be converted to primitive type index internally.
 	*/
 	virtual void api_close(int n_map_index);
 
@@ -526,6 +528,6 @@ private:
 	mutable std::mutex m_mutex_for_map;
 
 private://don't call these methods.
-	_vhid_api_briage(const _vhid_api_briage&);
-	_vhid_api_briage& operator=(const _vhid_api_briage&);
+	_vhid_api_bridge(const _vhid_api_bridge&);
+	_vhid_api_bridge& operator=(const _vhid_api_bridge&);
 };

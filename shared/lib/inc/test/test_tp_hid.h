@@ -6,6 +6,7 @@
 #include <array>
 #include <algorithm>
 #include <functional>
+#include <filesystem>
 
 #include <stdio.h>
 #include <wchar.h>
@@ -23,6 +24,8 @@
 #include <mp_cconsole.h>
 #include <mp_cnamed_pipe_.h>
 #include <hid/_vhid_info_lpu237.h>
+#include <cdev_lib.h>
+#include <mp_coffee_path.h>
 
 namespace _test{
     class tp_hid{
@@ -1258,6 +1261,45 @@ namespace _test{
 			return n_result;
 		}
 
+		int test_hid_rx(int n_loop = 1)
+		{
+			int n_result(0);
+
+			do {
+				_mp::clibhid& mlibhid(_mp::clibhid::get_manual_instance());
+				if (!mlibhid.is_ini()) {
+					std::wcout << L"ERROR - clibhid ini" << std::endl;
+					continue;
+				}
+
+				mlibhid.update_dev_set_in_manual();
+				_mp::clibhid_dev_info::type_set set_cur_dev = mlibhid.get_cur_device_set();
+				if(set_cur_dev.empty()) {
+					std::wcout << L"no device." << std::endl;
+					continue;
+				}
+
+				auto selected_dev = *set_cur_dev.begin();
+				tp_hid::_display_device_info(selected_dev);
+
+				// create & open clibhid_dev.
+				_mp::clibhid_dev::type_ptr ptr_dev = std::make_shared<_mp::clibhid_dev>(selected_dev, mlibhid.get_bridge().get());
+				if (!ptr_dev->is_open()) {
+					std::wcout << L"INFO - device is NOT open" << std::endl;
+					continue;
+				}
+				else {
+					std::wcout << L"INFO - device is open" << std::endl;
+				}
+
+				for (auto n_cnt = 0; n_cnt < n_loop; n_cnt++) {
+
+				}//end for
+			} while (false);
+
+			return n_result;
+		}
+
 		/**
 		* msr 읽기를 위한 thread msra 와 ibutton 읽기를 위한 thread ibb, ibc 를 만들고,
 		* 각 thread 가 독립적으로 읽기를 시도한다.
@@ -1358,6 +1400,120 @@ namespace _test{
 
 
 	private:
+		void _setup_log(bool b_run_by_coffee_manager, bool b_enable)
+		{
+			std::filesystem::path path_cur_exe = _mp::cfile::get_cur_exe_abs_path();
+			std::filesystem::path path_cur = path_cur_exe.parent_path();
+
+			/////////////////////////////////
+			// setup log
+			_mp::clog& log(_mp::clog::get_instance());
+			if (b_run_by_coffee_manager) {
+				std::wstring s_log_root_folder_except_backslash = _mp::ccoffee_path::get_path_of_coffee_logs_root_folder_except_backslash();
+				log.config(
+					s_log_root_folder_except_backslash
+					, 6
+					, std::wstring(L"coffee_manager")
+					, std::wstring(L"lpu230_update")
+					, std::wstring(L"lpu230_update")
+				);
+			}
+			else {
+#ifdef _DEBUG
+				log.config_ex(
+					path_cur.wstring() // without backslash
+					, -1
+					, std::wstring()
+					, std::wstring()
+					, std::wstring()
+					, false // 기존 lpu230_update 와 로그 파일 위치를 동일하게 하기 위해
+				);
+#else 
+				//release
+				std::wstring s_coffee_mgmt_folder_except_backslash = _mp::ccoffee_path::get_path_of_coffee_mgmt_folder_except_backslash();
+				if (s_coffee_mgmt_folder_except_backslash.compare(path_cur.wstring()) == 0) {
+					// 현재 업데이터가 실행 중인 곳이 installer 에 의해 설치된 곳이면, 로그를 b_run_by_coffee_manager 에 의한 곳과 동일한 곳에 만듬.
+					std::wstring s_log_root_folder_except_backslash = _mp::ccoffee_path::get_path_of_coffee_logs_root_folder_except_backslash();
+					log.config(
+						s_log_root_folder_except_backslash
+						, 6
+						, std::wstring(L"coffee_manager")
+						, std::wstring(L"lpu230_update")
+						, std::wstring(L"lpu230_update")
+					);
+				}
+				else {
+					log.config_ex(
+						path_cur.wstring() // without backslash
+						, -1
+						, std::wstring()
+						, std::wstring()
+						, std::wstring()
+						, false // 기존 lpu230_update 와 로그 파일 위치를 동일하게 하기 위해
+					);
+
+				}
+#endif
+			}
+
+			log.enable(b_enable);
+			if (b_run_by_coffee_manager) {
+				log.remove_log_files_older_then_now_day(3);
+			}
+
+		}
+
+
+		/**
+		*
+		* @return first - true : success processing, second - error code. if first is true, second must be EXIT_SUCCESS.
+		*/
+		std::pair<bool, int> _setup_dev_io_dll(bool b_run_by_coffee_manager, _mp::clog& log)
+		{
+			bool b_result(false);
+			int n_error_code(EXIT_SUCCESS);
+
+			std::filesystem::path path_cur_exe = _mp::cfile::get_cur_exe_abs_path();
+			std::filesystem::path path_cur = path_cur_exe.parent_path();
+
+			do {
+				// load dev_lib.dll(.so)
+				std::wstring s_dev_lib_dll_abs_full_path;
+				if (b_run_by_coffee_manager) {
+					s_dev_lib_dll_abs_full_path = _mp::ccoffee_path::get_abs_full_path_of_dev_lib_dll();
+				}
+				else {//단독 실행의 경우
+					s_dev_lib_dll_abs_full_path = path_cur.wstring();
+#ifdef _WIN32
+					s_dev_lib_dll_abs_full_path += L"\\dev_lib.dll";
+#else
+					s_dev_lib_dll_abs_full_path += L"/libdev_lib.so";
+#endif
+				}
+
+				if (!cdev_lib::get_instance().load(s_dev_lib_dll_abs_full_path, &log)) {
+					if (b_run_by_coffee_manager) {
+						log.log_fmt(L"[E] %ls | load dev_lib.dll(.so) | %ls.\n", __WFUNCTION__, s_dev_lib_dll_abs_full_path.c_str());
+						log.trace(L"[E] %ls | load dev_lib.dll(.so) | %ls.\n", __WFUNCTION__, s_dev_lib_dll_abs_full_path.c_str());
+						n_error_code = _mp::exit_error_load_dev_lib;
+						continue;
+					}
+					//단독 실행의 경우.
+					//현재 디렉토리에서 라이브러리 못찾으면, 기본path 에서 찾기.
+					s_dev_lib_dll_abs_full_path = _mp::ccoffee_path::get_abs_full_path_of_dev_lib_dll();
+					if (!cdev_lib::get_instance().load(s_dev_lib_dll_abs_full_path, &log)) {
+						log.log_fmt(L"[E] %ls | load dev_lib.dll(.so) | %ls.\n", __WFUNCTION__, s_dev_lib_dll_abs_full_path.c_str());
+						log.trace(L"[E] %ls | load dev_lib.dll(.so) | %ls.\n", __WFUNCTION__, s_dev_lib_dll_abs_full_path.c_str());
+						n_error_code = _mp::exit_error_load_dev_lib;
+						continue;
+					}
+				}
+
+				b_result = true;
+			} while (false);
+			return std::make_pair(b_result, n_error_code);
+		}
+
 		static void _generate_combinations(const std::array<_mp::type_bm_dev, 5>& ar_type,
 			std::set<_mp::type_bm_dev>& current_set,
 			std::vector<std::set<_mp::type_bm_dev>>& all_sets,
@@ -2037,6 +2193,11 @@ namespace _test{
     private:
 		tp_hid()
 		{
+			_setup_log(false, true);
+			// from this line, _mp::clog::get_instance() can be used.
+			_mp::clog& log(_mp::clog::get_instance());
+
+			auto result_dev_io_dll = _setup_dev_io_dll(false, log);//logging 도 포함.
 		}
 
 	private:

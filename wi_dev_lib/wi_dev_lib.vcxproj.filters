@@ -60,10 +60,10 @@
     <ClInclude Include="..\shared\3thpart\src\win\hidapi_winapi.h">
       <Filter>3thpart</Filter>
     </ClInclude>
-    <ClInclude Include="..\shared\lib\inc\hid\_hid_api_briage.h">
+    <ClInclude Include="..\shared\lib\inc\hid\_hid_api_bridge.h">
       <Filter>lib\hid</Filter>
     </ClInclude>
-    <ClInclude Include="..\shared\lib\inc\hid\_vhid_api_briage.h">
+    <ClInclude Include="..\shared\lib\inc\hid\_vhid_api_bridge.h">
       <Filter>lib\hid</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\lib\inc\hid\_vhid_info.h">
@@ -152,10 +152,10 @@
     <ClCompile Include="..\shared\3thpart\src\win\hid.c">
       <Filter>3thpart</Filter>
     </ClCompile>
-    <ClCompile Include="..\shared\lib\src\hid\_hid_api_briage.cpp">
+    <ClCompile Include="..\shared\lib\src\hid\_hid_api_bridge.cpp">
       <Filter>lib\hid</Filter>
     </ClCompile>
-    <ClCompile Include="..\shared\lib\src\hid\_vhid_api_briage.cpp">
+    <ClCompile Include="..\shared\lib\src\hid\_vhid_api_bridge.cpp">
       <Filter>lib\hid</Filter>
     </ClCompile>
     <ClCompile Include="..\shared\lib\inc\mp_cnamed_pipe_.cpp">

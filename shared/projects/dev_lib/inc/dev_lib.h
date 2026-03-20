@@ -30,7 +30,7 @@ int _CALLTYPE_ dev_lib_on(void *p_log);
 */
 int _CALLTYPE_ dev_lib_off();
 
-// the exported function is determined by _hid_api_briage class public method.
+// the exported function is determined by _hid_api_bridge class public method.
 
 /**
 * @brief get muetx of lib. Don't free return memory.
@@ -46,7 +46,7 @@ void _CALLTYPE_ dev_lib_destructor(void* p_instance);
 
 /**
 * @brief check is ini or not
-* @param p_instance - pointer of _vhid_api_briage instance.
+* @param p_instance - pointer of _vhid_api_bridge instance.
 * @return true : ini, false : not ini or error
 */
 int _CALLTYPE_ dev_lib_is_ini(void* p_instance);

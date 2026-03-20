@@ -10,7 +10,7 @@
 #include <mp_clog.h>
 
 #include <hid/mp_clibhid_dev_info.h>
-#include <chid_briage.h>
+#include <chid_bridge.h>
 
 namespace _mp {
     /**
@@ -59,24 +59,21 @@ namespace _mp {
 		* @brief constructor.
 		* when the instance is created, the device is opened. and the worker thread is started.(receiving is started automatically.)
 		* @param info - device information
-		* @param p_vhid_api_briage - virtual HID API bridge
+		* @param p_vhid_api_bridge - virtual HID API bridge
         */
-        clibhid_dev(const clibhid_dev_info& info, chid_briage*p_hid_api_briage);
+        clibhid_dev(const clibhid_dev_info& info, chid_bridge*p_hid_api_bridge);
 
-        clibhid_dev(const clibhid_dev_info& info, chid_briage* p_hid_api_briage, bool b_lpu23x_specific_protocol, bool b_remove_all_zero_rx );
+        clibhid_dev(const clibhid_dev_info& info, chid_bridge* p_hid_api_bridge, bool b_lpu23x_specific_protocol, bool b_remove_all_zero_rx );
 
         ~clibhid_dev();
 
-        void clear_api_briage();
+        void clear_api_bridge();
 
         bool is_detect_replugin();
 
         bool is_open() const;
 
         bool is_support_shared_open() const;
-
-        std::vector<unsigned char> get_report_desciptor();
-
 
         /**
         * @brief Staring Write an Output report to a HID device.
@@ -152,7 +149,7 @@ namespace _mp {
 
         /**
 		* @brief set tx by api check interval in msec.
-		* @param n_interval_mmsec - interval in msec. default is _hid_api_briage::const_default_hid_write_interval_mmsec.
+		* @param n_interval_mmsec - interval in msec. default is _hid_api_bridge::const_default_hid_write_interval_mmsec.
 		* @return this reference for chaining.
         */
         clibhid_dev& set_tx_by_api_check_interval(long long n_interval_mmsec);
@@ -252,8 +249,8 @@ namespace _mp {
 		// rx by api check interval in msec.( _worker_rx() call api-read with this sleeptime )
         std::atomic_llong m_atll_rx_by_api_in_rx_worker_check_interval_mmsec;
 
-        //_hid_api_briage* m_p_hid_api_briage;//virtual hidapi library instance
-        chid_briage* m_p_hid_api_briage;
+        //_hid_api_bridge* m_p_hid_api_bridge;//virtual hidapi library instance
+        chid_bridge* m_p_hid_api_bridge;
 
 		int m_n_dev;//valid is zero or positive. map index of primitive or composite map.
         clibhid_dev_info m_dev_info;

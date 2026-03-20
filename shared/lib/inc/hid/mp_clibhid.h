@@ -11,7 +11,7 @@
 #include <mp_elpusk.h>
 #include <mp_coperation.h>
 #include <hid/mp_clibhid_dev.h>
-//#include <chid_briage.h>
+//#include <chid_bridge.h>
 
 
 namespace _mp{
@@ -49,11 +49,11 @@ namespace _mp{
         * 
         *   1. set default device filter to lpu237, lpu238, hidbootloader.
         * 
-        *   2. create _vhid_api_briage instance.
+        *   2. create _vhid_api_bridge instance.
         * 
         *   3. get the current connected device list.
         * 
-        *   4. create & open clibhid_dev instatnce. (virtual device - using _vhid_api_briage instance) and register these to map.
+        *   4. create & open clibhid_dev instatnce. (virtual device - using _vhid_api_bridge instance) and register these to map.
         * 
         *   5. create & run device plug in/out thread.( clibhid::_worker_pluginout() ) 
         * 
@@ -118,7 +118,7 @@ namespace _mp{
         bool update_dev_set_in_manual();
 
 
-        chid_briage::type_ptr get_briage();
+        chid_bridge::type_ptr get_bridge();
 
         /**
         * @brief Consider the equipment to be removed
@@ -174,7 +174,7 @@ namespace _mp{
         * 
 		*   this is used in constructor only.
         */
-        void _ini(const chid_briage::type_ptr & ptr_briage = chid_briage::type_ptr());
+        void _ini(const chid_bridge::type_ptr & ptr_bridge = chid_bridge::type_ptr());
 
     protected:
         bool m_b_remove_all_zero_in_report; // default false, all zeros value report is ignored
@@ -182,8 +182,8 @@ namespace _mp{
         bool m_b_manual;
 
         // virtual hidapi library instance
-        //_hid_api_briage::type_ptr m_ptr_hid_api_briage;
-        chid_briage::type_ptr m_ptr_hid_api_briage;
+        //_hid_api_bridge::type_ptr m_ptr_hid_api_bridge;
+        chid_bridge::type_ptr m_ptr_hid_api_bridge;
 
 		void* m_p_user;// user parameter for callback(m_cb)
 		clibhid::type_callback_pluginout m_cb; // callback function for plugin out.(change of device list)
@@ -198,9 +198,6 @@ namespace _mp{
 
 		// key : device path(primitive & compositive), value : first - device instance, second - device info instance
         clibhid::type_map_pair_ptrs m_map_pair_ptrs;
-
-        // key : device path(lpu237 primitive only), value : first - device instance, second - device info instance
-        clibhid::type_map_pair_ptrs m_map_pair_ptrs_lpu237;
 
 		std::shared_ptr<std::thread> m_ptr_th_pluginout; //thread for detect plug in/out device.
 		std::atomic<bool> m_b_run_th_pluginout; //true - run, false - stop of pluginout thread.

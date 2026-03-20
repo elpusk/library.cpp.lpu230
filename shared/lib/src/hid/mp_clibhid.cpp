@@ -137,24 +137,24 @@ namespace _mp{
         return _get_device(sw_path);
     }
 
-    void clibhid::_ini(const chid_briage::type_ptr& ptr_briage /*= chid_briage::type_ptr()*/)
+    void clibhid::_ini(const chid_bridge::type_ptr& ptr_bridge /*= chid_bridge::type_ptr()*/)
     {
         //
-        // for supporting, virtual device. code is create child of _hid_api_briage class.
-        if (!ptr_briage) {
-            m_ptr_hid_api_briage = std::make_shared<chid_briage>(m_b_remove_all_zero_in_report);//create single instance of virtual hidapi library
+        // for supporting, virtual device. code is create child of _hid_api_bridge class.
+        if (!ptr_bridge) {
+            m_ptr_hid_api_bridge = std::make_shared<chid_bridge>(m_b_remove_all_zero_in_report);//create single instance of virtual hidapi library
         }
         else {
-            m_ptr_hid_api_briage = ptr_briage; // 이미 생성된 briage api 사용.
+            m_ptr_hid_api_bridge = ptr_bridge; // 이미 생성된 bridge api 사용.
         }
 
-        if (m_ptr_hid_api_briage->is_ini()) {
+        if (m_ptr_hid_api_bridge->is_ini()) {
             m_b_ini = true;
 
             m_set_cur_dev_info = _get_device_set();
 
             for (const clibhid_dev_info& item : m_set_cur_dev_info) {
-                auto ptr_dev = std::make_shared<clibhid_dev>(item, m_ptr_hid_api_briage.get());// create & open clibhid_dev.
+                auto ptr_dev = std::make_shared<clibhid_dev>(item, m_ptr_hid_api_bridge.get());// create & open clibhid_dev.
                 if (!ptr_dev) {
                     continue;
                 }
@@ -175,9 +175,6 @@ namespace _mp{
                     && ptr_info->get_product_id() != _mp::_elpusk::_lpu238::const_usb_pid) {
                     continue;
                 }
-
-                // for lpu237 & lpu238 primitive path only
-                m_map_pair_ptrs_lpu237.emplace(item.get_path_by_string(), std::make_pair(ptr_dev, ptr_info));
             }//end for
 
             //
@@ -196,9 +193,9 @@ namespace _mp{
         return _update_dev_set();
     }
 
-    chid_briage::type_ptr clibhid::get_briage()
+    chid_bridge::type_ptr clibhid::get_bridge()
     {
-        return m_ptr_hid_api_briage;
+        return m_ptr_hid_api_bridge;
     }
 
     bool clibhid::consider_to_be_removed(int n_vid, int n_pid, const std::wstring& s_pis)
@@ -247,12 +244,12 @@ namespace _mp{
             m_set_usb_filter.emplace(_elpusk::const_usb_vid, _elpusk::_lpu238::const_usb_pid, _elpusk::_lpu238::const_usb_inf_hid); //lpu238
             m_set_usb_filter.emplace(_elpusk::const_usb_vid, _elpusk::const_usb_pid_hidbl, _elpusk::const_usb_inf_hidbl); //hidbootloader
 
-            _ini(); //ptr_briage instance will ne created in _ini()
+            _ini(); //ptr_bridge instance will ne created in _ini()
         }
         else{
-            m_ptr_hid_api_briage = std::make_shared<chid_briage>(m_b_remove_all_zero_in_report);//create single instance of virtual hidapi library
+            m_ptr_hid_api_bridge = std::make_shared<chid_bridge>(m_b_remove_all_zero_in_report);//create single instance of virtual hidapi library
 
-            if (m_ptr_hid_api_briage->is_ini()) {
+            if (m_ptr_hid_api_bridge->is_ini()) {
                 m_b_ini = true;
                 //수동 모드에서는 현재 연결된 장비를 얻지 않고
                 // 쓰레드로 device plug in.out 을 검사하지 않는다.
@@ -285,15 +282,13 @@ namespace _mp{
         }
 
         //
-		m_map_pair_ptrs_lpu237.clear();//remove lpu237 primitive path
-
         for (auto item : m_map_pair_ptrs) {
             item.second.first.reset();
             item.second.second.reset();
         }//
         m_map_pair_ptrs.clear();
 
-        m_ptr_hid_api_briage.reset();//remove briage
+        m_ptr_hid_api_bridge.reset();//remove bridge
     }
 
     clibhid_dev::type_wptr clibhid::_get_device(const std::string& s_path)
@@ -432,7 +427,7 @@ namespace _mp{
         /**
         * don't use the hid_enumerate() of hidapi. it will occur packet-losting. 
         */
-        if (!m_ptr_hid_api_briage) {
+        if (!m_ptr_hid_api_bridge) {
             return st;
         }
 
@@ -442,7 +437,7 @@ namespace _mp{
         //get<3> - int, usb interface number,
         //get<4> - std::string, extra data
         std::set< std::tuple<std::string, unsigned short, unsigned short, int, std::string> > set_dev;
-        set_dev = m_ptr_hid_api_briage->hid_enumerate();
+        set_dev = m_ptr_hid_api_bridge->hid_enumerate();
 
         int n_v(-1), n_p(-1);
         std::wstring s_pis, ws_path;
@@ -502,7 +497,6 @@ namespace _mp{
                 //critical error .. remove device forcelly
                 // IO 중 removed 로 추정되는 에러가 발생한 장비
                 if (item.second.second) {
-                    m_map_pair_ptrs_lpu237.erase(item.first);//관리 장비에서 제거.
                     st_must_be_removed.insert(*item.second.second);//제가될 장비 set에 추가.
                 }
             }
@@ -535,19 +529,18 @@ namespace _mp{
     void clibhid::_update_device_map()
     {
         do {
-            if (!m_ptr_hid_api_briage) {
+            if (!m_ptr_hid_api_bridge) {
                 continue;
             }
 
             //remove
             for (auto item : m_set_removed_dev_info) {
-                m_map_pair_ptrs_lpu237.erase(item.get_path_by_string());
                 m_map_pair_ptrs.erase(item.get_path_by_string());
             }
 
             //insert
             for (const clibhid_dev_info & item : m_set_inserted_dev_info) {
-                auto ptr_dev = std::make_shared<clibhid_dev>(item, m_ptr_hid_api_briage.get()); // create & open clibhid_dev.
+                auto ptr_dev = std::make_shared<clibhid_dev>(item, m_ptr_hid_api_bridge.get()); // create & open clibhid_dev.
                 if (!ptr_dev) {
                     continue;
                 }
@@ -567,8 +560,6 @@ namespace _mp{
                     && ptr_info->get_product_id() != _mp::_elpusk::_lpu238::const_usb_pid) {
                     continue;
                 }
-                // for lpu237 & lpu238 primitive path only
-                m_map_pair_ptrs_lpu237.emplace(item.get_path_by_string(), std::make_pair(ptr_dev, ptr_info));
 
             }//end for
         } while (false);

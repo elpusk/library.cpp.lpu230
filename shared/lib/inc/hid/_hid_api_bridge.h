@@ -10,6 +10,10 @@
 #include <memory>
 #include <mutex>
 #include <atomic>
+#include <optional>
+#include <map>
+#include <tuple>
+#include <mutex>
 
 #include <hidapi.h>
 
@@ -21,7 +25,7 @@
 * sinlgle-tone type
 * supports primitve hid type device. 
 */
-class _hid_api_briage
+class _hid_api_bridge
 {
 public:
 	enum {
@@ -37,17 +41,30 @@ protected:
 	};
 
 public:
-	typedef	std::shared_ptr<_hid_api_briage>	type_ptr;
+	typedef	std::shared_ptr<_hid_api_bridge>	type_ptr;
 
 protected:
+
+	struct _hid_report_size_entry {
+		uint8_t id = 0;
+		int     in_bytes = 0;   // IN  report 1개의 byte 크기 (Report ID 포함)
+		int     out_bytes = 0;   // OUT report 1개의 byte 크기 (Report ID 포함)
+	};
+
+	// key = Report ID  (0 = Report ID item 자체가 없는 장비)
+	typedef std::map<uint8_t, _hid_api_bridge::_hid_report_size_entry> _type_hid_report_size_map;
+	typedef std::shared_ptr<_hid_api_bridge::_type_hid_report_size_map> _type_ptr_hid_report_size_map;
+
 
 	/**
 	* get<0> hid_device pointer
 	* get<1> true - exclusive using after opening device.
 	* get<2> device path
+	* get<3> shared_ptr of report size map (Report ID 별 IN/OUT report size 정보)
+	* get<4> mutex for hid_device pointer (each hid_device pointer must be guarded by this mutex. the instance of hid_device pointer must be shared this mutex.)
 	*/
-	typedef	std::tuple< hid_device*, bool,std::string > _type_tuple_hid_dev_lock_path;
-	typedef std::map<int, _hid_api_briage::_type_tuple_hid_dev_lock_path> _type_map_hid_dev;
+	typedef	std::tuple< hid_device*, bool,std::string, _hid_api_bridge::_type_ptr_hid_report_size_map, std::shared_ptr<std::mutex> > _type_tuple_hid_dev_lock_path;
+	typedef std::map<int, _hid_api_bridge::_type_tuple_hid_dev_lock_path> _type_map_hid_dev;
 
 private:
 	typedef std::map<hid_device*, bool> _type_map_lpu237_disable_ibutton;
@@ -65,7 +82,7 @@ public:
 		return m_p_clog;
 	}
 
-	virtual ~_hid_api_briage();
+	virtual ~_hid_api_bridge();
 
 	bool is_ini() const;
 
@@ -191,21 +208,27 @@ public:
 	*/
 	virtual const wchar_t* api_error(int n_primitive_map_index);
 
-	virtual _hid_api_briage& set_req_q_check_interval_in_child(long long n_interval_mmsec);
-	virtual _hid_api_briage& set_hid_write_interval_in_child(long long n_interval_mmsec);
-	virtual _hid_api_briage& set_hid_read_interval_in_child(long long n_interval_mmsec);
+	virtual _hid_api_bridge& set_req_q_check_interval_in_child(long long n_interval_mmsec);
+	virtual _hid_api_bridge& set_hid_write_interval_in_child(long long n_interval_mmsec);
+	virtual _hid_api_bridge& set_hid_read_interval_in_child(long long n_interval_mmsec);
 
 	virtual long long get_req_q_check_interval_in_child() const;
 	virtual long long get_hid_write_interval_in_child() const;
 	virtual long long get_hid_read_interval_in_child() const;
 
 protected:
-	_hid_api_briage();
-	_hid_api_briage(_mp::clog* p_clog);
+	_hid_api_bridge();
+	_hid_api_bridge(_mp::clog* p_clog);
 
 private:
 	bool _lpu237_ibutton_enable(hid_device* p_dev,bool b_enable);
 
+	/**
+	* @brief parse hid report size by report descriptor.
+	* @param desc : the buffer of report descriptor. the output of hid_get_report_descriptor()
+	* @param desc_len : the size of desc(unit byte)
+	*/
+	std::optional<_hid_api_bridge::_type_hid_report_size_map> _parse_hid_report_size(const uint8_t* desc, int desc_len);
 protected:
 	_mp::clog *m_p_clog;
 
@@ -227,9 +250,9 @@ protected:
 private:
 	// lpu237 & lpu238 device status of i-button disable request processing result.
 	// warning: this is dregon
-	_hid_api_briage::_type_map_lpu237_disable_ibutton m_map_lpu237_disable_ibutton;
+	_hid_api_bridge::_type_map_lpu237_disable_ibutton m_map_lpu237_disable_ibutton;
 	
 private://don't call these methods.
-	_hid_api_briage(const _hid_api_briage&);
-	_hid_api_briage& operator=(const _hid_api_briage&);
+	_hid_api_bridge(const _hid_api_bridge&);
+	_hid_api_bridge& operator=(const _hid_api_bridge&);
 };

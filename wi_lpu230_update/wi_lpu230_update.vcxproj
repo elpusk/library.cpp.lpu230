@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\shared\common\src\chid_briage.cpp" />
+    <ClCompile Include="..\shared\common\src\chid_bridge.cpp" />
     <ClCompile Include="..\shared\lib\inc\mp_cnamed_pipe_.cpp" />
     <ClCompile Include="..\shared\lib\inc\mp_csystem_.cpp" />
     <ClCompile Include="..\shared\lib\src\hid\mp_clibhid.cpp" />
@@ -34,7 +34,7 @@
   <ItemGroup>
     <ClInclude Include="..\shared\common\inc\cdev_lib.h" />
     <ClInclude Include="..\shared\common\inc\cfun_lpu237.h" />
-    <ClInclude Include="..\shared\common\inc\chid_briage.h" />
+    <ClInclude Include="..\shared\common\inc\chid_bridge.h" />
     <ClInclude Include="..\shared\common\inc\ckey_map.h" />
     <ClInclude Include="..\shared\common\inc\cprotocol_lpu237.h" />
     <ClInclude Include="..\shared\common\inc\lpu230\compiler.h" />

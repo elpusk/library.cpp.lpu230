@@ -51,7 +51,7 @@
     <ClCompile Include="..\shared\lib\src\hid\mp_clibhid_dev_info.cpp">
       <Filter>lib\hid</Filter>
     </ClCompile>
-    <ClCompile Include="..\shared\common\src\chid_briage.cpp">
+    <ClCompile Include="..\shared\common\src\chid_bridge.cpp">
       <Filter>common</Filter>
     </ClCompile>
     <ClCompile Include="..\shared\lib\inc\mp_cnamed_pipe_.cpp">
@@ -161,7 +161,7 @@
     <ClInclude Include="..\shared\lib\inc\mp_cqitem_dev.h">
       <Filter>lib</Filter>
     </ClInclude>
-    <ClInclude Include="..\shared\common\inc\chid_briage.h">
+    <ClInclude Include="..\shared\common\inc\chid_bridge.h">
       <Filter>common</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\lib\inc\mp_cnamed_pipe_.h">

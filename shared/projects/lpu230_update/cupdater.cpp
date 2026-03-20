@@ -68,8 +68,7 @@ cupdater::cupdater(
 
 	//parameter valid check
 	do {
-		m_ptr_hid_api_briage = std::make_shared<chid_briage>(true); //remove_all_zero_in_report
-		_mp::clibhid& mlibhid(_mp::clibhid::get_manual_instance());
+		_mp::clibhid& mlibhid(_mp::clibhid::get_manual_instance());//manual & remove_all_zero_in_report
 
 		std::string s_target_dev_path = _check_target_device_path_in_initial();
 		if (s_target_dev_path.empty()) {
@@ -870,7 +869,7 @@ std::string cupdater::_check_target_device_path_in_initial()
 	);
 
 	// create & open clibhid_dev.
-	_mp::clibhid_dev::type_ptr ptr_dev = std::make_shared<_mp::clibhid_dev>(*it_dev, m_ptr_hid_api_briage.get());
+	_mp::clibhid_dev::type_ptr ptr_dev = std::make_shared<_mp::clibhid_dev>(*it_dev, mlibhid.get_bridge().get());
 	if (!ptr_dev->is_open()) {
 		m_log_ref.log_fmt("[E] open : %s\n", s_target_dev_path.c_str());
 		s_target_dev_path.clear();
@@ -1224,7 +1223,6 @@ cupdater::~cupdater()
 
 	_mp::clibhid_dev::type_ptr ptr_null;
 	cshare::get_instance().set_target_lpu23x(ptr_null); // clear dev
-	m_ptr_hid_api_briage.reset();
 }
 
 // Update function to be implemented by derived classes
@@ -2247,6 +2245,7 @@ bool cupdater::_updates_sub_thread_recover_system_param(int& n_step, const _mp::
 	bool b_result(false);
 	bool b_complete(false);
 
+	_mp::clibhid& mlibhid(_mp::clibhid::get_manual_instance());
 	cshare& sh(cshare::get_instance());
 	std::string s_msg_success = "the system parameters has been recovered.";
 	std::string s_msg_error = "recover lpu23x system parameters.";
@@ -2261,7 +2260,7 @@ bool cupdater::_updates_sub_thread_recover_system_param(int& n_step, const _mp::
 		}
 		
 		// create & open clibhid_dev.
-		_mp::clibhid_dev::type_ptr ptr_dev = std::make_shared<_mp::clibhid_dev>(dev_info_after_update, m_ptr_hid_api_briage.get());
+		_mp::clibhid_dev::type_ptr ptr_dev = std::make_shared<_mp::clibhid_dev>(dev_info_after_update, mlibhid.get_bridge().get());
 		if (!ptr_dev->is_open()) {
 			s_msg_error = "ERROR - open lpu23x for recover system parameters.";
 			continue;
@@ -2311,6 +2310,7 @@ bool cupdater::_updates_sub_thread_change_interface_after_update(int& n_step, co
 		return true;//bypass
 	}
 
+	_mp::clibhid& mlibhid(_mp::clibhid::get_manual_instance());
 	bool b_result(false);
 
 	std::string s_new_inf = sh.get_string(sh.get_lpu23x_interface_change_after_update());
@@ -2324,7 +2324,7 @@ bool cupdater::_updates_sub_thread_change_interface_after_update(int& n_step, co
 		++n_step;
 
 		// create & open clibhid_dev.
-		_mp::clibhid_dev::type_ptr ptr_dev = std::make_shared<_mp::clibhid_dev>(dev_info_after_update, m_ptr_hid_api_briage.get());
+		_mp::clibhid_dev::type_ptr ptr_dev = std::make_shared<_mp::clibhid_dev>(dev_info_after_update, mlibhid.get_bridge().get());
 		if (!ptr_dev->is_open()) {
 			s_msg_error = "ERROR - open lpu23x for chaning interface.";
 			continue;
@@ -2365,6 +2365,7 @@ bool cupdater::_updates_sub_thread_set_iso_mode_after_update(int& n_step, const 
 		return true;//bypass
 	}
 
+	_mp::clibhid& mlibhid(_mp::clibhid::get_manual_instance());
 	bool b_result(false);
 
 	std::string s_msg_success = "mmd1100 mode have been changed to iso mode.";
@@ -2376,7 +2377,7 @@ bool cupdater::_updates_sub_thread_set_iso_mode_after_update(int& n_step, const 
 		++n_step;
 
 		// create & open clibhid_dev.
-		_mp::clibhid_dev::type_ptr ptr_dev = std::make_shared<_mp::clibhid_dev>(dev_info_after_update, m_ptr_hid_api_briage.get());
+		_mp::clibhid_dev::type_ptr ptr_dev = std::make_shared<_mp::clibhid_dev>(dev_info_after_update, mlibhid.get_bridge().get());
 		if (!ptr_dev->is_open()) {
 			s_msg_error = "ERROR - open lpu23x for mmd1100 iso mode change.";
 			continue;

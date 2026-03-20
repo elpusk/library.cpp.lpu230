@@ -3,7 +3,7 @@
 #include <mp_elpusk.h>
 
 #include <hid/_vhid_info_lpu237.h>
-#include <hid/_vhid_api_briage.h>
+#include <hid/_vhid_api_bridge.h>
 #include <hid/_vhid_info.h>
 
 #ifdef _WIN32
@@ -22,30 +22,30 @@
 /**
 * member function bodies
 */
-_vhid_api_briage::_vhid_api_briage() : _hid_api_briage()
+_vhid_api_bridge::_vhid_api_bridge() : _hid_api_bridge()
 {
-    m_s_class_name = L"_vhid_api_briage";
+    m_s_class_name = L"_vhid_api_bridge";
     m_b_remove_all_zero_in_report = false;
 }
 
-_vhid_api_briage::_vhid_api_briage(_mp::clog* p_clog) : _hid_api_briage(p_clog)
+_vhid_api_bridge::_vhid_api_bridge(_mp::clog* p_clog) : _hid_api_bridge(p_clog)
 {
-    m_s_class_name = L"_vhid_api_briage";
+    m_s_class_name = L"_vhid_api_bridge";
     m_b_remove_all_zero_in_report = false;
 }
 
-_vhid_api_briage::_vhid_api_briage(_mp::clog* p_clog, bool b_remove_all_zero_in_report) : _hid_api_briage(p_clog)
+_vhid_api_bridge::_vhid_api_bridge(_mp::clog* p_clog, bool b_remove_all_zero_in_report) : _hid_api_bridge(p_clog)
 {
-    m_s_class_name = L"_vhid_api_briage";
+    m_s_class_name = L"_vhid_api_bridge";
     m_b_remove_all_zero_in_report = b_remove_all_zero_in_report;
 }
 
-_vhid_api_briage::~_vhid_api_briage()
+_vhid_api_bridge::~_vhid_api_bridge()
 {
     m_map_ptr_hid_info_ptr_worker.clear();
 }
 
-std::set< std::tuple<std::string, unsigned short, unsigned short, int, std::string> > _vhid_api_briage::hid_enumerate()
+std::set< std::tuple<std::string, unsigned short, unsigned short, int, std::string> > _vhid_api_bridge::hid_enumerate()
 {
     /**
     * 1'st - device path, 2'nd - usb vendor id, 3'th - usb product id, 4'th - usb interface number, 5'th - extra data
@@ -53,7 +53,7 @@ std::set< std::tuple<std::string, unsigned short, unsigned short, int, std::stri
     std::set< std::tuple<std::string, unsigned short, unsigned short, int, std::string> > set_dev_in, set_dev_out;
 
     // get pysical device list
-    set_dev_in = _hid_api_briage::hid_enumerate();//연결된 HID list 를 얻음. 
+    set_dev_in = _hid_api_bridge::hid_enumerate();//연결된 HID list 를 얻음. 
 
     for (auto item : set_dev_in) {
         std::string s_path(std::get<0>(item));
@@ -86,13 +86,13 @@ std::set< std::tuple<std::string, unsigned short, unsigned short, int, std::stri
     return set_dev_out;
 }
 
-std::tuple<bool, int, bool> _vhid_api_briage::is_open(const char* path) const
+std::tuple<bool, int, bool> _vhid_api_bridge::is_open(const char* path) const
 {
     std::lock_guard<std::mutex> lock(m_mutex_for_map);
     return _is_open(path);
 }
 
-int _vhid_api_briage::api_open_path(const char* path)
+int _vhid_api_bridge::api_open_path(const char* path)
 {
     int n_map_index(_vhid_info::const_map_index_invalid);
     int n_primitive_map_index(_vhid_info::const_map_index_invalid);
@@ -109,10 +109,10 @@ int _vhid_api_briage::api_open_path(const char* path)
         std::tie(std::ignore, t, s_primitive, b_support_shared_open) = _vhid_info::is_path_compositive_type(std::string(path));
         bool b_open(false);
 
-        std::tie(b_open, n_primitive_map_index, std::ignore ) = _hid_api_briage::is_open(s_primitive.c_str());
+        std::tie(b_open, n_primitive_map_index, std::ignore ) = _hid_api_bridge::is_open(s_primitive.c_str());
 
         if (!b_open) {
-            n_map_index = n_primitive_map_index = _hid_api_briage::api_open_path(s_primitive.c_str());
+            n_map_index = n_primitive_map_index = _hid_api_bridge::api_open_path(s_primitive.c_str());
             if (n_primitive_map_index < 0) {
                 continue;// for compositive, open primitive error.
             }
@@ -134,7 +134,7 @@ int _vhid_api_briage::api_open_path(const char* path)
             std::set< std::tuple<std::string, unsigned short, unsigned short, int, std::string> > set_primitive_dev;
 
             // get pysical device list
-            set_primitive_dev = _hid_api_briage::hid_enumerate();//연결된 HID list 를 얻음. 
+            set_primitive_dev = _hid_api_bridge::hid_enumerate();//연결된 HID list 를 얻음. 
 
             for (auto item : set_primitive_dev) {
                 std::string s_path(std::get<0>(item));
@@ -214,7 +214,7 @@ int _vhid_api_briage::api_open_path(const char* path)
     return n_map_index;
 }
 
-void _vhid_api_briage::api_close(int n_map_index)
+void _vhid_api_bridge::api_close(int n_map_index)
 {
     do {
         std::lock_guard<std::mutex> lock(m_mutex_for_map);
@@ -251,18 +251,18 @@ void _vhid_api_briage::api_close(int n_map_index)
         if (b_all_compositive_type_are_zeros) {
             //all compositive type is closed
             m_map_ptr_hid_info_ptr_worker.erase(it);
-            _hid_api_briage::api_close(n_primitive);
+            _hid_api_bridge::api_close(n_primitive);
         }
 
     } while (false);
 }
 
-int _vhid_api_briage::api_set_nonblocking(int n_map_index, int nonblock)
+int _vhid_api_bridge::api_set_nonblocking(int n_map_index, int nonblock)
 {
     bool b_run(false);
     int n_result(-1);
     int n_primitive(-1);
-    _vhid_api_briage::_q_item::type_ptr ptr_item;
+    _vhid_api_bridge::_q_item::type_ptr ptr_item;
 
     std::tie(n_primitive,std::ignore) = _vhid_info::get_primitive_map_index_from_compositive_map_index(n_map_index);
 
@@ -289,7 +289,7 @@ int _vhid_api_briage::api_set_nonblocking(int n_map_index, int nonblock)
             continue;
         }
 
-        ptr_item = std::make_shared<_vhid_api_briage::_q_item>(n_map_index);
+        ptr_item = std::make_shared<_vhid_api_bridge::_q_item>(n_map_index);
         ptr_item->setup_for_set_nonblocking(nonblock);
         if (!it->second.second->push(ptr_item)) {
             continue;
@@ -312,12 +312,12 @@ int _vhid_api_briage::api_set_nonblocking(int n_map_index, int nonblock)
     return n_result;
 }
 
-int _vhid_api_briage::api_get_report_descriptor(int n_map_index, unsigned char* buf, size_t buf_size)
+int _vhid_api_bridge::api_get_report_descriptor(int n_map_index, unsigned char* buf, size_t buf_size)
 {
     bool b_run(false);
     int n_result(-1);
     int n_primitive(-1);
-    _vhid_api_briage::_q_item::type_ptr ptr_item;
+    _vhid_api_bridge::_q_item::type_ptr ptr_item;
 
     std::tie(n_primitive, std::ignore) = _vhid_info::get_primitive_map_index_from_compositive_map_index(n_map_index);
 
@@ -332,7 +332,7 @@ int _vhid_api_briage::api_get_report_descriptor(int n_map_index, unsigned char* 
             continue;
         }
 
-        ptr_item = std::make_shared<_vhid_api_briage::_q_item>(n_map_index);
+        ptr_item = std::make_shared<_vhid_api_bridge::_q_item>(n_map_index);
         ptr_item->setup_for_get_report_descriptor(buf, buf_size);
 
         if (!it->second.second->push(ptr_item)) {
@@ -356,12 +356,12 @@ int _vhid_api_briage::api_get_report_descriptor(int n_map_index, unsigned char* 
     return n_result;
 }
 
-int _vhid_api_briage::api_write(int n_map_index, const unsigned char* data, size_t length, _mp::type_next_io next)
+int _vhid_api_bridge::api_write(int n_map_index, const unsigned char* data, size_t length, _mp::type_next_io next)
 {
     bool b_run(false);
     int n_result(-1);
     int n_primitive(-1);
-    _vhid_api_briage::_q_item::type_ptr ptr_item;
+    _vhid_api_bridge::_q_item::type_ptr ptr_item;
 
     std::tie(n_primitive, std::ignore) = _vhid_info::get_primitive_map_index_from_compositive_map_index(n_map_index);
 
@@ -376,7 +376,7 @@ int _vhid_api_briage::api_write(int n_map_index, const unsigned char* data, size
             continue;
         }
 
-        ptr_item = std::make_shared<_vhid_api_briage::_q_item>(n_map_index);
+        ptr_item = std::make_shared<_vhid_api_bridge::_q_item>(n_map_index);
         ptr_item->setup_for_write(data, length,next);
 
         if (!it->second.second->push(ptr_item)) {
@@ -408,12 +408,12 @@ int _vhid_api_briage::api_write(int n_map_index, const unsigned char* data, size
     return n_result;
 }
 
-int _vhid_api_briage::api_read(int n_map_index, unsigned char* data, size_t length, size_t n_report)
+int _vhid_api_bridge::api_read(int n_map_index, unsigned char* data, size_t length, size_t n_report)
 {
     bool b_run(false);
     int n_result(-1);
     int n_primitive(-1);
-    _vhid_api_briage::_q_item::type_ptr ptr_item;
+    _vhid_api_bridge::_q_item::type_ptr ptr_item;
 
     std::tie(n_primitive, std::ignore) = _vhid_info::get_primitive_map_index_from_compositive_map_index(n_map_index);
 
@@ -433,7 +433,7 @@ int _vhid_api_briage::api_read(int n_map_index, unsigned char* data, size_t leng
             continue;
         }
 
-        ptr_item = std::make_shared<_vhid_api_briage::_q_item>(n_map_index);
+        ptr_item = std::make_shared<_vhid_api_bridge::_q_item>(n_map_index);
         ptr_item->setup_for_read(data, length,n_report);
 
         if (!it->second.second->push(ptr_item)) {
@@ -495,14 +495,14 @@ int _vhid_api_briage::api_read(int n_map_index, unsigned char* data, size_t leng
     return n_result;
 }
 
-const wchar_t* _vhid_api_briage::api_error(int n_map_index)
+const wchar_t* _vhid_api_bridge::api_error(int n_map_index)
 {
     int n_primitive(-1);
     std::tie(n_primitive, std::ignore) = _vhid_info::get_primitive_map_index_from_compositive_map_index(n_map_index);
-    return _hid_api_briage::api_error(n_map_index);
+    return _hid_api_bridge::api_error(n_map_index);
 }
 
-std::tuple<bool, int, bool> _vhid_api_briage::_is_open(const char* path) const
+std::tuple<bool, int, bool> _vhid_api_bridge::_is_open(const char* path) const
 {
     bool b_open(false);
     int n_primitive_map_index(-1);
@@ -515,7 +515,7 @@ std::tuple<bool, int, bool> _vhid_api_briage::_is_open(const char* path) const
         bool b_support_shared_open(false);
 
         std::tie(std::ignore, t, s_primitive, b_support_shared_open) = _vhid_info::is_path_compositive_type(std::string(path));
-        std::tie(b_open, n_primitive_map_index, std::ignore) = _hid_api_briage::is_open(s_primitive.c_str()); //check primitive type
+        std::tie(b_open, n_primitive_map_index, std::ignore) = _hid_api_bridge::is_open(s_primitive.c_str()); //check primitive type
 
         // the base type is opened ?
         if (!b_open) {
@@ -539,22 +539,22 @@ std::tuple<bool, int, bool> _vhid_api_briage::_is_open(const char* path) const
 
 /**
 * ***************************************************
-* _vhid_api_briage::_q_worker member function bodies
+* _vhid_api_bridge::_q_worker member function bodies
 */
-_vhid_api_briage::_q_worker::_q_worker(int n_primitive_map_index, _vhid_api_briage* p_api_briage, bool b_remove_all_zero_in_report) :
+_vhid_api_bridge::_q_worker::_q_worker(int n_primitive_map_index, _vhid_api_bridge* p_api_bridge, bool b_remove_all_zero_in_report) :
     m_b_run_worker(false),
     m_n_primitive_map_index(n_primitive_map_index),
     m_b_remove_all_zero_in_report(b_remove_all_zero_in_report)
 {
     m_b_run_worker = true;
-    m_ptr_worker = std::shared_ptr<std::thread>(new std::thread(&_vhid_api_briage::_q_worker::_worker, this, p_api_briage));
+    m_ptr_worker = std::shared_ptr<std::thread>(new std::thread(&_vhid_api_bridge::_q_worker::_worker, this, p_api_bridge));
 #if !defined(_WIN32) && defined(_SET_THREAD_NAME_)
     pthread_setname_np(m_ptr_worker->native_handle(), "_q_worker");
 #endif
 
 }
 
-_vhid_api_briage::_q_worker::~_q_worker()
+_vhid_api_bridge::_q_worker::~_q_worker()
 {
 #if defined(_WIN32) && defined(_DEBUG)
     //ATLTRACE(L" ** destructor ._q_worker()\n");
@@ -568,22 +568,22 @@ _vhid_api_briage::_q_worker::~_q_worker()
     }
 }
 
-bool _vhid_api_briage::_q_worker::push(const _vhid_api_briage::_q_item::type_ptr& ptr_item)
+bool _vhid_api_bridge::_q_worker::push(const _vhid_api_bridge::_q_item::type_ptr& ptr_item)
 {
     return m_q.push(ptr_item);
 }
 
-void _vhid_api_briage::_q_worker::_pop_all(int n_result, const _mp::type_v_buffer& v_rx)
+void _vhid_api_bridge::_q_worker::_pop_all(int n_result, const _mp::type_v_buffer& v_rx)
 {
     m_q.pop_all(n_result, v_rx);
 }
 
-std::pair<bool, bool> _vhid_api_briage::_q_worker::_try_pop(_q_container::type_ptr_list& ptr_list)
+std::pair<bool, bool> _vhid_api_bridge::_q_worker::_try_pop(_q_container::type_ptr_list& ptr_list)
 {
     return m_q.try_pop(ptr_list);
 }
 
-void _vhid_api_briage::_q_worker::_worker(_vhid_api_briage* p_api_briage)
+void _vhid_api_bridge::_q_worker::_worker(_vhid_api_bridge* p_api_bridge)
 {
 #ifdef _WIN32
 #ifdef _DEBUG
@@ -593,11 +593,11 @@ void _vhid_api_briage::_q_worker::_worker(_vhid_api_briage* p_api_briage)
 
     bool b_pass_result(false);
     _q_container::type_ptr_list ptr_list;
-    long long ll_req_q_check_interval_mmsec = _hid_api_briage::const_default_req_q_check_interval_mmsec_of_child;
+    long long ll_req_q_check_interval_mmsec = _hid_api_bridge::const_default_req_q_check_interval_mmsec_of_child;
     int n_reload_cnt = 0;
 
-    if( p_api_briage != nullptr) {
-        ll_req_q_check_interval_mmsec = p_api_briage->get_req_q_check_interval_in_child();
+    if( p_api_bridge != nullptr) {
+        ll_req_q_check_interval_mmsec = p_api_bridge->get_req_q_check_interval_in_child();
 	}
 
     while (m_b_run_worker) {
@@ -616,10 +616,10 @@ void _vhid_api_briage::_q_worker::_worker(_vhid_api_briage* p_api_briage)
             }
 
             if (b_canceled) {
-                b_result = _process_cancel(ptr_list, p_api_briage);
+                b_result = _process_cancel(ptr_list, p_api_bridge);
             }
             else {
-                std::tie(b_result, v_rx) = _process(ptr_list, p_api_briage);
+                std::tie(b_result, v_rx) = _process(ptr_list, p_api_bridge);
             }
         } while (false);
 
@@ -627,8 +627,8 @@ void _vhid_api_briage::_q_worker::_worker(_vhid_api_briage* p_api_briage)
         if (n_reload_cnt > (2000/ ll_req_q_check_interval_mmsec)) {
             n_reload_cnt = 0;
 
-            if (p_api_briage != nullptr) {
-                auto ll = p_api_briage->get_req_q_check_interval_in_child();
+            if (p_api_bridge != nullptr) {
+                auto ll = p_api_bridge->get_req_q_check_interval_in_child();
                 if (ll_req_q_check_interval_mmsec != ll) {
                     ll_req_q_check_interval_mmsec = ll;
                 }
@@ -643,15 +643,15 @@ void _vhid_api_briage::_q_worker::_worker(_vhid_api_briage* p_api_briage)
     _pop_all(0);
 #ifdef _WIN32
 #ifdef _DEBUG
-    ATLTRACE(L"Exit _vhid_api_briage::_q_worker::_worker().\n");
+    ATLTRACE(L"Exit _vhid_api_bridge::_q_worker::_worker().\n");
 #endif
 #endif
 
 }
 
-std::tuple<bool,int> _vhid_api_briage::_q_worker::_process_req(
-    const _vhid_api_briage::_q_item::type_ptr & ptr_item,
-    _hid_api_briage* p_api_briage,
+std::tuple<bool,int> _vhid_api_bridge::_q_worker::_process_req(
+    const _vhid_api_bridge::_q_item::type_ptr & ptr_item,
+    _hid_api_bridge* p_api_bridge,
     _mp::type_ptr_v_buffer & v_ptr_rx,
     const std::wstring& s_debug_msg /*= std::wstring(L"")*/
     )
@@ -687,20 +687,20 @@ std::tuple<bool,int> _vhid_api_briage::_q_worker::_process_req(
         ptr_item->set_start_time();
 
         switch (ptr_item->get_cmd()) {
-        case _vhid_api_briage::_q_item::cmd_set_nonblocking:
-            n_result = p_api_briage->_hid_api_briage::api_set_nonblocking(m_n_primitive_map_index, ptr_item->get_param_nonblock());
+        case _vhid_api_bridge::_q_item::cmd_set_nonblocking:
+            n_result = p_api_bridge->_hid_api_bridge::api_set_nonblocking(m_n_primitive_map_index, ptr_item->get_param_nonblock());
             break;
-        case _vhid_api_briage::_q_item::cmd_get_report_descriptor:
-            n_result = p_api_briage->_hid_api_briage::api_get_report_descriptor(m_n_primitive_map_index, &(*v_ptr_rx)[0], (*v_ptr_rx).size());
+        case _vhid_api_bridge::_q_item::cmd_get_report_descriptor:
+            n_result = p_api_bridge->_hid_api_bridge::api_get_report_descriptor(m_n_primitive_map_index, &(*v_ptr_rx)[0], (*v_ptr_rx).size());
             break;
-        case _vhid_api_briage::_q_item::cmd_write:
-            n_result = p_api_briage->_hid_api_briage::api_write(m_n_primitive_map_index, &v_tx[0], v_tx.size(), next_io);
+        case _vhid_api_bridge::_q_item::cmd_write:
+            n_result = p_api_bridge->_hid_api_bridge::api_write(m_n_primitive_map_index, &v_tx[0], v_tx.size(), next_io);
             if (n_result == 0) {
                 b_complete = false; // not yet tx
             }
             //tx is success and ready for rx or error
             break;
-        case _vhid_api_briage::_q_item::cmd_read:
+        case _vhid_api_bridge::_q_item::cmd_read:
 #ifdef _WIN32
 #ifdef _DEBUG
             ws_type = _vhid_info::get_type_wstring_from_compositive_map_index(ptr_item->get_map_index());
@@ -714,7 +714,7 @@ std::tuple<bool,int> _vhid_api_briage::_q_worker::_process_req(
             n_size_report_in = ptr_item->get_size_report_in();
 
             (*v_ptr_rx).resize(n_size_report_in, 0);
-            n_result = _rx((*v_ptr_rx), p_api_briage);
+            n_result = _rx((*v_ptr_rx), p_api_bridge);
             if (n_result == 0) {
                 // need more receving
                 b_complete = false;
@@ -730,9 +730,9 @@ std::tuple<bool,int> _vhid_api_briage::_q_worker::_process_req(
     return std::make_pair(b_complete, n_result);
 }
 
-std::pair<bool, _mp::type_v_buffer> _vhid_api_briage::_q_worker::_process(
+std::pair<bool, _mp::type_v_buffer> _vhid_api_bridge::_q_worker::_process(
     _q_container::type_ptr_list& ptr_list,
-    _hid_api_briage* p_api_briage
+    _hid_api_bridge* p_api_bridge
 )
 {
     bool b_result(false);
@@ -753,8 +753,8 @@ std::pair<bool, _mp::type_v_buffer> _vhid_api_briage::_q_worker::_process(
 
         if (ptr_list->size() == 1) {
             //single request
-            _vhid_api_briage::_q_item::type_ptr ptr_item(*ptr_list->begin());
-            std::tie(std::ignore, n_result) = _process_req(ptr_item, p_api_briage, ptr_v_rx, L"Single");
+            _vhid_api_bridge::_q_item::type_ptr ptr_item(*ptr_list->begin());
+            std::tie(std::ignore, n_result) = _process_req(ptr_item, p_api_bridge, ptr_v_rx, L"Single");
             _save_rx_to_msr_or_ibutton_buffer_in_single_or_multi_rx_requests(n_result, ptr_v_rx, ptr_item);
             _notify_in_single_or_multi_rx_requests(ptr_item, n_result, ptr_v_rx);
             continue;
@@ -764,7 +764,7 @@ std::pair<bool, _mp::type_v_buffer> _vhid_api_briage::_q_worker::_process(
         _q_container::type_list::iterator it_list = ptr_list->begin();//get first request of list
         if ((*it_list)->get_next_io_type() == _mp::next_io_none) {
             //multi rx request mode with the diffent map index. 
-            std::tie(std::ignore, n_result) = _process_req((*it_list), p_api_briage, ptr_v_rx, L"Multi");
+            std::tie(std::ignore, n_result) = _process_req((*it_list), p_api_bridge, ptr_v_rx, L"Multi");
             _save_rx_to_msr_or_ibutton_buffer_in_single_or_multi_rx_requests(n_result, ptr_v_rx);
 
             // notify result to all
@@ -784,9 +784,9 @@ std::pair<bool, _mp::type_v_buffer> _vhid_api_briage::_q_worker::_process(
         ATLTRACE(L"== CLR buffer.\n");
 #endif
 #endif
-		long long ll_check_write_interval_mmsec = _hid_api_briage::const_default_hid_write_interval_mmsec;
-        if (p_api_briage) {
-            ll_check_write_interval_mmsec = p_api_briage->get_hid_write_interval_in_child();
+		long long ll_check_write_interval_mmsec = _hid_api_bridge::const_default_hid_write_interval_mmsec;
+        if (p_api_bridge) {
+            ll_check_write_interval_mmsec = p_api_bridge->get_hid_write_interval_in_child();
         }
 
         for (_q_item::type_ptr &ptr_req : *ptr_list) {
@@ -795,22 +795,22 @@ std::pair<bool, _mp::type_v_buffer> _vhid_api_briage::_q_worker::_process(
                 continue;
             }
 
-            if (p_api_briage->get_clog())
-                p_api_briage->get_clog()->log_fmt_in_debug_mode(L"[D] TXRX REQ : %ls.\n", ptr_req->get_cmd_by_string().c_str());
+            if (p_api_bridge->get_clog())
+                p_api_bridge->get_clog()->log_fmt_in_debug_mode(L"[D] TXRX REQ : %ls.\n", ptr_req->get_cmd_by_string().c_str());
 
             next_io = ptr_req->get_next_io_type();
             ptr_v_rx.reset();
 
             do {
-                std::tie(b_complete, n_result) = _process_req(ptr_req, p_api_briage, ptr_v_rx, L"TXRX");
+                std::tie(b_complete, n_result) = _process_req(ptr_req, p_api_bridge, ptr_v_rx, L"TXRX");
                 if(!m_b_run_worker ){
-                    if (p_api_briage->get_clog())
-                        p_api_briage->get_clog()->log_fmt_in_debug_mode(L"[D] TXRX REQ : %ls - complete BY TH : %d.\n", ptr_req->get_cmd_by_string().c_str(), n_result);
+                    if (p_api_bridge->get_clog())
+                        p_api_bridge->get_clog()->log_fmt_in_debug_mode(L"[D] TXRX REQ : %ls - complete BY TH : %d.\n", ptr_req->get_cmd_by_string().c_str(), n_result);
                     break;//exit while
                 }
                 if (b_complete) {
-                    if (p_api_briage->get_clog())
-                        p_api_briage->get_clog()->log_fmt_in_debug_mode(L"[D] TXRX REQ : %ls - complete : %d.\n", ptr_req->get_cmd_by_string().c_str(), n_result);
+                    if (p_api_bridge->get_clog())
+                        p_api_bridge->get_clog()->log_fmt_in_debug_mode(L"[D] TXRX REQ : %ls - complete : %d.\n", ptr_req->get_cmd_by_string().c_str(), n_result);
                     break;// continue while
                 }
 
@@ -851,7 +851,7 @@ std::pair<bool, _mp::type_v_buffer> _vhid_api_briage::_q_worker::_process(
         return std::make_pair(b_result, _mp::type_v_buffer());
 }
 
-bool _vhid_api_briage::_q_worker::_process_cancel(_q_container::type_ptr_list& ptr_list, _hid_api_briage* p_api_briage)
+bool _vhid_api_bridge::_q_worker::_process_cancel(_q_container::type_ptr_list& ptr_list, _hid_api_bridge* p_api_bridge)
 {
     bool b_result(false);
     _mp::type_v_buffer v_rx(0);
@@ -933,7 +933,7 @@ bool _vhid_api_briage::_q_worker::_process_cancel(_q_container::type_ptr_list& p
     return b_result;
 }
 
-bool _vhid_api_briage::_q_worker::_notify_in_single_or_multi_rx_requests(
+bool _vhid_api_bridge::_q_worker::_notify_in_single_or_multi_rx_requests(
     _q_item::type_ptr& ptr_req,
     int n_result,
     const _mp::type_ptr_v_buffer& ptr_v_rx
@@ -953,7 +953,7 @@ bool _vhid_api_briage::_q_worker::_notify_in_single_or_multi_rx_requests(
             b_notified = false;//통지 할 정보가 없음으로 무시.
             continue;
         }
-        if (ptr_req->get_cmd() != _vhid_api_briage::_q_item::cmd_read) {
+        if (ptr_req->get_cmd() != _vhid_api_bridge::_q_item::cmd_read) {
             // read 인 것은 무조건 통지.
             continue;
         }
@@ -1044,7 +1044,7 @@ bool _vhid_api_briage::_q_worker::_notify_in_single_or_multi_rx_requests(
     return b_notified;
 }
 
-void _vhid_api_briage::_q_worker::_save_rx_to_msr_or_ibutton_buffer_in_single_or_multi_rx_requests(
+void _vhid_api_bridge::_q_worker::_save_rx_to_msr_or_ibutton_buffer_in_single_or_multi_rx_requests(
     int n_result,
     const _mp::type_ptr_v_buffer& ptr_v_rx,
     const _q_item::type_ptr& ptr_req /*= _q_item::type_ptr()*/
@@ -1056,7 +1056,7 @@ void _vhid_api_briage::_q_worker::_save_rx_to_msr_or_ibutton_buffer_in_single_or
     do {
         if (ptr_req) {
             // single request 의 경우.
-            if (ptr_req->get_cmd() != _vhid_api_briage::_q_item::cmd_read) {
+            if (ptr_req->get_cmd() != _vhid_api_bridge::_q_item::cmd_read) {
                 continue;// read 요청에서만 고려할 사항
             }
         }
@@ -1112,7 +1112,7 @@ void _vhid_api_briage::_q_worker::_save_rx_to_msr_or_ibutton_buffer_in_single_or
     } while (false);
 }
 
-int _vhid_api_briage::_q_worker::_rx(_mp::type_v_buffer& v_rx, _hid_api_briage* p_api_briage)
+int _vhid_api_bridge::_q_worker::_rx(_mp::type_v_buffer& v_rx, _hid_api_bridge* p_api_bridge)
 {
     int n_result(0);
     int n_offset(0);
@@ -1122,15 +1122,15 @@ int _vhid_api_briage::_q_worker::_rx(_mp::type_v_buffer& v_rx, _hid_api_briage* 
 
     std::fill(v_rx.begin(), v_rx.end(), 0);
 
-	long long ll_check_read_interval_mmsec = _hid_api_briage::const_default_hid_read_interval_mmsec;
-    if( p_api_briage != nullptr) {
-        ll_check_read_interval_mmsec = p_api_briage->get_hid_read_interval_in_child();
+	long long ll_check_read_interval_mmsec = _hid_api_bridge::const_default_hid_read_interval_mmsec;
+    if( p_api_bridge != nullptr) {
+        ll_check_read_interval_mmsec = p_api_bridge->get_hid_read_interval_in_child();
 	}
 
     do {
         ++n_loop; //for debugging
 
-        n_result = p_api_briage->_hid_api_briage::api_read(m_n_primitive_map_index, &v_rx[n_offset], n_len, v_rx.size());
+        n_result = p_api_bridge->_hid_api_bridge::api_read(m_n_primitive_map_index, &v_rx[n_offset], n_len, v_rx.size());
         if (n_result < 0) {
             break;// error 
         }
@@ -1171,26 +1171,14 @@ int _vhid_api_briage::_q_worker::_rx(_mp::type_v_buffer& v_rx, _hid_api_briage* 
 */
                 }
                 else {
-                    /*
-                    if (p_api_briage->get_clog())
-                        p_api_briage->get_clog()->log_fmt_in_debug_mode(L"[D%d] RX-OK : (n_offset, n_read)=(%d,%d,%u).\n", n_loop, n_offset, n_result, v_rx.size());
-                    */
                     break; // read complete
                 }
             }
             else {
-                /*
-                if (p_api_briage->get_clog())
-                    p_api_briage->get_clog()->log_fmt_in_debug_mode(L"[D%d] RX-OK : (n_offset, n_read)=(%d,%d,%u).\n", n_loop, n_offset, n_result, v_rx.size());
-                */
                 break; // read complete
             }
         }
         else {
-            /*
-            if (p_api_briage->get_clog())
-                p_api_briage->get_clog()->log_fmt_in_debug_mode(L"[D%d] RX : (n_offset, n_read)=(%d,%d,%u).\n", n_loop, n_offset, n_result, v_rx.size());
-            */
             n_offset = n_offset + n_result;
             n_len = n_len - n_result;
         }
@@ -1204,10 +1192,10 @@ int _vhid_api_briage::_q_worker::_rx(_mp::type_v_buffer& v_rx, _hid_api_briage* 
 
 /**
 * ***************************************************
-* _vhid_api_briage::_q_item member function bodies
+* _vhid_api_bridge::_q_item member function bodies
 */
 
-_vhid_api_briage::_q_item::_q_item(int n_compositive_map_index) : m_n_compositive_map_index(n_compositive_map_index)
+_vhid_api_bridge::_q_item::_q_item(int n_compositive_map_index) : m_n_compositive_map_index(n_compositive_map_index)
 {
     m_next = _mp::next_io_none;
     m_n_in_report = 0;
@@ -1224,7 +1212,7 @@ _vhid_api_briage::_q_item::_q_item(int n_compositive_map_index) : m_n_compositiv
 }
 
 
-void _vhid_api_briage::_q_item::setup_for_set_nonblocking(int nonblock)
+void _vhid_api_bridge::_q_item::setup_for_set_nonblocking(int nonblock)
 {
     m_v_rx.resize(0);
     m_ps_rx = nullptr;
@@ -1238,7 +1226,7 @@ void _vhid_api_briage::_q_item::setup_for_set_nonblocking(int nonblock)
     m_n_result = -1;
     m_n_event = m_waiter.generate_new_event();
 }
-void _vhid_api_briage::_q_item::setup_for_get_report_descriptor(unsigned char* buf, size_t buf_size)
+void _vhid_api_bridge::_q_item::setup_for_get_report_descriptor(unsigned char* buf, size_t buf_size)
 {
     m_n_rx = buf_size;
     m_v_rx.resize(buf_size,0);
@@ -1250,7 +1238,7 @@ void _vhid_api_briage::_q_item::setup_for_get_report_descriptor(unsigned char* b
     m_n_result = -1;
     m_n_event = m_waiter.generate_new_event();
 }
-void _vhid_api_briage::_q_item::setup_for_write(const unsigned char* data, size_t length, _mp::type_next_io next)
+void _vhid_api_bridge::_q_item::setup_for_write(const unsigned char* data, size_t length, _mp::type_next_io next)
 {
     m_v_rx.resize(0);
     m_ps_rx = nullptr;
@@ -1268,7 +1256,7 @@ void _vhid_api_briage::_q_item::setup_for_write(const unsigned char* data, size_
     m_n_result = -1;
     m_n_event = m_waiter.generate_new_event();
 }
-void _vhid_api_briage::_q_item::setup_for_read(unsigned char* data, size_t length, size_t n_report)
+void _vhid_api_bridge::_q_item::setup_for_read(unsigned char* data, size_t length, size_t n_report)
 {
     m_n_rx = length;
     m_v_rx.resize(length, 0);
@@ -1282,16 +1270,16 @@ void _vhid_api_briage::_q_item::setup_for_read(unsigned char* data, size_t lengt
     m_n_event = m_waiter.generate_new_event();
 }
 
-_vhid_api_briage::_q_item::~_q_item()
+_vhid_api_bridge::_q_item::~_q_item()
 {
 }
 
-_vhid_api_briage::_q_item::type_cmd _vhid_api_briage::_q_item::get_cmd() const
+_vhid_api_bridge::_q_item::type_cmd _vhid_api_bridge::_q_item::get_cmd() const
 {
     return m_cmd;
 }
 
-std::wstring _vhid_api_briage::_q_item::get_cmd_by_string() const
+std::wstring _vhid_api_bridge::_q_item::get_cmd_by_string() const
 {
     std::wstring s;
 
@@ -1318,21 +1306,21 @@ std::wstring _vhid_api_briage::_q_item::get_cmd_by_string() const
     return s;
 }
 
-_mp::type_next_io _vhid_api_briage::_q_item::get_next_io_type() const
+_mp::type_next_io _vhid_api_bridge::_q_item::get_next_io_type() const
 {
     return m_next;
 }
-_mp::type_v_buffer _vhid_api_briage::_q_item::get_tx() const
+_mp::type_v_buffer _vhid_api_bridge::_q_item::get_tx() const
 {
     return m_v_tx;
 }
 
-size_t _vhid_api_briage::_q_item::get_rx_size() const
+size_t _vhid_api_bridge::_q_item::get_rx_size() const
 {
     return m_v_rx.size();
 }
 
-_vhid_api_briage::_q_item& _vhid_api_briage::_q_item::set_rx(const _mp::type_ptr_v_buffer& ptr_v_rx)
+_vhid_api_bridge::_q_item& _vhid_api_bridge::_q_item::set_rx(const _mp::type_ptr_v_buffer& ptr_v_rx)
 {
     if (ptr_v_rx) {
         return set_rx(*ptr_v_rx);
@@ -1341,7 +1329,7 @@ _vhid_api_briage::_q_item& _vhid_api_briage::_q_item::set_rx(const _mp::type_ptr
         return set_rx(_mp::type_v_buffer());
     }
 }
-_vhid_api_briage::_q_item& _vhid_api_briage::_q_item::set_rx(const _mp::type_v_buffer& v_rx)
+_vhid_api_bridge::_q_item& _vhid_api_bridge::_q_item::set_rx(const _mp::type_v_buffer& v_rx)
 {
     do {
         if (m_v_rx.empty()) {
@@ -1368,7 +1356,7 @@ _vhid_api_briage::_q_item& _vhid_api_briage::_q_item::set_rx(const _mp::type_v_b
 }
 
 
-_vhid_api_briage::_q_item& _vhid_api_briage::_q_item::append_rx(const _mp::type_v_buffer& v_rx, bool b_add_to_head/* = false*/)
+_vhid_api_bridge::_q_item& _vhid_api_bridge::_q_item::append_rx(const _mp::type_v_buffer& v_rx, bool b_add_to_head/* = false*/)
 {
     if (b_add_to_head) {
         m_v_rx.insert(m_v_rx.begin(), v_rx.begin(), v_rx.end());
@@ -1389,7 +1377,7 @@ _vhid_api_briage::_q_item& _vhid_api_briage::_q_item::append_rx(const _mp::type_
     return *this;
 }
 
-_vhid_api_briage::_q_item& _vhid_api_briage::_q_item::set_result(int n_result, const std::wstring& s_debug_msg/*=std::wstring()*/)
+_vhid_api_bridge::_q_item& _vhid_api_bridge::_q_item::set_result(int n_result, const std::wstring& s_debug_msg/*=std::wstring()*/)
 {
     m_n_result = n_result;
 
@@ -1409,54 +1397,54 @@ _vhid_api_briage::_q_item& _vhid_api_briage::_q_item::set_result(int n_result, c
     return *this;
 }
 
-size_t _vhid_api_briage::_q_item::get_user_rx_buffer_size() const
+size_t _vhid_api_bridge::_q_item::get_user_rx_buffer_size() const
 {
     return m_n_rx;
 }
 
-unsigned char* _vhid_api_briage::_q_item::get_user_rx_buffer() const
+unsigned char* _vhid_api_bridge::_q_item::get_user_rx_buffer() const
 {
     return m_ps_rx;
 }
 
-int _vhid_api_briage::_q_item::get_param_nonblock() const
+int _vhid_api_bridge::_q_item::get_param_nonblock() const
 {
     return m_n_nonblock;
 }
 
-int _vhid_api_briage::_q_item::get_map_index() const
+int _vhid_api_bridge::_q_item::get_map_index() const
 {
     return m_n_compositive_map_index;
 }
 
-size_t _vhid_api_briage::_q_item::get_size_report_in() const
+size_t _vhid_api_bridge::_q_item::get_size_report_in() const
 {
     return m_n_in_report;
 }
 
-int _vhid_api_briage::_q_item::get_rx_timeout_mmsec() const
+int _vhid_api_bridge::_q_item::get_rx_timeout_mmsec() const
 {
     return m_n_milliseconds;
 }
 
-void _vhid_api_briage::_q_item::set_start_time()
+void _vhid_api_bridge::_q_item::set_start_time()
 {
     m_start_time = std::chrono::high_resolution_clock::now();
 }
 
-double _vhid_api_briage::_q_item::get_elapsed_usec_time()
+double _vhid_api_bridge::_q_item::get_elapsed_usec_time()
 {
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - m_start_time).count();
     return duration / 1e3; //unit usec
 }
 
-std::pair<int, _mp::type_v_buffer> _vhid_api_briage::_q_item::get_result() const
+std::pair<int, _mp::type_v_buffer> _vhid_api_bridge::_q_item::get_result() const
 {
     return std::make_pair(m_n_result,m_v_rx);
 }
 
-bool _vhid_api_briage::_q_item::waits()
+bool _vhid_api_bridge::_q_item::waits()
 {
     bool b_result(false);
 
@@ -1468,7 +1456,7 @@ bool _vhid_api_briage::_q_item::waits()
     return b_result;
 }
 
-void _vhid_api_briage::_q_item::set_event()
+void _vhid_api_bridge::_q_item::set_event()
 {
     m_waiter.set(m_n_event);
 }
@@ -1476,15 +1464,15 @@ void _vhid_api_briage::_q_item::set_event()
 /////////////////////////////////////////////////////
 /////////////////////////////////////////////////////
 // _q_container member
-_vhid_api_briage::_q_container::_q_container()
+_vhid_api_bridge::_q_container::_q_container()
 {
 }
 
-_vhid_api_briage::_q_container::~_q_container()
+_vhid_api_bridge::_q_container::~_q_container()
 {
 }
 
-bool _vhid_api_briage::_q_container::push( const _vhid_api_briage::_q_item::type_ptr& ptr_item)
+bool _vhid_api_bridge::_q_container::push( const _vhid_api_bridge::_q_item::type_ptr& ptr_item)
 {
     bool b_result(false);
 
@@ -1629,7 +1617,7 @@ bool _vhid_api_briage::_q_container::push( const _vhid_api_briage::_q_item::type
     return b_result;
 }
 
-void _vhid_api_briage::_q_container::_dump_map()
+void _vhid_api_bridge::_q_container::_dump_map()
 {
     // dump m_q_pair for debugging
     /*
@@ -1669,7 +1657,7 @@ void _vhid_api_briage::_q_container::_dump_map()
 #endif
     */
 }
-void _vhid_api_briage::_q_container::pop_all(int n_result, const _mp::type_v_buffer& v_rx)
+void _vhid_api_bridge::_q_container::pop_all(int n_result, const _mp::type_v_buffer& v_rx)
 {
     do {
         std::lock_guard<std::mutex> lock(m_mutex);
@@ -1691,7 +1679,7 @@ void _vhid_api_briage::_q_container::pop_all(int n_result, const _mp::type_v_buf
     } while (false);
 }
 
-std::pair<bool, bool> _vhid_api_briage::_q_container::try_pop(_q_container::type_ptr_list& ptr_list)
+std::pair<bool, bool> _vhid_api_bridge::_q_container::try_pop(_q_container::type_ptr_list& ptr_list)
 {
     bool b_exsit_data(false);
     bool b_canceled(false);

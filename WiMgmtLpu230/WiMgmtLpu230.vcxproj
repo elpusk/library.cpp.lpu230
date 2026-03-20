@@ -20,7 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\shared\3thpart\src\win\hid.c" />
-    <ClCompile Include="..\shared\common\src\chid_briage.cpp" />
+    <ClCompile Include="..\shared\common\src\chid_bridge.cpp" />
     <ClCompile Include="..\shared\lib\inc\mp_cnamed_pipe_.cpp" />
     <ClCompile Include="..\shared\lib\inc\mp_csystem_.cpp" />
     <ClCompile Include="..\shared\lib\src\cert\mp_ccertificate_.cpp" />
@@ -28,8 +28,8 @@
     <ClCompile Include="..\shared\lib\src\hid\mp_clibhid.cpp" />
     <ClCompile Include="..\shared\lib\src\hid\mp_clibhid_dev.cpp" />
     <ClCompile Include="..\shared\lib\src\hid\mp_clibhid_dev_info.cpp" />
-    <ClCompile Include="..\shared\lib\src\hid\_hid_api_briage.cpp" />
-    <ClCompile Include="..\shared\lib\src\hid\_vhid_api_briage.cpp" />
+    <ClCompile Include="..\shared\lib\src\hid\_hid_api_bridge.cpp" />
+    <ClCompile Include="..\shared\lib\src\hid\_vhid_api_bridge.cpp" />
     <ClCompile Include="..\shared\projects\MgmtLpu230\src\mgmt_lpu230.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -37,15 +37,15 @@
     <ClInclude Include="..\shared\3thpart\src\win\hidapi_winapi.h" />
     <ClInclude Include="..\shared\common\inc\cdev_lib.h" />
     <ClInclude Include="..\shared\common\inc\cfun_lpu237.h" />
-    <ClInclude Include="..\shared\common\inc\chid_briage.h" />
+    <ClInclude Include="..\shared\common\inc\chid_bridge.h" />
     <ClInclude Include="..\shared\common\inc\cprotocol_lpu237.h" />
     <ClInclude Include="..\shared\lib\inc\cert\mp_ccertificate_.h" />
     <ClInclude Include="..\shared\lib\inc\cert\mp_ccoffee_hlp_cert_.h" />
     <ClInclude Include="..\shared\lib\inc\hid\mp_clibhid.h" />
     <ClInclude Include="..\shared\lib\inc\hid\mp_clibhid_dev.h" />
     <ClInclude Include="..\shared\lib\inc\hid\mp_clibhid_dev_info.h" />
-    <ClInclude Include="..\shared\lib\inc\hid\_hid_api_briage.h" />
-    <ClInclude Include="..\shared\lib\inc\hid\_vhid_api_briage.h" />
+    <ClInclude Include="..\shared\lib\inc\hid\_hid_api_bridge.h" />
+    <ClInclude Include="..\shared\lib\inc\hid\_vhid_api_bridge.h" />
     <ClInclude Include="..\shared\lib\inc\hid\_vhid_info.h" />
     <ClInclude Include="..\shared\lib\inc\hid\_vhid_info_lpu237.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cconsole.h" />

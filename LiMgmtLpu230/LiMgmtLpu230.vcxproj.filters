@@ -93,16 +93,16 @@
     <ClCompile Include="..\shared\lib\src\server\mp_cmain_ctl_fn_.cpp">
       <Filter>lib\svr</Filter>
     </ClCompile>
-    <ClCompile Include="..\shared\lib\src\hid\_hid_api_briage.cpp">
+    <ClCompile Include="..\shared\lib\src\hid\_hid_api_bridge.cpp">
       <Filter>lib\hid</Filter>
     </ClCompile>
-    <ClCompile Include="..\shared\lib\src\hid\_vhid_api_briage.cpp">
+    <ClCompile Include="..\shared\lib\src\hid\_vhid_api_bridge.cpp">
       <Filter>lib\hid</Filter>
     </ClCompile>
     <ClCompile Include="..\shared\lib\src\server\mp_cbase_ctl_fn_.cpp">
       <Filter>lib\svr</Filter>
     </ClCompile>
-    <ClCompile Include="..\shared\common\src\chid_briage.cpp">
+    <ClCompile Include="..\shared\common\src\chid_bridge.cpp">
       <Filter>common</Filter>
     </ClCompile>
     <ClCompile Include="..\shared\common\src\cupdater_mgmt_.cpp">
@@ -239,10 +239,10 @@
     <ClInclude Include="..\shared\lib\inc\dll_service.h">
       <Filter>lib</Filter>
     </ClInclude>
-    <ClInclude Include="..\shared\lib\inc\hid\_hid_api_briage.h">
+    <ClInclude Include="..\shared\lib\inc\hid\_hid_api_bridge.h">
       <Filter>lib\hid</Filter>
     </ClInclude>
-    <ClInclude Include="..\shared\lib\inc\hid\_vhid_api_briage.h">
+    <ClInclude Include="..\shared\lib\inc\hid\_vhid_api_bridge.h">
       <Filter>lib\hid</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\lib\inc\hid\_vhid_info.h">
@@ -296,7 +296,7 @@
     <ClInclude Include="..\shared\common\inc\cdev_lib.h">
       <Filter>common</Filter>
     </ClInclude>
-    <ClInclude Include="..\shared\common\inc\chid_briage.h">
+    <ClInclude Include="..\shared\common\inc\chid_bridge.h">
       <Filter>common</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\common\inc\cfun_lpu237.h">

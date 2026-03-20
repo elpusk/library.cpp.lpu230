@@ -16,14 +16,14 @@
 #endif
 
 namespace _mp {
-    clibhid_dev::clibhid_dev(const clibhid_dev_info& info, chid_briage* p_hid_api_briage)
-        :clibhid_dev(info, p_hid_api_briage, true, false)
+    clibhid_dev::clibhid_dev(const clibhid_dev_info& info, chid_bridge* p_hid_api_bridge)
+        :clibhid_dev(info, p_hid_api_bridge, true, false)
     {
     }
 
     clibhid_dev::clibhid_dev(
         const clibhid_dev_info& info
-        , chid_briage* p_hid_api_briage
+        , chid_bridge* p_hid_api_bridge
         , bool b_lpu23x_specific_protocol
         , bool b_remove_all_zero_rx
     ) :
@@ -33,12 +33,12 @@ namespace _mp {
         m_b_run_th_worker(false),
         m_dev_info(info),
         m_b_detect_replugin(false),
-        m_p_hid_api_briage(p_hid_api_briage),
+        m_p_hid_api_bridge(p_hid_api_bridge),
         m_n_debug_line(0),
         m_b_lpu23x_specific_protocol(b_lpu23x_specific_protocol),
         m_b_remove_all_zero_rx(b_remove_all_zero_rx)
     {
-        if (!m_p_hid_api_briage) {
+        if (!m_p_hid_api_bridge) {
             return;
         }
 
@@ -52,14 +52,14 @@ namespace _mp {
         do {
             if (!b_composite) {
                 //primitive type
-                n_dev = m_p_hid_api_briage->api_open_path(info.get_path_by_string().c_str());
+                n_dev = m_p_hid_api_bridge->api_open_path(info.get_path_by_string().c_str());
                 if (n_dev < 0) {
                     continue; //open error
                 }
 
                 int n_none_blocking = 1;//enable non-blocking.
 
-                if (m_p_hid_api_briage->api_set_nonblocking(n_dev, n_none_blocking) == 0) {
+                if (m_p_hid_api_bridge->api_set_nonblocking(n_dev, n_none_blocking) == 0) {
                     m_n_dev = n_dev;
                     m_b_run_th_worker = true;
                     m_ptr_th_worker = std::shared_ptr<std::thread>(new std::thread(&clibhid_dev::_worker, this));
@@ -68,14 +68,14 @@ namespace _mp {
 #endif
                 }
                 else {
-                    m_p_hid_api_briage->api_close(n_dev);
+                    m_p_hid_api_bridge->api_close(n_dev);
                     m_n_dev = -1;
                 }
                 continue;
             }
 
             // compositive type
-            n_dev = m_p_hid_api_briage->api_open_path(info.get_path_by_string().c_str());
+            n_dev = m_p_hid_api_bridge->api_open_path(info.get_path_by_string().c_str());
             if (n_dev < 0) {
                 continue;
             }
@@ -93,8 +93,8 @@ namespace _mp {
     {
         m_b_run_th_worker = false;
 
-        if (m_p_hid_api_briage && m_n_dev >= 0) {
-            m_p_hid_api_briage->api_close(m_n_dev);
+        if (m_p_hid_api_bridge && m_n_dev >= 0) {
+            m_p_hid_api_bridge->api_close(m_n_dev);
         }
 
         if (m_ptr_th_worker) {
@@ -106,9 +106,9 @@ namespace _mp {
         m_n_dev = -1;
     }
 
-    void clibhid_dev::clear_api_briage()
+    void clibhid_dev::clear_api_bridge()
     {
-        m_p_hid_api_briage = nullptr;
+        m_p_hid_api_bridge = nullptr;
     }
 
     bool clibhid_dev::is_detect_replugin()
@@ -127,26 +127,6 @@ namespace _mp {
     bool clibhid_dev::is_support_shared_open() const
     {
         return m_dev_info.is_support_shared_open();
-    }
-
-    std::vector<unsigned char> clibhid_dev::get_report_desciptor()
-    {
-        std::vector<unsigned char> v(4096,0);//HID_API_MAX_REPORT_DESCRIPTOR_SIZE
-
-        do {
-            if (!m_p_hid_api_briage) {
-                continue;
-            }
-            int n_result = 0;
-            n_result = m_p_hid_api_briage->api_get_report_descriptor(m_n_dev, &v[0], v.size());
-            if (n_result < 0) {
-                continue;
-            }
-
-            v.resize(n_result);
-
-        } while (false);
-        return v;
     }
 
     void clibhid_dev::start_write(size_t n_req_uid,const std::vector<unsigned char>& v_tx, cqitem_dev::type_cb_for_packet cb_for_packet, void* p_user_for_cb, unsigned long n_session_number/*=0*/)
@@ -222,8 +202,8 @@ namespace _mp {
 
     clibhid_dev& clibhid_dev::set_rx_q_check_interval(long long n_interval_mmsec)
     {
-        if (m_p_hid_api_briage) {
-			m_p_hid_api_briage->set_req_q_check_interval_in_child(n_interval_mmsec);
+        if (m_p_hid_api_bridge) {
+			m_p_hid_api_bridge->set_req_q_check_interval_in_child(n_interval_mmsec);
         }
 
 		m_atll_rx_q_check_interval_mmsec.store(n_interval_mmsec, std::memory_order_relaxed);
@@ -232,8 +212,8 @@ namespace _mp {
 
     clibhid_dev& clibhid_dev::set_rx_by_api_in_rx_worker_check_interval(long long n_interval_mmsec)
     {
-        if (m_p_hid_api_briage) {
-			m_p_hid_api_briage->set_hid_read_interval_in_child(n_interval_mmsec);
+        if (m_p_hid_api_bridge) {
+			m_p_hid_api_bridge->set_hid_read_interval_in_child(n_interval_mmsec);
         }
         m_atll_rx_by_api_in_rx_worker_check_interval_mmsec.store(n_interval_mmsec, std::memory_order_relaxed);
 		return *this;
@@ -241,8 +221,8 @@ namespace _mp {
 
     clibhid_dev& clibhid_dev::set_tx_by_api_check_interval(long long n_interval_mmsec)
     {
-        if (m_p_hid_api_briage) {
-            m_p_hid_api_briage->set_hid_write_interval_in_child(n_interval_mmsec);
+        if (m_p_hid_api_bridge) {
+            m_p_hid_api_bridge->set_hid_write_interval_in_child(n_interval_mmsec);
         }
 		return *this;
     }
@@ -265,6 +245,9 @@ namespace _mp {
             clog::get_instance().trace(L"T[W] - %ls - _read_using_thread() in pump.\n", __WFUNCTION__);
             clog::get_instance().log_fmt(L"[W] - %ls - _read_using_thread() in pump.\n", __WFUNCTION__);
             if (b_expected_replugin) {
+                clog::get_instance().trace(L"T[W] - %ls - _read_using_thread() : expected replugin.\n", __WFUNCTION__);
+                clog::get_instance().log_fmt(L"[W] - %ls - _read_using_thread() : expected replugin.\n", __WFUNCTION__);
+
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
                 ATLTRACE(L" =******= DECTECT plugout.\n");
 #endif
@@ -279,7 +262,7 @@ namespace _mp {
         int n_flush = 0;
         _mp::type_ptr_v_buffer ptr_flush_buffer;
 
-        std::lock_guard<std::mutex> lock(chid_briage::get_mutex_for_hidapi());
+        std::lock_guard<std::mutex> lock(chid_bridge::get_mutex_for_hidapi());
 
         while (m_q_rx_ptr_v.try_pop(ptr_flush_buffer)) {
             n_flush++;
@@ -303,7 +286,7 @@ namespace _mp {
         size_t n_offset = 0;
 
         do {
-            if (!m_p_hid_api_briage) {
+            if (!m_p_hid_api_bridge) {
                 continue;
             }
             if (v_tx.size() == 0) {
@@ -356,7 +339,7 @@ namespace _mp {
                 else {
                     next = _mp::next_io_write;
                 }
-                n_result = m_p_hid_api_briage->api_write(m_n_dev, &v_report[0], v_report.size(), next);
+                n_result = m_p_hid_api_bridge->api_write(m_n_dev, &v_report[0], v_report.size(), next);
                 //_mp::clog::get_instance().log_data_in_debug_mode(v_report, L"v_report = ", L"\n");
                 if (n_result < 0) {
                     b_result = false;
@@ -380,7 +363,9 @@ namespace _mp {
     }
 
     /**
-    * read by report unit
+	* read by report unit( 읽은 것이  report 단위보다 작은 경우는 split read. report 단위보다 큰 경우는 여러번 read.)
+	* windows 에서는 report 단위로 하위 하이브러리에서 읽으니까 slip read는 없지만, linux에서는 hidraw에서 원하는 크기만큼 읽을 수 있으므로 slip read가 필요.
+    * 
     * @return first true - rx success, second true - mayne device is plug out and in at error status.  
     */
     std::pair<bool,bool> clibhid_dev::_read_using_thread(std::vector<unsigned char>& v_rx)
@@ -579,11 +564,11 @@ namespace _mp {
         do {
             _clear_rx_q_with_lock();//flush rx q
 
-            if (!m_p_hid_api_briage) {
+            if (!m_p_hid_api_bridge) {
                 continue;
             }
 
-            int n_result = m_p_hid_api_briage->api_write(m_n_dev, NULL, 0, _mp::next_io_none);
+            int n_result = m_p_hid_api_bridge->api_write(m_n_dev, NULL, 0, _mp::next_io_none);
             if (n_result < 0) {
                 _mp::clog::get_instance().log_fmt(L"[E] hid_write()-cancel < 0(n_result) = (%d).\n", n_result);
                 continue;
@@ -779,10 +764,10 @@ namespace _mp {
             int n_result = 0;
 
             do {
-                if (!m_p_hid_api_briage) {
+                if (!m_p_hid_api_bridge) {
                     continue;//nothing to do
                 }
-                n_result = m_p_hid_api_briage->api_read(m_n_dev, &v_report_in[0], v_report_in.size(), v_report_in.size());//wait block or not by initialization
+                n_result = m_p_hid_api_bridge->api_read(m_n_dev, &v_report_in[0], v_report_in.size(), v_report_in.size());//wait block or not by initialization
                 if (n_result == 0) {
                     continue;//re-read transaction
                 }
@@ -790,7 +775,7 @@ namespace _mp {
                     // warning
                     b_need_deep_recover = true;//this case - recover is impossible!
 
-                    auto pe = m_p_hid_api_briage->api_error(m_n_dev);
+                    auto pe = m_p_hid_api_bridge->api_error(m_n_dev);
                     if (pe) {
                         std::wstring s_error(pe);
                         _mp::clog::get_instance().log_fmt_in_debug_mode(L"[D] rx return = %d. - %ls.\n", n_result, s_error.c_str());
@@ -804,7 +789,7 @@ namespace _mp {
                 }
                 //here n_result > 0 recevied some data.
                 if (n_result < v_report_in.size()) {
-                    // _vhid_api_briage::api_read() 는 에러가 아닌 경우,항상 in-report 크기로 rx 를 반환하는데 이런 경우는 뭔가 엄청 잘못
+                    // _vhid_api_bridge::api_read() 는 에러가 아닌 경우,항상 in-report 크기로 rx 를 반환하는데 이런 경우는 뭔가 엄청 잘못
                     m_q_rx_ptr_v.push(std::make_shared<_mp::type_v_buffer>(0));
                     _mp::clog::get_instance().log_fmt(L"[E] %ls : lost packet - push zero size buffer.\n", __WFUNCTION__);
                     continue;

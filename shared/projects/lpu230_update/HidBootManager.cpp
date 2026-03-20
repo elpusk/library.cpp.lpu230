@@ -490,7 +490,7 @@ CHidBootManager::type_pair_handle CHidBootManager::_DDL_open(const std::wstring&
 		bool b_lpu23x_specific_protocol(false), b_remove_all_zero_rx(true);
 		ptr_dev = std::make_shared<_mp::clibhid_dev>(
 			item
-			, mclibhid.get_briage().get()
+			, mclibhid.get_bridge().get()
 			, b_lpu23x_specific_protocol
 			, b_remove_all_zero_rx
 			);// create & open clibhid_dev.

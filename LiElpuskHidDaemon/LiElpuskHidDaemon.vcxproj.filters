@@ -76,7 +76,7 @@
     <ClCompile Include="..\shared\common\src\main_terminal.cpp">
       <Filter>common</Filter>
     </ClCompile>
-    <ClCompile Include="..\shared\common\src\chid_briage.cpp">
+    <ClCompile Include="..\shared\common\src\chid_bridge.cpp">
       <Filter>common</Filter>
     </ClCompile>
     <ClCompile Include="..\shared\common\src\cupdater_mgmt_.cpp">
@@ -335,7 +335,7 @@
     <ClInclude Include="..\shared\common\inc\cdev_lib.h">
       <Filter>common</Filter>
     </ClInclude>
-    <ClInclude Include="..\shared\common\inc\chid_briage.h">
+    <ClInclude Include="..\shared\common\inc\chid_bridge.h">
       <Filter>common</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\projects\dev_lib\inc\dev_lib.h">

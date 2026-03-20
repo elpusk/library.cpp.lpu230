@@ -3,7 +3,7 @@
 
 #include <mp_cstring.h>
 #include <mp_elpusk.h>
-#include <hid/_hid_api_briage.h>
+#include <hid/_hid_api_bridge.h>
 #include <hid/_vhid_info.h>
 
 #ifdef _WIN32
@@ -383,12 +383,12 @@ void  _hid_free_enumeration(struct hid_device_info* devs)
 /**
 * member function bodies
 */
-_hid_api_briage::_hid_api_briage() :
+_hid_api_bridge::_hid_api_bridge() :
     m_p_clog(nullptr)
-    , m_atll_req_q_check_interval_mmsec(_hid_api_briage::const_default_req_q_check_interval_mmsec_of_child)
-    , m_atll_hid_write_interval_mmsec(_hid_api_briage::const_default_hid_write_interval_mmsec)
-    , m_atll_hid_read_interval_mmsec(_hid_api_briage::const_default_hid_read_interval_mmsec)
-    , m_s_class_name(L"_hid_api_briage")
+    , m_atll_req_q_check_interval_mmsec(_hid_api_bridge::const_default_req_q_check_interval_mmsec_of_child)
+    , m_atll_hid_write_interval_mmsec(_hid_api_bridge::const_default_hid_write_interval_mmsec)
+    , m_atll_hid_read_interval_mmsec(_hid_api_bridge::const_default_hid_read_interval_mmsec)
+    , m_s_class_name(L"_hid_api_bridge")
     , m_b_ini(false)
     , m_n_map_index(_vhid_info::const_map_index_invalid)
 {
@@ -406,12 +406,12 @@ _hid_api_briage::_hid_api_briage() :
     }
 }
 
-_hid_api_briage::_hid_api_briage(_mp::clog* p_clog) :
+_hid_api_bridge::_hid_api_bridge(_mp::clog* p_clog) :
     m_p_clog(p_clog)
-    , m_atll_req_q_check_interval_mmsec(_hid_api_briage::const_default_req_q_check_interval_mmsec_of_child)
-    , m_atll_hid_write_interval_mmsec(_hid_api_briage::const_default_hid_write_interval_mmsec)
-    , m_atll_hid_read_interval_mmsec(_hid_api_briage::const_default_hid_read_interval_mmsec)
-    , m_s_class_name(L"_hid_api_briage")
+    , m_atll_req_q_check_interval_mmsec(_hid_api_bridge::const_default_req_q_check_interval_mmsec_of_child)
+    , m_atll_hid_write_interval_mmsec(_hid_api_bridge::const_default_hid_write_interval_mmsec)
+    , m_atll_hid_read_interval_mmsec(_hid_api_bridge::const_default_hid_read_interval_mmsec)
+    , m_s_class_name(L"_hid_api_bridge")
     , m_b_ini(false)
     , m_n_map_index(_vhid_info::const_map_index_invalid)
 {
@@ -429,7 +429,7 @@ _hid_api_briage::_hid_api_briage(_mp::clog* p_clog) :
     }
 }
 
-_hid_api_briage::~_hid_api_briage()
+_hid_api_bridge::~_hid_api_bridge()
 {
     if (m_b_ini) {
         for( auto item : m_map_lpu237_disable_ibutton) {
@@ -461,24 +461,24 @@ _hid_api_briage::~_hid_api_briage()
     m_ptr_usb_lib.reset();
 }
 
-bool _hid_api_briage::is_ini() const
+bool _hid_api_bridge::is_ini() const
 {
     return m_b_ini;
 }
 
-std::set< std::tuple<std::string, unsigned short, unsigned short, int,std::string> > _hid_api_briage::hid_enumerate()
+std::set< std::tuple<std::string, unsigned short, unsigned short, int,std::string> > _hid_api_bridge::hid_enumerate()
 {
     std::set< std::tuple<std::string, unsigned short, unsigned short, int, std::string> > st;
 
     struct hid_device_info *p_devs = NULL, *p_devs_org = NULL;
 
     do {
-        std::lock_guard<std::mutex> lock(_hid_api_briage::get_mutex_for_hidapi());
+        std::lock_guard<std::mutex> lock(_hid_api_bridge::get_mutex_for_hidapi());//
         if (!m_b_ini) {
             continue;
         }
         /**
-        * don't use the hid_enumerate() of hidapi. it will occur packer-losting.
+        * don't use the hid_enumerate() of hidapi. it will occur packet-losting.
         */
         p_devs_org = p_devs = _hid_enumerate(m_p_clog,m_ptr_usb_lib->get_context(), 0x0, 0x0);
 
@@ -503,18 +503,19 @@ std::set< std::tuple<std::string, unsigned short, unsigned short, int,std::strin
 * @param path - primitive path
 * @return first true - open, false not open or error, second - the opened device of the index of map. third - true(exclusive open), false(shared open or not open )
 */
-std::tuple<bool, int, bool> _hid_api_briage::is_open(const char* path) const
+std::tuple<bool, int, bool> _hid_api_bridge::is_open(const char* path) const
 {
     bool b_result(false);
     int n_index(-1);
     bool b_exclusive_open(false);
 
     do {
-        std::lock_guard<std::mutex> lock(_hid_api_briage::get_mutex_for_hidapi());
-
         if (path == nullptr) {
             continue;
         }
+
+        std::lock_guard<std::mutex> lock(_hid_api_bridge::get_mutex_for_hidapi());//
+
         for (auto item : m_map_hid_dev) {
             hid_device* p_hid = std::get<0>(item.second);
             if (p_hid == nullptr) {
@@ -548,9 +549,9 @@ std::tuple<bool, int, bool> _hid_api_briage::is_open(const char* path) const
 }
 
 
-int _hid_api_briage::api_open_path(const char* path)
+int _hid_api_bridge::api_open_path(const char* path)
 {
-    std::lock_guard<std::mutex> lock(_hid_api_briage::get_mutex_for_hidapi());
+    std::lock_guard<std::mutex> lock(_hid_api_bridge::get_mutex_for_hidapi());
 
     if (!m_b_ini) {
         return -1;
@@ -576,7 +577,41 @@ int _hid_api_briage::api_open_path(const char* path)
         }
 
         //primitive device always exclusive mode
-		m_map_hid_dev[n_map_index] = std::make_tuple(p_dev, false, std::string(path));
+		
+        
+		_mp::type_v_buffer v_buf(HID_API_MAX_REPORT_DESCRIPTOR_SIZE, 0);
+
+        int n_d = hid_get_report_descriptor(p_dev, &v_buf[0], v_buf.size());
+        if (n_d < 0) {
+            return -1; //error
+        }
+        else if (n_d == 0) {
+            return -1; //error
+        }
+        else {
+			v_buf.resize(n_d);
+            std::optional<_hid_api_bridge::_type_hid_report_size_map> report_size_map = _parse_hid_report_size(&v_buf[0], v_buf.size());
+            if (report_size_map) {
+                /*
+                for( auto item : report_size_map.value()) {
+                    uint8_t c_report_id = std::get<0>(item);
+                    int n_size_in_report = std::get<1>(item).in_bytes;
+                    int n_size_out_report = std::get<1>(item).out_bytes;
+
+				}//end for
+                */
+                m_map_hid_dev[n_map_index] = std::make_tuple(
+                    p_dev
+                    , false
+                    , std::string(path)
+                    , std::make_shared<_hid_api_bridge::_type_hid_report_size_map>(*report_size_map)
+					, std::make_shared<std::mutex>()
+                );
+			}
+            else {
+                return -1; //error
+            }
+        }
         m_n_map_index = n_map_index;
 
         // this is dregon.
@@ -617,9 +652,9 @@ int _hid_api_briage::api_open_path(const char* path)
     }
 }
 
-void _hid_api_briage::api_close(int n_primitive_map_index)
+void _hid_api_bridge::api_close(int n_primitive_map_index)
 {
-    std::lock_guard<std::mutex> lock(_hid_api_briage::get_mutex_for_hidapi());
+    std::lock_guard<std::mutex> lock(_hid_api_bridge::get_mutex_for_hidapi());
 
     if (!m_b_ini) {
         return;
@@ -669,7 +704,7 @@ void _hid_api_briage::api_close(int n_primitive_map_index)
     }
 }
 
-bool _hid_api_briage::_lpu237_ibutton_enable(hid_device* p_dev, bool b_enable)
+bool _hid_api_bridge::_lpu237_ibutton_enable(hid_device* p_dev, bool b_enable)
 {
     bool b_result(false);
 
@@ -756,9 +791,85 @@ bool _hid_api_briage::_lpu237_ibutton_enable(hid_device* p_dev, bool b_enable)
     return b_result;
 }
 
-int _hid_api_briage::api_set_nonblocking(int n_primitive_map_index, int nonblock)
+/**
+* @generated by Claude on 2024-06-17 : parse hid report descriptor and get report size information.
+*/
+std::optional<_hid_api_bridge::_type_hid_report_size_map> _hid_api_bridge::_parse_hid_report_size(const uint8_t* desc, int desc_len)
 {
-    std::lock_guard<std::mutex> lock(_hid_api_briage::get_mutex_for_hidapi());
+    if (!desc || desc_len <= 0)
+        return std::nullopt;
+
+    // 파싱 중간 누적용 (bit 단위)
+    struct _acc {
+        int in_bits = 0;
+        int out_bits = 0;
+    };
+    std::map<uint8_t, _acc> acc_map;   // key = Report ID
+
+    // Global state
+    int     cur_size = 0;
+    int     cur_count = 0;
+    uint8_t cur_id = 0;             // 0 = Report ID 미등장
+
+    int pos = 0;
+    while (pos < desc_len) {
+        const uint8_t prefix = desc[pos];
+
+        // Long item skip
+        if (prefix == 0xFE) {
+            if (pos + 2 >= desc_len) break;
+            pos += 3 + static_cast<int>(desc[pos + 1]);
+            continue;
+        }
+
+        const int size_code = prefix & 0x03;
+        const int data_size = (size_code < 3) ? size_code : 4;
+        const int type = (prefix >> 2) & 0x03;
+        const int tag = (prefix >> 4) & 0x0F;
+
+        if (pos + 1 + data_size > desc_len) break;
+
+        uint32_t data = 0;
+        for (int i = 0; i < data_size; ++i)
+            data |= static_cast<uint32_t>(desc[pos + 1 + i]) << (8 * i);
+
+        if (type == 1) {          // Global
+            switch (tag) {
+            case 0x7: cur_size = static_cast<int>(data);    break; // Report Size
+            case 0x9: cur_count = static_cast<int>(data);    break; // Report Count
+            case 0x8: cur_id = static_cast<uint8_t>(data);       // Report ID
+                acc_map.try_emplace(cur_id);            break; // entry 사전 등록
+            default:  break;
+            }
+        }
+        else if (type == 0) {     // Main
+            const int bits = cur_size * cur_count;
+            switch (tag) {
+            case 0x8: acc_map[cur_id].in_bits += bits; break; // Input
+            case 0x9: acc_map[cur_id].out_bits += bits; break; // Output
+            default:  break;                                    // Feature/Collection
+            }
+        }
+
+        pos += 1 + data_size;
+    }
+
+    // bit → byte, Report ID byte 보정
+    _hid_api_bridge::_type_hid_report_size_map result;
+    for (auto& [id, acc] : acc_map) {
+        const int id_byte = (id != 0) ? 1 : 0;
+        _hid_api_bridge::_hid_report_size_entry e;
+        e.id = id;
+        e.in_bytes = (acc.in_bits > 0) ? (acc.in_bits + 7) / 8 + id_byte : 0;
+        e.out_bytes = (acc.out_bits > 0) ? (acc.out_bits + 7) / 8 + id_byte : 0;
+        result[id] = e;
+    }
+    return result;
+}
+
+int _hid_api_bridge::api_set_nonblocking(int n_primitive_map_index, int nonblock)
+{
+    std::lock_guard<std::mutex> lock(_hid_api_bridge::get_mutex_for_hidapi());
 
     hid_device* p_dev = nullptr;
     if (m_map_hid_dev.find(n_primitive_map_index) != std::end(m_map_hid_dev)) {
@@ -772,9 +883,9 @@ int _hid_api_briage::api_set_nonblocking(int n_primitive_map_index, int nonblock
 }
 
 
-int _hid_api_briage::api_get_report_descriptor(int n_primitive_map_index, unsigned char* buf, size_t buf_size)
+int _hid_api_bridge::api_get_report_descriptor(int n_primitive_map_index, unsigned char* buf, size_t buf_size)
 {
-    std::lock_guard<std::mutex> lock(_hid_api_briage::get_mutex_for_hidapi());
+    std::lock_guard<std::mutex> lock(_hid_api_bridge::get_mutex_for_hidapi());
 
     if (!m_b_ini) {
         return -1;
@@ -787,9 +898,9 @@ int _hid_api_briage::api_get_report_descriptor(int n_primitive_map_index, unsign
     return hid_get_report_descriptor(p_dev, buf, buf_size);
 }
 
-int _hid_api_briage::api_write(int n_primitive_map_index, const unsigned char* data, size_t length, _mp::type_next_io next)
+int _hid_api_bridge::api_write(int n_primitive_map_index, const unsigned char* data, size_t length, _mp::type_next_io next)
 {
-    std::lock_guard<std::mutex> lock(_hid_api_briage::get_mutex_for_hidapi());
+    std::lock_guard<std::mutex> lock(_hid_api_bridge::get_mutex_for_hidapi());
 
     int n_written(-1);
 
@@ -840,9 +951,9 @@ int _hid_api_briage::api_write(int n_primitive_map_index, const unsigned char* d
     return n_written;
 }
 
-int _hid_api_briage::api_read(int n_primitive_map_index, unsigned char* data, size_t length, size_t n_report)
+int _hid_api_bridge::api_read(int n_primitive_map_index, unsigned char* data, size_t length, size_t n_report)
 {
-    std::lock_guard<std::mutex> lock(_hid_api_briage::get_mutex_for_hidapi());
+    std::lock_guard<std::mutex> lock(_hid_api_bridge::get_mutex_for_hidapi());
 
 	int n_result = -1;
 
@@ -887,9 +998,9 @@ int _hid_api_briage::api_read(int n_primitive_map_index, unsigned char* data, si
 	return n_result;
 }
 
-const wchar_t* _hid_api_briage::api_error(int n_primitive_map_index)
+const wchar_t* _hid_api_bridge::api_error(int n_primitive_map_index)
 {
-    std::lock_guard<std::mutex> lock(_hid_api_briage::get_mutex_for_hidapi());
+    std::lock_guard<std::mutex> lock(_hid_api_bridge::get_mutex_for_hidapi());
 
     if (!m_b_ini) {
         return NULL;
@@ -902,33 +1013,33 @@ const wchar_t* _hid_api_briage::api_error(int n_primitive_map_index)
     return hid_error(p_dev);
 }
 
-_hid_api_briage& _hid_api_briage::set_req_q_check_interval_in_child(long long n_interval_mmsec)
+_hid_api_bridge& _hid_api_bridge::set_req_q_check_interval_in_child(long long n_interval_mmsec)
 {
 	m_atll_req_q_check_interval_mmsec.store(n_interval_mmsec, std::memory_order_relaxed);
     return *this;
 }
 
-_hid_api_briage& _hid_api_briage::set_hid_write_interval_in_child(long long n_interval_mmsec)
+_hid_api_bridge& _hid_api_bridge::set_hid_write_interval_in_child(long long n_interval_mmsec)
 {
 	m_atll_hid_write_interval_mmsec.store(n_interval_mmsec, std::memory_order_relaxed);
 	return *this;
 }
-_hid_api_briage& _hid_api_briage::set_hid_read_interval_in_child(long long n_interval_mmsec)
+_hid_api_bridge& _hid_api_bridge::set_hid_read_interval_in_child(long long n_interval_mmsec)
 {
     m_atll_hid_read_interval_mmsec.store(n_interval_mmsec, std::memory_order_relaxed);
     return *this;
 }
 
-long long _hid_api_briage::get_req_q_check_interval_in_child() const
+long long _hid_api_bridge::get_req_q_check_interval_in_child() const
 {
 	return m_atll_req_q_check_interval_mmsec.load(std::memory_order_relaxed);
 }
 
-long long _hid_api_briage::get_hid_write_interval_in_child() const
+long long _hid_api_bridge::get_hid_write_interval_in_child() const
 {
     return m_atll_hid_write_interval_mmsec.load(std::memory_order_relaxed);
 }
-long long _hid_api_briage::get_hid_read_interval_in_child() const
+long long _hid_api_bridge::get_hid_read_interval_in_child() const
 {
     return m_atll_hid_read_interval_mmsec.load(std::memory_order_relaxed);
 }

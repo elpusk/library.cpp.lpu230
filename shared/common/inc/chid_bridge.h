@@ -8,16 +8,16 @@
 * notice. before using this class, you must run and success cdev_lib.get_instance().load(L"dev_lib.dll")
 * or cdev_lib.get_instance().load(L"libdev_lib.so")
 */
-class chid_briage {
+class chid_bridge {
 public:
-	typedef std::shared_ptr<chid_briage>	type_ptr;
+	typedef std::shared_ptr<chid_bridge>	type_ptr;
 
 public:
 	static std::mutex& get_mutex_for_hidapi();
 
-	chid_briage(bool b_remove_all_zero_in_report);
+	chid_bridge(bool b_remove_all_zero_in_report);
 
-	virtual ~chid_briage();
+	virtual ~chid_bridge();
 
 	bool is_ini();
 
@@ -71,7 +71,7 @@ private:
 	void* m_p_api_brage_instance;
 
 private:
-	chid_briage() = delete;
-	chid_briage(const chid_briage&) = delete;
-	chid_briage& operator=(const chid_briage&) = delete;
+	chid_bridge() = delete;
+	chid_bridge(const chid_bridge&) = delete;
+	chid_bridge& operator=(const chid_bridge&) = delete;
 };

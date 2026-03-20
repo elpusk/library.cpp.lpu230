@@ -191,8 +191,8 @@
     <ClInclude Include="..\shared\common\inc\lpu230\info_sys.h" />
     <ClInclude Include="..\shared\common\inc\lpu230\info_sys_cnst.h" />
     <ClInclude Include="..\shared\common\inc\lpu230\KBConst.h" />
-    <ClInclude Include="..\shared\lib\inc\hid\_hid_api_briage.h" />
-    <ClInclude Include="..\shared\lib\inc\hid\_vhid_api_briage.h" />
+    <ClInclude Include="..\shared\lib\inc\hid\_hid_api_bridge.h" />
+    <ClInclude Include="..\shared\lib\inc\hid\_vhid_api_bridge.h" />
     <ClInclude Include="..\shared\lib\inc\hid\_vhid_info.h" />
     <ClInclude Include="..\shared\lib\inc\hid\_vhid_info_lpu237.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cconvert.h" />
@@ -217,8 +217,8 @@
   <ItemGroup>
     <ClCompile Include="..\shared\3thpart\src\win\hid.c" />
     <ClCompile Include="..\shared\lib\inc\mp_cnamed_pipe_.cpp" />
-    <ClCompile Include="..\shared\lib\src\hid\_hid_api_briage.cpp" />
-    <ClCompile Include="..\shared\lib\src\hid\_vhid_api_briage.cpp" />
+    <ClCompile Include="..\shared\lib\src\hid\_hid_api_bridge.cpp" />
+    <ClCompile Include="..\shared\lib\src\hid\_vhid_api_bridge.cpp" />
     <ClCompile Include="..\shared\projects\dev_lib\src\dev_lib.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="pch.cpp">

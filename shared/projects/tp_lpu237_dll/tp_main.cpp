@@ -125,8 +125,10 @@ int main(int argc, char* argv[])
 		}
 		if (set_parameters.find(L"/fw") != std::end(set_parameters)) {
 			// firmware update test
+#ifdef _WIN32
 			n_result = main_lpu237_fw(list_parameters);
 			continue;
+#endif
 		}
 
 		b_help = true;

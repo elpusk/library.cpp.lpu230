@@ -21,7 +21,7 @@
   <ItemGroup>
     <ClCompile Include="..\shared\3thpart\src\win\hid.c" />
     <ClCompile Include="..\shared\common\src\cbootloader_lpu237.cpp" />
-    <ClCompile Include="..\shared\common\src\chid_briage.cpp" />
+    <ClCompile Include="..\shared\common\src\chid_bridge.cpp" />
     <ClCompile Include="..\shared\common\src\cupdater_mgmt_.cpp" />
     <ClCompile Include="..\shared\common\src\cupdater_param_.cpp" />
     <ClCompile Include="..\shared\common\src\main_bye.cpp" />
@@ -59,7 +59,7 @@
     <ClInclude Include="..\shared\common\inc\cbootloader_lpu237.h" />
     <ClInclude Include="..\shared\common\inc\cdev_lib.h" />
     <ClInclude Include="..\shared\common\inc\cfun_lpu237.h" />
-    <ClInclude Include="..\shared\common\inc\chid_briage.h" />
+    <ClInclude Include="..\shared\common\inc\chid_bridge.h" />
     <ClInclude Include="..\shared\common\inc\ckey_map.h" />
     <ClInclude Include="..\shared\common\inc\cprocess_watcher.h" />
     <ClInclude Include="..\shared\common\inc\cupdater_mgmt_.h" />
