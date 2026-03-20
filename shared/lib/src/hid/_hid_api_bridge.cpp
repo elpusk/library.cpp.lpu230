@@ -6,6 +6,10 @@
 #include <hid/_hid_api_bridge.h>
 #include <hid/_vhid_info.h>
 
+#if !defined(_WIN32) && defined(_SET_THREAD_NAME_)
+#include <pthread.h>
+#endif
+
 #ifdef _WIN32
 
 extern "C"
@@ -1042,4 +1046,123 @@ long long _hid_api_bridge::get_hid_write_interval_in_child() const
 long long _hid_api_bridge::get_hid_read_interval_in_child() const
 {
     return m_atll_hid_read_interval_mmsec.load(std::memory_order_relaxed);
+}
+
+_hid_api_bridge::_crx_worker::_crx_worker(_hid_api_bridge::_type_tuple_hid_dev_lock_path& tuple_hid_dev)
+    : m_tuple_hid_dev(tuple_hid_dev)
+     , m_b_run(false)
+{
+    
+}
+
+_hid_api_bridge::_crx_worker::~_crx_worker()
+{
+    stop();
+    q_clear();
+}
+
+void _hid_api_bridge::_crx_worker::start()
+{
+    if (!m_ptr_thread) {
+        m_b_run = true;
+        m_ptr_thread = std::shared_ptr<std::thread>(new std::thread(&_hid_api_bridge::_crx_worker::_worker, this));
+#if !defined(_WIN32) && defined(_SET_THREAD_NAME_)
+        pthread_setname_np(m_ptr_thread->native_handle(), "_crx_worker::_worker");
+#endif
+    }   
+}
+void _hid_api_bridge::_crx_worker::stop()
+{
+    m_b_run = false;
+    if (m_ptr_thread) {
+        if (m_ptr_thread->joinable()) {
+            m_ptr_thread->join();
+        }
+        m_ptr_thread.reset();
+	}
+}
+
+void _hid_api_bridge::_crx_worker::_q_push(
+    bool b_result_rx
+    , const _mp::type_v_buffer& v_in_report /*= _mp::type_v_buffer()*/
+    , const std::wstring& s_debug_msg /*= std::wstring()*/
+)
+{
+	m_q_rx.push_back(
+        std::make_tuple(
+            b_result_rx
+            , std::shared_ptr<_mp::type_v_buffer>( new _mp::type_v_buffer(v_in_report))
+            , s_debug_msg
+        )
+    );
+}
+bool _hid_api_bridge::_crx_worker::q_try_pop(_crx_worker::_type_tuple_result_rx& tuple_result_rx)
+{
+    bool b_result = false;
+
+    do {
+        std::lock_guard<std::mutex> lock(*std::get<4>(m_tuple_hid_dev));
+        if (m_q_rx.empty()) {
+            continue;
+        }
+		tuple_result_rx = m_q_rx.front();
+        m_q_rx.pop_front();
+		b_result = true;
+    } while (false);
+    return b_result;
+
+}
+void _hid_api_bridge::_crx_worker::q_clear()
+{
+    std::lock_guard<std::mutex> lock(*std::get<4>(m_tuple_hid_dev));
+    m_q_rx.clear();
+}
+void _hid_api_bridge::_crx_worker::_worker()
+{
+    int n_result = 0;
+	size_t n_offset = 0;
+
+	hid_device* p_dev = std::get<0>(m_tuple_hid_dev);
+	_mp::type_v_buffer v_in_report(std::get<3>(m_tuple_hid_dev)->begin()->second.in_bytes, 0);
+    std::mutex &m(*std::get<4>(m_tuple_hid_dev));
+
+    while (m_b_run) {
+        do {
+            std::lock_guard<std::mutex> lock(m);
+
+            n_result = hid_read(p_dev, &v_in_report[n_offset], v_in_report.size() - n_offset);
+            if (n_result == 0) {
+                continue; // no data read, but no error. it can be treated as success.
+            }
+            if (n_result < 0) {
+                n_offset = 0;
+				std::fill(v_in_report.begin(), v_in_report.end(), 0); //reset buffer
+
+                const wchar_t* err = hid_error(p_dev);
+#if defined(_WIN32) && defined(_DEBUG)
+                ATLTRACE(L"[E] %ls : n_result = %d(%ls).\n", __WFUNCTION__, n_result, err);
+#endif
+                if (err) {
+					_q_push(false, v_in_report, std::wstring(err));
+                }
+                else {
+                    _q_push(false, v_in_report);
+                }
+                continue;
+            }
+			n_offset += n_result;
+
+            if(n_offset < v_in_report.size()) {
+				continue; // not full report read yet. keep reading.
+			}
+
+            n_offset = 0; //reset offset for next read
+            _q_push(true, v_in_report);
+            std::fill(v_in_report.begin(), v_in_report.end(), 0); //reset buffer
+
+        } while (false);
+
+        // usb full speed 기준 최대 폴링 간격 기준
+		std::this_thread::sleep_for(std::chrono::milliseconds(_crx_worker::_const_rx_sleep_time_msec));
+	}
 }

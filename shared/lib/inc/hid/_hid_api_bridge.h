@@ -13,6 +13,7 @@
 #include <optional>
 #include <map>
 #include <tuple>
+#include <thread>
 #include <mutex>
 
 #include <hidapi.h>
@@ -68,6 +69,49 @@ protected:
 
 private:
 	typedef std::map<hid_device*, bool> _type_map_lpu237_disable_ibutton;
+
+protected:
+	class _crx_worker{
+	public:
+		typedef std::shared_ptr<_crx_worker>	type_ptr;
+	private:
+		enum {
+			_const_rx_sleep_time_msec = 2
+		};
+
+		typedef std::tuple<bool, _mp::type_ptr_v_buffer, std::wstring>	_type_tuple_result_rx; // get<0> - true is success, false is fail. get<1> - rx data buffer.
+		typedef std::deque<_crx_worker::_type_tuple_result_rx>	_type_q_rx;
+
+	public:
+		_crx_worker(_hid_api_bridge::_type_tuple_hid_dev_lock_path & tuple_hid_dev);
+		virtual ~_crx_worker();
+		void start();
+		void stop();
+		/**
+		* @brief try pop one item from queue and remove it.
+		* @return true - success, false - fail (queue is empty)
+		*/
+		bool q_try_pop(_crx_worker::_type_tuple_result_rx& tuple_result_rx);
+
+		/**
+		* @brief clear all items in queue.
+		*/
+		void q_clear();
+	private:
+		void _q_push( bool b_result_rx, const _mp::type_v_buffer & v_in_report = _mp::type_v_buffer(), const std::wstring & s_debug_msg = std::wstring());
+
+		void _worker();
+	private:
+		_hid_api_bridge::_type_tuple_hid_dev_lock_path & m_tuple_hid_dev;
+		std::atomic_bool m_b_run;
+		std::shared_ptr<std::thread> m_ptr_thread;
+		_crx_worker::_type_q_rx m_q_rx; // m_thread 에서 계속 데이터를 pump 해서 저장.
+	private:
+		_crx_worker() = delete;
+		_crx_worker(const _crx_worker&) = delete;
+		_crx_worker& operator=(const _crx_worker&) = delete;
+	};
+
 public:
 
 	static std::mutex& get_mutex_for_hidapi()
