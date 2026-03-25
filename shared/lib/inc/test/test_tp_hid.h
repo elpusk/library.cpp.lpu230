@@ -1425,7 +1425,7 @@ namespace _test{
 				}
 
 				for (int i = 0; i < n_loop; i++) {
-					std::wcout << L" >>>>> TEST" << std::dec << i + 1 << std::endl;
+					std::wcout << L" >>>>> TEST" << std::dec << i + 1 << L" >>>>>>>>>>>>" << std::endl;
 
 					std::chrono::duration<double> elapsed;
 					bool b_test(false);

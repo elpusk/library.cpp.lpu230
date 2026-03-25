@@ -76,10 +76,12 @@ protected:
 	class _crx_worker {
 	public:
 		typedef std::shared_ptr<_crx_worker>	type_ptr;
-		typedef std::tuple<bool, _mp::type_v_buffer, std::wstring>	type_tuple_result_rx; // get<0> - true is success, false is fail. get<1> - rx data buffer. get<2> - debug message 
-		typedef std::shared_ptr<_crx_worker::type_tuple_result_rx>	type_ptr_tuple_result_rx; // get<0> - true is success, false is fail. get<1> - rx data buffer. get<2> - debug message
-		typedef std::deque<_crx_worker::type_ptr_tuple_result_rx>	type_q_rx;
-		typedef std::map<int, type_q_rx> type_map_q_rx;
+
+		typedef std::tuple<bool, _mp::type_ptr_v_buffer, std::wstring>	type_tuple_result_ptr_rx; // get<0> - true is success, false is fail. get<1> - rx data buffer. get<2> - debug message 
+		typedef std::shared_ptr<_crx_worker::type_tuple_result_ptr_rx>	type_ptr_tuple_result_ptr_rx; // get<0> - true is success, false is fail. get<1> - rx data buffer. get<2> - debug message
+		typedef std::deque<_crx_worker::type_ptr_tuple_result_ptr_rx>	type_q_ptr_rx;
+		typedef std::shared_ptr<_crx_worker::type_q_ptr_rx>				type_ptr_q_ptr_rx;
+		typedef std::map<int, _crx_worker::type_ptr_q_ptr_rx> type_map_ptr_q_ptr_rx;
 
 	private:
 		enum {
@@ -99,7 +101,7 @@ protected:
 		* @param tuple_result_rx[in/out] - rx result 
 		* @return true - success, false - fail (queue is empty)
 		*/
-		bool q_try_pop(int n_map_index,_crx_worker::type_tuple_result_rx& tuple_result_rx);
+		bool q_try_pop(int n_map_index,_crx_worker::type_tuple_result_ptr_rx& tuple_result_rx);
 
 		/**
 		* @brief clear all items in a queue.
@@ -140,7 +142,7 @@ protected:
 		// m_thread 에서 이 map 에 있는 모든 요소에 계속 데이터를 pump 해서 저장.
 		// m_n_primitive_index 의 key 에 대한 q 는 생성자에서 자동 생성된다.
 		// 이 map 의 키는 하나의 물리적 device 에 사상되는 primitive 와 compositive key.
-		_crx_worker::type_map_q_rx m_map_q_rx; 
+		_crx_worker::type_map_ptr_q_ptr_rx m_map_ptr_q_ptr_rx;
 	private:
 		_crx_worker() = delete;
 		_crx_worker(const _crx_worker&) = delete;

@@ -1110,7 +1110,7 @@ int _hid_api_bridge::api_read(int n_primitive_map_index, unsigned char* data, si
 
 
 
-    _hid_api_bridge::_crx_worker::type_tuple_result_rx tuple_result_rx(false,_mp::type_v_buffer(),std::wstring());
+    _hid_api_bridge::_crx_worker::type_tuple_result_ptr_rx tuple_result_ptr_rx(false,_mp::type_ptr_v_buffer(),std::wstring());
 
     do {
         if (!b_found) {
@@ -1123,15 +1123,15 @@ int _hid_api_bridge::api_read(int n_primitive_map_index, unsigned char* data, si
             continue;
         }
         // 여기서 ptr_mutex 로  lock 걸지 말자, worker q access method 에서 이 것을 가지고 lock 하므로.
-        if (!ptr_rx_worker->q_try_pop(n_primitive_map_index,tuple_result_rx)) {
+        if (!ptr_rx_worker->q_try_pop(n_primitive_map_index, tuple_result_ptr_rx)) {
             n_read = 0; // not yet rx data.
             continue;
         }
 
         bool b_result(false);
-        _mp::type_v_buffer v_rx;
+        _mp::type_ptr_v_buffer ptr_v_rx;
         std::wstring s_msg;
-        std::tie(b_result, v_rx, s_msg) = tuple_result_rx;
+        std::tie(b_result, ptr_v_rx, s_msg) = tuple_result_ptr_rx;
         if (!b_result) {
             if (m_p_clog) {
                 if (s_msg.empty()) {
@@ -1163,20 +1163,24 @@ int _hid_api_bridge::api_read(int n_primitive_map_index, unsigned char* data, si
             continue;
         }
 
-        //
-        if (v_rx.empty()) {
+        if (!ptr_v_rx) {
+            //zero rx
+            n_read = 0; //consider to success
+            continue;
+        }
+        if (ptr_v_rx->empty()) {
             //zero rx
             n_read = 0; //consider to success
             continue;
         }
 
-        if (v_rx.size() > length) {
-            std::copy(v_rx.begin(), v_rx.begin() + length, data);
+        if (ptr_v_rx->size() > length) {
+            std::copy(ptr_v_rx->begin(), ptr_v_rx->begin() + length, data);
             n_read = length;
         }
         else {
-            std::copy(v_rx.begin(), v_rx.end(), data);
-            n_read = v_rx.size();
+            std::copy(ptr_v_rx->begin(), ptr_v_rx->end(), data);
+            n_read = ptr_v_rx->size();
         }
 
     } while (false);
@@ -1256,9 +1260,11 @@ _hid_api_bridge::_crx_worker::_crx_worker(const _hid_api_bridge::_type_tuple_hid
      , m_b_run(false)
     , m_n_primitive_index(n_primitive_index)
 {
-    m_map_q_rx.emplace(
+
+    _crx_worker::type_ptr_q_ptr_rx ptr_q_ptr_rx(new type_q_ptr_rx());
+    m_map_ptr_q_ptr_rx.emplace(
         m_n_primitive_index
-        , type_q_rx()
+        , ptr_q_ptr_rx
     );
 }
 
@@ -1295,36 +1301,36 @@ void _hid_api_bridge::_crx_worker::_q_push(
     , const std::wstring& s_debug_msg /*= std::wstring()*/
 )
 {
-    _crx_worker::type_ptr_tuple_result_rx ptr_tuple_result_rx(
-        new _crx_worker::type_tuple_result_rx(
-        b_result_rx
-        , _mp::type_v_buffer(v_in_report)
-        , s_debug_msg
-        )
-    );
+    _mp::type_ptr_v_buffer ptr_v_in_report(new _mp::type_v_buffer(v_in_report));
+    type_ptr_tuple_result_ptr_rx ptr_tuple_result_ptr_rx(new type_tuple_result_ptr_rx(b_result_rx, ptr_v_in_report, s_debug_msg));
 
-    for (auto item : m_map_q_rx) {
-        item.second.push_back(ptr_tuple_result_rx);
+    for (auto item : m_map_ptr_q_ptr_rx) {
+        if (item.second) {
+            item.second->push_back(ptr_tuple_result_ptr_rx);
+        }
     }//end for
 }
 
-bool _hid_api_bridge::_crx_worker::q_try_pop(int n_map_index,_crx_worker::type_tuple_result_rx& tuple_result_rx)
+bool _hid_api_bridge::_crx_worker::q_try_pop(int n_map_index,_crx_worker::type_tuple_result_ptr_rx& tuple_result_ptr_rx)
 {
     bool b_result = false;
 
     do {
         std::lock_guard<std::mutex> lock(*std::get<4>(m_tuple_hid_dev));
-        auto it = m_map_q_rx.find(n_map_index);
-        if (it == std::end(m_map_q_rx)) {
+        auto it = m_map_ptr_q_ptr_rx.find(n_map_index);
+        if (it == std::end(m_map_ptr_q_ptr_rx)) {
             continue;
         }
-        if (it->second.empty()) {
+        if (!it->second) {
             continue;
         }
-        _crx_worker::type_ptr_tuple_result_rx ptr_tuple_result_rx = it->second.front();
-        it->second.pop_front();
+        if (it->second->empty()) {
+            continue;
+        }
+        _crx_worker::type_ptr_tuple_result_ptr_rx ptr_tuple_result_ptr_rx = it->second->front();
+        it->second->pop_front();
         
-        tuple_result_rx = *ptr_tuple_result_rx; //deep copy
+        tuple_result_ptr_rx = *ptr_tuple_result_ptr_rx; //deep copy
 		b_result = true;
     } while (false);
     return b_result;
@@ -1334,42 +1340,51 @@ bool _hid_api_bridge::_crx_worker::q_try_pop(int n_map_index,_crx_worker::type_t
 void _hid_api_bridge::_crx_worker::q_clear(int n_map_index)
 {
     std::lock_guard<std::mutex> lock(*std::get<4>(m_tuple_hid_dev));
-    auto it = m_map_q_rx.find(n_map_index);
-    if (it != std::end(m_map_q_rx)) {
-        it->second.clear();
+    auto it = m_map_ptr_q_ptr_rx.find(n_map_index);
+    if (it != std::end(m_map_ptr_q_ptr_rx)) {
+        if (it->second) {
+            it->second->clear();
+        }
     }
 }
 
 void _hid_api_bridge::_crx_worker::q_clear()
 {
     std::lock_guard<std::mutex> lock(*std::get<4>(m_tuple_hid_dev));
-    for (auto item : m_map_q_rx) {
-        item.second.clear();
+    for (auto item : m_map_ptr_q_ptr_rx) {
+        if (item.second) {
+            item.second->clear();
+        }
     }//end for
 }
 
 void _hid_api_bridge::_crx_worker::q_create(int n_map_index)
 {
     std::lock_guard<std::mutex> lock(*std::get<4>(m_tuple_hid_dev));
-    auto it = m_map_q_rx.find(n_map_index);
-    if (it == std::end(m_map_q_rx)) {
-        m_map_q_rx.emplace(n_map_index, type_q_rx());
+    auto it = m_map_ptr_q_ptr_rx.find(n_map_index);
+    if (it == std::end(m_map_ptr_q_ptr_rx)) {
+
+        _crx_worker::type_ptr_q_ptr_rx ptr_q_ptr_rx(new type_q_ptr_rx());
+        m_map_ptr_q_ptr_rx.emplace(
+            n_map_index
+            , ptr_q_ptr_rx
+        );
     }
 }
 
 void _hid_api_bridge::_crx_worker::q_remove(int n_map_index)
 {
     std::lock_guard<std::mutex> lock(*std::get<4>(m_tuple_hid_dev));
-    auto it = m_map_q_rx.find(n_map_index);
-    if (it != std::end(m_map_q_rx)) {
-        m_map_q_rx.erase(it);
+    auto it = m_map_ptr_q_ptr_rx.find(n_map_index);
+    if (it != std::end(m_map_ptr_q_ptr_rx)) {
+        m_map_ptr_q_ptr_rx.erase(it);
     }
 }
 
 void _hid_api_bridge::_crx_worker::q_remove()
 {
     std::lock_guard<std::mutex> lock(*std::get<4>(m_tuple_hid_dev));
-    m_map_q_rx.clear();
+    m_map_ptr_q_ptr_rx.clear();
 }
 
 void _hid_api_bridge::_crx_worker::_worker()
