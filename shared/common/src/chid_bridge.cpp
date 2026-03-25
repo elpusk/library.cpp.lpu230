@@ -62,14 +62,6 @@ void chid_bridge::api_close(int n_primitive_map_index)
 	}
 }
 
-int chid_bridge::api_set_nonblocking(int n_primitive_map_index, int nonblock)
-{
-	int n_r(-1);
-	if (m_p_api_brage_instance) {
-		n_r = cdev_lib::get_instance().api_set_nonblocking(m_p_api_brage_instance, n_primitive_map_index,nonblock);
-	}
-	return n_r;
-}
 int chid_bridge::api_get_report_descriptor(int n_primitive_map_index, unsigned char* buf, size_t buf_size)
 {
 	int n_r(-1);

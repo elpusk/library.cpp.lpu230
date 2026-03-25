@@ -63,7 +63,7 @@ void* _CALLTYPE_ dev_lib_constrcutor(int n_remove_all_zero_in_report)
 	else {
 		p_vhid_api = new _vhid_api_bridge(gp_log, true);
 	}
-	
+
 	return p_vhid_api;
 }
 
@@ -173,22 +173,6 @@ void _CALLTYPE_ dev_lib_api_close(void* p_instance, int n_primitive_map_index)
 		p_vhid_api->api_close(n_primitive_map_index);
 		//
 	} while (false);
-}
-
-int _CALLTYPE_ dev_lib_api_set_nonblocking(void* p_instance, int n_primitive_map_index, int nonblock)
-{
-	int n_result(-1);
-	do {
-		if (!p_instance) {
-			continue;
-		}
-
-		_vhid_api_bridge* p_vhid_api((_vhid_api_bridge*)p_instance);
-		n_result = p_vhid_api->api_set_nonblocking(n_primitive_map_index, nonblock);
-		//
-	} while (false);
-
-	return n_result;
 }
 
 int _CALLTYPE_ dev_lib_api_get_report_descriptor(void* p_instance, int n_primitive_map_index, unsigned char* buf, size_t buf_size)

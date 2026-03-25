@@ -1,5 +1,6 @@
 #include <iostream>
 #include <sstream>
+#include <filesystem>
 
 #include <mp_cstring.h>
 #include <mp_elpusk.h>
@@ -455,8 +456,21 @@ _hid_api_bridge::~_hid_api_bridge()
 		}//end for
 
         for (auto item : m_map_hid_dev) {
-            std::get<1>(item.second) = false;
-            hid_close(std::get<0>(item.second));
+            hid_device* p_dev = std::get<0>(item.second);
+            bool b_exclusive = std::get<1>(item.second);
+            std::string s_path = std::get<2>(item.second);
+            _hid_api_bridge::_type_ptr_hid_report_size_map ptr_map = std::get<3>(item.second);
+            std::shared_ptr<std::mutex> ptr_mutex = std::get<4>(item.second);
+            _hid_api_bridge::_crx_worker::type_ptr ptr_worker = std::get<6>(item.second);
+
+            if (ptr_worker) {
+                ptr_worker->stop();
+                ptr_worker.reset();
+            }
+
+            if(p_dev){
+                hid_close(p_dev);
+            }
         }//end for
 
         hid_exit();
@@ -555,15 +569,30 @@ std::tuple<bool, int, bool> _hid_api_bridge::is_open(const char* path) const
 
 int _hid_api_bridge::api_open_path(const char* path)
 {
+    int n_index(-1);
     std::lock_guard<std::mutex> lock(_hid_api_bridge::get_mutex_for_hidapi());
+    bool b_need_close(false);
+    hid_device* p_dev(nullptr);
 
-    if (!m_b_ini) {
-        return -1;
-    }
-
-    int n_map_index = m_n_map_index;
-    hid_device* p_dev = hid_open_path(path);
-    if (p_dev) {
+    do {
+        if (!m_b_ini) {
+            if (m_p_clog) {
+                m_p_clog->log_fmt(L"[E] %ls : !m_b_ini.\n", __WFUNCTION__);
+                m_p_clog->trace(L"[E] %ls : !m_b_ini.\n", __WFUNCTION__);
+            }
+            continue;
+        }
+        int n_map_index = m_n_map_index;
+        p_dev = hid_open_path(path);
+        if (p_dev==nullptr) {
+            if (m_p_clog) {
+                std::filesystem::path ps(path);
+                m_p_clog->log_fmt(L"[E] %ls : hid_open_path() return null(%ls).\n", __WFUNCTION__, ps.wstring().c_str());
+                m_p_clog->trace(L"[E] %ls : hid_open_path() return null(%ls).\n", __WFUNCTION__, ps.wstring().c_str());
+            }
+            continue;
+        }
+        // create map index
         if (n_map_index == _vhid_info::const_map_index_invalid) {
             n_map_index = _vhid_info::const_map_index_min;
         }
@@ -573,139 +602,186 @@ int _hid_api_bridge::api_open_path(const char* path)
         else {
             n_map_index += _vhid_info::const_map_index_inc_unit;
         }
-        
+
         if (m_map_hid_dev.find(n_map_index) != std::end(m_map_hid_dev)) {
-            return -1; // already open
+            continue; // already open
             //hid_close(m_map_hid_dev[n_map_index].first);
             //m_map_hid_dev.erase(n_map_index);
         }
 
+		b_need_close = true; // need to close if error occurs after this line.
+
         //primitive device always exclusive mode
-		
-        
-		_mp::type_v_buffer v_buf(HID_API_MAX_REPORT_DESCRIPTOR_SIZE, 0);
+        _mp::type_v_buffer v_buf(HID_API_MAX_REPORT_DESCRIPTOR_SIZE, 0);
 
         int n_d = hid_get_report_descriptor(p_dev, &v_buf[0], v_buf.size());
         if (n_d < 0) {
-            return -1; //error
+            continue; //error
         }
-        else if (n_d == 0) {
-            return -1; //error
+        if (n_d == 0) {
+            continue; //error
         }
-        else {
-			v_buf.resize(n_d);
-            std::optional<_hid_api_bridge::_type_hid_report_size_map> report_size_map = _parse_hid_report_size(&v_buf[0], v_buf.size());
-            if (report_size_map) {
-                /*
-                for( auto item : report_size_map.value()) {
-                    uint8_t c_report_id = std::get<0>(item);
-                    int n_size_in_report = std::get<1>(item).in_bytes;
-                    int n_size_out_report = std::get<1>(item).out_bytes;
+        v_buf.resize(n_d);
+        std::optional<_hid_api_bridge::_type_hid_report_size_map> report_size_map = _parse_hid_report_size(&v_buf[0], v_buf.size());
+        if(!report_size_map) {
+            continue; //error
+		}
 
-				}//end for
-                */
-                m_map_hid_dev[n_map_index] = std::make_tuple(
-                    p_dev
-                    , false
-                    , std::string(path)
-                    , std::make_shared<_hid_api_bridge::_type_hid_report_size_map>(*report_size_map)
-					, std::make_shared<std::mutex>()
-                );
-			}
-            else {
-                return -1; //error
+        int n_setblock = hid_set_nonblocking(p_dev, 1); // 항상 nonblocking mode.
+        if (n_setblock != 0) {
+            continue; //error
+        }
+        /*
+        for( auto item : report_size_map.value()) {
+            uint8_t c_report_id = std::get<0>(item);
+            int n_size_in_report = std::get<1>(item).in_bytes;
+            int n_size_out_report = std::get<1>(item).out_bytes;
+
+        }//end for
+        */
+
+        std::shared_ptr<_mp::type_next_io> ptr_next_io( new _mp::type_next_io(_mp::next_io_none));
+
+        _hid_api_bridge::_type_tuple_hid_dev_lock_path para = std::make_tuple(
+            p_dev
+            , false
+            , std::string(path)
+            , std::make_shared<_hid_api_bridge::_type_hid_report_size_map>(*report_size_map)
+            , std::make_shared<std::mutex>()
+            , ptr_next_io
+        );
+        _hid_api_bridge::_crx_worker::type_ptr ptr_worker(new _hid_api_bridge::_crx_worker(para, n_map_index));
+        m_map_hid_dev[n_map_index] = std::make_tuple(
+            std::get<0>(para)
+            , std::get<1>(para)
+            , std::get<2>(para)
+            , std::get<3>(para)
+            , std::get<4>(para)
+            , ptr_next_io
+            , ptr_worker
+        );
+        n_index = m_n_map_index = n_map_index;
+		b_need_close = false; // successfully open, no need to close.
+
+        ptr_worker->start();
+
+		// this is dregon.
+        struct hid_device_info* p_hid_dev_inf = hid_get_device_info(p_dev);
+        if (!p_hid_dev_inf) {
+            continue;
+        }
+        do {
+            if (p_hid_dev_inf->vendor_id != _mp::_elpusk::const_usb_vid) {
+                continue;
             }
-        }
-        m_n_map_index = n_map_index;
-
-        // this is dregon.
-        if (p_dev) {
-            struct hid_device_info* p_hid_dev_inf = hid_get_device_info(p_dev);
-            if (p_hid_dev_inf) {
-
-
-                do {
-                    if (p_hid_dev_inf->vendor_id != _mp::_elpusk::const_usb_vid) {
-                        continue;
-                    }
-                    if (p_hid_dev_inf->product_id != _mp::_elpusk::_lpu237::const_usb_pid && p_hid_dev_inf->product_id != _mp::_elpusk::_lpu238::const_usb_pid) {
-                        continue;
-                    }
-                    // here lpu237 & lpu238 device only
-                    /*
-                    if (_lpu237_ibutton_enable(p_dev, false)) {// disable i-button listening.
-						m_map_lpu237_disable_ibutton[p_dev] = true; // remember disable i-button
-                    }
-                    */
-                } while (false);
+            if (p_hid_dev_inf->product_id != _mp::_elpusk::_lpu237::const_usb_pid && p_hid_dev_inf->product_id != _mp::_elpusk::_lpu238::const_usb_pid) {
+                continue;
+            }
+            // here lpu237 & lpu238 device only
+            /*
+            if (_lpu237_ibutton_enable(p_dev, false)) {// disable i-button listening.
+                m_map_lpu237_disable_ibutton[p_dev] = true; // remember disable i-button
+            }
+            */
+        } while (false);
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-                ATLTRACE(" ^________^ device open-%s, vendor_id:0x%x, product_id:0x%x, interface_number:%d.\n",
-                    p_hid_dev_inf->path,
-                    p_hid_dev_inf->vendor_id,
-                    p_hid_dev_inf->product_id,
-                    p_hid_dev_inf->interface_number
-                );
+        ATLTRACE(" ^________^ device open-%s, vendor_id:0x%x, product_id:0x%x, interface_number:%d.\n",
+            p_hid_dev_inf->path,
+            p_hid_dev_inf->vendor_id,
+            p_hid_dev_inf->product_id,
+            p_hid_dev_inf->interface_number
+        );
 #endif
-            }
-        }
 
-        return n_map_index;
-    }
-    else {
-        return -1;
-    }
+    } while (false);
+
+    if(b_need_close && p_dev) {
+        hid_close(p_dev);
+	}
+
+    return n_index;
 }
 
 void _hid_api_bridge::api_close(int n_primitive_map_index)
 {
-    std::lock_guard<std::mutex> lock(_hid_api_bridge::get_mutex_for_hidapi());
-
-    if (!m_b_ini) {
-        return;
-    }
-
+    bool b_found(false);
+    _hid_api_bridge::_type_map_hid_dev::iterator it;
+    
     hid_device* p_dev = nullptr;
-	auto it = m_map_hid_dev.find(n_primitive_map_index);
-    if (it != std::end(m_map_hid_dev)) {
-        p_dev = std::get<0>(it->second);
-        m_map_hid_dev.erase(n_primitive_map_index);
+    bool b_exclusive_open = true;
+    std::string s_path;
+    _hid_api_bridge::_type_ptr_hid_report_size_map ptr_hid_report_size_map;
+    std::shared_ptr<std::mutex> ptr_mutex;
+    _hid_api_bridge::_crx_worker::type_ptr ptr_worker;
+    std::shared_ptr<_mp::type_next_io> ptr_next_io;
 
-        // this is dregon.
-        if (p_dev) {
-            struct hid_device_info* p_hid_dev_inf = hid_get_device_info(p_dev);
-            if (p_hid_dev_inf) {
+    do {
+        std::lock_guard<std::mutex> lock(_hid_api_bridge::get_mutex_for_hidapi());
+        it = std::end(m_map_hid_dev);
+        if (!m_b_ini) {
+            continue;
+        }
 
-                do {
-                    if (p_hid_dev_inf->vendor_id != _mp::_elpusk::const_usb_vid) {
-                        continue;
+        it = m_map_hid_dev.find(n_primitive_map_index);
+        if (it == std::end(m_map_hid_dev)) {
+            continue;
+        }
+
+        b_found = true;
+        std::tie(p_dev, b_exclusive_open, s_path, ptr_hid_report_size_map, ptr_mutex, ptr_next_io,ptr_worker) = it->second;
+        m_map_hid_dev.erase(it);
+
+    } while (false);
+
+    do {
+        if (!b_found) {
+            continue; // not openned device.
+        }
+        if (!ptr_mutex) {
+            continue;
+        }
+
+        std::lock_guard<std::mutex> l(*ptr_mutex);
+        if (!p_dev) {
+            continue;
+        }
+        //
+        struct hid_device_info* p_hid_dev_inf = hid_get_device_info(p_dev);
+        if (p_hid_dev_inf) {
+            do {
+                if (p_hid_dev_inf->vendor_id != _mp::_elpusk::const_usb_vid) {
+                    continue;
+                }
+                if (p_hid_dev_inf->product_id != _mp::_elpusk::_lpu237::const_usb_pid && p_hid_dev_inf->product_id != _mp::_elpusk::_lpu238::const_usb_pid) {
+                    continue;
+                }
+                // here lpu237 & lpu238 device only
+                auto it = m_map_lpu237_disable_ibutton.find(p_dev);
+                if (it != std::end(m_map_lpu237_disable_ibutton)) {
+                    if (it->second) {
+                        // enable i-button listening.
+                        //_lpu237_ibutton_enable(p_dev, true); // enable i-button listening.(recover default )
                     }
-                    if (p_hid_dev_inf->product_id != _mp::_elpusk::_lpu237::const_usb_pid && p_hid_dev_inf->product_id != _mp::_elpusk::_lpu238::const_usb_pid) {
-                        continue;
-                    }
-                    // here lpu237 & lpu238 device only
-					auto it = m_map_lpu237_disable_ibutton.find(p_dev);
-                    if(it != std::end(m_map_lpu237_disable_ibutton)) {
-                        if (it->second) {
-                            // enable i-button listening.
-                            //_lpu237_ibutton_enable(p_dev, true); // enable i-button listening.(recover default )
-                        }
-                        m_map_lpu237_disable_ibutton.erase(it);
-                    }
-                } while (false);
+                    m_map_lpu237_disable_ibutton.erase(it);
+                }
+            } while (false);
 
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-                ATLTRACE(" ^________^ device closed-%s, vendor_id:0x%x, product_id:0x%x, interface_number:%d.\n",
-                    p_hid_dev_inf->path,
-                    p_hid_dev_inf->vendor_id,
-                    p_hid_dev_inf->product_id,
-					p_hid_dev_inf->interface_number
-                );
+            ATLTRACE(" ^________^ device closed-%s, vendor_id:0x%x, product_id:0x%x, interface_number:%d.\n",
+                p_hid_dev_inf->path,
+                p_hid_dev_inf->vendor_id,
+                p_hid_dev_inf->product_id,
+                p_hid_dev_inf->interface_number
+            );
 #endif
-            }
-
-            hid_close(p_dev);
         }
-    }
+        if (ptr_worker) {
+            ptr_worker->stop();
+        }
+        hid_close(p_dev);
+
+    } while (false);
+    
 }
 
 bool _hid_api_bridge::_lpu237_ibutton_enable(hid_device* p_dev, bool b_enable)
@@ -871,44 +947,51 @@ std::optional<_hid_api_bridge::_type_hid_report_size_map> _hid_api_bridge::_pars
     return result;
 }
 
-int _hid_api_bridge::api_set_nonblocking(int n_primitive_map_index, int nonblock)
-{
-    std::lock_guard<std::mutex> lock(_hid_api_bridge::get_mutex_for_hidapi());
-
-    hid_device* p_dev = nullptr;
-    if (m_map_hid_dev.find(n_primitive_map_index) != std::end(m_map_hid_dev)) {
-        p_dev = std::get<0>(m_map_hid_dev[n_primitive_map_index]);
-        return hid_set_nonblocking(p_dev, nonblock);
-    }
-    else {
-        return -1; //error
-    }
-    
-}
-
-
 int _hid_api_bridge::api_get_report_descriptor(int n_primitive_map_index, unsigned char* buf, size_t buf_size)
 {
-    std::lock_guard<std::mutex> lock(_hid_api_bridge::get_mutex_for_hidapi());
-
-    if (!m_b_ini) {
-        return -1;
-    }
-
+    bool b_found(false);
+    _hid_api_bridge::_type_map_hid_dev::iterator it;
     hid_device* p_dev = nullptr;
-    if (m_map_hid_dev.find(n_primitive_map_index) != std::end(m_map_hid_dev)) {
-        p_dev = std::get<0>(m_map_hid_dev[n_primitive_map_index]);
-    }
-    return hid_get_report_descriptor(p_dev, buf, buf_size);
+    std::shared_ptr<std::mutex> ptr_mutex;
+    int n_result(-1);
+
+    do {
+        std::lock_guard<std::mutex> lock(_hid_api_bridge::get_mutex_for_hidapi());
+        it = m_map_hid_dev.find(n_primitive_map_index);
+        if (it == std::end(m_map_hid_dev)) {
+            continue;
+        }
+        std::tie(p_dev, std::ignore, std::ignore, std::ignore, ptr_mutex, std::ignore, std::ignore) = it->second;
+        b_found = true;
+    } while (false);
+
+    do {
+        if (!b_found) {
+            continue;
+        }
+        if (!ptr_mutex) {
+            continue;
+        }
+
+        std::lock_guard<std::mutex> l(*ptr_mutex);
+        if (!p_dev) {
+            continue;
+        }
+        n_result = hid_get_report_descriptor(p_dev, buf, buf_size);
+    } while (false);
+
+    return n_result;
 }
 
 int _hid_api_bridge::api_write(int n_primitive_map_index, const unsigned char* data, size_t length, _mp::type_next_io next)
 {
-    std::lock_guard<std::mutex> lock(_hid_api_bridge::get_mutex_for_hidapi());
-
+    bool b_found(false);
+    _hid_api_bridge::_type_map_hid_dev::iterator it;
+    hid_device* p_dev = nullptr;
+    std::shared_ptr<std::mutex> ptr_mutex;
     int n_written(-1);
 
-    do{
+    do {
         if (!m_b_ini) {
             if (m_p_clog) {
                 m_p_clog->log_fmt(L"[E] %ls : not m_b_ini.\n", __WFUNCTION__);
@@ -916,23 +999,37 @@ int _hid_api_bridge::api_write(int n_primitive_map_index, const unsigned char* d
             continue;
         }
 
-        hid_device* p_dev = nullptr;
-        if (m_map_hid_dev.find(n_primitive_map_index) != std::end(m_map_hid_dev)) {
-            p_dev = std::get<0>(m_map_hid_dev[n_primitive_map_index]);
+        std::lock_guard<std::mutex> lock(_hid_api_bridge::get_mutex_for_hidapi());
+        it = m_map_hid_dev.find(n_primitive_map_index);
+        if (it == std::end(m_map_hid_dev)) {
+            continue;
         }
+        std::tie(p_dev, std::ignore, std::ignore, std::ignore, ptr_mutex, std::ignore, std::ignore) = it->second;
+        b_found = true;
+    } while (false);
 
-        n_written = hid_write(p_dev, data, length);
-        if (length != n_written) {
-            if (m_p_clog) {
-                m_p_clog->log_fmt(L"[E] %ls : (write_len,n_written) = (%d,%d).\n", __WFUNCTION__, length, n_written);
-            }
-#if defined(_WIN32) && defined(_DEBUG)
-            ATLTRACE(L"[E] %ls : (write_len,n_written) = (%d,%d).\n", __WFUNCTION__, length, n_written);
-#endif
-			n_written = -1; // treat as error
+    do {
+        if (!b_found) {
+            continue;
+        }
+        if (!ptr_mutex) {
             continue;
         }
 
+        std::lock_guard<std::mutex> l(*ptr_mutex);
+        if (!p_dev) {
+            continue;
+        }
+        *std::get<5>(it->second) = _mp::next_io_none; // 이 값은 rx thread 공유 되므로 reference 로 access 해야 함.
+
+        if (m_p_clog) {
+            m_p_clog->log_fmt(L"[I] %ls : write_len = %d.\n", __WFUNCTION__, length);
+        }
+#if defined(_WIN32) && defined(_DEBUG)
+        ATLTRACE(L"[I] %ls : write_len = %d.\n", __WFUNCTION__, length);
+#endif
+
+        n_written = hid_write(p_dev, data, length);
         if (n_written < 0) {
             const wchar_t* err = hid_error(p_dev);
 
@@ -944,22 +1041,49 @@ int _hid_api_bridge::api_write(int n_primitive_map_index, const unsigned char* d
 #endif
             continue;
         }
+
+        if (length != n_written) {
+            if (m_p_clog) {
+                m_p_clog->log_fmt(L"[E] %ls : (write_len,n_written) = (%d,%d).\n", __WFUNCTION__, length, n_written);
+            }
+#if defined(_WIN32) && defined(_DEBUG)
+            ATLTRACE(L"[E] %ls : (write_len,n_written) = (%d,%d).\n", __WFUNCTION__, length, n_written);
+#endif
+            n_written = -1; // treat as error
+            continue;
+        }
+
+        *std::get<5>(it->second) = next; // 이 값은 rx thread 공유 되므로 reference 로 access 해야 함.
+
 #if defined(_WIN32) && defined(_DEBUG)
         if (next == _mp::next_io_write) {
-            ATLTRACE(L"[E] %ls : next IO is write.\n", __WFUNCTION__);
+            ATLTRACE(L"[I] %ls : next IO is write.\n", __WFUNCTION__);
         }
+        else if (next == _mp::next_io_read) {
+            ATLTRACE(L"[I] %ls : next IO is read.\n", __WFUNCTION__);
+        }
+        else if (next == _mp::next_io_none) {
+            ATLTRACE(L"[I] %ls : next IO is none.\n", __WFUNCTION__);
+        }
+        else {
+            ATLTRACE(L"[I] %ls : unknown code..\n", __WFUNCTION__);
+        }
+
 #endif
 
-    }while (false);
+    } while (false);
 
     return n_written;
 }
 
 int _hid_api_bridge::api_read(int n_primitive_map_index, unsigned char* data, size_t length, size_t n_report)
 {
-    std::lock_guard<std::mutex> lock(_hid_api_bridge::get_mutex_for_hidapi());
-
-	int n_result = -1;
+    bool b_found(false);
+    _hid_api_bridge::_type_map_hid_dev::iterator it;
+    hid_device* p_dev = nullptr;
+    std::shared_ptr<std::mutex> ptr_mutex;
+    _hid_api_bridge::_crx_worker::type_ptr ptr_rx_worker;
+    int n_read(-1);
 
     do {
         if (!m_b_ini) {
@@ -968,11 +1092,10 @@ int _hid_api_bridge::api_read(int n_primitive_map_index, unsigned char* data, si
             }
             continue;
         }
-        hid_device* p_dev = nullptr;
-        if (m_map_hid_dev.find(n_primitive_map_index) != std::end(m_map_hid_dev)) {
-            p_dev = std::get<0>(m_map_hid_dev[n_primitive_map_index]);
-        }
-        else {
+
+        std::lock_guard<std::mutex> lock(_hid_api_bridge::get_mutex_for_hidapi());
+        it = m_map_hid_dev.find(n_primitive_map_index);
+        if (it == std::end(m_map_hid_dev)) {
             if (m_p_clog)
                 m_p_clog->log_fmt(L"[E] %ls : not found device handle in map.\n", __WFUNCTION__);
 
@@ -981,40 +1104,120 @@ int _hid_api_bridge::api_read(int n_primitive_map_index, unsigned char* data, si
 #endif
             continue;
         }
+        std::tie(p_dev, std::ignore, std::ignore, std::ignore, ptr_mutex, std::ignore, ptr_rx_worker) = it->second;
+        b_found = true;
+    } while (false);
 
-        n_result = hid_read(p_dev, data, length);
-        if(n_result == 0) {
-            continue; // no data read, but no error. it can be treated as success.
-		}
-        if (n_result < 0) {
-            const wchar_t* err = hid_error(p_dev);
 
+
+    _hid_api_bridge::_crx_worker::type_tuple_result_rx tuple_result_rx(false,_mp::type_v_buffer(),std::wstring());
+
+    do {
+        if (!b_found) {
+            continue;
+        }
+        if (!ptr_mutex) {
+            continue;
+        }
+        if (!ptr_rx_worker) {
+            continue;
+        }
+        // 여기서 ptr_mutex 로  lock 걸지 말자, worker q access method 에서 이 것을 가지고 lock 하므로.
+        if (!ptr_rx_worker->q_try_pop(n_primitive_map_index,tuple_result_rx)) {
+            n_read = 0; // not yet rx data.
+            continue;
+        }
+
+        bool b_result(false);
+        _mp::type_v_buffer v_rx;
+        std::wstring s_msg;
+        std::tie(b_result, v_rx, s_msg) = tuple_result_rx;
+        if (!b_result) {
             if (m_p_clog) {
-                m_p_clog->log_fmt(L"[E] %ls : n_result = %d(%ls).\n", __WFUNCTION__, n_result, err);
+                if (s_msg.empty()) {
+                    m_p_clog->log_fmt(L"[E] %ls : without message.\n", __WFUNCTION__);
+                }
+                else {
+                    m_p_clog->log_fmt(L"[E] %ls : %ls.\n", __WFUNCTION__, s_msg.c_str());
+                }
             }
 
 #if defined(_WIN32) && defined(_DEBUG)
-            ATLTRACE(L"[E] %ls : n_result = %d(%ls).\n", __WFUNCTION__, n_result, err);
+            if (s_msg.empty()) {
+                ATLTRACE(L"[E] %ls : without message.\n", __WFUNCTION__);
+            }
+            else {
+                ATLTRACE(L"[E] %ls : %ls.\n", __WFUNCTION__, s_msg.c_str());
+            }
 #endif
+            continue; //error
         }
+
+        if (data == nullptr || length == 0) {
+            if (m_p_clog)
+                m_p_clog->log_fmt(L"[E] %ls : none rx buffer.\n", __WFUNCTION__);
+
+#if defined(_WIN32) && defined(_DEBUG)
+            ATLTRACE(L"[E] %ls : none rx buffer.\n", __WFUNCTION__);
+#endif
+            continue;
+        }
+
+        //
+        if (v_rx.empty()) {
+            //zero rx
+            n_read = 0; //consider to success
+            continue;
+        }
+
+        if (v_rx.size() > length) {
+            std::copy(v_rx.begin(), v_rx.begin() + length, data);
+            n_read = length;
+        }
+        else {
+            std::copy(v_rx.begin(), v_rx.end(), data);
+            n_read = v_rx.size();
+        }
+
     } while (false);
-    
-	return n_result;
+
+    return n_read;
 }
 
 const wchar_t* _hid_api_bridge::api_error(int n_primitive_map_index)
 {
-    std::lock_guard<std::mutex> lock(_hid_api_bridge::get_mutex_for_hidapi());
-
-    if (!m_b_ini) {
-        return NULL;
-    }
-
+    bool b_found(false);
+    _hid_api_bridge::_type_map_hid_dev::iterator it;
     hid_device* p_dev = nullptr;
-    if (m_map_hid_dev.find(n_primitive_map_index) != std::end(m_map_hid_dev)) {
-        p_dev = std::get<0>(m_map_hid_dev[n_primitive_map_index]);
-    }
-    return hid_error(p_dev);
+    std::shared_ptr<std::mutex> ptr_mutex;
+    const wchar_t* ps_result(nullptr);
+
+    do {
+        std::lock_guard<std::mutex> lock(_hid_api_bridge::get_mutex_for_hidapi());
+        it = m_map_hid_dev.find(n_primitive_map_index);
+        if (it == std::end(m_map_hid_dev)) {
+            continue;
+        }
+        std::tie(p_dev, std::ignore, std::ignore, std::ignore, ptr_mutex, std::ignore, std::ignore) = it->second;
+        b_found = true;
+    } while (false);
+
+    do {
+        if (!b_found) {
+            continue;
+        }
+        if (!ptr_mutex) {
+            continue;
+        }
+
+        std::lock_guard<std::mutex> l(*ptr_mutex);
+        if (!p_dev) {
+            continue;
+        }
+        ps_result = hid_error(p_dev);
+    } while (false);
+
+    return ps_result;
 }
 
 _hid_api_bridge& _hid_api_bridge::set_req_q_check_interval_in_child(long long n_interval_mmsec)
@@ -1048,17 +1251,21 @@ long long _hid_api_bridge::get_hid_read_interval_in_child() const
     return m_atll_hid_read_interval_mmsec.load(std::memory_order_relaxed);
 }
 
-_hid_api_bridge::_crx_worker::_crx_worker(_hid_api_bridge::_type_tuple_hid_dev_lock_path& tuple_hid_dev)
+_hid_api_bridge::_crx_worker::_crx_worker(const _hid_api_bridge::_type_tuple_hid_dev_lock_path& tuple_hid_dev, int n_primitive_index)
     : m_tuple_hid_dev(tuple_hid_dev)
      , m_b_run(false)
+    , m_n_primitive_index(n_primitive_index)
 {
-    
+    m_map_q_rx.emplace(
+        m_n_primitive_index
+        , type_q_rx()
+    );
 }
 
 _hid_api_bridge::_crx_worker::~_crx_worker()
 {
     stop();
-    q_clear();
+    q_remove();
 }
 
 void _hid_api_bridge::_crx_worker::start()
@@ -1088,35 +1295,83 @@ void _hid_api_bridge::_crx_worker::_q_push(
     , const std::wstring& s_debug_msg /*= std::wstring()*/
 )
 {
-	m_q_rx.push_back(
-        std::make_tuple(
-            b_result_rx
-            , std::shared_ptr<_mp::type_v_buffer>( new _mp::type_v_buffer(v_in_report))
-            , s_debug_msg
+    _crx_worker::type_ptr_tuple_result_rx ptr_tuple_result_rx(
+        new _crx_worker::type_tuple_result_rx(
+        b_result_rx
+        , _mp::type_v_buffer(v_in_report)
+        , s_debug_msg
         )
     );
+
+    for (auto item : m_map_q_rx) {
+        item.second.push_back(ptr_tuple_result_rx);
+    }//end for
 }
-bool _hid_api_bridge::_crx_worker::q_try_pop(_crx_worker::_type_tuple_result_rx& tuple_result_rx)
+
+bool _hid_api_bridge::_crx_worker::q_try_pop(int n_map_index,_crx_worker::type_tuple_result_rx& tuple_result_rx)
 {
     bool b_result = false;
 
     do {
         std::lock_guard<std::mutex> lock(*std::get<4>(m_tuple_hid_dev));
-        if (m_q_rx.empty()) {
+        auto it = m_map_q_rx.find(n_map_index);
+        if (it == std::end(m_map_q_rx)) {
             continue;
         }
-		tuple_result_rx = m_q_rx.front();
-        m_q_rx.pop_front();
+        if (it->second.empty()) {
+            continue;
+        }
+        _crx_worker::type_ptr_tuple_result_rx ptr_tuple_result_rx = it->second.front();
+        it->second.pop_front();
+        
+        tuple_result_rx = *ptr_tuple_result_rx; //deep copy
 		b_result = true;
     } while (false);
     return b_result;
 
 }
+
+void _hid_api_bridge::_crx_worker::q_clear(int n_map_index)
+{
+    std::lock_guard<std::mutex> lock(*std::get<4>(m_tuple_hid_dev));
+    auto it = m_map_q_rx.find(n_map_index);
+    if (it != std::end(m_map_q_rx)) {
+        it->second.clear();
+    }
+}
+
 void _hid_api_bridge::_crx_worker::q_clear()
 {
     std::lock_guard<std::mutex> lock(*std::get<4>(m_tuple_hid_dev));
-    m_q_rx.clear();
+    for (auto item : m_map_q_rx) {
+        item.second.clear();
+    }//end for
 }
+
+void _hid_api_bridge::_crx_worker::q_create(int n_map_index)
+{
+    std::lock_guard<std::mutex> lock(*std::get<4>(m_tuple_hid_dev));
+    auto it = m_map_q_rx.find(n_map_index);
+    if (it == std::end(m_map_q_rx)) {
+        m_map_q_rx.emplace(n_map_index, type_q_rx());
+    }
+}
+
+void _hid_api_bridge::_crx_worker::q_remove(int n_map_index)
+{
+    std::lock_guard<std::mutex> lock(*std::get<4>(m_tuple_hid_dev));
+    auto it = m_map_q_rx.find(n_map_index);
+    if (it != std::end(m_map_q_rx)) {
+        m_map_q_rx.erase(it);
+    }
+}
+
+void _hid_api_bridge::_crx_worker::q_remove()
+{
+    std::lock_guard<std::mutex> lock(*std::get<4>(m_tuple_hid_dev));
+    m_map_q_rx.clear();
+}
+
 void _hid_api_bridge::_crx_worker::_worker()
 {
     int n_result = 0;
@@ -1130,31 +1385,53 @@ void _hid_api_bridge::_crx_worker::_worker()
         do {
             std::lock_guard<std::mutex> lock(m);
 
-            n_result = hid_read(p_dev, &v_in_report[n_offset], v_in_report.size() - n_offset);
-            if (n_result == 0) {
-                continue; // no data read, but no error. it can be treated as success.
+            if (*std::get<5>(m_tuple_hid_dev) == _mp::next_io_write) {
+                continue;//현재 multi report tx 로 송신 중이면, 수신은 중단해야함.
             }
-            if (n_result < 0) {
-                n_offset = 0;
-				std::fill(v_in_report.begin(), v_in_report.end(), 0); //reset buffer
+            bool b_more = false;
+            do {
+                b_more = false;
 
-                const wchar_t* err = hid_error(p_dev);
+                n_result = hid_read(p_dev, &v_in_report[n_offset], v_in_report.size() - n_offset);
+                if (n_result == 0) {
+                    if (n_offset == 0) {
+                        // interval between each other report.
+                        continue; // no data read, but no error. it can be treated as success.
+                    }
+
+                    // interval between one report.
+                    b_more = true; //fast re-read
+                    std::this_thread::sleep_for(std::chrono::milliseconds(_crx_worker::_const_rx_sleep_in_one_report_time_msec));
+                    continue;
+                }
+                if (n_result < 0) {
+                    n_offset = 0;
+                    std::fill(v_in_report.begin(), v_in_report.end(), 0); //reset buffer
+
+                    const wchar_t* err = hid_error(p_dev);
 #if defined(_WIN32) && defined(_DEBUG)
-                ATLTRACE(L"[E] %ls : n_result = %d(%ls).\n", __WFUNCTION__, n_result, err);
+                    ATLTRACE(L"[E] %ls : n_result = %d(%ls).\n", __WFUNCTION__, n_result, err);
 #endif
-                if (err) {
-					_q_push(false, v_in_report, std::wstring(err));
+                    if (err) {
+                        _q_push(false, v_in_report, std::wstring(err));
+                    }
+                    else {
+                        _q_push(false, v_in_report, std::wstring(L"hid_error() isn't error message"));
+                    }
+                    continue;//exit in one report read while.
                 }
-                else {
-                    _q_push(false, v_in_report);
-                }
-                continue;
-            }
-			n_offset += n_result;
+#if defined(_WIN32) && defined(_DEBUG)
+                ATLTRACE(L"[I] %ls : rx size = %d.\n", __WFUNCTION__, n_result);
+#endif
+                n_offset += n_result;
 
-            if(n_offset < v_in_report.size()) {
-				continue; // not full report read yet. keep reading.
-			}
+                if (n_offset < v_in_report.size()) {
+                    // interval between one report.
+                    b_more = true; //fast re-read
+                    std::this_thread::sleep_for(std::chrono::milliseconds(_crx_worker::_const_rx_sleep_in_one_report_time_msec));
+                    continue; // not full report read yet. keep reading.
+                }
+            } while (b_more && m_b_run); // one report reading
 
             n_offset = 0; //reset offset for next read
             _q_push(true, v_in_report);

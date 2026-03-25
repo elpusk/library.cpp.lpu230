@@ -100,31 +100,37 @@ int _vhid_api_bridge::api_open_path(const char* path)
     std::string s_primitive;
     bool b_support_shared_open(false);
 
+    if (path == nullptr) {
+        if (m_p_clog) {
+            m_p_clog->log_fmt(L"[E] %ls : path is null.\n", __WFUNCTION__);
+            m_p_clog->trace(L"[E] %ls : path is null.\n", __WFUNCTION__);
+        }
+        return _vhid_info::const_map_index_invalid;
+    }
+    std::tie(std::ignore, t, s_primitive, b_support_shared_open) = _vhid_info::is_path_compositive_type(std::string(path));
+    bool b_open(false);
+
+    std::tie(b_open, n_primitive_map_index, std::ignore) = _hid_api_bridge::is_open(s_primitive.c_str());
+
+    if (!b_open) {
+        n_map_index = n_primitive_map_index = _hid_api_bridge::api_open_path(s_primitive.c_str());
+        if (n_primitive_map_index < 0) {
+            if (m_p_clog) {
+                m_p_clog->log_fmt(L"[E] %ls : for compositive, open primitive error.\n", __WFUNCTION__);
+                m_p_clog->trace(L"[E] %ls : for compositive, open primitive error.\n", __WFUNCTION__);
+            }
+            return _vhid_info::const_map_index_invalid;;// for compositive, open primitive error.
+        }
+
+#if defined(_WIN32) && defined(_DEBUG)
+        ATLTRACE(L"_create_new_map_primitive_item : index = 0x%x.\n", n_primitive_map_index);
+#endif
+    }
+
+    // 여기는 primitive open 이미 되어 있거나, 방금 open 성공한 경우.
     do {
         std::lock_guard<std::mutex> lock(m_mutex_for_map);
-        if (path == nullptr) {
-            continue;
-        }
 
-        std::tie(std::ignore, t, s_primitive, b_support_shared_open) = _vhid_info::is_path_compositive_type(std::string(path));
-        bool b_open(false);
-
-        std::tie(b_open, n_primitive_map_index, std::ignore ) = _hid_api_bridge::is_open(s_primitive.c_str());
-
-        if (!b_open) {
-            n_map_index = n_primitive_map_index = _hid_api_bridge::api_open_path(s_primitive.c_str());
-            if (n_primitive_map_index < 0) {
-                continue;// for compositive, open primitive error.
-            }
-
-#ifdef _WIN32
-#ifdef _DEBUG
-            ATLTRACE(L"_create_new_map_primitive_item : index = 0x%x.\n", n_primitive_map_index);
-#endif
-#endif
-        }
-
-        // here! primitive is opened.
         auto it = m_map_ptr_hid_info_ptr_worker.find(n_primitive_map_index);
         if (it == std::end(m_map_ptr_hid_info_ptr_worker)) {
             std::string s_in_path(path);
@@ -133,7 +139,7 @@ int _vhid_api_bridge::api_open_path(const char* path)
             */
             std::set< std::tuple<std::string, unsigned short, unsigned short, int, std::string> > set_primitive_dev;
 
-            // get pysical device list
+            // get physical device list
             set_primitive_dev = _hid_api_bridge::hid_enumerate();//연결된 HID list 를 얻음. 
 
             for (auto item : set_primitive_dev) {
@@ -255,61 +261,6 @@ void _vhid_api_bridge::api_close(int n_map_index)
         }
 
     } while (false);
-}
-
-int _vhid_api_bridge::api_set_nonblocking(int n_map_index, int nonblock)
-{
-    bool b_run(false);
-    int n_result(-1);
-    int n_primitive(-1);
-    _vhid_api_bridge::_q_item::type_ptr ptr_item;
-
-    std::tie(n_primitive,std::ignore) = _vhid_info::get_primitive_map_index_from_compositive_map_index(n_map_index);
-
-    do {
-        std::lock_guard<std::mutex> lock(m_mutex_for_map);
-
-        if (n_primitive == _vhid_info::const_map_index_invalid) {
-            continue;
-        }
-
-        auto it = m_map_ptr_hid_info_ptr_worker.find(n_primitive);
-        if (it == std::end(m_map_ptr_hid_info_ptr_worker)) {
-            continue;
-        }
-
-        if (it->second.first->get_none_blocking() && nonblock == 1) {
-            //already noneblocking
-            n_result = 0;
-            continue;
-        }
-        if (!it->second.first->get_none_blocking() && nonblock == 0) {
-            //already blocking
-            n_result = 0;
-            continue;
-        }
-
-        ptr_item = std::make_shared<_vhid_api_bridge::_q_item>(n_map_index);
-        ptr_item->setup_for_set_nonblocking(nonblock);
-        if (!it->second.second->push(ptr_item)) {
-            continue;
-        }
-
-        b_run = true;
-
-    } while (false);
-
-    do {
-        if (!b_run) {
-            continue;
-        }
-        //waits response
-        ptr_item->waits();
-        std::tie(n_result, std::ignore) = ptr_item->get_result();
-
-    } while (false);
-
-    return n_result;
 }
 
 int _vhid_api_bridge::api_get_report_descriptor(int n_map_index, unsigned char* buf, size_t buf_size)
@@ -687,9 +638,6 @@ std::tuple<bool,int> _vhid_api_bridge::_q_worker::_process_req(
         ptr_item->set_start_time();
 
         switch (ptr_item->get_cmd()) {
-        case _vhid_api_bridge::_q_item::cmd_set_nonblocking:
-            n_result = p_api_bridge->_hid_api_bridge::api_set_nonblocking(m_n_primitive_map_index, ptr_item->get_param_nonblock());
-            break;
         case _vhid_api_bridge::_q_item::cmd_get_report_descriptor:
             n_result = p_api_bridge->_hid_api_bridge::api_get_report_descriptor(m_n_primitive_map_index, &(*v_ptr_rx)[0], (*v_ptr_rx).size());
             break;
@@ -1148,7 +1096,7 @@ int _vhid_api_bridge::_q_worker::_rx(_mp::type_v_buffer& v_rx, _hid_api_bridge* 
                     n_result = -1;
                     break;
                 }
-                std::this_thread::sleep_for(std::chrono::milliseconds(ll_check_read_interval_mmsec));
+                //std::this_thread::sleep_for(std::chrono::milliseconds(ll_check_read_interval_mmsec));
                 continue;
             }
         }
@@ -1164,11 +1112,11 @@ int _vhid_api_bridge::_q_worker::_rx(_mp::type_v_buffer& v_rx, _hid_api_bridge* 
                 if (it == std::end(v_rx)) {
                     std::fill(v_rx.begin(), v_rx.begin() + n_result, 0); // reset for re-read
                     n_offset = n_result = 0;
-/*
+
 #if defined(_WIN32) && defined(_DEBUG)
-                    ATLTRACE(L" ++ ignored zeros in-report\n");
+                    //ATLTRACE(L" ++ ignored zeros in-report\n");
 #endif
-*/
+
                 }
                 else {
                     break; // read complete
@@ -1183,7 +1131,7 @@ int _vhid_api_bridge::_q_worker::_rx(_mp::type_v_buffer& v_rx, _hid_api_bridge* 
             n_len = n_len - n_result;
         }
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(ll_check_read_interval_mmsec));
+        //std::this_thread::sleep_for(std::chrono::milliseconds(ll_check_read_interval_mmsec));
     } while (m_b_run_worker);
     //
     return n_result;
@@ -1211,21 +1159,6 @@ _vhid_api_bridge::_q_item::_q_item(int n_compositive_map_index) : m_n_compositiv
     m_ps_rx = nullptr;
 }
 
-
-void _vhid_api_bridge::_q_item::setup_for_set_nonblocking(int nonblock)
-{
-    m_v_rx.resize(0);
-    m_ps_rx = nullptr;
-
-    m_cmd = _q_item::cmd_set_nonblocking;
-    m_v_tx.resize(0);
-    //
-    m_n_nonblock = nonblock;
-    
-    //
-    m_n_result = -1;
-    m_n_event = m_waiter.generate_new_event();
-}
 void _vhid_api_bridge::_q_item::setup_for_get_report_descriptor(unsigned char* buf, size_t buf_size)
 {
     m_n_rx = buf_size;
@@ -1286,9 +1219,6 @@ std::wstring _vhid_api_bridge::_q_item::get_cmd_by_string() const
     switch (m_cmd) {
     case cmd_undefined:
         s = L"cmd_undefined";
-        break;
-    case cmd_set_nonblocking:
-        s = L"cmd_set_nonblocking";
         break;
     case cmd_get_report_descriptor:
         s = L"cmd_get_report_descriptor";

@@ -36,8 +36,7 @@ private:
 	public:
 		typedef	enum : int {
 			cmd_undefined = -1,
-			cmd_set_nonblocking = 1,
-			cmd_get_report_descriptor,
+			cmd_get_report_descriptor = 1,
 			cmd_write,
 			cmd_read
 		}	type_cmd;
@@ -48,12 +47,6 @@ private:
 		_q_item(int n_compositive_map_index);
 		~_q_item();
 
-		/**
-		* set blocking mode.(hid_set_nonblocking())
-		* @param
-		* nonblock:int - 0 is blocking mode, 1 is nonblocking mode
-		*/
-		void setup_for_set_nonblocking(int nonblock);
 		void setup_for_get_report_descriptor( unsigned char* buf, size_t buf_size);
 		void setup_for_write(const unsigned char* data, size_t length, _mp::type_next_io next);
 		void setup_for_read(unsigned char* data, size_t length, size_t n_report);
@@ -372,6 +365,10 @@ private:
 	//value is pair of vhid_info ptr and worker ptr
 	typedef std::map<int, std::pair<_vhid_info::type_ptr, _q_worker::type_ptr> > _type_map_ptr_vhid_info_ptr_worker;
 
+	//key is primitive map index.
+	//value is vhid_info ptr.
+	typedef std::map<int, _vhid_info::type_ptr> _type_map_ptr_vhid_info;
+
 public:
 	_vhid_api_bridge();
 	_vhid_api_bridge(_mp::clog* p_clog);
@@ -444,21 +441,6 @@ public:
 	virtual void api_close(int n_map_index);
 
 	/**
-	* @brief set blocking mode.
-	* 
-	* @param n_map_index:int - primitive or compositive map index.
-	* 
-	* @param nonblock:int - 0 is blocking mode, 1 is nonblocking mode
-	* 
-	* @return int 
-	*	0 - success
-	* 
-	*	-1 - error
-	*/
-	virtual int api_set_nonblocking(int n_map_index, int nonblock);
-
-
-	/**
 	* @brief get report descriptor.
 	*
 	* @param n_map_index int - primitive or compositive map index.
@@ -520,12 +502,13 @@ private:
 
 	bool m_b_remove_all_zero_in_report; // default false, all zeros value report is ignored
 private:
+	mutable std::mutex m_mutex_for_map;
+
 	// key is primitive map index.
 	// value is pair of vhid_info ptr and worker ptr
+	// prottected by m_mutex_for_map
 	_type_map_ptr_vhid_info_ptr_worker m_map_ptr_hid_info_ptr_worker;
-
-	// new part
-	mutable std::mutex m_mutex_for_map;
+	
 
 private://don't call these methods.
 	_vhid_api_bridge(const _vhid_api_bridge&);

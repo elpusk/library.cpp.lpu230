@@ -20,11 +20,24 @@
 
 static void _display_option()
 {
-    std::wcout << L" = input option!" << std::endl;
+    std::wcout << L" = BYE - Error option." << std::endl;
     std::wcout << L" = filter - filter test." << std::endl;
     std::wcout << L" = hid - tx-rx test." << std::endl;
     std::wcout << L" = msr - reading msr test." << std::endl;
     std::wcout << L" = ibutton - reading ibutton test." << std::endl;
+    std::wcout << L" = multiibutton - reading ibutton test in multi-threading env." << std::endl;
+    std::wcout << L" = msr ibutton - reading one msr and two ibutton test." << std::endl;
+    std::wcout << L" = cancelmsr - cancel reading msr test." << std::endl;
+    std::wcout << L" = cancelibutton - cancel reading ibutton test." << std::endl;
+    std::wcout << L" = hidrx - hid rx test." << std::endl;
+    std::wcout << L" = hidtx - hid tx test(multi tx)." << std::endl;
+    std::wcout << L"ex) hid io 10 times test > mgmt_lpu230 hid 10 " << std::endl;
+    std::wcout << L"ex) msr io 100 times test > mgmt_lpu230 msr 100 " << std::endl;
+    std::wcout << L"ex) ibutton io 200 times test > mgmt_lpu230 ibutton 200 " << std::endl;
+    std::wcout << L"ex) after default timeout, cancel the status of msr-reading 300 times test > mgmt_lpu230 cancelmsr 300 " << std::endl;
+    std::wcout << L"ex) after 200 msec, cancel the status of msr-reading 100 times test > mgmt_lpu230 cancelmsr 100 200 " << std::endl;
+    std::wcout << L"ex) after default timeout, cancel the status of ibutton-reading 300 times test > mgmt_lpu230 cancelibutton 300 " << std::endl;
+    std::wcout << L"ex) after 200 msec, cancel the status of ibutton-reading 100 times test > mgmt_lpu230 cancelibutton 100 200 " << std::endl;
 }
 
 
@@ -39,23 +52,7 @@ int main(int argc, char* argv[])
 
     do {
         if (list_option.size() < 1) {
-            std::wcout << L" = BYE - Error option." <<std::endl;
-            std::wcout << L" = filter - filter test." << std::endl;
-            std::wcout << L" = hid - tx-rx test." << std::endl;
-            std::wcout << L" = msr - reading msr test." << std::endl;
-            std::wcout << L" = ibutton - reading ibutton test." << std::endl;
-            std::wcout << L" = multiibutton - reading ibutton test in multi-threading env." << std::endl;
-            std::wcout << L" = msr ibutton - reading one msr and two ibutton test." << std::endl;
-            std::wcout << L" = cancelmsr - cancel reading msr test." << std::endl;
-            std::wcout << L" = cancelibutton - cancel reading ibutton test." << std::endl;
-            std::wcout << L" = hidrx - hid rx test." << std::endl;
-            std::wcout << L"ex) hid io 10 times test > mgmt_lpu230 hid 10 " << std::endl;
-            std::wcout << L"ex) msr io 100 times test > mgmt_lpu230 msr 100 " << std::endl;
-            std::wcout << L"ex) ibutton io 200 times test > mgmt_lpu230 ibutton 200 " << std::endl;
-            std::wcout << L"ex) after default timeout, cancel the status of msr-reading 300 times test > mgmt_lpu230 cancelmsr 300 " << std::endl;
-            std::wcout << L"ex) after 200 msec, cancel the status of msr-reading 100 times test > mgmt_lpu230 cancelmsr 100 200 " << std::endl;
-            std::wcout << L"ex) after default timeout, cancel the status of ibutton-reading 300 times test > mgmt_lpu230 cancelibutton 300 " << std::endl;
-            std::wcout << L"ex) after 200 msec, cancel the status of ibutton-reading 100 times test > mgmt_lpu230 cancelibutton 100 200 " << std::endl;
+            _display_option();
             continue;
         }
 
@@ -101,6 +98,10 @@ int main(int argc, char* argv[])
 
             if (s_test.compare(L"hidrx") == 0) {
                 n_result = _test::tp_hid::get_instance().test_hid_rx();
+                continue;
+            }
+            if (s_test.compare(L"hidtx") == 0) {
+                n_result = _test::tp_hid::get_instance().test_hid_tx();
                 continue;
             }
 
@@ -152,6 +153,10 @@ int main(int argc, char* argv[])
             }
             if (s_p1.compare(L"hidrx") == 0) {
                 n_result = _test::tp_hid::get_instance().test_hid_rx(n_loop);
+                continue;
+            }
+            if (s_p1.compare(L"hidtx") == 0) {
+                n_result = _test::tp_hid::get_instance().test_hid_tx(n_loop);
                 continue;
             }
         }

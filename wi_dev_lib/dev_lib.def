@@ -13,7 +13,6 @@ EXPORTS
 	dev_lib_is_open_free
 	dev_lib_api_open_path
 	dev_lib_api_close
-	dev_lib_api_set_nonblocking
 	dev_lib_api_get_report_descriptor
 	dev_lib_api_write
 	dev_lib_api_read

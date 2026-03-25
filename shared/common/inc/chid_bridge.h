@@ -44,7 +44,6 @@ public:
 
 	void api_close(int n_primitive_map_index);
 
-	int api_set_nonblocking(int n_primitive_map_index, int nonblock);
 	int api_get_report_descriptor(int n_primitive_map_index, unsigned char* buf, size_t buf_size);
 
 	/**

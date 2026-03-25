@@ -2909,6 +2909,33 @@ public:
 		return b_result;
 
 	}
+
+	/**
+	* @brief only use for debugging
+	*/
+	bool generate_set_key_map_for_debugging()
+	{
+		bool b_result(false);
+
+		do {
+			uint32_t n_mapping_table_index = static_cast<uint32_t>(cprotocol_lpu237::language_map_index_english);
+			uint32_t dw_offset, dw_size;
+			unsigned char* p_data;
+
+			//USB map
+			dw_offset = address_system_hid_key_map_offset;
+			dw_size = FOR_CVT_MAX_ASCII_CODE;
+			p_data = (unsigned char*)(ckey_map::get_ascii_to_hid_key_map(n_mapping_table_index));
+			b_result = _generate_config_set(dw_offset, dw_size, p_data, __func__);
+
+			dw_offset = address_system_hid_key_map_offset + FOR_CVT_MAX_ASCII_CODE;
+			dw_size = FOR_CVT_MAX_ASCII_CODE;
+			p_data = (unsigned char*)(ckey_map::get_ascii_to_hid_key_map(n_mapping_table_index, FOR_CVT_MAX_ASCII_CODE / 2));
+			b_result = _generate_config_set(dw_offset, dw_size, p_data, __func__);
+			//
+		} while (false);
+		return b_result;
+	}
 private:
 	void _clear_generated_tx_info()
 	{

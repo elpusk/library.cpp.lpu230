@@ -45,7 +45,6 @@ public:
 	typedef	std::shared_ptr<_hid_api_bridge>	type_ptr;
 
 protected:
-
 	struct _hid_report_size_entry {
 		uint8_t id = 0;
 		int     in_bytes = 0;   // IN  report 1개의 byte 크기 (Report ID 포함)
@@ -56,6 +55,99 @@ protected:
 	typedef std::map<uint8_t, _hid_api_bridge::_hid_report_size_entry> _type_hid_report_size_map;
 	typedef std::shared_ptr<_hid_api_bridge::_type_hid_report_size_map> _type_ptr_hid_report_size_map;
 
+	/**
+	* get<0> hid_device pointer
+	* get<1> true - exclusive using after opening device.
+	* get<2> device path
+	* get<3> shared_ptr of report size map (Report ID 별 IN/OUT report size 정보)
+	* get<4> shared_ptr mutex for hid_device pointer  (each hid_device pointer must be guarded by this mutex. the instance of hid_device pointer must be shared this mutex.)
+	* get<5> shared_ptr next_tx_type - in multi report, next tx type. thread 간 공유가 필요해서 shared_ptr 로
+	*/
+	typedef	std::tuple <
+		hid_device*
+		, bool
+		, std::string
+		, _hid_api_bridge::_type_ptr_hid_report_size_map
+		, std::shared_ptr<std::mutex>
+		, std::shared_ptr<_mp::type_next_io>
+	> _type_tuple_hid_dev_lock_path;
+
+
+	class _crx_worker {
+	public:
+		typedef std::shared_ptr<_crx_worker>	type_ptr;
+		typedef std::tuple<bool, _mp::type_v_buffer, std::wstring>	type_tuple_result_rx; // get<0> - true is success, false is fail. get<1> - rx data buffer. get<2> - debug message 
+		typedef std::shared_ptr<_crx_worker::type_tuple_result_rx>	type_ptr_tuple_result_rx; // get<0> - true is success, false is fail. get<1> - rx data buffer. get<2> - debug message
+		typedef std::deque<_crx_worker::type_ptr_tuple_result_rx>	type_q_rx;
+		typedef std::map<int, type_q_rx> type_map_q_rx;
+
+	private:
+		enum {
+			_const_rx_sleep_in_one_report_time_msec = 1,
+			_const_rx_sleep_time_msec = 10
+		};
+
+
+	public:
+		_crx_worker(const _hid_api_bridge::_type_tuple_hid_dev_lock_path& tuple_hid_dev, int n_primitive_index);
+		virtual ~_crx_worker();
+		void start();
+		void stop();
+		/**
+		* @brief try pop one item from queue and remove it.
+		* @param n_map_index[in] - primitive or compositive map index.
+		* @param tuple_result_rx[in/out] - rx result 
+		* @return true - success, false - fail (queue is empty)
+		*/
+		bool q_try_pop(int n_map_index,_crx_worker::type_tuple_result_rx& tuple_result_rx);
+
+		/**
+		* @brief clear all items in a queue.
+		* @param n_map_index[in] - primitive or compositive map index.
+		*/
+		void q_clear(int n_map_index);
+		/**
+		* @brief clear all items of map.
+		*/
+		void q_clear();
+
+		/**
+		* @brief create a queue.
+		* @param n_map_index[in] - primitive or compositive map index.
+		*/
+		void q_create(int n_map_index);
+
+		/**
+		* @brief remove a queue.
+		* @param n_map_index[in] - primitive or compositive map index.
+		*/
+		void q_remove(int n_map_index);
+		/**
+		* @brief remove all q of map.
+		*/
+		void q_remove();
+
+	private:
+		void _q_push(bool b_result_rx, const _mp::type_v_buffer& v_in_report = _mp::type_v_buffer(), const std::wstring& s_debug_msg = std::wstring());
+
+		void _worker();
+	private:
+		int m_n_primitive_index; // 이 worker instance 를 사용하는 장비의 _hid_api_bridge.m_map_hid_dev map 에서의 index 값으로 생성자에서 설정 된다.
+		_hid_api_bridge::_type_tuple_hid_dev_lock_path m_tuple_hid_dev;
+		std::atomic_bool m_b_run;
+		std::shared_ptr<std::thread> m_ptr_thread;
+
+		// m_thread 에서 이 map 에 있는 모든 요소에 계속 데이터를 pump 해서 저장.
+		// m_n_primitive_index 의 key 에 대한 q 는 생성자에서 자동 생성된다.
+		// 이 map 의 키는 하나의 물리적 device 에 사상되는 primitive 와 compositive key.
+		_crx_worker::type_map_q_rx m_map_q_rx; 
+	private:
+		_crx_worker() = delete;
+		_crx_worker(const _crx_worker&) = delete;
+		_crx_worker& operator=(const _crx_worker&) = delete;
+	};
+
+protected:
 
 	/**
 	* get<0> hid_device pointer
@@ -63,60 +155,32 @@ protected:
 	* get<2> device path
 	* get<3> shared_ptr of report size map (Report ID 별 IN/OUT report size 정보)
 	* get<4> mutex for hid_device pointer (each hid_device pointer must be guarded by this mutex. the instance of hid_device pointer must be shared this mutex.)
+	* get<5> next_tx_type - in multi report, next tx type. thread 간 공유가 필요해서 shared_ptr 로
+	* get<6> rx worker class instance
 	*/
-	typedef	std::tuple< hid_device*, bool,std::string, _hid_api_bridge::_type_ptr_hid_report_size_map, std::shared_ptr<std::mutex> > _type_tuple_hid_dev_lock_path;
-	typedef std::map<int, _hid_api_bridge::_type_tuple_hid_dev_lock_path> _type_map_hid_dev;
+	typedef	std::tuple< 
+		hid_device*
+		, bool
+		, std::string
+		, _hid_api_bridge::_type_ptr_hid_report_size_map
+		, std::shared_ptr<std::mutex>
+		, std::shared_ptr<_mp::type_next_io>
+		, _hid_api_bridge::_crx_worker::type_ptr 
+	> _type_tuple_hid_dev_lock_path_with_worker;
+
+	typedef std::map<int, _hid_api_bridge::_type_tuple_hid_dev_lock_path_with_worker> _type_map_hid_dev;
 
 private:
 	typedef std::map<hid_device*, bool> _type_map_lpu237_disable_ibutton;
 
-protected:
-	class _crx_worker{
-	public:
-		typedef std::shared_ptr<_crx_worker>	type_ptr;
-	private:
-		enum {
-			_const_rx_sleep_time_msec = 2
-		};
-
-		typedef std::tuple<bool, _mp::type_ptr_v_buffer, std::wstring>	_type_tuple_result_rx; // get<0> - true is success, false is fail. get<1> - rx data buffer.
-		typedef std::deque<_crx_worker::_type_tuple_result_rx>	_type_q_rx;
-
-	public:
-		_crx_worker(_hid_api_bridge::_type_tuple_hid_dev_lock_path & tuple_hid_dev);
-		virtual ~_crx_worker();
-		void start();
-		void stop();
-		/**
-		* @brief try pop one item from queue and remove it.
-		* @return true - success, false - fail (queue is empty)
-		*/
-		bool q_try_pop(_crx_worker::_type_tuple_result_rx& tuple_result_rx);
-
-		/**
-		* @brief clear all items in queue.
-		*/
-		void q_clear();
-	private:
-		void _q_push( bool b_result_rx, const _mp::type_v_buffer & v_in_report = _mp::type_v_buffer(), const std::wstring & s_debug_msg = std::wstring());
-
-		void _worker();
-	private:
-		_hid_api_bridge::_type_tuple_hid_dev_lock_path & m_tuple_hid_dev;
-		std::atomic_bool m_b_run;
-		std::shared_ptr<std::thread> m_ptr_thread;
-		_crx_worker::_type_q_rx m_q_rx; // m_thread 에서 계속 데이터를 pump 해서 저장.
-	private:
-		_crx_worker() = delete;
-		_crx_worker(const _crx_worker&) = delete;
-		_crx_worker& operator=(const _crx_worker&) = delete;
-	};
-
 public:
 
+	/**
+	* @brief all instance of this class must be shared this mutex.
+	*/
 	static std::mutex& get_mutex_for_hidapi()
 	{
-		static std::mutex mutex_hidapi; //each hidapi function must be guarded by this mutex. all instance of this class must be shared this mutex.
+		static std::mutex mutex_hidapi;
 
 		return mutex_hidapi;
 	}
@@ -174,6 +238,12 @@ public:
 	* 
 	* @return the primitive type map index of map(m_map_hid_dev)
 	* 
+	*   positive : min index is  _mp::type_bm_dev_hid | _vhid_info::const_map_index_inc_unit.
+	* 
+	*   max index is _mp::type_bm_dev_hid | 0x0000FF00
+	* 
+	*   this index is Multiples of _vhid_info::const_map_index_inc_unit(0x00000100)
+	* 
 	*	-1 : error( including already open status )
 	*/
 	virtual int api_open_path(const char* path);
@@ -185,17 +255,6 @@ public:
 	*/
 	virtual void api_close(int n_primitive_map_index);
 
-
-	/**
-	* @brief set blocking mode.(hid_set_nonblocking())
-	* 
-	* @param n_primitive_map_index int - primitive type map index(m_map_hid_dev)
-	* 
-	* @param nonblock:int - 0 is blocking mode, 1 is nonblocking mode
-	* 
-	* @return 0 : success, -1 : error 
-	*/
-	virtual int api_set_nonblocking(int n_primitive_map_index, int nonblock);
 
 	/**
 	* @brief get report descriptor.(hid_get_report_descriptor())
@@ -286,6 +345,7 @@ protected:
 
 	// key is primity type key only
 	// this value must be const_map_index_min~const_map_index_max, Multiples of const_map_index_inc_unit.
+	// protected by _hid_api_bridge::get_mutex_for_hidapi().
 	_type_map_hid_dev m_map_hid_dev;
 
 	// -1 or the last generated map index key of m_map_hid_dev

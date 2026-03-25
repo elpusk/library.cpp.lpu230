@@ -36,7 +36,6 @@ private:
 
 	typedef	int (_CALLTYPE_* _type_dev_lib_api_open_path)(void*, const char*);
 	typedef	void (_CALLTYPE_* _type_dev_lib_api_close)(void*, int);
-	typedef	int (_CALLTYPE_* _type_dev_lib_api_set_nonblocking)(void*, int, int);
 	typedef	int (_CALLTYPE_* _type_dev_lib_api_get_report_descriptor)(void*, int, unsigned char*, size_t);
 	typedef	int (_CALLTYPE_* _type_dev_lib_api_write)(void*, int, const unsigned char*, size_t, int);
 	typedef	int (_CALLTYPE_* _type_dev_lib_api_read)(void*, int, unsigned char*, size_t, size_t);
@@ -124,7 +123,6 @@ public:
 			m_dev_lib_is_open_free = reinterpret_cast<cdev_lib::_type_dev_lib_is_open_free>(_load_symbol(m_hMode, "dev_lib_is_open_free"));
 			m_dev_lib_api_open_path = reinterpret_cast<cdev_lib::_type_dev_lib_api_open_path>(_load_symbol(m_hMode, "dev_lib_api_open_path"));
 			m_dev_lib_api_close = reinterpret_cast<cdev_lib::_type_dev_lib_api_close>(_load_symbol(m_hMode, "dev_lib_api_close"));
-			m_dev_lib_api_set_nonblocking = reinterpret_cast<cdev_lib::_type_dev_lib_api_set_nonblocking>(_load_symbol(m_hMode, "dev_lib_api_set_nonblocking"));
 			m_dev_lib_api_get_report_descriptor = reinterpret_cast<cdev_lib::_type_dev_lib_api_get_report_descriptor>(_load_symbol(m_hMode, "dev_lib_api_get_report_descriptor"));
 			m_dev_lib_api_write = reinterpret_cast<cdev_lib::_type_dev_lib_api_write>(_load_symbol(m_hMode, "dev_lib_api_write"));
 			m_dev_lib_api_read = reinterpret_cast<cdev_lib::_type_dev_lib_api_read>(_load_symbol(m_hMode, "dev_lib_api_read"));
@@ -148,7 +146,6 @@ public:
 			if (m_dev_lib_is_open_free == NULL)		continue;
 			if (m_dev_lib_api_open_path == NULL)	continue;
 			if (m_dev_lib_api_close == NULL)		continue;
-			if (m_dev_lib_api_set_nonblocking == NULL)			continue;
 			if (m_dev_lib_api_get_report_descriptor == NULL)	continue;
 			if (m_dev_lib_api_write == NULL)		continue;
 			if (m_dev_lib_api_read == NULL)			continue;
@@ -202,9 +199,6 @@ public:
 
 					m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_api_close = 0x%x.\n", (void*)m_dev_lib_api_close);
 					m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_api_close = 0x%x.\n", (void*)m_dev_lib_api_close);
-
-					m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_api_set_nonblocking = 0x%x.\n", (void*)m_dev_lib_api_set_nonblocking);
-					m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_api_set_nonblocking = 0x%x.\n", (void*)m_dev_lib_api_set_nonblocking);
 
 					m_p_clog->log_fmt(L" E : cdev_lib::load() : m_dev_lib_api_get_report_descriptor = 0x%x.\n", (void*)m_dev_lib_api_get_report_descriptor);
 					m_p_clog->trace(L" E : cdev_lib::load() : m_dev_lib_api_get_report_descriptor = 0x%x.\n", (void*)m_dev_lib_api_get_report_descriptor);
@@ -364,18 +358,6 @@ public:
 			}
 			m_dev_lib_api_close(p_instance, n_primitive_map_index);
 		} while (false);
-	}
-
-	int api_set_nonblocking(void* p_instance, int n_primitive_map_index, int nonblock)
-	{
-		int n_result(-1);
-		do {
-			if (m_dev_lib_api_set_nonblocking == NULL) {
-				continue;
-			}
-			n_result = m_dev_lib_api_set_nonblocking(p_instance, n_primitive_map_index,nonblock);
-		} while (false);
-		return n_result;
 	}
 
 	int api_get_report_descriptor(void* p_instance, int n_primitive_map_index, unsigned char* buf, size_t buf_size)
@@ -561,7 +543,6 @@ private:
 		m_dev_lib_is_open_free = nullptr;
 		m_dev_lib_api_open_path = nullptr;
 		m_dev_lib_api_close = nullptr;
-		m_dev_lib_api_set_nonblocking = nullptr;
 		m_dev_lib_api_get_report_descriptor = nullptr;
 		m_dev_lib_api_write = nullptr;
 		m_dev_lib_api_read = nullptr;
@@ -628,7 +609,6 @@ private:
 	cdev_lib::_type_dev_lib_is_open_free m_dev_lib_is_open_free;
 	cdev_lib::_type_dev_lib_api_open_path m_dev_lib_api_open_path;
 	cdev_lib::_type_dev_lib_api_close m_dev_lib_api_close;
-	cdev_lib::_type_dev_lib_api_set_nonblocking m_dev_lib_api_set_nonblocking;
 	cdev_lib::_type_dev_lib_api_get_report_descriptor m_dev_lib_api_get_report_descriptor;
 	cdev_lib::_type_dev_lib_api_write m_dev_lib_api_write;
 	cdev_lib::_type_dev_lib_api_read m_dev_lib_api_read;

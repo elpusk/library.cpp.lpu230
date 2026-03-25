@@ -56,21 +56,13 @@ namespace _mp {
                 if (n_dev < 0) {
                     continue; //open error
                 }
-
-                int n_none_blocking = 1;//enable non-blocking.
-
-                if (m_p_hid_api_bridge->api_set_nonblocking(n_dev, n_none_blocking) == 0) {
-                    m_n_dev = n_dev;
-                    m_b_run_th_worker = true;
-                    m_ptr_th_worker = std::shared_ptr<std::thread>(new std::thread(&clibhid_dev::_worker, this));
+                //enable non-blocking in api_open_path()
+                m_n_dev = n_dev;
+                m_b_run_th_worker = true;
+                m_ptr_th_worker = std::shared_ptr<std::thread>(new std::thread(&clibhid_dev::_worker, this));
 #if !defined(_WIN32) && defined(_SET_THREAD_NAME_)
-                    pthread_setname_np(m_ptr_th_worker->native_handle(), "clibhid_dev");
+                pthread_setname_np(m_ptr_th_worker->native_handle(), "clibhid_dev");
 #endif
-                }
-                else {
-                    m_p_hid_api_bridge->api_close(n_dev);
-                    m_n_dev = -1;
-                }
                 continue;
             }
 
@@ -797,7 +789,9 @@ namespace _mp {
                 //one report complete.
                 m_q_rx_ptr_v.push(std::make_shared<_mp::type_v_buffer>(v_report_in));
                 _mp::clog::get_instance().log_fmt_in_debug_mode(L"[H] v_rx.size() = %u.\n", v_report_in.size());
-                _mp::clog::get_instance().log_data_in_debug_mode(v_report_in, std::wstring(), L"\n");
+                if (v_report_in.size() >= 3) {
+                    _mp::clog::get_instance().log_fmt(L"[I] rx0,rx1,rx2 = 0x%x, 0x%x, 0x%x.\n", __WFUNCTION__, v_report_in[0], v_report_in[1], v_report_in[2]);
+                }
 
             } while (false);
 

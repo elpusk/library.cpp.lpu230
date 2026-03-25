@@ -1264,6 +1264,7 @@ namespace _test{
 		int test_hid_rx(int n_loop = 1)
 		{
 			int n_result(0);
+			std::vector<double> v_d_time(n_loop * 2, 0.0);
 
 			do {
 				_mp::clibhid& mlibhid(_mp::clibhid::get_manual_instance());
@@ -1273,13 +1274,43 @@ namespace _test{
 				}
 
 				mlibhid.update_dev_set_in_manual();
-				_mp::clibhid_dev_info::type_set set_cur_dev = mlibhid.get_cur_device_set();
-				if(set_cur_dev.empty()) {
+				_mp::clibhid_dev_info::type_set st_dev_info = mlibhid.get_cur_device_set();
+				if(st_dev_info.empty()) {
 					std::wcout << L"no device." << std::endl;
 					continue;
 				}
 
-				auto selected_dev = *set_cur_dev.begin();
+				// filter device info set by device type.
+				_mp::clibhid_dev_info::type_set st_dev_info_filtered;
+				std::set<_mp::type_bm_dev> set_filter{ _mp::type_bm_dev_hid };
+				st_dev_info_filtered = tp_hid::_filter_device_info_set_by_device_type(st_dev_info, set_filter);
+				if (st_dev_info_filtered.empty()) {
+					std::wcout << L"none filtered device." << std::endl;
+					continue;
+				}
+
+				_mp::clibhid_dev_info::type_set st_dev_info_filtered_lpu23x;
+				//std::wcout << L"= filtered devices. = " << std::endl;
+				for (auto item : st_dev_info_filtered) {
+					//tp_hid::_display_device_info(item);
+					if (item.get_vendor_id() != 0x134b) {
+						continue;
+					}
+					if (item.get_product_id() != 0x0206) {
+						continue;
+					}
+					if (item.get_interface_number() != 1) {
+						continue;
+					}
+					st_dev_info_filtered_lpu23x.insert(item);
+				}//end for
+
+				if (st_dev_info_filtered_lpu23x.empty()) {
+					std::wcout << L"none lpu23x device." << std::endl;
+					continue;
+				}
+
+				auto selected_dev = *st_dev_info_filtered_lpu23x.begin();
 				tp_hid::_display_device_info(selected_dev);
 
 				// create & open clibhid_dev.
@@ -1292,9 +1323,148 @@ namespace _test{
 					std::wcout << L"INFO - device is open" << std::endl;
 				}
 
-				for (auto n_cnt = 0; n_cnt < n_loop; n_cnt++) {
+				for (int i = 0; i < n_loop; i++) {
+					std::wcout << L" >>>>> TEST" << std::dec << i + 1 << std::endl;
+
+					std::chrono::duration<double> elapsed;
+					bool b_test(false);
+
+					std::tie(b_test, elapsed) = tp_hid::_test_one_byte_request(ptr_dev, 'X');
+					if (!b_test) {
+						std::wcout << L"test fail X - " << L"Elapsed time: " << elapsed.count() << L" seconds" << std::endl;
+						break;
+					}
+
+					v_d_time[i] = elapsed.count();
+					std::wcout << L"success test - " << L"Elapsed time: " << elapsed.count() << L" seconds" << std::endl;
+					//
+					std::tie(b_test, elapsed) = tp_hid::_test_one_byte_request(ptr_dev, 'Y');
+					if (!b_test) {
+						std::wcout << L"test fail Y - " << L"Elapsed time: " << elapsed.count() << L" seconds" << std::endl;
+						break;
+					}
+
+					v_d_time[i + n_loop] = elapsed.count();
+					std::wcout << L"success test - " << L"Elapsed time: " << elapsed.count() << L" seconds" << std::endl;
 
 				}//end for
+
+				double d_t(0.0);
+				for (auto c : v_d_time) {
+					d_t += c;
+				}
+				std::wcout << L" * average - " << L"Elapsed time: " << d_t / ((double)v_d_time.size()) << L" seconds" << std::endl;
+
+				ptr_dev.reset();
+				std::wcout << L"INFO - device is closed." << std::endl;
+			} while (false);
+
+			return n_result;
+		}
+
+		int test_hid_tx(int n_loop = 1)
+		{
+			int n_result(0);
+			std::vector<double> v_d_time(n_loop * 2, 0.0);
+
+			do {
+				_mp::clibhid& mlibhid(_mp::clibhid::get_manual_instance());
+				if (!mlibhid.is_ini()) {
+					std::wcout << L"ERROR - clibhid ini" << std::endl;
+					continue;
+				}
+
+				mlibhid.update_dev_set_in_manual();
+				_mp::clibhid_dev_info::type_set st_dev_info = mlibhid.get_cur_device_set();
+				if (st_dev_info.empty()) {
+					std::wcout << L"no device." << std::endl;
+					continue;
+				}
+
+				// filter device info set by device type.
+				_mp::clibhid_dev_info::type_set st_dev_info_filtered;
+				std::set<_mp::type_bm_dev> set_filter{ _mp::type_bm_dev_hid };
+				st_dev_info_filtered = tp_hid::_filter_device_info_set_by_device_type(st_dev_info, set_filter);
+				if (st_dev_info_filtered.empty()) {
+					std::wcout << L"none filtered device." << std::endl;
+					continue;
+				}
+
+				_mp::clibhid_dev_info::type_set st_dev_info_filtered_lpu23x;
+				//std::wcout << L"= filtered devices. = " << std::endl;
+				for (auto item : st_dev_info_filtered) {
+					//tp_hid::_display_device_info(item);
+					if (item.get_vendor_id() != 0x134b) {
+						continue;
+					}
+					if (item.get_product_id() != 0x0206) {
+						continue;
+					}
+					if (item.get_interface_number() != 1) {
+						continue;
+					}
+					st_dev_info_filtered_lpu23x.insert(item);
+				}//end for
+
+				if (st_dev_info_filtered_lpu23x.empty()) {
+					std::wcout << L"none lpu23x device." << std::endl;
+					continue;
+				}
+
+				auto selected_dev = *st_dev_info_filtered_lpu23x.begin();
+				tp_hid::_display_device_info(selected_dev);
+
+				// create & open clibhid_dev.
+				_mp::clibhid_dev::type_ptr ptr_dev = std::make_shared<_mp::clibhid_dev>(selected_dev, mlibhid.get_bridge().get());
+				if (!ptr_dev->is_open()) {
+					std::wcout << L"INFO - device is NOT open" << std::endl;
+					continue;
+				}
+				else {
+					std::wcout << L"INFO - device is open" << std::endl;
+				}
+
+				for (int i = 0; i < n_loop; i++) {
+					std::wcout << L" >>>>> TEST" << std::dec << i + 1 << std::endl;
+
+					std::chrono::duration<double> elapsed;
+					bool b_test(false);
+
+					std::tie(b_test, elapsed) = tp_hid::_test_one_byte_request(ptr_dev, 'X');//enter config
+					if (!b_test) {
+						std::wcout << L"test fail X - " << L"Elapsed time: " << elapsed.count() << L" seconds" << std::endl;
+						break;
+					}
+
+					
+					std::tie(b_test, elapsed) = tp_hid::_test_multi_report_tx_request(ptr_dev);//multi report write
+					if (!b_test) {
+						std::wcout << L"test multi fail X - " << L"Elapsed time: " << elapsed.count() << L" seconds" << std::endl;
+						break;
+					}
+
+					v_d_time[i] = elapsed.count();
+					std::wcout << L"success test - " << L"Elapsed time: " << elapsed.count() << L" seconds" << std::endl;
+					//
+					std::tie(b_test, elapsed) = tp_hid::_test_one_byte_request(ptr_dev, 'Y');//leave config
+					if (!b_test) {
+						std::wcout << L"test fail Y - " << L"Elapsed time: " << elapsed.count() << L" seconds" << std::endl;
+						break;
+					}
+
+					v_d_time[i + n_loop] = elapsed.count();
+					std::wcout << L"success test - " << L"Elapsed time: " << elapsed.count() << L" seconds" << std::endl;
+
+				}//end for
+
+				double d_t(0.0);
+				for (auto c : v_d_time) {
+					d_t += c;
+				}
+				std::wcout << L" * average - " << L"Elapsed time: " << d_t / ((double)v_d_time.size()) << L" seconds" << std::endl;
+
+				ptr_dev.reset();
+				std::wcout << L"INFO - device is closed." << std::endl;
 			} while (false);
 
 			return n_result;
@@ -1400,6 +1570,68 @@ namespace _test{
 
 
 	private:
+		/**
+		* @brief test "enter config".
+		* @param[in,const] _mp::clibhid_dev_info dev_info : device info instance.
+		* @return std::pair<bool,std::chrono::duration<double>> :
+		* first : true - success, false - fail.
+		* second : elapsed time.
+		*/
+		std::pair<bool, std::chrono::duration<double>> _test_one_byte_request(_mp::clibhid_dev::type_ptr & ptr_dev, unsigned char c_cmd)
+		{
+			bool b_result(false);
+			std::chrono::duration<double> elapsed;
+			do {
+				if (!ptr_dev) {
+					std::wcout << L"ptr_dev is nullptr." << std::endl;
+					continue;
+				}
+
+				m_ar_evt[tp_hid::_index_cb_tx_rx].reset();
+				//
+				_mp::type_v_buffer v_tx(64, 0);
+				v_tx[0] = c_cmd;
+
+				auto start = std::chrono::high_resolution_clock::now();//start timer
+
+				ptr_dev->start_write_read(0, v_tx, tp_hid::_cb_txrx, &m_ar_evt[tp_hid::_index_cb_tx_rx]);
+
+				int n_point = 0;
+				int n_wait_cnt = 200;
+
+				//wait for response
+				do {
+					if (m_ar_evt[tp_hid::_index_cb_tx_rx].is_triggered()) {
+						std::wcout << L"_test_one_byte_request() - result code = " << _mp::cqitem_dev::get_result_string(m_ar_evt[tp_hid::_index_cb_tx_rx].get_result()) << std::endl;
+						b_result = true;
+						break;
+					}
+					if (!ptr_dev) {
+						std::wcout << std::endl;
+						std::wcout << L"_test_one_byte_request() - ptr_dev is nullptr." << std::endl;
+						break;
+					}
+
+					std::this_thread::sleep_for(std::chrono::milliseconds(10));
+					std::wcout << L".";
+					++n_point;
+					if (n_point % 25 == 0) {
+						std::wcout << std::endl;
+					}
+
+					if (n_wait_cnt-- <= 0) {
+						std::wcout << L"_test_one_byte_request() - processing timeout" << std::endl;
+						break;
+					}
+				} while (true);
+
+
+				auto end = std::chrono::high_resolution_clock::now();//stop timer
+				elapsed = end - start;
+			} while (false);
+			return std::make_pair(b_result, elapsed);
+		}
+
 		void _setup_log(bool b_run_by_coffee_manager, bool b_enable)
 		{
 			std::filesystem::path path_cur_exe = _mp::cfile::get_cur_exe_abs_path();
@@ -1508,6 +1740,8 @@ namespace _test{
 						continue;
 					}
 				}
+				log.log_fmt(L"[I] %ls | load dev_lib.dll(.so) | %ls.\n", __WFUNCTION__, s_dev_lib_dll_abs_full_path.c_str());
+				log.trace(L"[I] %ls | load dev_lib.dll(.so) | %ls.\n", __WFUNCTION__, s_dev_lib_dll_abs_full_path.c_str());
 
 				b_result = true;
 			} while (false);
@@ -1737,6 +1971,98 @@ namespace _test{
 					
 				auto end = std::chrono::high_resolution_clock::now();//stop timer
 				elapsed = end - start;
+			} while (false);
+			return std::make_pair(b_result, elapsed);
+		}
+
+		/**
+		* @brief test "multi report tx request".
+		* @param[in,const] _mp::clibhid_dev_info dev_info : device info instance.
+		* @return std::pair<bool,std::chrono::duration<double>> :
+		* first : true - success, false - fail.
+		* second : elapsed time.
+		*/
+		std::pair<bool, std::chrono::duration<double>> _test_multi_report_tx_request(_mp::clibhid_dev::type_ptr& ptr_dev)
+		{
+			bool b_result(false);
+			std::chrono::duration<double> elapsed;
+			do {
+
+				m_ar_evt[tp_hid::_index_cb_tx_rx].reset();
+				/////////////////////////////////////
+				cprotocol_lpu237 target_protocol_lpu237;
+				target_protocol_lpu237.clear_transaction();
+				target_protocol_lpu237.generate_set_key_map_for_debugging();
+
+				_mp::type_v_buffer v_tx;
+				_mp::type_v_buffer v_rx;
+				size_t n_remainder_transaction(0);
+
+				bool b_more = true;
+				auto start = std::chrono::high_resolution_clock::now();//start timer
+
+				do {
+					n_remainder_transaction = target_protocol_lpu237.get_tx_transaction(v_tx);
+					if (v_tx.size() == 0) {
+						//no more tx data
+						b_more = false;
+						continue;
+					}
+
+					m_ar_evt[tp_hid::_index_cb_tx_rx].reset();
+					ptr_dev->start_write_read(0, v_tx, tp_hid::_cb_txrx, &m_ar_evt[tp_hid::_index_cb_tx_rx]);
+
+					int n_point = 0;
+					int n_wait_cnt = 200;
+
+					//wait for response
+					b_result = false;
+					do {
+						if (m_ar_evt[tp_hid::_index_cb_tx_rx].is_triggered()) {
+							std::wcout << L"_test_multi_report_tx_request() - result code = " << _mp::cqitem_dev::get_result_string(m_ar_evt[tp_hid::_index_cb_tx_rx].get_result()) << std::endl;
+							
+							//
+							v_rx = m_ar_evt[tp_hid::_index_cb_tx_rx].get_rx();
+							if (!target_protocol_lpu237.set_rx_transaction(v_rx)) {
+								std::wcout << L"_test_multi_report_tx_request() - set_rx_transaction() " << std::endl;
+								break;//exit with error. 
+							}
+							if (!target_protocol_lpu237.is_success_rx()) {
+								std::wcout << L"_test_multi_report_tx_request() - error " << std::endl;
+								break;
+							}
+							//std::this_thread::sleep_for(std::chrono::milliseconds(10));
+							b_result = true;
+							break;
+						}
+
+						std::this_thread::sleep_for(std::chrono::milliseconds(10));
+						std::wcout << L".";
+						++n_point;
+						if (n_point % 25 == 0) {
+							std::wcout << std::endl;
+						}
+
+						if (n_wait_cnt-- <= 0) {
+							std::wcout << L"_test_multi_report_tx_request() - processing timeout" << std::endl;
+							break;
+						}
+					} while (true);
+
+					if (!b_result) {
+						break;//exit more with error
+					}
+
+				} while (b_more);
+				//////////////////////////////////
+
+				auto end = std::chrono::high_resolution_clock::now();//stop timer
+				elapsed = end - start;
+
+				if (n_remainder_transaction <= 0) {
+					target_protocol_lpu237.clear_transaction();
+				}
+
 			} while (false);
 			return std::make_pair(b_result, elapsed);
 		}
@@ -2198,6 +2524,12 @@ namespace _test{
 			_mp::clog& log(_mp::clog::get_instance());
 
 			auto result_dev_io_dll = _setup_dev_io_dll(false, log);//logging 도 포함.
+			if (result_dev_io_dll.first) {
+				std::wcout << L"_setup_dev_io_dll() =  : true , " << result_dev_io_dll.second << std::endl;
+			}
+			else {
+				std::wcout << L"_setup_dev_io_dll() =  : false , " << result_dev_io_dll.second << std::endl;
+			}
 		}
 
 	private:

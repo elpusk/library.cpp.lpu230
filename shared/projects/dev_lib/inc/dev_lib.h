@@ -153,17 +153,6 @@ void _CALLTYPE_ dev_lib_api_close(void* p_instance, int n_primitive_map_index);
 
 
 /**
-* @brief set blocking mode.(hid_set_nonblocking())
-*
-* @param n_primitive_map_index int - primitive type map index(m_map_hid_dev)
-*
-* @param nonblock:int - 0 is blocking mode, 1 is nonblocking mode
-*
-* @return 0 : success, -1 : error
-*/
-int _CALLTYPE_ dev_lib_api_set_nonblocking(void* p_instance, int n_primitive_map_index, int nonblock);
-
-/**
 * @brief get report descriptor.(hid_get_report_descriptor())
 *
 * @param n_primitive_map_index int - primitive type map index(m_map_hid_dev)
