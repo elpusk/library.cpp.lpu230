@@ -1267,7 +1267,8 @@ namespace _test{
 			std::vector<double> v_d_time(n_loop * 2, 0.0);
 
 			do {
-				_mp::clibhid& mlibhid(_mp::clibhid::get_manual_instance());
+				_mp::clibhid& mlibhid(_mp::clibhid::get_instance());
+				mlibhid.initialize(true, true);// 수동모드로 초기화.
 				if (!mlibhid.is_ini()) {
 					std::wcout << L"ERROR - clibhid ini" << std::endl;
 					continue;
@@ -1368,7 +1369,8 @@ namespace _test{
 			std::vector<double> v_d_time(n_loop * 2, 0.0);
 
 			do {
-				_mp::clibhid& mlibhid(_mp::clibhid::get_manual_instance());
+				_mp::clibhid& mlibhid(_mp::clibhid::get_instance());
+				mlibhid.initialize(true, true);// 수동모드로 초기화.
 				if (!mlibhid.is_ini()) {
 					std::wcout << L"ERROR - clibhid ini" << std::endl;
 					continue;

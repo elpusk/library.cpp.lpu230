@@ -451,7 +451,7 @@ std::pair<bool, std::string> CHidBootManager::do_write_sector(
 
 int CHidBootManager::_DDL_GetList(std::list<std::wstring>& ListDev, int nVid, int nPid, int nInf)
 {
-	_mp::clibhid& mclibhid(_mp::clibhid::get_manual_instance());
+	_mp::clibhid& mclibhid(_mp::clibhid::get_instance());
 	_mp::type_set_usb_filter set_usb_filter;
 	set_usb_filter.emplace(nVid, nPid, nInf);
 
@@ -473,7 +473,7 @@ int CHidBootManager::_DDL_GetList(std::list<std::wstring>& ListDev, int nVid, in
 
 CHidBootManager::type_pair_handle CHidBootManager::_DDL_open(const std::wstring& szDevicePath)
 {
-	_mp::clibhid& mclibhid(_mp::clibhid::get_manual_instance());
+	_mp::clibhid& mclibhid(_mp::clibhid::get_instance());
 	_mp::clibhid_dev_info::type_set set_dev_info = mclibhid.get_cur_device_set();
 
 	_mp::clibhid_dev::type_ptr ptr_dev;

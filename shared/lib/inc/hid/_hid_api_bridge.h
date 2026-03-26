@@ -325,6 +325,23 @@ protected:
 	_hid_api_bridge();
 	_hid_api_bridge(_mp::clog* p_clog);
 
+	/**
+	* @brief 이 장비에 연결되는 worker 의 rx q map 에 새로운 rx q를 추가.
+	* 
+	*  primitive type index 에 대해서는 아무 것도 하지 않는다.
+	* 
+	* @param n_map_index - primitive or compositive index
+	*/
+	void _add_rx_q(int n_map_index);
+
+	/**
+	* @brief 이 장비에 연결되는 worker 의 rx q map 에서 지정된 index 번호의 rx q를 제거.
+	* 
+	*  primitive type index 에 대해서는 아무 것도 하지 않는다.
+	* 
+	* @param n_map_index - primitive or compositive index
+	*/
+	void _remove_rx_q(int n_map_index);
 private:
 	bool _lpu237_ibutton_enable(hid_device* p_dev,bool b_enable);
 

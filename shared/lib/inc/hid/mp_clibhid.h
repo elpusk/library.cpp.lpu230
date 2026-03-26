@@ -46,34 +46,50 @@ namespace _mp{
 
         /**
         * @brief create singleton instance of clibhid class.(device manager)
+        * @return the instance of clibhid class.
+        */
+        static clibhid& get_instance();
+
+        /*
+        * @brief initialize clibhid instance.
+        * 
+        *  처음 get_instance() 을 호출 후, 다른 member 를 호출 하기 전에 항상 이 함수를 호출행야 한다,
+        *
+        *   1. set default device filter to lpu237, lpu238, hidbootloader.
+        *
+        *   2. create _vhid_api_bridge instance.
+        *
+        *   3. get the current connected device list.
+        *
+        *   4. create & open clibhid_dev instatnce. (virtual device - using _vhid_api_bridge instance) and register these to map.
+        *
+        *   5. create & run device plug in/out thread.( clibhid::_worker_pluginout() )
+        *
+        * @param set_usb_filter - if this parameter is empty, default filter will be set to lpu237, lpu238, hidbootloader.
+        * @return true - ini success
+        */
+        bool initialize(const _mp::type_set_usb_filter& set_usb_filter = _mp::type_set_usb_filter());
+
+        /*
+        * @brief initialize clibhid instance.
+        * 
+        *  처음 get_instance() 을 호출 후, 다른 member 를 호출 하기 전에 항상 이 함수를 호출행야 한다,
         * 
         *   1. set default device filter to lpu237, lpu238, hidbootloader.
         * 
         *   2. create _vhid_api_bridge instance.
         * 
         *   3. get the current connected device list.
-        * 
+        *
         *   4. create & open clibhid_dev instatnce. (virtual device - using _vhid_api_bridge instance) and register these to map.
+        *
+        *   5. create & run device plug in/out thread.( clibhid::_worker_pluginout() )
         * 
-        *   5. create & run device plug in/out thread.( clibhid::_worker_pluginout() ) 
-        * 
-        * @param set_usb_filter - if this parameter is empty, default filter will be set to lpu237, lpu238, hidbootloader.
-        *   
-        *   this will affected to constructor only.
-        * 
-        * @return the instance of clibhid class.
+        * @param b_manual - true : 위 1~2 까지 실행, false : 위 1~5 까지 실행.
+        * @prarm b_remove_all_zero_in_report - true : in report 값이 모드 0 이면, 그 수신 in-report 는 무시한다.
+        * @return true - ini success 
         */
-        static clibhid& get_instance( const _mp::type_set_usb_filter& set_usb_filter = _mp::type_set_usb_filter() );
-
-        /**
-        * @brief create singleton instance of clibhid class.(device manager) WITH MANUAL mode.
-        * 
-        *   in this mode, all zeros packet is ignored.
-        * 
-        *   get_instance() and get_manual_instance() must be used exculsively.
-        * 
-        */
-        static clibhid& get_manual_instance();
+        bool initialize(bool b_manual, bool b_remove_all_zero_in_report);
 
         ~clibhid();
 
@@ -132,8 +148,6 @@ namespace _mp{
         
     protected:
         clibhid();
-        clibhid(bool b_manual,bool b_remove_all_zero_in_report);
-		clibhid(const _mp::type_set_usb_filter& set_usb_filter);
 
         clibhid_dev::type_wptr _get_device(const std::string& s_path);
 

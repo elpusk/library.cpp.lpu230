@@ -15,35 +15,11 @@
 
 namespace _mp{
 
-    clibhid& clibhid::get_instance(const _mp::type_set_usb_filter& set_usb_filter /*= _mp::type_set_usb_filter()*/)
+    clibhid& clibhid::get_instance()
     {
-		static bool b_first = true;
-        static clibhid::type_ptr ptr_obj;
-        if (b_first) {
-            b_first = false;
-            if (set_usb_filter.empty()) {
-                ptr_obj = std::shared_ptr<clibhid>(new clibhid());
-            }
-            else {
-                ptr_obj = std::shared_ptr<clibhid>(new clibhid(set_usb_filter));
-            }
-        }
-
+        static clibhid::type_ptr ptr_obj(std::shared_ptr<clibhid>(new clibhid()));
         return *ptr_obj;
     }
-
-    clibhid& clibhid::get_manual_instance()
-    {
-        static bool b_first = true;
-        static clibhid::type_ptr ptr_obj;
-        if (b_first) {
-            b_first = false;
-            ptr_obj = std::shared_ptr<clibhid>(new clibhid(true,true));
-        }
-
-        return *ptr_obj;
-    }
-
 
     bool clibhid::is_ini() const
     {
@@ -222,19 +198,21 @@ namespace _mp{
         return b_result;
     }
 
-    clibhid::clibhid() : clibhid(false,false)
-    {
-    }
-
-    clibhid::clibhid(bool b_manual,bool b_remove_all_zero_in_report) :
+    clibhid::clibhid() : 
         m_b_ini(false)
         , m_b_run_th_pluginout(false)
         , m_p_user(NULL)
         , m_cb(nullptr)
         , m_atll_dev_pluginout_check_interval_mmsec(clibhid::_const_default_dev_pluginout_check_interval_mmsec)
-        , m_b_manual(b_manual)
-        , m_b_remove_all_zero_in_report(b_remove_all_zero_in_report)
+        , m_b_manual(false)
+        , m_b_remove_all_zero_in_report(false)
     {
+    }
+
+    bool clibhid::initialize(bool b_manual, bool b_remove_all_zero_in_report)
+    {
+        m_b_manual = b_manual;
+        m_b_remove_all_zero_in_report = b_remove_all_zero_in_report;
         if (!b_manual) {
             // 기본 값은 자동 처리 모드.
             //setup usb filter
@@ -246,7 +224,7 @@ namespace _mp{
 
             _ini(); //ptr_bridge instance will ne created in _ini()
         }
-        else{
+        else {
             m_ptr_hid_api_bridge = std::make_shared<chid_bridge>(m_b_remove_all_zero_in_report);//create single instance of virtual hidapi library
 
             if (m_ptr_hid_api_bridge->is_ini()) {
@@ -256,18 +234,17 @@ namespace _mp{
             }
 
         }
+        return m_b_ini;
     }
 
-    clibhid::clibhid(const _mp::type_set_usb_filter& set_usb_filter) :
-        m_b_ini(false)
-        , m_b_run_th_pluginout(false)
-        , m_p_user(NULL)
-        , m_cb(nullptr)
-        , m_atll_dev_pluginout_check_interval_mmsec(clibhid::_const_default_dev_pluginout_check_interval_mmsec)
-		, m_set_usb_filter(set_usb_filter)
-        , m_b_manual(false)
+    bool clibhid::initialize(const _mp::type_set_usb_filter& set_usb_filter/* = _mp::type_set_usb_filter()*/)
     {
+        m_b_manual = false;
+        m_b_remove_all_zero_in_report = false;
+
+        m_set_usb_filter = set_usb_filter;
         _ini();
+        return m_b_ini;
     }
 
     clibhid::~clibhid()

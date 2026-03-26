@@ -61,7 +61,7 @@ namespace _mp{
 
 				//create hid device library instance.
 				clibhid& lib_hid(_mp::clibhid::get_instance());
-				if (lib_hid.is_ini()) {
+				if (lib_hid.initialize(false, false)) {// 자동 장비 인식으로 초기화.
 					clibhid_dev_info::type_set st_dev = lib_hid.get_cur_device_set();
 					unsigned short w_device_index = 0;
 

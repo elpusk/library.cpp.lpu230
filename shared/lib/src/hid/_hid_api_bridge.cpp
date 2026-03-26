@@ -463,10 +463,7 @@ _hid_api_bridge::~_hid_api_bridge()
             std::shared_ptr<std::mutex> ptr_mutex = std::get<4>(item.second);
             _hid_api_bridge::_crx_worker::type_ptr ptr_worker = std::get<6>(item.second);
 
-            if (ptr_worker) {
-                ptr_worker->stop();
-                ptr_worker.reset();
-            }
+            ptr_worker.reset();
 
             if(p_dev){
                 hid_close(p_dev);
@@ -775,13 +772,77 @@ void _hid_api_bridge::api_close(int n_primitive_map_index)
             );
 #endif
         }
-        if (ptr_worker) {
-            ptr_worker->stop();
-        }
-        hid_close(p_dev);
 
     } while (false);
+
+    if (b_found) {
+        // std::lock_guard<std::mutex> l(*ptr_mutex); 가 걸린 상태에서 하면 rx worker 와 dead-lock 걸릴 수 있음.
+        ptr_worker.reset();
+        hid_close(p_dev);
+    }
     
+}
+
+void _hid_api_bridge::_add_rx_q(int n_map_index)
+{
+    do {
+        int n_primitive_map_index(-1);
+        bool b_compositive_type(false);
+        std::tie(n_primitive_map_index, b_compositive_type) = _vhid_info::get_primitive_map_index_from_compositive_map_index(n_map_index);
+
+        if (!b_compositive_type) {
+            continue;
+        }
+        std::lock_guard<std::mutex> lock(_hid_api_bridge::get_mutex_for_hidapi());
+        _hid_api_bridge::_type_map_hid_dev::iterator it = std::end(m_map_hid_dev);
+        if (!m_b_ini) {
+            continue;
+        }
+
+        it = m_map_hid_dev.find(n_primitive_map_index);
+        if (it == std::end(m_map_hid_dev)) {
+            continue;
+        }
+
+        _hid_api_bridge::_crx_worker::type_ptr ptr_worker = std::get<6>(it->second);
+        if (!ptr_worker) {
+            continue;
+        }
+
+        ptr_worker->q_create(n_map_index);
+
+    } while (false);
+}
+
+void _hid_api_bridge::_remove_rx_q(int n_map_index)
+{
+    do {
+        int n_primitive_map_index(-1);
+        bool b_compositive_type(false);
+        std::tie(n_primitive_map_index, b_compositive_type) = _vhid_info::get_primitive_map_index_from_compositive_map_index(n_map_index);
+
+        if (!b_compositive_type) {
+            continue;
+        }
+        std::lock_guard<std::mutex> lock(_hid_api_bridge::get_mutex_for_hidapi());
+        _hid_api_bridge::_type_map_hid_dev::iterator it = std::end(m_map_hid_dev);
+        if (!m_b_ini) {
+            continue;
+        }
+
+        it = m_map_hid_dev.find(n_primitive_map_index);
+        if (it == std::end(m_map_hid_dev)) {
+            continue;
+        }
+
+        _hid_api_bridge::_crx_worker::type_ptr ptr_worker = std::get<6>(it->second);
+        if (!ptr_worker) {
+            continue;
+        }
+
+        ptr_worker->q_remove(n_map_index);
+
+    } while (false);
 }
 
 bool _hid_api_bridge::_lpu237_ibutton_enable(hid_device* p_dev, bool b_enable)
@@ -1271,6 +1332,13 @@ _hid_api_bridge::_crx_worker::_crx_worker(const _hid_api_bridge::_type_tuple_hid
 _hid_api_bridge::_crx_worker::~_crx_worker()
 {
     stop();
+    if (m_ptr_thread) {
+        if (m_ptr_thread->joinable()) {
+            m_ptr_thread->join();
+        }
+        m_ptr_thread.reset();
+    }
+
     q_remove();
 }
 
@@ -1287,12 +1355,6 @@ void _hid_api_bridge::_crx_worker::start()
 void _hid_api_bridge::_crx_worker::stop()
 {
     m_b_run = false;
-    if (m_ptr_thread) {
-        if (m_ptr_thread->joinable()) {
-            m_ptr_thread->join();
-        }
-        m_ptr_thread.reset();
-	}
 }
 
 void _hid_api_bridge::_crx_worker::_q_push(
@@ -1448,9 +1510,11 @@ void _hid_api_bridge::_crx_worker::_worker()
                 }
             } while (b_more && m_b_run); // one report reading
 
-            n_offset = 0; //reset offset for next read
-            _q_push(true, v_in_report);
-            std::fill(v_in_report.begin(), v_in_report.end(), 0); //reset buffer
+            if (n_offset > 0) {
+                n_offset = 0; //reset offset for next read
+                _q_push(true, v_in_report);
+                std::fill(v_in_report.begin(), v_in_report.end(), 0); //reset buffer
+            }
 
         } while (false);
 

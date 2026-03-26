@@ -42,7 +42,7 @@ _vhid_api_bridge::_vhid_api_bridge(_mp::clog* p_clog, bool b_remove_all_zero_in_
 
 _vhid_api_bridge::~_vhid_api_bridge()
 {
-    m_map_ptr_hid_info_ptr_worker.clear();
+    m_map_ptr_hid_info.clear();
 }
 
 std::set< std::tuple<std::string, unsigned short, unsigned short, int, std::string> > _vhid_api_bridge::hid_enumerate()
@@ -63,7 +63,7 @@ std::set< std::tuple<std::string, unsigned short, unsigned short, int, std::stri
         std::string s_extra_path;
         std::set<std::string> set_v_extra_path;
         //
-        //add primitive path
+        //각 물리적 device path 에 가상 device path 도 추가 한다.
         
         auto out_item = std::make_tuple(
             s_path,
@@ -99,6 +99,7 @@ int _vhid_api_bridge::api_open_path(const char* path)
     _mp::type_bm_dev t(_mp::type_bm_dev_unknown);
     std::string s_primitive;
     bool b_support_shared_open(false);
+    bool b_compositive(false);
 
     if (path == nullptr) {
         if (m_p_clog) {
@@ -107,7 +108,7 @@ int _vhid_api_bridge::api_open_path(const char* path)
         }
         return _vhid_info::const_map_index_invalid;
     }
-    std::tie(std::ignore, t, s_primitive, b_support_shared_open) = _vhid_info::is_path_compositive_type(std::string(path));
+    std::tie(b_compositive, t, s_primitive, b_support_shared_open) = _vhid_info::is_path_compositive_type(std::string(path));
     bool b_open(false);
 
     std::tie(b_open, n_primitive_map_index, std::ignore) = _hid_api_bridge::is_open(s_primitive.c_str());
@@ -131,8 +132,8 @@ int _vhid_api_bridge::api_open_path(const char* path)
     do {
         std::lock_guard<std::mutex> lock(m_mutex_for_map);
 
-        auto it = m_map_ptr_hid_info_ptr_worker.find(n_primitive_map_index);
-        if (it == std::end(m_map_ptr_hid_info_ptr_worker)) {
+        auto it = m_map_ptr_hid_info.find(n_primitive_map_index);
+        if (it == std::end(m_map_ptr_hid_info)) {
             std::string s_in_path(path);
             /**
             * 1'st - device path, 2'nd - usb vendor id, 3'th - usb product id, 4'th - usb interface number, 5'th - extra data
@@ -154,13 +155,13 @@ int _vhid_api_bridge::api_open_path(const char* path)
                 if (w_pid == _mp::_elpusk::_lpu237::const_usb_pid) {
                     if (s_in_path.find(s_path) == 0) {
                         // lpu237 장비면.
-                        m_map_ptr_hid_info_ptr_worker[n_primitive_map_index] =
-                            std::make_pair(
-                                std::make_shared<_vhid_info_lpu237>(t), // in constructure, type open counter is increased.
-                                std::make_shared<_q_worker>(n_primitive_map_index, this, m_b_remove_all_zero_in_report)
-                            );
+                        m_map_ptr_hid_info[n_primitive_map_index] = std::make_shared<_vhid_info_lpu237>(t); // in constructure, type open counter is increased.
+
                         //convert primitive index to composite index.
                         n_map_index = _vhid_info::get_compositive_map_index_from_primitive_map_index(t, n_primitive_map_index);
+                        if (b_compositive) {
+                            _add_rx_q(n_map_index);
+                        }
 #if defined(_WIN32) && defined(_DEBUG)
                         ATLTRACE(L"_create_new_map_compositive_item : index = 0x%x.\n", n_map_index);
 #endif
@@ -178,13 +179,13 @@ int _vhid_api_bridge::api_open_path(const char* path)
                 else if (w_pid == _mp::_elpusk::const_usb_pid_hidbl) {
                     if (s_in_path.find(s_path) == 0) {
                         //hid bootloader.
-                        m_map_ptr_hid_info_ptr_worker[n_primitive_map_index] =
-                            std::make_pair(
-                                std::make_shared<_vhid_info_lpu237>(t), // in constructure, type open counter is increased.
-                                std::make_shared<_q_worker>(n_primitive_map_index, this, m_b_remove_all_zero_in_report)
-                            );
+                        m_map_ptr_hid_info[n_primitive_map_index] = std::make_shared<_vhid_info_lpu237>(t); // in constructure, type open counter is increased.
+
                         //convert primitive index to composite index.
                         n_map_index = _vhid_info::get_compositive_map_index_from_primitive_map_index(t, n_primitive_map_index);
+                        if (b_compositive) {
+                            _add_rx_q(n_map_index);
+                        }
 #if defined(_WIN32) && defined(_DEBUG)
                         ATLTRACE(L"_create_new_map_compositive_item hid boot : index = 0x%x.\n", n_map_index);
 #endif
@@ -197,15 +198,15 @@ int _vhid_api_bridge::api_open_path(const char* path)
         }
 
         //already opened 
-        if (!it->second.first->can_be_open(t, !b_support_shared_open)) {
+        if (!it->second->can_be_open(t, !b_support_shared_open)) {
             n_map_index = _vhid_info::const_map_index_invalid;
-            continue; // thie type cannt be open by shared-mode.
+            continue; // this type cannt be open by shared-mode.
         }
 
         // compositive shared open or primitive open
         bool b_adjustment(false);
 
-        std::tie(b_adjustment, std::ignore, std::ignore) = it->second.first->ajust_open_cnt(t, true);
+        std::tie(b_adjustment, std::ignore, std::ignore) = it->second->ajust_open_cnt(t, true);
         if (!b_adjustment) {
             n_map_index = _vhid_info::const_map_index_invalid;
             continue;//open failure....... previous opened compositive isn't support shared open! 
@@ -232,12 +233,15 @@ void _vhid_api_bridge::api_close(int n_map_index)
             continue;
         }
 
-        auto it = m_map_ptr_hid_info_ptr_worker.find(n_primitive);
-        if (it == std::end(m_map_ptr_hid_info_ptr_worker)) {
+        auto it = m_map_ptr_hid_info.find(n_primitive);
+        if (it == std::end(m_map_ptr_hid_info)) {
             continue;//not opened
         }
 
         // here opened.
+        if (b_compositive_type) {
+            _remove_rx_q(n_map_index);
+        }
         // 
         //get type from index
         auto t = _vhid_info::get_type_from_compositive_map_index(n_map_index);
@@ -249,14 +253,14 @@ void _vhid_api_bridge::api_close(int n_map_index)
         bool b_all_compositive_type_are_zeros(false);
 
         //decrease open counter
-        std::tie(b_result,std::ignore,b_all_compositive_type_are_zeros) = it->second.first->ajust_open_cnt(t, false);
+        std::tie(b_result,std::ignore,b_all_compositive_type_are_zeros) = it->second->ajust_open_cnt(t, false);
         if (!b_result) {
             continue;
         }
 
         if (b_all_compositive_type_are_zeros) {
             //all compositive type is closed
-            m_map_ptr_hid_info_ptr_worker.erase(it);
+            m_map_ptr_hid_info.erase(it);
             _hid_api_bridge::api_close(n_primitive);
         }
 
@@ -278,29 +282,12 @@ int _vhid_api_bridge::api_get_report_descriptor(int n_map_index, unsigned char* 
             continue;
         }
 
-        auto it = m_map_ptr_hid_info_ptr_worker.find(n_primitive);
-        if (it == std::end(m_map_ptr_hid_info_ptr_worker)) {
+        auto it = m_map_ptr_hid_info.find(n_primitive);
+        if (it == std::end(m_map_ptr_hid_info)) {
             continue;
         }
 
-        ptr_item = std::make_shared<_vhid_api_bridge::_q_item>(n_map_index);
-        ptr_item->setup_for_get_report_descriptor(buf, buf_size);
-
-        if (!it->second.second->push(ptr_item)) {
-            continue;
-        }
-
-        b_run = true;
-    } while (false);
-
-    do {
-        if (!b_run) {
-            continue;
-        }
-        //waits response
-        ptr_item->waits();
-        //rx data will be save on buf directly.
-        std::tie(n_result, std::ignore) = ptr_item->get_result();
+        n_result = _hid_api_bridge::api_get_report_descriptor(n_primitive, buf, buf_size);
 
     } while (false);
 
@@ -322,38 +309,12 @@ int _vhid_api_bridge::api_write(int n_map_index, const unsigned char* data, size
             continue;
         }
 
-        auto it = m_map_ptr_hid_info_ptr_worker.find(n_primitive);
-        if (it == std::end(m_map_ptr_hid_info_ptr_worker)) {
+        auto it = m_map_ptr_hid_info.find(n_primitive);
+        if (it == std::end(m_map_ptr_hid_info)) {
             continue;
         }
 
-        ptr_item = std::make_shared<_vhid_api_bridge::_q_item>(n_map_index);
-        ptr_item->setup_for_write(data, length,next);
-
-        if (!it->second.second->push(ptr_item)) {
-            continue;
-        }
-
-        if (next == _mp::next_io_read && it->second.first->is_lpu237_device()) {
-            //TODO....
-        }
-        b_run = true;
-    } while (false);
-
-    do {
-        if (!b_run) {
-            continue;
-        }
-        //
-        if (next == _mp::next_io_none) {
-            //waits response
-            ptr_item->waits();
-            //rx data will be save on buf directly.
-            std::tie(n_result, std::ignore) = ptr_item->get_result();
-        }
-        else {
-            n_result = length;//virtual success.
-        }
+        n_result = _hid_api_bridge::api_write(n_primitive, data, length, next);
     } while (false);
 
     return n_result;
@@ -377,60 +338,39 @@ int _vhid_api_bridge::api_read(int n_map_index, unsigned char* data, size_t leng
             continue;
         }
 
-        auto it = m_map_ptr_hid_info_ptr_worker.find(n_primitive);
-        if (it == std::end(m_map_ptr_hid_info_ptr_worker)) {
+        auto it = m_map_ptr_hid_info.find(n_primitive);
+        if (it == std::end(m_map_ptr_hid_info)) {
             if (m_p_clog)
                 m_p_clog->log_fmt(L"[E] %ls : not found map item.\n", __WFUNCTION__);
             continue;
         }
 
-        ptr_item = std::make_shared<_vhid_api_bridge::_q_item>(n_map_index);
-        ptr_item->setup_for_read(data, length,n_report);
-
-        if (!it->second.second->push(ptr_item)) {
-            if (m_p_clog)
-                m_p_clog->log_fmt(L"[E] %ls : push().\n", __WFUNCTION__);
-            continue;
-        }
-
-        b_run = true;
+        n_result = _hid_api_bridge::api_read(n_primitive, data, length, n_report);
     } while (false);
-
-    do {
-        if (!b_run) {
-            continue;
-        }
-
-        //waits response
-        ptr_item->waits();
-        //rx data will be save on buf directly.
-        _mp::type_v_buffer v_rx(0);
-        std::tie(n_result, v_rx) = ptr_item->get_result();
 
 #ifdef _WIN32
 #ifdef _DEBUG
-        static size_t n_ct(0);
-        if (n_result > 2) {
-            ATLTRACE(L"0x%08x:0x%08X(%s)-RX%u (n_result,rx[0],rx[1],rx[2]) = (%d, 0x%x, 0x%x, 0x%x)\n", \
-                GetCurrentThreadId(), n_map_index,
-                _vhid_info::get_type_wstring_from_compositive_map_index(n_map_index).c_str(),
-                n_ct++, n_result, v_rx[0], v_rx[1], v_rx[2]);
-        }
-        else if (n_result > 1) {
-            ATLTRACE(L"0x%08x:0x%08X(%s)-RX%u (n_result,rx[0],rx[1]) = (%d, 0x%x, 0x%x)\n",\
-                GetCurrentThreadId(), n_map_index,
-                _vhid_info::get_type_wstring_from_compositive_map_index(n_map_index).c_str(),
-                n_ct++, n_result, v_rx[0], v_rx[1]);
-        }
-        else if (n_result > 0) {
-            ATLTRACE(L"0x%08x:0x%08X(%s)-RX%u (n_result,rx[0]) = (%d,0x%x)\n",
-                GetCurrentThreadId(), n_map_index,
-                _vhid_info::get_type_wstring_from_compositive_map_index(n_map_index).c_str(),
-                n_ct++, n_result, v_rx[0]);
-        }
+    static size_t n_ct(0);
+    if (n_result > 2) {
+        ATLTRACE(L"0x%08x:0x%08X(%s)-RX%u (n_result,rx[0],rx[1],rx[2]) = (%d, 0x%x, 0x%x, 0x%x)\n", \
+            GetCurrentThreadId(), n_map_index,
+            _vhid_info::get_type_wstring_from_compositive_map_index(n_map_index).c_str(),
+            n_ct++, n_result, data[0], data[1], data[2]);
+    }
+    else if (n_result > 1) {
+        ATLTRACE(L"0x%08x:0x%08X(%s)-RX%u (n_result,rx[0],rx[1]) = (%d, 0x%x, 0x%x)\n", \
+            GetCurrentThreadId(), n_map_index,
+            _vhid_info::get_type_wstring_from_compositive_map_index(n_map_index).c_str(),
+            n_ct++, n_result, data[0], data[1]);
+    }
+    else if (n_result > 0) {
+        ATLTRACE(L"0x%08x:0x%08X(%s)-RX%u (n_result,rx[0]) = (%d,0x%x)\n",
+            GetCurrentThreadId(), n_map_index,
+            _vhid_info::get_type_wstring_from_compositive_map_index(n_map_index).c_str(),
+            n_ct++, n_result, data[0]);
+    }
 #endif
 #endif
-    } while (false);
 
     if (n_result < 0) {
         if (m_p_clog)
@@ -473,8 +413,8 @@ std::tuple<bool, int, bool> _vhid_api_bridge::_is_open(const char* path) const
             continue;
         }
 
-        auto it_info = m_map_ptr_hid_info_ptr_worker.find(n_primitive_map_index);
-        if (it_info == std::end(m_map_ptr_hid_info_ptr_worker)) {
+        auto it_info = m_map_ptr_hid_info.find(n_primitive_map_index);
+        if (it_info == std::end(m_map_ptr_hid_info)) {
             b_open = false; // not opened compositive type
             continue;
         }

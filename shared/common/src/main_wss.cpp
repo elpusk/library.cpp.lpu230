@@ -195,6 +195,7 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 		std::wstring s_pis;
 		//lib_hid 는 wss_svr.start() 가 성공하면, 생성되는 instance 이므로, wss_svr.start() 보다 먼저 사용 불가.
 		_mp::clibhid& lib_hid(_mp::clibhid::get_instance());
+
 		long long ll_ctl_pipe_check_interval_mmsec(_mp::_coffee::CONST_N_COFFEE_MGMT_SLEEP_INTERVAL_MMSEC);
 		do {
 			if (!gptr_tx_ctl_pipe) {

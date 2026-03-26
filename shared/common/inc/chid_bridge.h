@@ -5,8 +5,8 @@
 #include <set>
 
 /**
-* notice. before using this class, you must run and success cdev_lib.get_instance().load(L"dev_lib.dll")
-* or cdev_lib.get_instance().load(L"libdev_lib.so")
+* notice. before using this class, you must run and success cdev_lib::get_instance().load(L"dev_lib.dll")
+* or cdev_lib::get_instance().load(L"libdev_lib.so")
 */
 class chid_bridge {
 public:
@@ -67,7 +67,7 @@ public:
 
 	long long get_hid_read_interval_in_child();
 private:
-	void* m_p_api_brage_instance;
+	void* m_p_api_brage_instance; // 이 것은 _vhid_api_bridge class instance pointer
 
 private:
 	chid_bridge() = delete;

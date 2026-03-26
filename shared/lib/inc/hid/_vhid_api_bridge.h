@@ -363,7 +363,7 @@ private:
 private:
 	//key is primitive map index.
 	//value is pair of vhid_info ptr and worker ptr
-	typedef std::map<int, std::pair<_vhid_info::type_ptr, _q_worker::type_ptr> > _type_map_ptr_vhid_info_ptr_worker;
+	//typedef std::map<int, std::pair<_vhid_info::type_ptr, _q_worker::type_ptr> > _type_map_ptr_vhid_info_ptr_worker;
 
 	//key is primitive map index.
 	//value is vhid_info ptr.
@@ -507,7 +507,9 @@ private:
 	// key is primitive map index.
 	// value is pair of vhid_info ptr and worker ptr
 	// prottected by m_mutex_for_map
-	_type_map_ptr_vhid_info_ptr_worker m_map_ptr_hid_info_ptr_worker;
+	//_type_map_ptr_vhid_info_ptr_worker m_map_ptr_hid_info_ptr_worker;
+
+	_type_map_ptr_vhid_info m_map_ptr_hid_info;
 	
 
 private://don't call these methods.

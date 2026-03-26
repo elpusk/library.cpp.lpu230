@@ -68,7 +68,8 @@ cupdater::cupdater(
 
 	//parameter valid check
 	do {
-		_mp::clibhid& mlibhid(_mp::clibhid::get_manual_instance());//manual & remove_all_zero_in_report
+		_mp::clibhid& mlibhid(_mp::clibhid::get_instance());//manual & remove_all_zero_in_report
+		mlibhid.initialize(true, true);// 수동모드로 초기화.
 
 		std::string s_target_dev_path = _check_target_device_path_in_initial();
 		if (s_target_dev_path.empty()) {
@@ -646,7 +647,7 @@ std::pair<bool, int> cupdater::_request_server_stop_using_all_hidboot()
 	do {
 		_mp::type_set_usb_filter set_usb_filter;
 		set_usb_filter.emplace(_mp::_elpusk::const_usb_vid, _mp::_elpusk::const_usb_pid_hidbl, _mp::_elpusk::const_usb_inf_hidbl); //hidbootloader
-		_mp::clibhid& mlibhid(_mp::clibhid::get_manual_instance());
+		_mp::clibhid& mlibhid(_mp::clibhid::get_instance());
 		mlibhid.set_usb_filter(set_usb_filter);
 
 		mlibhid.update_dev_set_in_manual();
@@ -763,7 +764,7 @@ std::string cupdater::_check_target_device_path_in_initial()
 	set_usb_filter.emplace(_mp::_elpusk::const_usb_vid, _mp::_elpusk::_lpu237::const_usb_pid, _mp::_elpusk::_lpu237::const_usb_inf_hid); //lpu237
 	set_usb_filter.emplace(_mp::_elpusk::const_usb_vid, _mp::_elpusk::_lpu238::const_usb_pid, _mp::_elpusk::_lpu238::const_usb_inf_hid); //lpu238
 	//
-	_mp::clibhid& mlibhid(_mp::clibhid::get_manual_instance());
+	_mp::clibhid& mlibhid(_mp::clibhid::get_instance());
 	mlibhid.set_usb_filter(set_usb_filter);
 
 	mlibhid.update_dev_set_in_manual();
@@ -1766,7 +1767,7 @@ bool cupdater::_updates_sub_thread_run_bootloader(int& n_step)
 	set_usb_filter.emplace(_mp::_elpusk::const_usb_vid, _mp::_elpusk::_lpu238::const_usb_pid, _mp::_elpusk::_lpu238::const_usb_inf_hid); //lpu238
 	set_usb_filter.emplace(_mp::_elpusk::const_usb_vid, _mp::_elpusk::const_usb_pid_hidbl, _mp::_elpusk::const_usb_inf_hidbl); //hidbootloader
 
-	_mp::clibhid& mlibhid(_mp::clibhid::get_manual_instance());
+	_mp::clibhid& mlibhid(_mp::clibhid::get_instance());
 	mlibhid.set_usb_filter(set_usb_filter);
 
 	mlibhid.update_dev_set_in_manual();
@@ -1809,7 +1810,7 @@ std::pair<bool, bool> cupdater::_updates_sub_thread_wait_plugout_lpu23x(int& n_s
 	bool b_wait(true);
 	int n_timeout_mm_unit = 300; //300msec
 	int n_total_timeout_unit = 9;
-	_mp::clibhid& mlibhid(_mp::clibhid::get_manual_instance());
+	_mp::clibhid& mlibhid(_mp::clibhid::get_instance());
 	_mp::clibhid_dev_info::type_set::iterator it_out, it_in;
 
 	_push_message(n_step, true, "waits plugout lpu23x.");
@@ -1877,7 +1878,7 @@ bool cupdater::_updates_sub_thread_wait_plugin_bootloader(int& n_step)
 	bool b_wait(true);
 	int n_timeout_mm_unit = 300; //300msec
 	int n_total_timeout_unit = 17;
-	_mp::clibhid& mlibhid(_mp::clibhid::get_manual_instance());
+	_mp::clibhid& mlibhid(_mp::clibhid::get_instance());
 	_mp::clibhid_dev_info::type_set::iterator it_in;
 
 	_push_message(n_step, true, "waits plugin bootloader.");
@@ -2133,7 +2134,7 @@ bool cupdater::_updates_sub_thread_wait_plugout_bootloader(int& n_step)
 	set_usb_filter.emplace(_mp::_elpusk::const_usb_vid, _mp::_elpusk::_lpu238::const_usb_pid, _mp::_elpusk::_lpu238::const_usb_inf_hid); //lpu238
 	set_usb_filter.emplace(_mp::_elpusk::const_usb_vid, _mp::_elpusk::_lpu237::const_usb_pid, _mp::_elpusk::const_usb_pid_hidbl); //hidboot
 
-	_mp::clibhid& mlibhid(_mp::clibhid::get_manual_instance());
+	_mp::clibhid& mlibhid(_mp::clibhid::get_instance());
 	mlibhid.set_usb_filter(set_usb_filter);
 
 	_mp::clibhid_dev_info::type_set::iterator it_rm;
@@ -2189,7 +2190,7 @@ std::pair<bool, _mp::clibhid_dev_info> cupdater::_updates_sub_thread_wait_plugin
 	bool b_wait(true);
 	int n_timeout_mm_unit = 300; //300msec
 	int n_total_timeout_unit = 30;
-	_mp::clibhid& mlibhid(_mp::clibhid::get_manual_instance());
+	_mp::clibhid& mlibhid(_mp::clibhid::get_instance());
 	_mp::clibhid_dev_info::type_set::iterator it_in;
 
 	_push_message(n_step,true, "waits plugin lpu23x.");
@@ -2245,7 +2246,7 @@ bool cupdater::_updates_sub_thread_recover_system_param(int& n_step, const _mp::
 	bool b_result(false);
 	bool b_complete(false);
 
-	_mp::clibhid& mlibhid(_mp::clibhid::get_manual_instance());
+	_mp::clibhid& mlibhid(_mp::clibhid::get_instance());
 	cshare& sh(cshare::get_instance());
 	std::string s_msg_success = "the system parameters has been recovered.";
 	std::string s_msg_error = "recover lpu23x system parameters.";
@@ -2310,7 +2311,7 @@ bool cupdater::_updates_sub_thread_change_interface_after_update(int& n_step, co
 		return true;//bypass
 	}
 
-	_mp::clibhid& mlibhid(_mp::clibhid::get_manual_instance());
+	_mp::clibhid& mlibhid(_mp::clibhid::get_instance());
 	bool b_result(false);
 
 	std::string s_new_inf = sh.get_string(sh.get_lpu23x_interface_change_after_update());
@@ -2365,7 +2366,7 @@ bool cupdater::_updates_sub_thread_set_iso_mode_after_update(int& n_step, const 
 		return true;//bypass
 	}
 
-	_mp::clibhid& mlibhid(_mp::clibhid::get_manual_instance());
+	_mp::clibhid& mlibhid(_mp::clibhid::get_instance());
 	bool b_result(false);
 
 	std::string s_msg_success = "mmd1100 mode have been changed to iso mode.";
