@@ -49,7 +49,7 @@ public:
 	virtual ~_vhid_info_lpu237()
 	{
 	}
-	virtual bool can_be_open(_mp::type_bm_dev type, bool b_exclusive_open) const
+	virtual bool can_be_open(_mp::type_bm_dev type, bool b_shared_open) const
 	{
 		bool b_can_open(false);
 
@@ -60,7 +60,7 @@ public:
 			}
 			if (std::get<2>(it->second)) {
 				// type support shared open
-				if (b_exclusive_open) {
+				if (!b_shared_open) {
 					//but exclusive open request
 					continue;//can not open
 				}
@@ -68,7 +68,7 @@ public:
 				continue;
 			}
 			// type support only exclusive open case
-			if (!b_exclusive_open) {
+			if (b_shared_open) {
 				//but shared open request
 				continue;//can not open
 			}

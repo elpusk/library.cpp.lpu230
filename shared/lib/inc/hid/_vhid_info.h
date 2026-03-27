@@ -9,6 +9,7 @@
 #include <cprotocol_lpu237.h>
 /**
 * An instance of this class corresponds to a single physical device (primitive device).
+* all primitive and compositive device open counter of a physcal device. 
 */
 class _vhid_info
 {
@@ -394,7 +395,7 @@ public:
 	}
 
 public:
-	_vhid_info() : m_b_none_blocking(false), m_c_option(0), m_n_option(0)
+	_vhid_info()
 	{
 	}
 
@@ -403,10 +404,18 @@ public:
 	}
 
 	/**
-	* type compositive device can be open?
+	* @brief type compositive device can be open?
+	* @param type - primitive or compositive
+	* @param b_shared_open - open mode, true : shared open mode(rx is shared). false : exclusive using mode.
+	* @return true : allowed open, false : not be allowed
 	*/
-	virtual bool can_be_open(_mp::type_bm_dev type, bool b_exclusive_open) const = 0;
+	virtual bool can_be_open(_mp::type_bm_dev type, bool b_shared_open) const = 0;
 
+	/**
+	* @brief check open or not.
+	* @param type - primitive or compositive
+	* @return true : this type device is opened.
+	*/
 	virtual bool is_open(_mp::type_bm_dev type) const = 0;
 
 	/**
@@ -427,37 +436,6 @@ public:
 	* 
 	*/
 	virtual bool is_lpu237_device() = 0;
-
-public:
-	void set_none_blocking(bool b_none_blocking)
-	{
-		m_b_none_blocking = b_none_blocking;
-	}
-
-	bool get_none_blocking() const
-	{
-		return m_b_none_blocking;
-	}
-
-	void set_option_char(char c_data)
-	{
-		m_c_option = c_data;
-	}
-
-	char get_option_char() const
-	{
-		return m_c_option;
-	}
-
-	void set_option_int(int n_data)
-	{
-		m_n_option = n_data;
-	}
-
-	int get_option_int() const
-	{
-		return m_n_option;
-	}
 
 protected:
 	/**
@@ -569,14 +547,4 @@ protected:
 		} while (false);
 		return data;
 	}
-
-protected:
-	bool m_b_none_blocking;
-
-	// char type option data
-	char m_c_option;
-
-	// int type option data
-	char m_n_option;
-
 };

@@ -77,8 +77,11 @@ protected:
 	public:
 		typedef std::shared_ptr<_crx_worker>	type_ptr;
 
-		typedef std::tuple<bool, _mp::type_ptr_v_buffer, std::wstring>	type_tuple_result_ptr_rx; // get<0> - true is success, false is fail. get<1> - rx data buffer. get<2> - debug message 
-		typedef std::shared_ptr<_crx_worker::type_tuple_result_ptr_rx>	type_ptr_tuple_result_ptr_rx; // get<0> - true is success, false is fail. get<1> - rx data buffer. get<2> - debug message
+		// get<0> - true is success, false is fail. get<1> - rx data buffer. get<2> - debug message 
+		typedef std::tuple<bool, _mp::type_ptr_v_buffer, std::wstring>	type_tuple_result_ptr_rx; 
+
+		// get<0> - true is success, false is fail. get<1> - rx data buffer. get<2> - debug message
+		typedef std::shared_ptr<_crx_worker::type_tuple_result_ptr_rx>	type_ptr_tuple_result_ptr_rx; 
 		typedef std::deque<_crx_worker::type_ptr_tuple_result_ptr_rx>	type_q_ptr_rx;
 		typedef std::shared_ptr<_crx_worker::type_q_ptr_rx>				type_ptr_q_ptr_rx;
 		typedef std::map<int, _crx_worker::type_ptr_q_ptr_rx> type_map_ptr_q_ptr_rx;
@@ -98,10 +101,12 @@ protected:
 		/**
 		* @brief try pop one item from queue and remove it.
 		* @param n_map_index[in] - primitive or compositive map index.
-		* @param tuple_result_rx[in/out] - rx result 
+		* @param b_out_result[in/out] - rx result . true - success
+		* @param v_out_rx[in/out] - rx data vector
+		* @param s_out_deb_msg[in/out] - debug message
 		* @return true - success, false - fail (queue is empty)
 		*/
-		bool q_try_pop(int n_map_index,_crx_worker::type_tuple_result_ptr_rx& tuple_result_rx);
+		bool q_try_pop(int n_map_index, bool& b_out_result, _mp::type_v_buffer &v_out_rx, std::wstring &s_out_deb_msg);
 
 		/**
 		* @brief clear all items in a queue.
@@ -289,7 +294,7 @@ public:
 	/**
 	* @brief receive data from device.(hid_read())
 	*
-	* @param n_primitive_map_index int - primitive type map index(m_map_hid_dev)
+	* @param n_map_index int - primitive or compositive type map index(primitive type -> m_map_hid_dev)
 	*
 	* @param data: unsigned char* - the buffer of rx data.
 	*
@@ -299,7 +304,7 @@ public:
 	*
 	* @return -1 : error, else : the size of received data(on data).
 	*/
-	virtual int api_read(int n_primitive_map_index, unsigned char* data, size_t length, size_t n_report);
+	virtual int api_read(int n_map_index, unsigned char* data, size_t length, size_t n_report);
 
 	/**
 	* @brief get last error string(hid_error())

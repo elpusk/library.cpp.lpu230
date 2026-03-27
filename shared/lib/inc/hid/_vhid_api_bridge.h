@@ -505,10 +505,9 @@ private:
 	mutable std::mutex m_mutex_for_map;
 
 	// key is primitive map index.
-	// value is pair of vhid_info ptr and worker ptr
+	// value is pair of vhid_info ptr
 	// prottected by m_mutex_for_map
-	//_type_map_ptr_vhid_info_ptr_worker m_map_ptr_hid_info_ptr_worker;
-
+	// vhid_info 하나의 장비에 연결된 모든 가상장비의 type 에 대한 open cnt 관리.
 	_type_map_ptr_vhid_info m_map_ptr_hid_info;
 	
 

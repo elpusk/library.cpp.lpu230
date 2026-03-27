@@ -693,6 +693,18 @@ namespace _mp {
             }
 
             //RX OK.
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+            if (v_rx.size() > 2) {
+                ATLTRACE(L" = RX(%u) - rx[0..2] = 0x%x,0x%x,0x%x.\n", v_rx.size(), v_rx[0], v_rx[1], v_rx[2]);
+            }
+            else if (v_rx.size() > 1) {
+                ATLTRACE(L" = RX(%u) - rx[0..1] = 0x%x,0x%x.\n", v_rx.size(), v_rx[0], v_rx[1]);
+            }
+            else if (v_rx.size() > 0) {
+                ATLTRACE(L" = RX(%u) - rx[0] = 0x%x.\n", v_rx.size(), v_rx[0]);
+            }
+#endif
+
             if (m_b_lpu23x_specific_protocol) {
                 if (v_rx[0] != 'R') {//lpu237 specific protocol // ptr_req->get_request_type() == cqitem_dev::req_tx_rx 일때만 적용.
                     // very important code - fix miss-matching txrx protocol. 
@@ -713,7 +725,7 @@ namespace _mp {
             }
             else {
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-                ATLTRACE(L" =some capture RX.\n");
+                ATLTRACE(L" =some capture RX(%u).\n", v_rx.size());
 #endif
             }
 
@@ -770,11 +782,17 @@ namespace _mp {
                     auto pe = m_p_hid_api_bridge->api_error(m_n_dev);
                     if (pe) {
                         std::wstring s_error(pe);
-                        _mp::clog::get_instance().log_fmt_in_debug_mode(L"[D] rx return = %d. - %ls.\n", n_result, s_error.c_str());
+                        _mp::clog::get_instance().log_fmt_in_debug_mode(L"[E] rx return = %d. - %ls.\n", n_result, s_error.c_str());
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+                        ATLTRACE(L"[E] clibhid_dev::_worker_rx(0x%08x) : rx return = %d. - %ls.\n", m_n_dev, n_result, s_error.c_str());
+#endif
                     }
                     else {
-                        _mp::clog::get_instance().log_fmt_in_debug_mode(L"[D] rx return = %d. - without error message\n", n_result);
-					}
+                        _mp::clog::get_instance().log_fmt_in_debug_mode(L"[E] rx return = %d. - without error message\n", n_result);
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+                        ATLTRACE(L"[E] clibhid_dev::_worker_rx(0x%08x) : rx return = %d. - without error message\n", m_n_dev, n_result);
+#endif
+                    }
 
                     m_q_rx_ptr_v.push(_mp::type_ptr_v_buffer());//indicate error of device usb io.
                     continue;
@@ -784,13 +802,22 @@ namespace _mp {
                     // _vhid_api_bridge::api_read() 는 에러가 아닌 경우,항상 in-report 크기로 rx 를 반환하는데 이런 경우는 뭔가 엄청 잘못
                     m_q_rx_ptr_v.push(std::make_shared<_mp::type_v_buffer>(0));
                     _mp::clog::get_instance().log_fmt(L"[E] %ls : lost packet - push zero size buffer.\n", __WFUNCTION__);
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+                    ATLTRACE(L"[E] clibhid_dev::_worker_rx(0x%08x) : lost packet .\n", m_n_dev);
+#endif
                     continue;
                 }
                 //one report complete.
                 m_q_rx_ptr_v.push(std::make_shared<_mp::type_v_buffer>(v_report_in));
                 _mp::clog::get_instance().log_fmt_in_debug_mode(L"[H] v_rx.size() = %u.\n", v_report_in.size());
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+                ATLTRACE(L"[H] clibhid_dev::_worker_rx(0x%08x) : v_rx.size() = %u.\n", m_n_dev, v_report_in.size());
+#endif
                 if (v_report_in.size() >= 3) {
-                    _mp::clog::get_instance().log_fmt(L"[I] rx0,rx1,rx2 = 0x%x, 0x%x, 0x%x.\n", __WFUNCTION__, v_report_in[0], v_report_in[1], v_report_in[2]);
+                    _mp::clog::get_instance().log_fmt(L"[I] %ls : rx0,rx1,rx2 = 0x%x, 0x%x, 0x%x.\n", __WFUNCTION__, v_report_in[0], v_report_in[1], v_report_in[2]);
+#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
+                    ATLTRACE(L"[H] clibhid_dev::_worker_rx(0x%08x) : rx0,rx1,rx2 = 0x%x, 0x%x, 0x%x.\n", m_n_dev, v_report_in[0], v_report_in[1], v_report_in[2]);
+#endif
                 }
 
             } while (false);

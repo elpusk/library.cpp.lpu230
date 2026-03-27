@@ -1137,7 +1137,7 @@ int _hid_api_bridge::api_write(int n_primitive_map_index, const unsigned char* d
     return n_written;
 }
 
-int _hid_api_bridge::api_read(int n_primitive_map_index, unsigned char* data, size_t length, size_t n_report)
+int _hid_api_bridge::api_read(int n_map_index, unsigned char* data, size_t length, size_t n_report)
 {
     bool b_found(false);
     _hid_api_bridge::_type_map_hid_dev::iterator it;
@@ -1145,6 +1145,11 @@ int _hid_api_bridge::api_read(int n_primitive_map_index, unsigned char* data, si
     std::shared_ptr<std::mutex> ptr_mutex;
     _hid_api_bridge::_crx_worker::type_ptr ptr_rx_worker;
     int n_read(-1);
+
+    int n_primitive_map_index(-1);
+    bool b_compositive_type(false);
+
+    std::tie(n_primitive_map_index, b_compositive_type) = _vhid_info::get_primitive_map_index_from_compositive_map_index(n_map_index);
 
     do {
         if (!m_b_ini) {
@@ -1183,16 +1188,16 @@ int _hid_api_bridge::api_read(int n_primitive_map_index, unsigned char* data, si
         if (!ptr_rx_worker) {
             continue;
         }
+
+        bool b_result(false);
+        _mp::type_v_buffer v_rx;
+        std::wstring s_msg;
+
         // 여기서 ptr_mutex 로  lock 걸지 말자, worker q access method 에서 이 것을 가지고 lock 하므로.
-        if (!ptr_rx_worker->q_try_pop(n_primitive_map_index, tuple_result_ptr_rx)) {
+        if (!ptr_rx_worker->q_try_pop(n_map_index, b_result,v_rx,s_msg)) {
             n_read = 0; // not yet rx data.
             continue;
         }
-
-        bool b_result(false);
-        _mp::type_ptr_v_buffer ptr_v_rx;
-        std::wstring s_msg;
-        std::tie(b_result, ptr_v_rx, s_msg) = tuple_result_ptr_rx;
         if (!b_result) {
             if (m_p_clog) {
                 if (s_msg.empty()) {
@@ -1224,24 +1229,19 @@ int _hid_api_bridge::api_read(int n_primitive_map_index, unsigned char* data, si
             continue;
         }
 
-        if (!ptr_v_rx) {
-            //zero rx
-            n_read = 0; //consider to success
-            continue;
-        }
-        if (ptr_v_rx->empty()) {
+        if (v_rx.empty()) {
             //zero rx
             n_read = 0; //consider to success
             continue;
         }
 
-        if (ptr_v_rx->size() > length) {
-            std::copy(ptr_v_rx->begin(), ptr_v_rx->begin() + length, data);
+        if (v_rx.size() > length) {
+            std::copy(v_rx.begin(), v_rx.begin() + length, data);
             n_read = length;
         }
         else {
-            std::copy(ptr_v_rx->begin(), ptr_v_rx->end(), data);
-            n_read = ptr_v_rx->size();
+            std::copy(v_rx.begin(), v_rx.end(), data);
+            n_read = v_rx.size();
         }
 
     } while (false);
@@ -1327,6 +1327,10 @@ _hid_api_bridge::_crx_worker::_crx_worker(const _hid_api_bridge::_type_tuple_hid
         m_n_primitive_index
         , ptr_q_ptr_rx
     );
+#if defined(_WIN32) && defined(_DEBUG)
+    ATLTRACE(" ^@@@^ q_create in constructor(0x%x).^@@@^\n", n_primitive_index);
+#endif
+
 }
 
 _hid_api_bridge::_crx_worker::~_crx_worker()
@@ -1373,7 +1377,12 @@ void _hid_api_bridge::_crx_worker::_q_push(
     }//end for
 }
 
-bool _hid_api_bridge::_crx_worker::q_try_pop(int n_map_index,_crx_worker::type_tuple_result_ptr_rx& tuple_result_ptr_rx)
+bool _hid_api_bridge::_crx_worker::q_try_pop(
+    int n_map_index
+    ,bool& b_out_result
+    , _mp::type_v_buffer& v_out_rx
+    , std::wstring& s_out_deb_msg
+)
 {
     bool b_result = false;
 
@@ -1392,7 +1401,16 @@ bool _hid_api_bridge::_crx_worker::q_try_pop(int n_map_index,_crx_worker::type_t
         _crx_worker::type_ptr_tuple_result_ptr_rx ptr_tuple_result_ptr_rx = it->second->front();
         it->second->pop_front();
         
-        tuple_result_ptr_rx = *ptr_tuple_result_ptr_rx; //deep copy
+        b_out_result = std::get<0>(*ptr_tuple_result_ptr_rx);
+        s_out_deb_msg = std::get<2>(*ptr_tuple_result_ptr_rx);
+        _mp::type_ptr_v_buffer ptr_rx = std::get<1>(*ptr_tuple_result_ptr_rx);
+        if (!ptr_rx) {
+            v_out_rx.resize(0);
+        }
+
+        v_out_rx.resize(0);
+        std::copy(ptr_rx->begin(), ptr_rx->end(), std::back_inserter(v_out_rx)); // deep copy
+        
 		b_result = true;
     } while (false);
     return b_result;
@@ -1431,6 +1449,10 @@ void _hid_api_bridge::_crx_worker::q_create(int n_map_index)
             n_map_index
             , ptr_q_ptr_rx
         );
+
+#if defined(_WIN32) && defined(_DEBUG)
+        ATLTRACE(" ^@@@^ q_create(0x%x).^@@@^\n", n_map_index  );
+#endif
     }
 }
 
@@ -1440,6 +1462,10 @@ void _hid_api_bridge::_crx_worker::q_remove(int n_map_index)
     auto it = m_map_ptr_q_ptr_rx.find(n_map_index);
     if (it != std::end(m_map_ptr_q_ptr_rx)) {
         m_map_ptr_q_ptr_rx.erase(it);
+#if defined(_WIN32) && defined(_DEBUG)
+        ATLTRACE(" ^@@@^ q_remove(0x%x).^@@@^\n", n_map_index);
+#endif
+
     }
 }
 
@@ -1497,9 +1523,6 @@ void _hid_api_bridge::_crx_worker::_worker()
                     }
                     continue;//exit in one report read while.
                 }
-#if defined(_WIN32) && defined(_DEBUG)
-                ATLTRACE(L"[I] %ls : rx size = %d.\n", __WFUNCTION__, n_result);
-#endif
                 n_offset += n_result;
 
                 if (n_offset < v_in_report.size()) {
@@ -1511,6 +1534,10 @@ void _hid_api_bridge::_crx_worker::_worker()
             } while (b_more && m_b_run); // one report reading
 
             if (n_offset > 0) {
+#if defined(_WIN32) && defined(_DEBUG)
+                ATLTRACE(L"[I] %ls : [0x%x] : rx size = %d.\n", __WFUNCTION__, m_n_primitive_index, n_result);
+#endif
+
                 n_offset = 0; //reset offset for next read
                 _q_push(true, v_in_report);
                 std::fill(v_in_report.begin(), v_in_report.end(), 0); //reset buffer
