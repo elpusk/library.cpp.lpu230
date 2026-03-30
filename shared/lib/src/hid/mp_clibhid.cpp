@@ -118,7 +118,7 @@ namespace _mp{
         //
         // for supporting, virtual device. code is create child of _hid_api_bridge class.
         if (!ptr_bridge) {
-            m_ptr_hid_api_bridge = std::make_shared<chid_bridge>(m_b_remove_all_zero_in_report);//create single instance of virtual hidapi library
+            m_ptr_hid_api_bridge = std::make_shared<chid_bridge>();//create single instance of virtual hidapi library
         }
         else {
             m_ptr_hid_api_bridge = ptr_bridge; // 이미 생성된 bridge api 사용.
@@ -205,14 +205,12 @@ namespace _mp{
         , m_cb(nullptr)
         , m_atll_dev_pluginout_check_interval_mmsec(clibhid::_const_default_dev_pluginout_check_interval_mmsec)
         , m_b_manual(false)
-        , m_b_remove_all_zero_in_report(false)
     {
     }
 
-    bool clibhid::initialize(bool b_manual, bool b_remove_all_zero_in_report)
+    bool clibhid::initialize(bool b_manual)
     {
         m_b_manual = b_manual;
-        m_b_remove_all_zero_in_report = b_remove_all_zero_in_report;
         if (!b_manual) {
             // 기본 값은 자동 처리 모드.
             //setup usb filter
@@ -225,7 +223,7 @@ namespace _mp{
             _ini(); //ptr_bridge instance will ne created in _ini()
         }
         else {
-            m_ptr_hid_api_bridge = std::make_shared<chid_bridge>(m_b_remove_all_zero_in_report);//create single instance of virtual hidapi library
+            m_ptr_hid_api_bridge = std::make_shared<chid_bridge>();//create single instance of virtual hidapi library
 
             if (m_ptr_hid_api_bridge->is_ini()) {
                 m_b_ini = true;
@@ -240,8 +238,6 @@ namespace _mp{
     bool clibhid::initialize(const _mp::type_set_usb_filter& set_usb_filter/* = _mp::type_set_usb_filter()*/)
     {
         m_b_manual = false;
-        m_b_remove_all_zero_in_report = false;
-
         m_set_usb_filter = set_usb_filter;
         _ini();
         return m_b_ini;

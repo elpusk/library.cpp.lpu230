@@ -3,9 +3,9 @@
 #include <chid_bridge.h>
 #include <cdev_lib.h>
 
-chid_bridge::chid_bridge(bool b_remove_all_zero_in_report)
+chid_bridge::chid_bridge()
 {
-	m_p_api_brage_instance = cdev_lib::get_instance().constructor(b_remove_all_zero_in_report);
+	m_p_api_brage_instance = cdev_lib::get_instance().constructor();
 }
 
 chid_bridge::~chid_bridge()

@@ -53,16 +53,9 @@ std::mutex* _CALLTYPE_ dev_lib_get_mutex()
 	return & m;
 }
 
-void* _CALLTYPE_ dev_lib_constrcutor(int n_remove_all_zero_in_report)
+void* _CALLTYPE_ dev_lib_constrcutor()
 {
-	_vhid_api_bridge* p_vhid_api(nullptr);
-
-	if (n_remove_all_zero_in_report == 0) {
-		p_vhid_api = new _vhid_api_bridge(gp_log,false);
-	}
-	else {
-		p_vhid_api = new _vhid_api_bridge(gp_log, true);
-	}
+	_vhid_api_bridge* p_vhid_api(new _vhid_api_bridge(gp_log));
 
 	return p_vhid_api;
 }

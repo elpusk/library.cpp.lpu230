@@ -39,9 +39,8 @@ std::mutex* _CALLTYPE_ dev_lib_get_mutex();
 
 /**
 * @brief constructs inner object instane.
-* @param n_remove_all_zero_in_report - 0 : if the in-report contains all zeros, ignore it.
 e*/
-void* _CALLTYPE_ dev_lib_constrcutor(int n_remove_all_zero_in_report);
+void* _CALLTYPE_ dev_lib_constrcutor();
 void _CALLTYPE_ dev_lib_destructor(void* p_instance);
 
 /**

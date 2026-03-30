@@ -15,7 +15,7 @@ public:
 public:
 	static std::mutex& get_mutex_for_hidapi();
 
-	chid_bridge(bool b_remove_all_zero_in_report);
+	chid_bridge();
 
 	virtual ~chid_bridge();
 
@@ -70,7 +70,6 @@ private:
 	void* m_p_api_brage_instance; // 이 것은 _vhid_api_bridge class instance pointer
 
 private:
-	chid_bridge() = delete;
 	chid_bridge(const chid_bridge&) = delete;
 	chid_bridge& operator=(const chid_bridge&) = delete;
 };

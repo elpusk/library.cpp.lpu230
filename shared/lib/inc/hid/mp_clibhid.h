@@ -89,7 +89,7 @@ namespace _mp{
         * @prarm b_remove_all_zero_in_report - true : in report 값이 모드 0 이면, 그 수신 in-report 는 무시한다.
         * @return true - ini success 
         */
-        bool initialize(bool b_manual, bool b_remove_all_zero_in_report);
+        bool initialize(bool b_manual);
 
         ~clibhid();
 
@@ -191,8 +191,6 @@ namespace _mp{
         void _ini(const chid_bridge::type_ptr & ptr_bridge = chid_bridge::type_ptr());
 
     protected:
-        bool m_b_remove_all_zero_in_report; // default false, all zeros value report is ignored
-
         bool m_b_manual;
 
         // virtual hidapi library instance

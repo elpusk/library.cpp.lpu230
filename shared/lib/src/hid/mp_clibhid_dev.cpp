@@ -609,6 +609,34 @@ namespace _mp {
             }
 
             //RX OK.
+            if (!ptr_req) {
+                continue;
+            }
+            if (ptr_req->get_request_type() != cqitem_dev::req_only_rx) {
+                continue;
+            }
+
+            // 정상 수신 했지만. txrx pair 가 아닌 only_rx 의 경우, 현재 가상 device type 에 따라 filtering 이 필요함.
+            if (m_dev_info.get_type() == _mp::type_bm_dev_lpu200_msr) {
+                if (_vhid_info::is_rx_ibutton_of_lpu23x(v_rx).first) {
+                    // MSR 형식이 아니므로 다시 받아야함.
+                    b_complete = false;
+                    v_rx.resize(0);
+                }
+                else if (_vhid_info::is_rx_pair_txrx_of_lpu23x(v_rx)) {
+                    // MSR 형식이 아니므로 다시 받아야함.
+                    b_complete = false;
+                    v_rx.resize(0);
+                }
+            }
+            else if (m_dev_info.get_type() == _mp::type_bm_dev_lpu200_ibutton) {
+                if (!_vhid_info::is_rx_ibutton_of_lpu23x(v_rx).first) {
+                    // ibutton 형식이 아니므로 다시 받아야함.
+                    b_complete = false;
+                    v_rx.resize(0);
+                }
+            }
+
 
         } while (false);
         return std::make_tuple(b_result, b_complete, v_rx);
@@ -1033,28 +1061,6 @@ namespace _mp {
 #endif
                         continue; // 새로운 명령은 처리됨.
                     }
-/*
-                    if (ptr_cur) {
-                        // 새로운 명령 처리가 더 필요하므로 기존 명령이 cancel 된 것을,
-                        // callback 해서 알려 준다. 
-                        // ptr_new 가 비동기명령인 경우는 여기에.
-                        // ptr_cur가 있는 경우, ptr_cur 를 cancel 시키고 cancel notificate 를 아래 코드로.
-                        ptr_cur->run_callback_for_packet();
-#if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)
-                        if (_vhid_info::get_type_from_compositive_map_index(m_n_dev) == type_bm_dev_lpu200_ibutton) {
-                            if (m_n_debug_line != (__LINE__ + 1)) {
-                                m_n_debug_line = __LINE__;
-                                ATLTRACE(L" =======(%ls)%u:%u: cur req(%ls).canceled.\n",
-                                    _vhid_info::get_type_wstring_from_compositive_map_index(m_n_dev).c_str(),
-                                    ptr_cur->get_session_number(),
-                                    ptr_cur->get_uid(),
-                                    ptr_cur->get_request_type_by_string().c_str()
-                                );
-                            }
-                        }
-#endif
-                    }
-*/
                     // ptr_new 가 비동기명령 시, 응답 수신전인 경우 여기에.
                     // 새로운 명령 처리가 더 필요하므로, 현재 명령으로 설정.
 #if defined(_WIN32) && defined(_DEBUG) && defined(__THIS_FILE_ONLY__)

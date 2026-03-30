@@ -39,7 +39,6 @@ private:
 public:
 	_vhid_api_bridge();
 	_vhid_api_bridge(_mp::clog* p_clog);
-	_vhid_api_bridge(_mp::clog* p_clog, bool b_remove_all_zero_in_report);
 
 	virtual ~_vhid_api_bridge();
 
@@ -142,8 +141,6 @@ public:
 	*
 	* rx data is received regardless of format.(for filtering format, need a transaction status. so rx data cannot be filtered here.)
 	* 
-	* but all zero in-report can be filtered by constructor b_remove_all_zero_in_report parameter.
-	*
 	* @param n_map_index int - primitive or compositive map index.
 	*
 	* @param data: unsigned char* - the buffer of rx data.
@@ -171,7 +168,6 @@ public:
 private:
 	std::tuple<bool, int, bool> _is_open(const char* path) const;
 
-	bool m_b_remove_all_zero_in_report; // default false, all zeros value report is ignored
 private:
 	mutable std::mutex m_mutex_for_map;
 

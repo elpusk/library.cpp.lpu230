@@ -69,7 +69,7 @@ cupdater::cupdater(
 	//parameter valid check
 	do {
 		_mp::clibhid& mlibhid(_mp::clibhid::get_instance());//manual & remove_all_zero_in_report
-		mlibhid.initialize(true, true);// 수동모드로 초기화.
+		mlibhid.initialize(true);// 수동모드로 초기화.
 
 		std::string s_target_dev_path = _check_target_device_path_in_initial();
 		if (s_target_dev_path.empty()) {

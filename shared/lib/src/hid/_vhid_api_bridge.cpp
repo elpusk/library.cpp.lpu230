@@ -25,19 +25,11 @@
 _vhid_api_bridge::_vhid_api_bridge() : _hid_api_bridge()
 {
     m_s_class_name = L"_vhid_api_bridge";
-    m_b_remove_all_zero_in_report = false;
 }
 
 _vhid_api_bridge::_vhid_api_bridge(_mp::clog* p_clog) : _hid_api_bridge(p_clog)
 {
     m_s_class_name = L"_vhid_api_bridge";
-    m_b_remove_all_zero_in_report = false;
-}
-
-_vhid_api_bridge::_vhid_api_bridge(_mp::clog* p_clog, bool b_remove_all_zero_in_report) : _hid_api_bridge(p_clog)
-{
-    m_s_class_name = L"_vhid_api_bridge";
-    m_b_remove_all_zero_in_report = b_remove_all_zero_in_report;
 }
 
 _vhid_api_bridge::~_vhid_api_bridge()
