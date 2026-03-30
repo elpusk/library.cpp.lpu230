@@ -408,18 +408,16 @@ int _vhid_api_bridge::api_read(int n_map_index, unsigned char* data, size_t leng
             _vhid_info::get_type_wstring_from_compositive_map_index(n_map_index).c_str(),
             n_ct++, n_result, data[0]);
     }
+
+    if (n_result < 0) {
+        if (m_p_clog) {
+            m_p_clog->log_fmt(L"[E] %ls : n_result = %d.\n", __WFUNCTION__, n_result);
+        }
+        ATLTRACE(L"0x%08X-ERROR-RX (n_result) = (%d)\n", n_map_index, n_result);
+    }
 #endif
 #endif
 
-    if (n_result < 0) {
-        if (m_p_clog)
-            m_p_clog->log_fmt(L"[E] %ls : n_result = %d.\n", __WFUNCTION__, n_result);
-#ifdef _WIN32
-#ifdef _DEBUG
-        ATLTRACE(L"0x%08X-ERROR-RX (n_result) = (%d)\n", n_map_index, n_result);
-#endif
-#endif
-    }
 
 
     return n_result;
@@ -1019,7 +1017,6 @@ void _vhid_api_bridge::_q_worker::_save_rx_to_msr_or_ibutton_buffer_in_single_or
         }
 
 #if defined(_WIN32) && defined(_DEBUG)
-        /*
         if (ptr_req) {
             ATLTRACE(L" MSR [0x%08X] : pushed rx.(q size = %u)\n", ptr_req->get_map_index(), m_q_result_msr.size() + 1);
             if (ptr_v_rx) {
@@ -1032,7 +1029,6 @@ void _vhid_api_bridge::_q_worker::_save_rx_to_msr_or_ibutton_buffer_in_single_or
         else {
             ATLTRACE(L" MSR [none] : pushed rx.(q size = %u)\n", m_q_result_msr.size() + 1);
         }
-        */
 #endif
         m_q_result_msr.push_back(std::make_pair(n_result, ptr_v_rx));
 

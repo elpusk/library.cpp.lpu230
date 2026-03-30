@@ -471,7 +471,11 @@ public:
 	/**
 	* @brief receive data from device.(hid_read()).
 	* 
-	* This function reads data in in-report size units.
+	* this function will read multiples of in-report size.
+	*
+	* rx data is received regardless of format.(for filtering format, need a transaction status. so rx data cannot be filtered here.)
+	* 
+	* but all zero in-report can be filtered by constructor b_remove_all_zero_in_report parameter.
 	*
 	* @param n_map_index int - primitive or compositive map index.
 	*

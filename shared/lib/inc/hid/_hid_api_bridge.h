@@ -292,9 +292,13 @@ public:
 	virtual int api_write(int n_primitive_map_index, const unsigned char* data, size_t length, _mp::type_next_io next);
 
 	/**
-	* @brief receive data from device.(hid_read())
+	* @brief receive data from device.(hid_read()).
 	*
-	* @param n_map_index int - primitive or compositive type map index(primitive type -> m_map_hid_dev)
+	* this function will read multiples of in-report size.
+	* 
+	* rx data is received regardless of format.
+	*
+	* @param n_map_index int - "primitive" or "compositive" type map index(primitive type -> m_map_hid_dev)
 	*
 	* @param data: unsigned char* - the buffer of rx data.
 	*
