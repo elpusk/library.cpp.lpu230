@@ -802,7 +802,7 @@ bool cshare::io_write_read_sync(
 		}
 	, &param_rx);
 
-	if (waiter.wait_for_one_at_time(6000) >= 0) {
+	if (waiter.wait_for_one_at_time(8000) >= 0) {// timeout 6 sec. -> 8 sec
 		return true;
 	}
 	else {
