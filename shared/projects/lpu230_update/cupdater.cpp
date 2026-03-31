@@ -1877,7 +1877,7 @@ bool cupdater::_updates_sub_thread_wait_plugin_bootloader(int& n_step)
 
 	bool b_wait(true);
 	int n_timeout_mm_unit = 300; //300msec
-	int n_total_timeout_unit = 17;
+	int n_total_timeout_unit = 34;
 	_mp::clibhid& mlibhid(_mp::clibhid::get_instance());
 	_mp::clibhid_dev_info::type_set::iterator it_in;
 
