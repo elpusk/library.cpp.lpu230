@@ -92,56 +92,56 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <TargetName>libdev_lib</TargetName>
-    <TargetExt>.so.1.0.0</TargetExt>
+    <TargetExt>.so.1.1.0</TargetExt>
     <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/libusb/include/libusb-1.0;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc;$(SolutionDir)\shared\3thpart\src\win;~/projects/li_dev_lib/job/library.cpp.lpu230/shared/3thpart/src/linux;~/projects/li_dev_lib/job/library.cpp.lpu230/shared/projects/dev_lib/inc</IncludePath>
     <LibraryPath>/usr/local/lib</LibraryPath>
     <RemoteLdCommmandTimeout>3600000</RemoteLdCommmandTimeout>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
     <TargetName>libdev_lib</TargetName>
-    <TargetExt>.so.1.0.0</TargetExt>
+    <TargetExt>.so.1.1.0</TargetExt>
     <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/libusb/include/libusb-1.0;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc;$(SolutionDir)\shared\3thpart\src\win;~/projects/li_dev_lib/job/library.cpp.lpu230/shared/3thpart/src/linux;~/projects/li_dev_lib/job/library.cpp.lpu230/shared/projects/dev_lib/inc</IncludePath>
     <LibraryPath>/usr/local/lib</LibraryPath>
     <RemoteLdCommmandTimeout>3600000</RemoteLdCommmandTimeout>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <TargetName>libdev_lib</TargetName>
-    <TargetExt>.so.1.0.0</TargetExt>
+    <TargetExt>.so.1.1.0</TargetExt>
     <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/libusb/include/libusb-1.0;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc;$(SolutionDir)\shared\3thpart\src\win;~/projects/li_dev_lib/job/library.cpp.lpu230/shared/3thpart/src/linux;~/projects/li_dev_lib/job/library.cpp.lpu230/shared/projects/dev_lib/inc</IncludePath>
     <LibraryPath>/usr/local/lib</LibraryPath>
     <RemoteLdCommmandTimeout>3600000</RemoteLdCommmandTimeout>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <TargetName>libdev_lib</TargetName>
-    <TargetExt>.so.1.0.0</TargetExt>
+    <TargetExt>.so.1.1.0</TargetExt>
     <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/libusb/include/libusb-1.0;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc;$(SolutionDir)\shared\3thpart\src\win;~/projects/li_dev_lib/job/library.cpp.lpu230/shared/3thpart/src/linux;~/projects/li_dev_lib/job/library.cpp.lpu230/shared/projects/dev_lib/inc</IncludePath>
     <LibraryPath>/usr/local/lib</LibraryPath>
     <RemoteLdCommmandTimeout>3600000</RemoteLdCommmandTimeout>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <TargetName>libdev_lib</TargetName>
-    <TargetExt>.so.1.0.0</TargetExt>
+    <TargetExt>.so.1.1.0</TargetExt>
     <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/libusb/include/libusb-1.0;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc;$(SolutionDir)\shared\3thpart\src\win;~/projects/li_dev_lib/job/library.cpp.lpu230/shared/3thpart/src/linux;~/projects/li_dev_lib/job/library.cpp.lpu230/shared/projects/dev_lib/inc</IncludePath>
     <LibraryPath>/usr/local/lib</LibraryPath>
     <RemoteLdCommmandTimeout>3600000</RemoteLdCommmandTimeout>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <TargetName>libdev_lib</TargetName>
-    <TargetExt>.so.1.0.0</TargetExt>
+    <TargetExt>.so.1.1.0</TargetExt>
     <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/libusb/include/libusb-1.0;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc;$(SolutionDir)\shared\3thpart\src\win;~/projects/li_dev_lib/job/library.cpp.lpu230/shared/3thpart/src/linux;~/projects/li_dev_lib/job/library.cpp.lpu230/shared/projects/dev_lib/inc</IncludePath>
     <LibraryPath>/usr/local/lib</LibraryPath>
     <RemoteLdCommmandTimeout>3600000</RemoteLdCommmandTimeout>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
     <TargetName>libdev_lib</TargetName>
-    <TargetExt>.so.1.0.0</TargetExt>
+    <TargetExt>.so.1.1.0</TargetExt>
     <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/libusb/include/libusb-1.0;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc;$(SolutionDir)\shared\3thpart\src\win;~/projects/li_dev_lib/job/library.cpp.lpu230/shared/3thpart/src/linux;~/projects/li_dev_lib/job/library.cpp.lpu230/shared/projects/dev_lib/inc</IncludePath>
     <LibraryPath>/usr/local/lib</LibraryPath>
     <RemoteLdCommmandTimeout>3600000</RemoteLdCommmandTimeout>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
     <TargetName>libdev_lib</TargetName>
-    <TargetExt>.so.1.0.0</TargetExt>
+    <TargetExt>.so.1.1.0</TargetExt>
     <IncludePath>C:\local\boost_1_80_0;/usr/local/include;/usr/local/libusb/include/libusb-1.0;C:\local\libusb\out\include\libusb-1.0;$(SolutionDir)\shared\lib\inc;$(SolutionDir)\shared\common\inc;$(SolutionDir)\shared\3thpart\inc;$(SolutionDir)\shared\3thpart\src\win;~/projects/li_dev_lib/job/library.cpp.lpu230/shared/3thpart/src/linux;~/projects/li_dev_lib/job/library.cpp.lpu230/shared/projects/dev_lib/inc</IncludePath>
     <LibraryPath>/usr/local/lib</LibraryPath>
     <RemoteLdCommmandTimeout>3600000</RemoteLdCommmandTimeout>

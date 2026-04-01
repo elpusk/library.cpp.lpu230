@@ -1,7 +1,7 @@
 #pragma once
 
 /**
-* 2025.03.18  - release version 6.0 : wss client
+* 2026.04.01	- release version 6.1
 */
 
 #include <mp_os_type.h>

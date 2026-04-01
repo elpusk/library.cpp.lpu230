@@ -1,5 +1,5 @@
 # Software components information
-release 2.6
+package release 2.10
 
 ## LiMgmtLpu230
 - for Debian 12.(x64)
@@ -12,7 +12,6 @@ release 2.6
 - lpu237 device library test program.
 
 ## LiElpuskHidDaemon
-- v2.6
 - for Debian 12.(x64)
 - executable file name : elpusk-hid-d
 - secure websoecket server deamon.(only single instance) with /server option or none(default)
@@ -21,10 +20,9 @@ release 2.6
 - supports remove self-signed certificate. with /removecert option.
 - display runtime tracking message of the current elpusk-hid-d. with /trace option.
 - supports lpu237-fw update by webapp.
-- "In Linux package version 2.6, after stopping the service with systemctl stop, running elpusk-hid-d --removecert followed by elpusk-hid-d --cert generates a certificate. However, executing it results in an authentication certificate error."
+- "In Linux package version 2.6, after stopping the service with systemctl stop, running elpusk-hid-d --removecert followed by elpusk-hid-d --cert generates a certificate. However, executing it results in an authentication certificate error." -> remove the installed pkg and reinstall it.
 
 ## WiElpuskHidDaemon
-- v2.6
 - for windows 11.(x64, x86)
 - executable file name : elpusk-hid-d.exe
 - secure websoecket server exe file.(only single instance) with /server option or none(default)
@@ -36,35 +34,30 @@ release 2.6
 - supports lpu237-fw update by webapp.
 
 ## wi_coffee_service
-- v2.0
 - for windows 11.(x64, x86)
 - executable file name : coffee_service.exe
 - Windows service program.
 - run and stop elpusk-hid-d.exe
 
 ## li_lpu237_dll
-- v6.0
 - for Debian 12.(x64)
 - executable file name : libtg_lpu237_dll.so
 - for native client application, shared object.
 - supports lpu237 msr functionality.
 
 ## wi_lpu237_dll
-- v6.0
 - for windows 11.(x64, x86)
 - executable file name : tg_lpu237_dll.dll
 - for native client application, dynamic linked library.
 - supports lpu237 msr functionality.
 
 ## li_lpu237_ibutton
-- v6.0
 - for Debian 12.(x64)
 - executable file name : libtg_lpu237_ibutton.so
 - for native client application, shared object.
 - supports lpu237 ibutton functionality.
 
 ## wi_lpu237_ibutton
-- v6.0
 - for windows 11.(x64, x86)
 - executable file name : tg_lpu237_ibutton.dll
 - for native client application, dynamic linked library.
@@ -81,27 +74,23 @@ release 2.6
 - tg_lpu237_dll.dll test program.(msr test)
 
 ## li_lpu237_update
-- v2.3
 - for Debian 12.(x64)
 - executable file name : lpu237_update.out or lpu237_update
 - lpu237 firmware update program.
 - can be executed by elpusk-hid-d.
 
 ## wi_lpu237_update
-- v2.3
 - for windows 11.(x64, x86)
 - executable file name : lpu237_update.exe
 - lpu237 firmware update program.
 - can be executed by elpusk-hid-d.exe.
 
 ## li_rom
-- v1.2
 - for Debian 12.(x64)
 - executable file name : libtg_rom.so
 - rom file helper dynamic linked library.
 
 ## wi_rom
-- v1.2
 - for windows 11.(x64, x86)
 - executable file name : tg_rom.dll
 - rom file helper dynamic linked library.
@@ -117,14 +106,12 @@ release 2.6
 - rom file build program.
 
 ## wi_dev_lib
-- v1.0
 - for windows 11.(x64, x86)
 - executable file name : dev_lib.dll
 - for native client application, dynamic linked library.
 - for elpusk-hid-d.exe and lpu230_update.exe, service hid device io.
 
 ## li_dev_lib
-- v1.0
 - for Debian 12.(x64)
 - executable file name : libdev_lib.so
 - for native client application, shared object.

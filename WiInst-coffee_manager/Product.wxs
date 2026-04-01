@@ -46,6 +46,15 @@
 *                               : 0DB9CDDD-AF68-4C9A-8C18-9EDC7F8BB5A2
 *                               : elpusk-hid-d.exe - v2.8(recover 기능 추가.)
 *                               : lpu230_update.exe - v2.6(recover 기능 추가.)
+* 
+* 2026.04.01 - package v 2.10.0 : coffee manager 2nd project(v2.10)
+*                               : 9BEFD1A0-59EB-4492-99C9-78A529FC5B20
+*                               : coffee_sevice.exe - v2.1(공용라이브러리 변경으로 업데이트)
+*                               : elpusk-hid-d.exe - v2.9( 가끔 응답 놓치는 문제 수정을 위한 변경.)
+*                               : lpu237_dll.dll - v6.1(공용라이브러리 변경으로 업데이트)
+*                               : lpu237_ibutton.dll - v6.1(공용라이브러리 변경으로 업데이트)
+*                               : dev_lib.dll - v1.1( 가끔 응답 놓치는 문제 수정을 위한 변경.)
+*                               : lpu230_update.exe - v2.7( 가끔 응답 놓치는 문제 수정을 위한 변경.)
 *
 -->
 
@@ -63,8 +72,8 @@
 <?define Pre_ProductName = "coffee_manager_2nd"?>
 
 <!-- Pre_ProductVersion 값이 변경되면, Pre_ProductCode 는 새로 생성해야함.-->
-<?define Pre_ProductVersion = "2.9.0"?>
-<?define Pre_ProductCode = "0DB9CDDD-AF68-4C9A-8C18-9EDC7F8BB5A2"?>
+<?define Pre_ProductVersion = "2.10.0"?>
+<?define Pre_ProductCode = "9BEFD1A0-59EB-4492-99C9-78A529FC5B20"?>
 
 <!-- 같은 프로그래은 버전이 달라져도 Pre_ProductUpgradeCode 는 항상 동일해야 함.-->
 <?define Pre_ProductUpgradeCode = "B9BF3037-BD17-4F00-BA59-C5CE301723D6"?>

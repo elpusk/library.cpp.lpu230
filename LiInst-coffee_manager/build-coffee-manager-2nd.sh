@@ -6,7 +6,7 @@ set -e # Exit immediately if a command exits with a non-zero status.
 
 # 패키지 정보 설정
 PACKAGE_NAME="coffee-manager-2nd"
-VERSION="2.9"
+VERSION="2.10"
 ARCH="amd64" # 또는 'arm64', 'i386' 등 실제 아키텍처에 맞게 수정
 DEB_PACKAGE_NAME="${PACKAGE_NAME}_${VERSION}_${ARCH}.deb"
 
@@ -19,9 +19,9 @@ gCA_CERT_ALIAS="ca-coffee_server"
 SRC_BASE_DIR="/home/tester/projects"
 
 # 라이브러리 버전 정보
-LIBDEV_LIB_VERSION="1.0.0"
-LIBTG_LPU237_DLL_VERSION="6.0.0"
-LIBTG_LPU237_IBUTTON_VERSION="6.0.0"
+LIBDEV_LIB_VERSION="1.1.0"
+LIBTG_LPU237_DLL_VERSION="6.1.0"
+LIBTG_LPU237_IBUTTON_VERSION="6.1.0"
 LIBTG_ROM_VERSION="1.2.0"
 
 # 원본 파일 전체 경로
@@ -77,7 +77,7 @@ Version: ${VERSION}
 Architecture: ${ARCH}
 Pre-Depends: libnss3-tools
 Maintainer: Elpusk<elpusk@naver.com>
-Description: Coffee Manager 2nd Daemon 2.7 & Updater 2.5
+Description: Coffee Manager 2nd Daemon 2.9 & Updater 2.7
  Provides the necessary daemon, libraries and fw-updater, for the coffee manager 2nd system.
 EOF
 

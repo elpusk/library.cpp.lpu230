@@ -1,15 +1,7 @@
 #pragma once
 
 /*!
-*  2015.04.03	- release version 1.2 : support SCR interface
-*  2015.04.07	- release version 1.3 : support MSR function & SCR interface at same time.
-*  2015.05.14	- release version 1.4 : support LPU-208D.
-*  ?			- release version 1.5.
-*  ?			- release version 1.6.
-*  2017.11.18	- release version 3.0 : changed to The Next Device Manager( NDM ) client.
-*  2020.06.24	- release version 4.0 : changed to coffee manager framework( CF ) client.
-*  2024.04.24	- release version 5.0 : support secure
-*  2024.08.0x  - release version 6.0 : wss client
+*  2026.04.01	- release version 6.1
 */
 
 #include <mp_os_type.h>
