@@ -64,6 +64,24 @@ static cmap_user_cb g_map_user_cb; //global user callback map
 /////////////////////////////////////////////////////////////////////////
 // local function prototype
 /////////////////////////////////////////////////////////////////////////
+std::filesystem::path _get_module_directory() {
+#ifdef _WIN32
+	wchar_t buffer[MAX_PATH];
+	HMODULE hModule = NULL;
+	GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+		GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+		(LPCWSTR)&_get_module_directory, &hModule);
+	GetModuleFileNameW(hModule, buffer, MAX_PATH);
+	return std::filesystem::path(buffer).parent_path();
+#else
+	Dl_info info;
+	if (dladdr((void*)&_get_module_directory, &info)) {
+		return fs::absolute(fs::path(info.dli_fname)).parent_path();
+	}
+#endif
+	return std::filesystem::path(""); // error
+}
+
 static unsigned long _fw_msr_update_ex_w(const unsigned char* sId,
 	unsigned long dwWaitTime
 	, type_lpu237_fw_callback cbUpdate
@@ -87,6 +105,9 @@ static void __stdcall _cb_fw(void*p_user);
 /////////////////////////////////////////////////////////////////////////
 void __stdcall _cb_fw(void* p_user)
 {
+	static std::mutex mutex_for_cb_fw;
+	std::lock_guard<std::mutex> lock(mutex_for_cb_fw);
+
 	long n_item_index = (long)p_user; // item index of callback function in g_map_user_cb
 	bool b_get_param(false);
 	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
@@ -122,11 +143,66 @@ void __stdcall _cb_fw(void* p_user)
 			_mp::clog::get_instance().log_fmt(L" : RET : %ls : none manager_of_device_of_client.\n", __WFUNCTION__);
 			continue;
 		}
-		_mp::casync_parameter_result::type_ptr_ct_async_parameter_result& ptr_result = ptr_manager_of_device_of_client->get_async_parameter_result_for_manager_from_all_device(n_result_index);
+		lpu237_of_client::type_ptr_lpu237_of_client& ptr_device = ptr_manager_of_device_of_client->get_device(v_dev_id);
+		unsigned long n_device_index(i_device_of_client::const_invalied_device_index);
+		if (ptr_device) {
+			n_device_index = ptr_device->get_device_index();
+		}
+
+		_mp::clog::get_instance().log_fmt(L" : INF : n_device_index = %u.\n", n_device_index);
+
+		_mp::casync_parameter_result::type_ptr_ct_async_parameter_result ptr_result;
+
+		if (n_device_index == i_device_of_client::const_invalied_device_index) {
+			ptr_result = ptr_manager_of_device_of_client->get_async_parameter_result_for_manager_from_all_device(n_result_index);
+		}
+		else {
+			ptr_result = ptr_manager_of_device_of_client->get_async_parameter_result_for_manager(n_device_index,n_result_index);
+		}
 		if (!ptr_result) {
-			_mp::clog::get_instance().log_fmt(L" : RET : %ls : INVALID_HANDLE_VALUE\n", __WFUNCTION__);
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : INVALID_HANDLE_VALUE : n_result_index = %d.\n", __WFUNCTION__, n_result_index);
 			continue;
 		}
+		
+
+
+		_mp::type_v_buffer v_debug_out_result;
+		std::wstring s_debug_result;
+		_mp::type_set_wstring set_debug_wstring_result;
+		_mp::type_list_wstring list_debug_wstring_result;
+		unsigned long n_debug_result_code(-1);
+
+		_mp::clog::get_instance().log_fmt(L" : INF : n_item_index = %d.\n", n_item_index);
+		_mp::clog::get_instance().log_fmt(L" : INF : n_result_index = %d.\n", n_result_index);
+		ptr_result->get_result(v_debug_out_result);
+		_mp::clog::get_instance().log_fmt(L" : INF : v_debug_out_result.size = %u.\n", v_debug_out_result.size());
+
+		ptr_result->get_result(s_debug_result);
+		if(s_debug_result.empty())
+			_mp::clog::get_instance().log_fmt(L" : INF : s_debug_result is empty.\n");
+		else
+			_mp::clog::get_instance().log_fmt(L" : INF : s_debug_result = %ls\n", s_debug_result.c_str());
+
+		ptr_result->get_result(set_debug_wstring_result);
+		if (set_debug_wstring_result.empty())
+			_mp::clog::get_instance().log_fmt(L" : INF : set_debug_wstring_result is empty.\n");
+		else {
+			_mp::clog::get_instance().log_fmt(L" : INF : set_debug_wstring_result = \n");
+			for (auto s : set_debug_wstring_result) {
+				_mp::clog::get_instance().log_fmt(L"    %ls\n", s.c_str());
+			}//end for
+		}
+		ptr_result->get_result(list_debug_wstring_result);
+		if (list_debug_wstring_result.empty())
+			_mp::clog::get_instance().log_fmt(L" : INF : list_debug_wstring_result is empty.\n");
+		else {
+			_mp::clog::get_instance().log_fmt(L" : INF : list_debug_wstring_result = \n");
+			for (auto s : list_debug_wstring_result) {
+				_mp::clog::get_instance().log_fmt(L"    %ls\n", s.c_str());
+			}//end for
+		}
+		ptr_result->get_result(n_debug_result_code);
+		_mp::clog::get_instance().log_fmt(L" : INF : n_debug_result_code = %lu\n", n_debug_result_code);
 
 		unsigned long dw_client_result(LPU237_FW_RESULT_ERROR);
 		_mp::type_v_buffer v_out_rx(0);
@@ -134,12 +210,19 @@ void __stdcall _cb_fw(void* p_user)
 		if (!ptr_result->get_result(v_out_rx)) {
 			ptr_result->get_result(dw_client_result);
 			//dw_client_result = LPU237_DLL_RESULT_ERROR;
-			ptr_manager_of_device_of_client->remove_async_result_for_manager(n_result_index);
-			_mp::clog::get_instance().log_fmt(L" : RET : %ls : error\n", __WFUNCTION__);
+			ptr_manager_of_device_of_client->remove_async_result_for_manager(n_device_index,n_result_index);
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : get_result() - error\n", __WFUNCTION__);
 			continue;
 		}
 		ptr_result->get_result(dw_client_result);
-		ptr_manager_of_device_of_client->remove_async_result_for_manager(n_result_index);
+		ptr_manager_of_device_of_client->remove_async_result_for_manager(n_device_index,n_result_index);
+		//
+		int n_new_result_index = ptr_device->cmd_async_waits_data(_cb_fw, (void*)n_item_index);
+		if(n_new_result_index<0){
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : cmd_async_waits_data fail for item index %d.\n", __WFUNCTION__, n_item_index);
+			continue;
+		}
+		g_map_user_cb.change_result_index(n_item_index, n_new_result_index);
 
 		if (p_fun) {
 			unsigned long dw_w_param(LPU237_FW_WPARAM_ERROR);
@@ -163,7 +246,7 @@ void __stdcall _cb_fw(void* p_user)
 			// 2'nd - current processing result : LPU237_FW_RESULT_x
 			// 3'th - LPU237_FW_WPARAM_x.
 			
-			p_fun(p_para, dw_client_result, dw_w_param);
+			//p_fun(p_para, dw_client_result, dw_w_param);
 		}
 
 		_mp::clog::get_instance().log_fmt(L" : INF : %ls : callbacked for item index %d.\n", __WFUNCTION__, n_item_index);
@@ -225,6 +308,7 @@ unsigned long _fw_msr_update_ex_w(
 			continue;
 		}
 
+		// set bootloader parameters
 		std::wstring s_name = ptr_device->get_name_by_wstring();
 		if (!ptr_device->bootloader_operation(L"set",L"model_name", s_name)) {
 			_mp::clog::get_instance().log_fmt(L" : RET : %ls : error bootloader_operation for model_name.\n", __WFUNCTION__);
@@ -245,17 +329,21 @@ unsigned long _fw_msr_update_ex_w(
 			continue;
 		}
 		
+		// 주의 s_key 가 "file" 이면  abs_path_rom_file.wstring() 의 ":" 은 "::" 로 변경되지 않는다.
 		if (!ptr_device->bootloader_operation(L"set", L"file", abs_path_rom_file.wstring())) {
 			_mp::clog::get_instance().log_fmt(L" : RET : %ls : error bootloader_operation for file.\n", __WFUNCTION__);
 			continue;
 		}
 		
-
-		if (dwFwIndex != -1) {
+		if (dwFwIndex >= 0 && dwFwIndex < 256) {
 			if (!ptr_device->bootloader_operation(L"set", L"firmware_index", std::to_wstring(dwFwIndex))) {
 				_mp::clog::get_instance().log_fmt(L" : RET : %ls : %u : error bootloader_operation for firmware_index.\n", __WFUNCTION__, dwFwIndex);
 				continue;
 			}
+		}
+		else {
+			_mp::clog::get_instance().log_fmt(L" : INF : %ls : firmware_index = %u : firmware auto-selection mode.\n", __WFUNCTION__, dwFwIndex);
+			// firmware 자동 선택 시도.
 		}
 
 
@@ -276,11 +364,11 @@ unsigned long _fw_msr_update_ex_w(
 		}
 
 		if (!ptr_device->bootloader_operation(L"start", L"", L"")) {
+			g_map_user_cb.remove_callback(n_item_index);
 			_mp::clog::get_instance().log_fmt(L" : RET : %ls : error bootloader_operation for starting.\n", __WFUNCTION__);
 			continue;
 		}
-		dw_result = ccb_client::const_dll_result_success;
-		/*
+
 		int n_result_index = ptr_device->cmd_async_waits_data(_cb_fw, (void*)n_item_index);
 		if (n_result_index < 0) {
 			g_map_user_cb.remove_callback(n_item_index);
@@ -290,8 +378,8 @@ unsigned long _fw_msr_update_ex_w(
 
 		g_map_user_cb.change_result_index(n_item_index, n_result_index);
 
+
 		dw_result = (unsigned long)n_item_index;
-		*/
 	} while (false);
 
 	if (dw_result == ccb_client::const_dll_result_error) {
@@ -846,7 +934,10 @@ unsigned long _CALLTYPE_ LPU237_fw_rom_load_w(const wchar_t* sRomFileName)
 		}
 
 		//
-		CRom dll_rom(L"tg_tom.dll");
+		std::filesystem::path rom_lib = _get_module_directory();
+		rom_lib /= "tg_rom.dll";
+		CRom dll_rom(rom_lib.wstring().c_str());
+
 		CRom::ROMFILE_HEAD Header = { 0, };
 		result_rom = dll_rom.LoadHeader(sRomFileName, &Header);
 		if (result_rom != CRom::result_success) {
@@ -890,7 +981,10 @@ unsigned long _CALLTYPE_ LPU237_fw_rom_get_index_w(const wchar_t* sRomFileName, 
 			continue;
 		}
 		//
-		CRom dll_rom(L"tg_rom.dll");
+		std::filesystem::path rom_lib = _get_module_directory();
+		rom_lib /= "tg_rom.dll";
+		CRom dll_rom(rom_lib.wstring().c_str());
+
 		CRom::ROMFILE_HEAD Header = { 0, };
 
 		if (sRomFileName != NULL) {

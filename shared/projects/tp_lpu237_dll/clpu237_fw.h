@@ -468,18 +468,20 @@ public:
 	}
 
 	/**
-	* fw update by callback method. async type function.
-	* @parameter hDev - device handle.
-	* @parameter pFun - callback function , defined by -> typedef	unsigned long(_CALLTYPE_* type_lpu237_fw_callback)(void*, unsigned long, unsigned long)
-	* @parameter pParameter - callback function parameter. library internal thread call the given callback function(pFun) with this parameter.
-	* @return true - success
+	* @brief fw update by callback method. async type function.
+	* @param vId - device id 16 bytes.
+	* @param cbUpdate - callback function , defined by -> typedef	unsigned long(_CALLTYPE_* type_lpu237_fw_callback)(void*, unsigned long, unsigned long)
+	* @param pUser - callback function parameter. library internal thread call the given callback function(pFun) with this parameter.
+	* @param sRomFileNmae - rom file name.
+	* @param dwFwIndex - the index of firmware in rom file. greater then equal 0 and less then equal 255.
+	* @return first : true - processing success, second : if first is true, return the buffer index for getting update result. else return LPU237_FW_RESULT_ERROR.
 	*/
-	bool LPU237_fw_msr_update_callback(
+	std::pair<bool, unsigned long> LPU237_fw_msr_update_callback(
 		const std::vector<unsigned char>& vId
 		, type_lpu237_fw_callback cbUpdate
 		, void* pUser
 		, const std::wstring& sRomFileName
-		, unsigned long dwIndex
+		, unsigned long dwFwIndex
 	)
 	{
 		bool b_result(false);
@@ -491,7 +493,7 @@ public:
 				continue;
 			}
 
-			n_buffer_index = m_FunLPU237_fw_msr_update_callback(&vId[0], cbUpdate, pUser, sRomFileName.c_str(), dwIndex);
+			n_buffer_index = m_FunLPU237_fw_msr_update_callback(&vId[0], cbUpdate, pUser, sRomFileName.c_str(), dwFwIndex);
 			if (n_buffer_index == LPU237_FW_RESULT_ERROR) {
 				continue;
 			}
@@ -499,10 +501,16 @@ public:
 			b_result = true;
 		} while (false);
 
-		return b_result;
+		return std::make_pair(b_result, n_buffer_index);
 	}
 
-	std::pair<bool, unsigned long> LPU237_fw_msr_update_wnd(const unsigned char* sId, HWND hWnd, UINT uMsg, const wchar_t* sRomFileName, unsigned long dwIndex)
+	std::pair<bool, unsigned long> LPU237_fw_msr_update_wnd(
+		const std::vector<unsigned char>& vId
+		, HWND hWnd
+		, UINT uMsg
+		, const std::wstring& sRomFileName
+		, unsigned long dwFwIndex
+	)
 	{
 		bool b_result(false);
 		unsigned long n_buffer_index(LPU237_FW_RESULT_ERROR);
@@ -513,7 +521,7 @@ public:
 				continue;
 			}
 
-			n_buffer_index = m_FunLPU237_fw_msr_update_wnd(sId, hWnd, uMsg, sRomFileName, dwIndex);
+			n_buffer_index = m_FunLPU237_fw_msr_update_wnd(&vId[0], hWnd, uMsg, sRomFileName.c_str(), dwFwIndex);
 			if (n_buffer_index == LPU237_FW_RESULT_ERROR) {
 				continue;
 			}

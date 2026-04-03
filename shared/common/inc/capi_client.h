@@ -185,6 +185,14 @@ public:
 
 	bool get_device_list_multi_sync(std::set<std::wstring>& set_s_path, unsigned long n_client_index, const std::list<std::wstring>& list_s_filter = std::list<std::wstring>());
 
+	/**
+	* @brief bootloader 를 위한 parameter 설정한다.
+	* @param n_client_index : client index
+	* @param n_device_index : device index
+	* @param s_run_type : bootloader operation type. "set" or "start"
+	* @param s_key : the key parameter for bootloader operation. 만약 이 값이 "file" 이면, s_value 안의 ":" 가 "::" 로 변환되지 않는다. 그 이외의 키값에서는 ":" 가 "::" 로 변환된다.
+	* @param s_value : the value parameter for bootloader operation.
+	*/
 	bool bootloader_operation(unsigned long n_client_index, unsigned long n_device_index, const std::wstring& s_run_type, const std::wstring & s_key, const std::wstring& s_value);
 
 	bool bootloader_operation_sync(

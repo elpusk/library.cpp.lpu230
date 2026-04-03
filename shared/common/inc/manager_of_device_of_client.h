@@ -343,9 +343,22 @@ public:
 	{
 		return _mp::casync_result_manager::get_instance(std::wstring(L"manager_of_device_of_client")).get_async_parameter_result(i_device_of_client::const_invalied_device_index, n_result_index);
 	}
+	_mp::casync_parameter_result::type_ptr_ct_async_parameter_result& get_async_parameter_result_for_manager(int n_device_index,int n_result_index)
+	{
+		return _mp::casync_result_manager::get_instance(
+			std::wstring(L"manager_of_device_of_client")
+		).get_async_parameter_result(n_device_index, n_result_index);
+	}
+
 	bool remove_async_result_for_manager(int n_result_index)
 	{
 		return _mp::casync_result_manager::get_instance(std::wstring(L"manager_of_device_of_client")).remove_async_result(i_device_of_client::const_invalied_device_index, n_result_index);
+	}
+
+	bool remove_async_result_for_manager(int n_device_index, int n_result_index)
+	{
+		return _mp::casync_result_manager::get_instance(std::wstring(L"manager_of_device_of_client"))
+			.remove_async_result(n_device_index, n_result_index);
 	}
 
 	int pop_async_parameter_result_index_for_manager(bool b_remove = true)

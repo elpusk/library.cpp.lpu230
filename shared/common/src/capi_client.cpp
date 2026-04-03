@@ -620,25 +620,48 @@ bool capi_client::bootloader_operation(unsigned long n_client_index, unsigned lo
 			.set_session_number(p_client->get_session_number_from_server())
 			.set_owner(_mp::cio_packet::owner_device, n_device_index)
 			.set_action(_mp::cio_packet::act_dev_sub_bootloader);
+
+		bool b_change_colon_to_double_colon = true;
+
+		if (s_key.compare(L"file") == 0) {
+			// 이 경우 s_value는 파일 경로를 나타내며, s_value 안의 ":" 은 "::" 변경되지 않는다. 
+			b_change_colon_to_double_colon = false;
+		}
+
 		if (!s_run_type.empty()) {
 			packet.set_data_by_utf8(s_run_type);
 			if (!s_key.empty()) {
 				packet.set_data_by_utf8(s_key, true);
 			}
 			if (!s_value.empty()) {
-				packet.set_data_by_utf8(s_value, true);
+				if (b_change_colon_to_double_colon) {
+					packet.set_data_by_utf8(s_value, true);
+				}
+				else {
+					packet.set_data_by_utf8_without_colron_doubling(s_value, true);
+				}
 			}
 		}
 		else {
 			if (!s_key.empty()) {
 				packet.set_data_by_utf8(s_key);
 				if (!s_value.empty()) {
-					packet.set_data_by_utf8(s_value, true);
+					if (b_change_colon_to_double_colon) {
+						packet.set_data_by_utf8(s_value, true);
+					}
+					else {
+						packet.set_data_by_utf8_without_colron_doubling(s_value, true);
+					}
 				}
 			}
 			else {
 				if (!s_value.empty()) {
-					packet.set_data_by_utf8(s_value);
+					if(b_change_colon_to_double_colon) {
+						packet.set_data_by_utf8(s_value);
+					}
+					else{
+						packet.set_data_by_utf8_without_colron_doubling(s_value);
+					}
 				}
 			}
 		}

@@ -8,6 +8,10 @@
 
 #include <lpu237_of_client.h>
 
+#ifdef _WIN32
+#include <atltrace.h>
+#endif
+
 class ccb_client
 {
 public:
@@ -138,6 +142,9 @@ private:
 				last_action = capi_client::get_instance().get_last_action(0);
 			}
 
+#if defined(_WIN32) && defined(_DEBUG)
+			ATLTRACE(L"^^^^^^ %ls : %d.\n", __WFUNCTION__, last_action);
+#endif
 			switch (last_action)
 			{
 			case capi_client::act_create:
@@ -186,6 +193,25 @@ private:
 				}
 				break;
 			case capi_client::act_read:
+				n_result_index = _mp::casync_result_manager::get_instance(std::wstring(L"lpu237_of_client")).pop_result_index(n_device_index);
+				if (n_result_index >= 0) {
+					_mp::casync_parameter_result::type_ptr_ct_async_parameter_result& ptr_result = _mp::casync_result_manager::get_instance(std::wstring(L"lpu237_of_client")).get_async_parameter_result(n_device_index, n_result_index);
+					ptr_result->set_result(b_result, n_result_code, v_rx);
+					ptr_result->notify();
+				}
+#if defined(_WIN32) && defined(_DEBUG)
+				if (b_result) {
+					ATLTRACE(L"^^^^^^ %ls : success : last_action = %d : n_device_index = %u : n_result_index = %d : n_result_code = %u : rx.size() = %u.\n"
+						, __WFUNCTION__, last_action, n_device_index, n_result_index, n_result_code, v_rx.size()
+					);
+				}
+				else{
+					ATLTRACE(L"^^^^^^ %ls : error : last_action = %d : n_device_index = %u : n_result_index = %d : n_result_code = %u : rx.size() = %u.\n"
+						, __WFUNCTION__, last_action, n_device_index, n_result_index, n_result_code, v_rx.size()
+					);
+				}
+#endif
+				break;
 			case capi_client::act_transmit:
 				n_result_index = _mp::casync_result_manager::get_instance(std::wstring(L"lpu237_of_client")).pop_result_index(n_device_index);
 				if (n_result_index >= 0) {
@@ -203,15 +229,22 @@ private:
 				}
 				break;
 			case capi_client::act_sub_bootloader:
+#if defined(_WIN32) && defined(_DEBUG)
+				ATLTRACE(L"~~~~~ %ls : act_sub_bootloader\n", __WFUNCTION__);
+#endif
 				n_result_index = _mp::casync_result_manager::get_instance(std::wstring(L"lpu237_of_client")).pop_result_index(n_device_index);
 				if (n_result_index >= 0) {
 					_mp::casync_parameter_result::type_ptr_ct_async_parameter_result& ptr_result = _mp::casync_result_manager::get_instance(std::wstring(L"lpu237_of_client")).get_async_parameter_result(n_device_index, n_result_index);
 					ptr_result->set_result(b_result, n_result_code, v_rx);
 					ptr_result->notify();
 				}
-			default:
 				break;
-			}
+			default:
+#if defined(_WIN32) && defined(_DEBUG)
+				ATLTRACE(L"~~~~~ %ls : %d.\n", __WFUNCTION__, last_action);
+#endif
+				break;
+			}//end switch
 
 		} while (false);
 	}

@@ -662,8 +662,8 @@ namespace _mp
 						clog::get_instance().trace(L"[E] - %ls : 0x%p : %ls(%d).\n", __WFUNCTION__, ptr_session.get(), _s_error_msg.c_str(), ec.value());
 					}
 					else {
-						clog::get_instance().log_fmt(L"[I] - %ls : 0x%p.\n", __WFUNCTION__, ptr_session.get());
-						clog::get_instance().trace(L"[I] - %ls : 0x%p.\n", __WFUNCTION__, ptr_session.get());
+						clog::get_instance().log_fmt(L"[I] - %ls : 0x%p : rx.size() = %u.\n", __WFUNCTION__, ptr_session.get(), v_data.size());
+						clog::get_instance().trace(L"[I] - %ls : 0x%p : rx.size() = %u.\n", __WFUNCTION__, ptr_session.get(), v_data.size());
 					}
 
 					if (ec == boost::beast::websocket::error::closed)

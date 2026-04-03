@@ -38,12 +38,16 @@ static unsigned long _CALLTYPE_ _cbUpdate(void* pPara, unsigned long dw_result, 
 	}
 	else if (dw_result == LPU237_FW_RESULT_CANCEL) {
 		//cancel
+		std::wcout << L" : W : canceled update OMG." << std::endl;
+
 		if (p_b_complete) {
 			*p_b_complete = true;
 		}
 	}
 	else {
 		//error
+		std::wcout << L" : E :  update Error" << std::endl;
+
 		if (p_b_complete) {
 			*p_b_complete = true;
 		}
@@ -253,7 +257,7 @@ int main_lpu237_fw(const std::list<std::wstring>& list_parameters)
 		}
 		std::wcout << L" : I : ID : " << _get_string_from_vector_version(vVersion) << std::endl;
 
-		if(!lib.LPU237_fw_rom_load(s_rom_file)) {
+		if(lib.LPU237_fw_rom_load(s_rom_file)) {
 			std::wcout << L" : I : LPU237_fw_rom_load : " << s_rom_file << std::endl;
 		}
 		else {
@@ -261,23 +265,25 @@ int main_lpu237_fw(const std::list<std::wstring>& list_parameters)
 			continue;
 		}
 
-		auto pair_result_index = lib.LPU237_fw_rom_get_index(s_rom_file, vName, vVersion);
-		if (!pair_result_index.first) {
+		auto pair_result_fw_index = lib.LPU237_fw_rom_get_index(s_rom_file, vName, vVersion);
+		if (!pair_result_fw_index.first) {
 			std::wcout << L" : E : LPU237_fw_rom_get_index : " << s_rom_file << std::endl;
 			continue;
 		}
-		std::wcout << L" : I : LPU237_fw_rom_get_index : " << s_rom_file << L" : index : " << pair_result_index.second << std::endl;
+		std::wcout << L" : I : LPU237_fw_rom_get_index : " << s_rom_file << L" : index : " << pair_result_fw_index.second << std::endl;
 
 		lib.LPU237_fw_msr_save_setting(h_dev);// for old compatibility, but it is not necessary to call this function before update.
 		std::wcout << L" : I : LPU237_fw_msr_save_setting." << std::endl;
 
 		b_complete = false;
 
-		if (!lib.LPU237_fw_msr_update_callback(vId, _cbUpdate, &b_complete, s_rom_file, pair_result_index.second)) {
+		auto pair_result_result_index = lib.LPU237_fw_msr_update_callback(vId, _cbUpdate, &b_complete, s_rom_file, pair_result_fw_index.second);
+		if (!pair_result_result_index.first) {
 			std::wcout << L" : E : LPU237_fw_msr_update_callback : " << s_rom_file << std::endl;
 			continue;
 		}
 		std::wcout << L" : I : Started LPU237_fw_msr_update_callback : " << s_rom_file << std::endl;
+		std::wcout << L" : I : the given result index : " << pair_result_result_index.second << std::endl;
 
 		int n_wait_cnt = 0;
 		while (!b_complete) {
@@ -289,7 +295,6 @@ int main_lpu237_fw(const std::list<std::wstring>& list_parameters)
 				std::wcout << std::endl;
 			}
 		}
-		
 		//
 		lib.LPU237_msr_recover_setting(h_dev);// for old compatibility, but it is not necessary to call this function before update.
 
