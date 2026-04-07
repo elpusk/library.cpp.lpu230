@@ -119,6 +119,12 @@ namespace _mp
 			m_b_success = b_success;
 			m_list_wstring_result = list_wstring_result;
 		}
+		void set_result(bool b_success, const type_v_wstring& v_wstring_result)
+		{
+			std::lock_guard<std::mutex> lock(m_mutex_for_result);
+			m_b_success = b_success;
+			m_v_wstring_result = v_wstring_result;
+		}
 		void set_result(bool b_success, unsigned long n_result_code)
 		{
 			std::lock_guard<std::mutex> lock(m_mutex_for_result);
@@ -155,6 +161,12 @@ namespace _mp
 			list_wstring_result = m_list_wstring_result;
 			return m_b_success;
 		}
+		bool get_result(type_v_wstring& v_wstring_result)
+		{
+			std::lock_guard<std::mutex> lock(m_mutex_for_result);
+			v_wstring_result = m_v_wstring_result;
+			return m_b_success;
+		}
 		bool get_result(unsigned long& n_result_code)
 		{
 			std::lock_guard<std::mutex> lock(m_mutex_for_result);
@@ -175,6 +187,11 @@ namespace _mp
 				}
 				m_event_kill_and_wait.set(m_n_evt_wait);
 			} while (false);
+		}
+
+		void reset_notify_event()
+		{
+			m_event_kill_and_wait.reset(m_n_evt_wait);
 		}
 
 	private:
@@ -234,6 +251,7 @@ namespace _mp
 		std::wstring m_s_result;
 		type_set_wstring m_set_wstring_result;
 		type_list_wstring m_list_wstring_result;
+		type_v_wstring m_v_wstring_result;
 
 	private://don't call these methods
 		casync_parameter_result(const casync_parameter_result&);

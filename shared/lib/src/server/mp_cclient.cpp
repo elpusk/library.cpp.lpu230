@@ -336,7 +336,10 @@ namespace _mp {
 					ptr_packet->get_data_field(v_data_field);
 					continue;
 				}
+
+				ptr_packet->get_data_field(v_data_field); // string type 의 경우에도 data field를 가져온다.
 				if (ptr_packet->is_success()) {
+					// 
 					//success case
 					n_result = cclient::RESULT_SUCCESS;
 					continue;
@@ -357,8 +360,9 @@ namespace _mp {
 				clog::get_instance().trace(L" :: E : _callback_read : server & client protocol error.\n");
 			} while (false);
 
-			if( b_need_callback )
-				p_obj->_push_q_user_callback_read(act_code,n_result, n_device_index, c_in_id, v_data_field);
+			if (b_need_callback) {
+				p_obj->_push_q_user_callback_read(act_code, n_result, n_device_index, c_in_id, v_data_field);
+			}
 		} while (false);
 	}
 	void cclient::_callback_write(cws_client::csession& session, boost::beast::error_code& ec, const type_v_buffer& v_data, void* p_parameter)

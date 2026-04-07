@@ -7,6 +7,7 @@
 #include <future> 
 #include <typeinfo>  
 #include <set>
+#include <tuple>
 #include <functional>
 #include <map>
 #include <utility>
@@ -45,7 +46,10 @@ public:
 
 private:
 	typedef	std::pair< capi_client::type_action, unsigned long>	_type_pair_action_result;
-	typedef	std::map<unsigned long, capi_client::_type_pair_action_result>	_type_map_device_index_pair_action_result;
+
+	// get<0> : action, get<1> : result, get<2> : run_type_string, get<3> : key_string, get<4> : value_string
+	typedef	std::tuple< capi_client::type_action, unsigned long, std::wstring, std::wstring, std::wstring>	_type_tuple_action_result_k_s;
+	typedef	std::map<unsigned long, capi_client::_type_tuple_action_result_k_s>	_type_map_device_index_tuple_action_result_k_s;
 
 	typedef	std::shared_ptr< _mp::cclient_cb::type_cb_callbacks > _type_ptr_cb_callbacks;
 	typedef	std::map< unsigned long, capi_client::_type_ptr_cb_callbacks >	_type_map_client_index_ptr_cb_callbacks;
@@ -150,7 +154,19 @@ public:
 
 	unsigned long get_last_result(unsigned long n_device_index) const;
 	capi_client::type_action get_last_action(unsigned long n_device_index) const;
-	void set_last_action_and_result(unsigned long n_device_index, const capi_client::type_action last_action, const unsigned long dw_last_result);
+
+	std::wstring get_last_run_type_string(unsigned long n_device_index) const;
+	std::wstring get_last_key_string(unsigned long n_device_index) const;
+	std::wstring get_last_value_string(unsigned long n_device_index) const;
+
+	void set_last_action_and_result(
+		unsigned long n_device_index
+		, const capi_client::type_action last_action
+		, const unsigned long dw_last_result
+		, const std::wstring& s_run_type = std::wstring()
+		, const std::wstring& s_key = std::wstring()
+		, const std::wstring& s_value = std::wstring()
+	);
 
 	unsigned long create_before_set_callback
 	(
@@ -315,6 +331,27 @@ public:
 			if (n_item > 0) {
 				for (auto item : list_t) {
 					list_s_dst.push_back(capi_client::_remove_colron_doubling(item));//"::" -> ":"
+				}
+			}
+
+		} while (false);
+		return n_item;
+	}
+
+	static size_t help_strings_from_response(std::vector<std::wstring>& v_s_dst, const std::vector<unsigned char>& v_receive)
+	{
+		size_t n_item(0);
+		do {
+			v_s_dst.clear();
+
+			if (v_receive.empty())
+				continue;
+
+			std::list<std::wstring> list_t;
+			n_item = capi_client::_get_string_list_from_multi_string(list_t, (unsigned long)(v_receive.size()), &v_receive[0]);
+			if (n_item > 0) {
+				for (auto item : list_t) {
+					v_s_dst.push_back(capi_client::_remove_colron_doubling(item));//"::" -> ":"
 				}
 			}
 
@@ -540,7 +577,7 @@ private:
 	std::mutex m_mutex_for_sync;
 	capi_client::_type_map_client_index_ptr_cb_callbacks m_map_cur_callbacks;
 
-	capi_client::_type_map_device_index_pair_action_result m_map_device_index_pair_action_result;
+	capi_client::_type_map_device_index_tuple_action_result_k_s m_map_device_index_tuple_action_result;
 
 
 	capi_client::type_action m_last_action;

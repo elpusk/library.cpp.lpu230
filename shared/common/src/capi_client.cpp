@@ -56,28 +56,70 @@ capi_client::~capi_client()
 
 unsigned long capi_client::get_last_result(unsigned long n_device_index) const
 {
-	capi_client::_type_map_device_index_pair_action_result::const_iterator it = m_map_device_index_pair_action_result.find(n_device_index);
-	if (it == std::end(m_map_device_index_pair_action_result)) {
+	capi_client::_type_map_device_index_tuple_action_result_k_s::const_iterator it = m_map_device_index_tuple_action_result.find(n_device_index);
+	if (it == std::end(m_map_device_index_tuple_action_result)) {
 		return _mp::cclient::RESULT_SUCCESS;
 	}
 	else {
-		return it->second.second;
+		return std::get<0>(it->second);
 	}
 	return m_dw_last_result;
 }
 capi_client::type_action capi_client::get_last_action(unsigned long n_device_index) const
 {
-	_type_map_device_index_pair_action_result::const_iterator it = m_map_device_index_pair_action_result.find(n_device_index);
-	if (it == std::end(m_map_device_index_pair_action_result)) {
+	_type_map_device_index_tuple_action_result_k_s::const_iterator it = m_map_device_index_tuple_action_result.find(n_device_index);
+	if (it == std::end(m_map_device_index_tuple_action_result)) {
 		return capi_client::act_none;
 	}
 	else {
-		return it->second.first;
+		return std::get<0>(it->second);
 	}
 }
-void capi_client::set_last_action_and_result(unsigned long n_device_index, const capi_client::type_action last_action, const unsigned long dw_last_result)
+
+std::wstring capi_client::get_last_run_type_string(unsigned long n_device_index) const
 {
-	m_map_device_index_pair_action_result[n_device_index] = std::make_pair(last_action, dw_last_result);
+	std::wstring s_run_type;
+
+	_type_map_device_index_tuple_action_result_k_s::const_iterator it = m_map_device_index_tuple_action_result.find(n_device_index);
+	if (it != std::end(m_map_device_index_tuple_action_result)) {
+		s_run_type = std::get<2>(it->second);
+	}
+	return s_run_type;
+}
+
+std::wstring capi_client::get_last_key_string(unsigned long n_device_index) const
+{
+	std::wstring s_key;
+
+	_type_map_device_index_tuple_action_result_k_s::const_iterator it = m_map_device_index_tuple_action_result.find(n_device_index);
+	if (it != std::end(m_map_device_index_tuple_action_result)) {
+		s_key = std::get<3>(it->second);
+	}
+	return s_key;
+}
+
+std::wstring capi_client::get_last_value_string(unsigned long n_device_index) const
+{
+	std::wstring s_value;
+
+	_type_map_device_index_tuple_action_result_k_s::const_iterator it = m_map_device_index_tuple_action_result.find(n_device_index);
+	if (it != std::end(m_map_device_index_tuple_action_result)) {
+		s_value = std::get<4>(it->second);
+	}
+	return s_value;
+}
+
+
+void capi_client::set_last_action_and_result(
+	unsigned long n_device_index
+	, const capi_client::type_action last_action
+	, const unsigned long dw_last_result
+	, const std::wstring& s_run_type /*= std::wstring()*/
+	, const std::wstring& s_key /*= std::wstring()*/
+	, const std::wstring& s_value /*= std::wstring()*/
+)
+{
+	m_map_device_index_tuple_action_result[n_device_index] = std::make_tuple(last_action, dw_last_result, s_run_type, s_key, s_value);
 }
 
 unsigned long capi_client::create_before_set_callback
@@ -673,7 +715,7 @@ bool capi_client::bootloader_operation(unsigned long n_client_index, unsigned lo
 		n_result = _mp::cclient::RESULT_SUCCESS;
 	} while (false);
 	//
-	set_last_action_and_result(n_device_index, capi_client::act_sub_bootloader, n_result);
+	set_last_action_and_result(n_device_index, capi_client::act_sub_bootloader, n_result, s_run_type, s_key, s_value);
 	if (n_result == _mp::cclient::RESULT_SUCCESS)	return true;
 	else	return false;
 }

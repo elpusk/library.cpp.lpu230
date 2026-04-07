@@ -70,7 +70,10 @@ public:
 private:
 	bool _cmd_get(cprotocol_lpu237::type_cmd c_cmd);
 
-	//return result index
+	/**
+	* @brief 비동기적으로 데이터를 한번	기다리는 명령어. 콜백함수 또는 윈도우 메시지로 결과를 받을 수 있다.
+	* @return result index
+	*/
 	int _cmd_async_waits_rx(_mp::casync_parameter_result::type_callback p_fun, void* p_para, HWND h_wnd, UINT n_msg);
 
 	void _set_name(const _mp::type_v_buffer& v_name);

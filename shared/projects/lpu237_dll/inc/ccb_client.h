@@ -2,6 +2,7 @@
 
 #include <mp_clog.h>
 #include <mp_casync_result_manager.h>
+#include <mp_cconvert.h>
 
 #include <cprotocol_lpu237.h>
 #include <manager_of_device_of_client.h>
@@ -86,9 +87,21 @@ private:
 
 		} while (false);
 	}
-	static void __stdcall _read(char c_action_code, unsigned long n_result, unsigned long n_device_index, unsigned char c_in_id, void* p_user, unsigned long n_rx, const unsigned char* s_rx)
+	static void __stdcall _read(
+		char c_action_code
+		, unsigned long n_result
+		, unsigned long n_device_index
+		, unsigned char c_in_id
+		, void* p_user
+		, unsigned long n_rx
+		, const unsigned char* s_rx
+	)
 	{
 		bool b_result(false);
+		std::wstring s_deb;
+		std::list<std::wstring> list_s_deb;
+		long n_fw_step_cur(0), n_fw_step_max(0);
+		wchar_t* endptr = nullptr;
 
 		do {
 			unsigned long n_result_code(ccb_client::const_dll_result_success);
@@ -111,6 +124,7 @@ private:
 			//received data for binary type.
 			_mp::type_v_buffer v_rx(0);
 			std::set<std::wstring> set_s_out;//received data for multi string.
+			std::vector<std::wstring> v_s_out;//received data for multi string.
 			std::wstring s_result;//received data for single string.
 
 			if (n_rx > 0 && s_rx != NULL) {
@@ -134,16 +148,22 @@ private:
 						}
 					}
 				}
+
+				capi_client::help_strings_from_response(v_s_out, v_rx);
 			}
 			//
 			capi_client::type_action last_action(capi_client::get_instance().get_last_action(n_device_index));
+			std::wstring s_last_run_type(capi_client::get_instance().get_last_run_type_string(n_device_index));
+			std::wstring s_last_key(capi_client::get_instance().get_last_key_string(n_device_index));
+			std::wstring s_last_value(capi_client::get_instance().get_last_value_string(n_device_index));
+
 			if (c_action_code == 'o') {
 				//open request.
 				last_action = capi_client::get_instance().get_last_action(0);
 			}
 
 #if defined(_WIN32) && defined(_DEBUG)
-			ATLTRACE(L"^^^^^^ %ls : %d.\n", __WFUNCTION__, last_action);
+			ATLTRACE(L"^^^^^^ %ls : %d(n_rx = %u).\n", __WFUNCTION__, last_action, n_rx);
 #endif
 			switch (last_action)
 			{
@@ -199,18 +219,6 @@ private:
 					ptr_result->set_result(b_result, n_result_code, v_rx);
 					ptr_result->notify();
 				}
-#if defined(_WIN32) && defined(_DEBUG)
-				if (b_result) {
-					ATLTRACE(L"^^^^^^ %ls : success : last_action = %d : n_device_index = %u : n_result_index = %d : n_result_code = %u : rx.size() = %u.\n"
-						, __WFUNCTION__, last_action, n_device_index, n_result_index, n_result_code, v_rx.size()
-					);
-				}
-				else{
-					ATLTRACE(L"^^^^^^ %ls : error : last_action = %d : n_device_index = %u : n_result_index = %d : n_result_code = %u : rx.size() = %u.\n"
-						, __WFUNCTION__, last_action, n_device_index, n_result_index, n_result_code, v_rx.size()
-					);
-				}
-#endif
 				break;
 			case capi_client::act_transmit:
 				n_result_index = _mp::casync_result_manager::get_instance(std::wstring(L"lpu237_of_client")).pop_result_index(n_device_index);
@@ -230,13 +238,78 @@ private:
 				break;
 			case capi_client::act_sub_bootloader:
 #if defined(_WIN32) && defined(_DEBUG)
-				ATLTRACE(L"~~~~~ %ls : act_sub_bootloader\n", __WFUNCTION__);
+				if (s_last_run_type.empty()) {
+					ATLTRACE(L"~~~~~ %ls : act_sub_bootloader : s_last_run_type is empty.\n", __WFUNCTION__);
+				}
+				else {
+					ATLTRACE(L"~~~~~ %ls : act_sub_bootloader : s_last_run_type = %ls.\n", __WFUNCTION__, s_last_run_type.c_str());
+				}
+				if (s_last_key.empty()) {
+					if (s_last_value.empty()) {
+						ATLTRACE(L"~~~~~ %ls : act_sub_bootloader : s_last_key is empty and s_last_value is empty.\n", __WFUNCTION__);
+					}
+					else {
+						ATLTRACE(L"~~~~~ %ls : act_sub_bootloader : s_last_key is empty and s_last_value = %ls.\n", __WFUNCTION__, s_last_value.c_str());
+					}
+				}
+				else {
+					if (s_last_value.empty()) {
+						ATLTRACE(L"~~~~~ %ls : act_sub_bootloader : s_last_key = %ls and s_last_value is empty.\n", __WFUNCTION__, s_last_key.c_str());
+					}
+					else {
+						ATLTRACE(L"~~~~~ %ls : act_sub_bootloader : s_last_key = %ls and s_last_value = %ls.\n", __WFUNCTION__, s_last_key.c_str(), s_last_value.c_str());
+					}
+				}
+
+				for (const auto& s : v_s_out) {
+					ATLTRACE(L"~~~~~ ::::: %ls\n", s.c_str());
+				}
 #endif
-				n_result_index = _mp::casync_result_manager::get_instance(std::wstring(L"lpu237_of_client")).pop_result_index(n_device_index);
-				if (n_result_index >= 0) {
+				n_result_index = _mp::casync_result_manager::get_instance(std::wstring(L"lpu237_of_client")).pop_result_index(n_device_index,false);
+				if (n_result_index < 0) {
+					// 에러(n_result_index 없음)나서 계속 사용 중지.
+#if defined(_WIN32) && defined(_DEBUG)
+					ATLTRACE(L"~~~~~ +++++ none result index of device index %u.\n", n_device_index);
+#endif
+				}
+				else{
 					_mp::casync_parameter_result::type_ptr_ct_async_parameter_result& ptr_result = _mp::casync_result_manager::get_instance(std::wstring(L"lpu237_of_client")).get_async_parameter_result(n_device_index, n_result_index);
-					ptr_result->set_result(b_result, n_result_code, v_rx);
+					ptr_result->reset_notify_event(); // 재사용을 위한 조건 설정.
+					ptr_result->set_result(b_result, n_result_code);
+					ptr_result->set_result(b_result, v_s_out);
 					ptr_result->notify();
+
+					if (s_last_key.compare(L"start") != 0) {
+						_mp::casync_result_manager::get_instance(std::wstring(L"lpu237_of_client")).pop_result_index(n_device_index, true);
+						break;
+					}
+					// start 이 후 들어오는 서버 메시지는 fw 진행 이므로, "start" 에 사용된 result index 를 제거해서는 안된다.
+					if(set_s_out.find(L"success") == set_s_out.end()){
+						// "start" 에 대해 "success" 응답이 없으면 실패 한 것이므로 result index 를 제거( 진행 중 실패 한것도 포함.)
+						_mp::casync_result_manager::get_instance(std::wstring(L"lpu237_of_client")).pop_result_index(n_device_index, true);
+						break;
+					}
+
+					// "start" 에 대해 "success" 응답이 있으면 성공 한 것이므로 result index 를 유지
+					if (v_s_out.size() < 3) {
+						break;
+					}
+					if (!_mp::cconvert::get_value(n_fw_step_cur, v_s_out[1], 10)) {
+						break;
+					}
+					if (!_mp::cconvert::get_value(n_fw_step_max, v_s_out[2], 10)) {
+						break;
+					}
+					if (n_fw_step_cur >= (n_fw_step_max - 1)) {
+						// 모두 정상으로 끝남.
+						// 주의. (n_fw_step_max-1) == n_fw_step_cur 인 message 가 두번 오는데, 마지막 것은 무시해도 됨.
+						// 끝난 것을 한 번 더 다름 메시지와 함께 보냄.
+						// 이제 result index 를 제거해야 한다
+						_mp::casync_result_manager::get_instance(std::wstring(L"lpu237_of_client")).pop_result_index(n_device_index, true);
+#if defined(_WIN32) && defined(_DEBUG)
+						ATLTRACE(L"~~~~~ ::::: removed result index queue of device index %u.\n", n_device_index);
+#endif
+					}
 				}
 				break;
 			default:

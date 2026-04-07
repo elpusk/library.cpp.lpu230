@@ -125,6 +125,58 @@ public:
 		} while (false);
 		return b_result;
 	}
+
+	/**
+	* @brief "start" parameter 를 가진 bootloader_operation() 을 실행하고, 성공하면 펌웨어 업데이트 진행 상황을 기다리는 비동기 함수를 실행한다.
+	* @return pair.first : bootloader_operation() 실행 결과,
+	*
+	*   pair.second : bootloader_operation() 실행이 성공한 경우 펌웨어 업데이트 진행 상황을 기다리는 비동기 함수의 result index, 실패한 경우 -1
+	*/
+	std::pair<bool, int> bootloader_operation_start(_mp::casync_parameter_result::type_callback p_fun, void* p_para)
+	{
+		bool b_result(false);
+		unsigned long n_device_index(const_invalied_device_index);
+		int n_result_index(_mp::casync_result_manager::const_invalied_result_index);
+		bool b_remove_async_result_for_transaction(false);
+
+		do {
+			std::lock_guard<std::mutex> lock(m_mutex);
+
+			if (m_n_client_index == _mp::cclient::UNDEFINED_INDEX)
+				continue;
+			if (m_n_device_index == const_invalied_device_index)
+				continue;
+			if (is_null_device())
+				continue;
+			//
+			n_result_index = _create_async_result_for_transaction();
+			if (n_result_index < 0)
+				continue;
+			if (!capi_client::get_instance().bootloader_operation(m_n_client_index, m_n_device_index, L"start", L"", L"")) {
+				b_remove_async_result_for_transaction = true;
+				continue;
+			}
+			_mp::casync_parameter_result::type_ptr_ct_async_parameter_result& ptr_async_parameter_result = get_async_parameter_result_for_transaction(n_result_index);
+			if (!ptr_async_parameter_result->waits()) {
+				b_remove_async_result_for_transaction = true;
+				continue;
+			}
+			if (!ptr_async_parameter_result->get_result()){
+				b_remove_async_result_for_transaction = true;
+				continue;// "start" 에 대한 서리 실패.
+			}
+
+			// "start" 에 대한 성공 이후 펌웨어 업데이트 진행 상황을 얻기 위해 async result 재사용.
+			b_result = true;
+		} while (false);
+
+		if (b_remove_async_result_for_transaction) {
+			remove_async_result_for_transaction(n_result_index);
+			n_result_index = _mp::casync_result_manager::const_invalied_result_index;
+		}
+		return std::make_pair(b_result, n_result_index);
+	}
+
 	// getter
 	unsigned long get_device_index() const
 	{

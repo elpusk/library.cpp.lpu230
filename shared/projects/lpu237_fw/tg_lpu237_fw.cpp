@@ -149,7 +149,7 @@ void __stdcall _cb_fw(void* p_user)
 			n_device_index = ptr_device->get_device_index();
 		}
 
-		_mp::clog::get_instance().log_fmt(L" : INF : n_device_index = %u.\n", n_device_index);
+		_mp::clog::get_instance().log_fmt(L" : INF :  %ls : n_device_index = %u.\n", __WFUNCTION__, n_device_index);
 
 		_mp::casync_parameter_result::type_ptr_ct_async_parameter_result ptr_result;
 
@@ -208,22 +208,26 @@ void __stdcall _cb_fw(void* p_user)
 		_mp::type_v_buffer v_out_rx(0);
 
 		if (!ptr_result->get_result(v_out_rx)) {
-			ptr_result->get_result(dw_client_result);
-			//dw_client_result = LPU237_DLL_RESULT_ERROR;
+			//ptr_result->get_result(dw_client_result);
+			dw_client_result = LPU237_FW_RESULT_ERROR;
 			ptr_manager_of_device_of_client->remove_async_result_for_manager(n_device_index,n_result_index);
 			_mp::clog::get_instance().log_fmt(L" : RET : %ls : get_result() - error\n", __WFUNCTION__);
+			ptr_result.reset(); // release result
 			continue;
 		}
-		ptr_result->get_result(dw_client_result);
-		ptr_manager_of_device_of_client->remove_async_result_for_manager(n_device_index,n_result_index);
-		//
+		else {
+			ptr_result->get_result(dw_client_result);
+			//ptr_manager_of_device_of_client->remove_async_result_for_manager(n_device_index, n_result_index);
+			//ptr_result.reset(); // release result
+		}
+		/*
 		int n_new_result_index = ptr_device->cmd_async_waits_data(_cb_fw, (void*)n_item_index);
 		if(n_new_result_index<0){
 			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : cmd_async_waits_data fail for item index %d.\n", __WFUNCTION__, n_item_index);
 			continue;
 		}
 		g_map_user_cb.change_result_index(n_item_index, n_new_result_index);
-
+		*/
 		if (p_fun) {
 			unsigned long dw_w_param(LPU237_FW_WPARAM_ERROR);
 
@@ -362,17 +366,13 @@ unsigned long _fw_msr_update_ex_w(
 			_mp::clog::get_instance().log_fmt(L" : RET : %ls : [critical error]add_callback error.\n", __WFUNCTION__);
 			continue;
 		}
-
-		if (!ptr_device->bootloader_operation(L"start", L"", L"")) {
+		
+		bool b_result(false);
+		int n_result_index(-1);
+		std::tie(b_result,n_result_index) = ptr_device->bootloader_operation_start(_cb_fw, (void*)n_item_index);
+		if (!b_result) {
 			g_map_user_cb.remove_callback(n_item_index);
 			_mp::clog::get_instance().log_fmt(L" : RET : %ls : error bootloader_operation for starting.\n", __WFUNCTION__);
-			continue;
-		}
-
-		int n_result_index = ptr_device->cmd_async_waits_data(_cb_fw, (void*)n_item_index);
-		if (n_result_index < 0) {
-			g_map_user_cb.remove_callback(n_item_index);
-			_mp::clog::get_instance().log_fmt(L" : RET : %ls : error cmd_async_waits_ms_card.\n", __WFUNCTION__);
 			continue;
 		}
 

@@ -141,6 +141,9 @@ namespace _mp{
     typedef	std::tuple<int, int, std::wstring> type_tuple_usb_id_pis;//first vid, second pid, third port id string
     typedef	std::set<type_tuple_usb_id_pis> type_set_usb_id_pis;
 
+    typedef std::vector<std::wstring> type_v_wstring;
+    typedef std::vector<std::string> type_v_string;
+
     typedef std::list<std::wstring> type_list_wstring;
     typedef std::list<std::string> type_list_string;
 

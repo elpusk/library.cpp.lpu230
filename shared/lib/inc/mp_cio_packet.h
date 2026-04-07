@@ -936,6 +936,10 @@ public:
 		}
 		return *this;
 	}
+
+	/**
+	* @brief 이 packet 의 데이터 필드의 시작에 "success" 문자열이 있는지 체크한다.
+	*/
 	bool is_success()
 	{
 		bool b_result(false);
@@ -949,6 +953,10 @@ public:
 		} while (false);
 		return b_result;
 	}
+
+	/**
+	* @brief 이 packet 의 데이터 필드의 시작에 "error" 문자열이 있는지 체크한다.
+	*/
 	bool is_error()
 	{
 		bool b_result(false);
@@ -962,6 +970,10 @@ public:
 		} while (false);
 		return b_result;
 	}
+
+	/**
+	* @brief 이 packet 의 데이터 필드의 시작에 "cancel" 문자열이 있는지 체크한다.
+	*/
 	bool is_cancel()
 	{
 		bool b_result(false);
