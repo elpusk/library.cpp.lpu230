@@ -32,6 +32,10 @@
 #define	LPU237_FW_WPARAM_SECTOR_WRITE	3
 
 #define	LPU237_FW_WPARAM_ERROR			0xFFFF
+// ! ignore this message.
+// the handler of callback of this wparam should ignore this message and do nothing.
+// add 2026.04.08
+#define	LPU237_FW_WPARAM_IGNORE			0x7FFF 
 
 /*!
 *	the callback function type.

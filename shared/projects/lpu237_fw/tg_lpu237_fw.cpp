@@ -100,20 +100,114 @@ static unsigned long _fw_msr_update_ex_w(const unsigned char* sId,
 */
 static void __stdcall _cb_fw(void*p_user);
 
+/**
+* @brief 수신된 _mp::type_v_wstring 값으로 부터 펌웨어 업데이트 진행 상황을 얻는 함수.
+* @param v_wstring_result - _mp::type_v_wstring 형식의 펌웨어 업데이트 진행 상황 정보.
+* @return tuple of (b_result, s_result, n_fw_step_cur, n_fw_step_max, s_deb)
+* 
+* b_result : 펌웨어 업데이트 진행 상황 정보가 정상적으로 수신되었는지 여부. (true - 정상, false - 비정상)
+* 
+* s_result : 펌웨어 업데이트 진행 상황 정보에서 얻은 single string 결과. (예를 들어, "success" 또는 "error" 등)
+* 
+* n_fw_step_cur : 펌웨어 업데이트 진행 상황 정보에서 얻은 현재 펌웨어 업데이트 단계. (0 ~ n_fw_step_max-1)
+* 
+* n_fw_step_max : 펌웨어 업데이트 진행 상황 정보에서 얻은 총 펌웨어 업데이트 단계.
+* 
+* s_message : lpu230_update 가 보낸 펌웨어 업데이트 진행 정보
+*/
+static std::tuple<bool, std::wstring, long, long, std::wstring>_get_fw_update_progress(
+	const _mp::type_v_wstring& v_wstring_result
+);
+
+static std::pair<unsigned long,std::wstring> _get_wparam_from_fw_update_message(const std::wstring& s_message);
+
+std::pair<unsigned long, std::wstring> _get_wparam_from_fw_update_message(const std::wstring& s_message)
+{
+	// 메시지 step 이 전혀 맞질 않아서, 적절하게 조정함.
+	unsigned long wparam = LPU237_FW_WPARAM_IGNORE;
+	std::wstring s_param = L"LPU237_FW_WPARAM_IGNORE";
+	
+	if (s_message.find(_mp::_coffee::CONST_S_MSG_FW_UPDATE_SETUP_BOOTLOADER_DOT) != std::wstring::npos) {
+		wparam = LPU237_FW_WPARAM_FOUND_BL;
+		s_param = L"LPU237_FW_WPARAM_FOUND_BL";
+	}
+	else if (s_message.find(_mp::_coffee::CONST_S_MSG_FW_UPDATE_ERASE_SECTOR_SPACE) != std::wstring::npos) {
+		wparam = LPU237_FW_WPARAM_SECTOR_ERASE;
+		s_param = L"LPU237_FW_WPARAM_SECTOR_ERASE";
+	}
+	else if (s_message.find(_mp::_coffee::CONST_S_MSG_FW_UPDATE_WRITE_AND_VERIFY_SECTOR_SPACE) != std::wstring::npos) {
+		wparam = LPU237_FW_WPARAM_SECTOR_WRITE;
+		s_param = L"LPU237_FW_WPARAM_SECTOR_WRITE";
+	}
+	else if (s_message.find(_mp::_coffee::CONST_S_MSG_FW_UPDATE_NO_RECOVERING_SYSTEM_PARAMETERS) != std::wstring::npos) {
+		wparam = LPU237_FW_WPARAM_SECTOR_WRITE;
+		s_param = L"LPU237_FW_WPARAM_SECTOR_WRITE";
+	}
+	return std::make_pair(wparam,s_param);
+}
+
 /////////////////////////////////////////////////////////////////////////
 // local function body
 /////////////////////////////////////////////////////////////////////////
+std::tuple<bool, std::wstring, long, long, std::wstring>_get_fw_update_progress(
+	const _mp::type_v_wstring& v_wstring_result
+)
+{
+	bool b_result(false);
+	std::wstring s_result;
+	long n_fw_step_cur(-1), n_fw_step_max(-1);
+	std::wstring s_message;
+	do {
+		if (v_wstring_result.empty()) {
+			continue;
+		}
+		s_result = v_wstring_result[0];
+		if (s_result.compare(L"success") != 0 && s_result.compare(L"error") != 0 && s_result.compare(L"cancel") != 0) {
+			continue;
+		}
+
+		if (v_wstring_result.size() >= 3) {
+			n_fw_step_cur = wcstol(v_wstring_result[1].c_str(), nullptr, 10);
+			n_fw_step_max = wcstol(v_wstring_result[2].c_str(), nullptr, 10);
+			if (n_fw_step_cur < 0 || n_fw_step_max <= 0 || n_fw_step_cur > n_fw_step_max) {
+				n_fw_step_cur = -1;
+				n_fw_step_max = -1;
+			}
+		}
+		if (v_wstring_result.size() >= 4) {
+			s_message = v_wstring_result[3];
+		}
+		b_result = true;
+	} while (false);
+	return std::make_tuple(b_result, s_result, n_fw_step_cur, n_fw_step_max, s_message);
+}
+
+/**
+* @brief ccb_client::_read() 에서 last_action 이 capi_client::act_sub_bootloader 인 경우, 호출되는 콜백 함수.
+* 
+* 결과는 b_result(bool), n_result_code(unsigned long), std::vector<std::wstring> 형식으로 주어진다.
+*/
 void __stdcall _cb_fw(void* p_user)
 {
 	static std::mutex mutex_for_cb_fw;
 	std::lock_guard<std::mutex> lock(mutex_for_cb_fw);
 
+	unsigned long n_device_index(i_device_of_client::const_invalied_device_index);
+	int n_result_index(-1);
 	long n_item_index = (long)p_user; // item index of callback function in g_map_user_cb
 	bool b_get_param(false);
 	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
+	_mp::casync_parameter_result::type_ptr_ct_async_parameter_result ptr_result;
+
+	long n_fw_step_cur(-1), n_fw_step_max(-1);
+	_mp::type_v_wstring v_out_wstring_result;
 
 	do {
-		int n_result_index(-1);
+		if (!ptr_manager_of_device_of_client) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : none manager_of_device_of_client.\n", __WFUNCTION__);
+			continue;
+		}
+		
 		_mp::type_v_buffer v_dev_id(0);
 		type_lpu237_fw_callback p_fun(nullptr);
 		void* p_para(nullptr);
@@ -139,19 +233,13 @@ void __stdcall _cb_fw(void* p_user)
 		}
 		//
 		
-		if (!ptr_manager_of_device_of_client) {
-			_mp::clog::get_instance().log_fmt(L" : RET : %ls : none manager_of_device_of_client.\n", __WFUNCTION__);
-			continue;
-		}
 		lpu237_of_client::type_ptr_lpu237_of_client& ptr_device = ptr_manager_of_device_of_client->get_device(v_dev_id);
-		unsigned long n_device_index(i_device_of_client::const_invalied_device_index);
+		
 		if (ptr_device) {
 			n_device_index = ptr_device->get_device_index();
 		}
 
 		_mp::clog::get_instance().log_fmt(L" : INF :  %ls : n_device_index = %u.\n", __WFUNCTION__, n_device_index);
-
-		_mp::casync_parameter_result::type_ptr_ct_async_parameter_result ptr_result;
 
 		if (n_device_index == i_device_of_client::const_invalied_device_index) {
 			ptr_result = ptr_manager_of_device_of_client->get_async_parameter_result_for_manager_from_all_device(n_result_index);
@@ -163,104 +251,113 @@ void __stdcall _cb_fw(void* p_user)
 			_mp::clog::get_instance().log_fmt(L" : RET : %ls : INVALID_HANDLE_VALUE : n_result_index = %d.\n", __WFUNCTION__, n_result_index);
 			continue;
 		}
-		
 
-
-		_mp::type_v_buffer v_debug_out_result;
-		std::wstring s_debug_result;
-		_mp::type_set_wstring set_debug_wstring_result;
-		_mp::type_list_wstring list_debug_wstring_result;
-		unsigned long n_debug_result_code(-1);
-
-		_mp::clog::get_instance().log_fmt(L" : INF : n_item_index = %d.\n", n_item_index);
-		_mp::clog::get_instance().log_fmt(L" : INF : n_result_index = %d.\n", n_result_index);
-		ptr_result->get_result(v_debug_out_result);
-		_mp::clog::get_instance().log_fmt(L" : INF : v_debug_out_result.size = %u.\n", v_debug_out_result.size());
-
-		ptr_result->get_result(s_debug_result);
-		if(s_debug_result.empty())
-			_mp::clog::get_instance().log_fmt(L" : INF : s_debug_result is empty.\n");
-		else
-			_mp::clog::get_instance().log_fmt(L" : INF : s_debug_result = %ls\n", s_debug_result.c_str());
-
-		ptr_result->get_result(set_debug_wstring_result);
-		if (set_debug_wstring_result.empty())
-			_mp::clog::get_instance().log_fmt(L" : INF : set_debug_wstring_result is empty.\n");
-		else {
-			_mp::clog::get_instance().log_fmt(L" : INF : set_debug_wstring_result = \n");
-			for (auto s : set_debug_wstring_result) {
-				_mp::clog::get_instance().log_fmt(L"    %ls\n", s.c_str());
-			}//end for
+		if (!ptr_result->get_result(v_out_wstring_result)) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : get_result() - error\n", __WFUNCTION__);
+			continue;
 		}
-		ptr_result->get_result(list_debug_wstring_result);
-		if (list_debug_wstring_result.empty())
-			_mp::clog::get_instance().log_fmt(L" : INF : list_debug_wstring_result is empty.\n");
-		else {
-			_mp::clog::get_instance().log_fmt(L" : INF : list_debug_wstring_result = \n");
-			for (auto s : list_debug_wstring_result) {
-				_mp::clog::get_instance().log_fmt(L"    %ls\n", s.c_str());
-			}//end for
+
+		bool b_parse(false);
+		std::wstring s_result, s_message;
+		std::tie(b_parse, s_result, n_fw_step_cur, n_fw_step_max, s_message) = _get_fw_update_progress(v_out_wstring_result);
+
+		if (!b_parse) {
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : item index = %d : result invalid format.\n", __WFUNCTION__, n_item_index);
+			continue;
 		}
-		ptr_result->get_result(n_debug_result_code);
-		_mp::clog::get_instance().log_fmt(L" : INF : n_debug_result_code = %lu\n", n_debug_result_code);
+		if (s_result.compare(L"success") != 0) {
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : item index = %d : process result = %ls.\n", __WFUNCTION__, n_item_index, v_out_wstring_result[0]);
+			continue;
+		}
+
+		b_get_param = true; // 재사용을 위해서 콜백 정보를 유지.
+
+		if (v_out_wstring_result.size() == 1) {
+			// 첫 "start" 에 대한 응답 이므로, n_fw_step_max 이런 애들 없음.
+			// 콜백도 필요 없음.
+			continue;
+		}
+
+		if (b_parse && n_fw_step_max > 0) {
+			if (n_fw_step_cur >= (n_fw_step_max - 1)) {
+				// 모두 정상으로 끝남.
+				// 주의. (n_fw_step_max-1) == n_fw_step_cur 인 message 가 두번 오는데, 마지막 것은 무시해도 됨.
+				// 끝난 것을 한 번 더 다름 메시지와 함께 보냄.
+				// 이제 result index 를 제거해야 한다
+				b_get_param = false;
+			}
+		}
 
 		unsigned long dw_client_result(LPU237_FW_RESULT_ERROR);
-		_mp::type_v_buffer v_out_rx(0);
+		std::wstring s_w_param;
 
-		if (!ptr_result->get_result(v_out_rx)) {
-			//ptr_result->get_result(dw_client_result);
-			dw_client_result = LPU237_FW_RESULT_ERROR;
-			ptr_manager_of_device_of_client->remove_async_result_for_manager(n_device_index,n_result_index);
-			_mp::clog::get_instance().log_fmt(L" : RET : %ls : get_result() - error\n", __WFUNCTION__);
-			ptr_result.reset(); // release result
-			continue;
-		}
-		else {
-			ptr_result->get_result(dw_client_result);
-			//ptr_manager_of_device_of_client->remove_async_result_for_manager(n_device_index, n_result_index);
-			//ptr_result.reset(); // release result
-		}
-		/*
-		int n_new_result_index = ptr_device->cmd_async_waits_data(_cb_fw, (void*)n_item_index);
-		if(n_new_result_index<0){
-			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : cmd_async_waits_data fail for item index %d.\n", __WFUNCTION__, n_item_index);
-			continue;
-		}
-		g_map_user_cb.change_result_index(n_item_index, n_new_result_index);
-		*/
+		// ptr_result->get_result(v_out_wstring_result) 의 return 이 true 라면,
+		// 아래 ptr_result->get_result 도 true 이므로 체크불요.
+		ptr_result->get_result(dw_client_result);
 		if (p_fun) {
 			unsigned long dw_w_param(LPU237_FW_WPARAM_ERROR);
 
 			switch (dw_client_result) {
 			case LPU237_FW_RESULT_SUCCESS:
-				dw_w_param = LPU237_FW_WPARAM_SUCCESS;
-				break;
-			case LPU237_FW_RESULT_ERROR:
-				dw_w_param = LPU237_FW_WPARAM_ERROR;
+				if (n_fw_step_max > 0 && (n_fw_step_cur >= (n_fw_step_max - 1))) {
+					dw_w_param = LPU237_FW_WPARAM_COMPLETE;
+					s_w_param = L"LPU237_FW_WPARAM_COMPLETE";
+				}
+				else {
+					std::tie(dw_w_param, s_w_param) = _get_wparam_from_fw_update_message(s_message);
+				}
 				break;
 			case LPU237_FW_RESULT_CANCEL:
-				dw_w_param = LPU237_FW_WPARAM_SUCCESS;
+				dw_w_param = LPU237_FW_WPARAM_ERROR;
+				s_w_param = L"LPU237_FW_WPARAM_ERROR";
 				break;
+			case LPU237_FW_RESULT_ERROR:
 			default:
 				dw_client_result = LPU237_FW_RESULT_ERROR;
 				dw_w_param = LPU237_FW_WPARAM_ERROR;
+				s_w_param = L"LPU237_FW_WPARAM_ERROR";
 				break;
 			}//end switch
 			// 1'st - user defined data.
 			// 2'nd - current processing result : LPU237_FW_RESULT_x
 			// 3'th - LPU237_FW_WPARAM_x.
-			
-			//p_fun(p_para, dw_client_result, dw_w_param);
+
+			p_fun(p_para, dw_client_result, dw_w_param);
 		}
 
-		_mp::clog::get_instance().log_fmt(L" : INF : %ls : callbacked for item index %d.\n", __WFUNCTION__, n_item_index);
-
-		b_get_param = true;
+		_mp::clog::get_instance().log_fmt(L" : INF : %ls : callbacked(item index=%d) : wparam = %ls.\n", __WFUNCTION__, n_item_index, s_w_param.c_str());
 
 	} while (false);
 
+	///////////////////////////
+	// log for debugging
+	if (v_out_wstring_result.size() > 3) {
+		_mp::clog::get_instance().log_fmt(L" : INF : %ls : n_item_index =  %d : %ls : (cur,max) = (%d,%d) : %ls.\n"
+			, __WFUNCTION__
+			, n_item_index
+			, v_out_wstring_result[0].c_str()
+			, n_fw_step_cur
+			, n_fw_step_max
+			, v_out_wstring_result[3].c_str()
+		);
+	}
+	else if (v_out_wstring_result.size() > 2) {
+		_mp::clog::get_instance().log_fmt(L" : INF : %ls : n_item_index =  %d : %ls : (cur,max) = (%d,%d).\n"
+			, __WFUNCTION__
+			, n_item_index
+			, v_out_wstring_result[0].c_str()
+			, n_fw_step_cur
+			, n_fw_step_max
+		);
+	}
+
 	if (!b_get_param) {// 파라메터 얻기를 실패하면 콜백을 제거한다. (예를 들어, 콜백이 이미 제거된 경우)
 		g_map_user_cb.remove_callback(n_item_index); // remove invalid callback
+
+		if (ptr_manager_of_device_of_client) {
+			ptr_manager_of_device_of_client->remove_async_result_for_manager(n_device_index, n_result_index);
+			ptr_result.reset(); // release result
+		}
 	}
 }
 

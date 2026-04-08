@@ -73,6 +73,51 @@ namespace _mp{
         constexpr const wchar_t* CONST_S_CMD_LINE_FW_UPDATE_SET_SESSION = L"session"; // the client session number of server for updating
         constexpr const wchar_t* CONST_S_CMD_LINE_FW_UPDATE_SET_FW_INDEX = L"firmware_index"; // the firmware zero-base index of the selected rom file. 
 
+		// for firmware update message from updater.(only result)
+		constexpr const wchar_t* CONST_S_MSG_FW_UPDATE_BACKUP_SYSTEM_PARAMETERS = L"backup system parameters";
+        constexpr const char* CONST_S_UTF8_MSG_FW_UPDATE_BACKUP_SYSTEM_PARAMETERS = "backup system parameters";
+
+        constexpr const wchar_t* CONST_S_MSG_FW_UPDATE_RUN_BOOTLOADER_DOT = L"run bootloader.";
+        constexpr const char* CONST_S_UTF8_MSG_FW_UPDATE_RUN_BOOTLOADER_DOT = "run bootloader.";
+
+        constexpr const wchar_t* CONST_S_MSG_FW_UPDATE_DETECT_PLUGOUT_LPU23X_DOT = L"detect plugout lpu23x.";
+        constexpr const char* CONST_S_UTF8_MSG_FW_UPDATE_DETECT_PLUGOUT_LPU23X_DOT = "detect plugout lpu23x.";
+
+        constexpr const wchar_t* CONST_S_MSG_FW_UPDATE_DETECT_PLUGOUT_LPU23X_AND_PLUGIN_BOOTLOADER_DOT = L"detected plugout lpu23x and plugin bootloader.";
+        constexpr const char* CONST_S_UTF8_MSG_FW_UPDATE_DETECT_PLUGOUT_LPU23X_AND_PLUGIN_BOOTLOADER_DOT = "detected plugout lpu23x and plugin bootloader.";
+
+        constexpr const wchar_t* CONST_S_MSG_FW_UPDATE_DETECT_PLUGIN_BOOTLOADER_DOT = L"detect plugin bootloader.";
+        constexpr const char* CONST_S_UTF8_MSG_FW_UPDATE_DETECT_PLUGIN_BOOTLOADER_DOT = "detect plugin bootloader.";
+
+        constexpr const wchar_t* CONST_S_MSG_FW_UPDATE_SETUP_BOOTLOADER_DOT = L"setup bootloader.";
+        constexpr const char* CONST_S_UTF8_MSG_FW_UPDATE_SETUP_BOOTLOADER_DOT = "setup bootloader.";
+
+        constexpr const wchar_t* CONST_S_MSG_FW_UPDATE_ERASE_SECTOR_SPACE = L"erase sector ";
+        constexpr const char* CONST_S_UTF8_MSG_FW_UPDATE_ERASE_SECTOR_SPACE = "erase sector ";
+
+        constexpr const wchar_t* CONST_S_MSG_FW_UPDATE_READ_SECTOR_SPACE = L"read sector ";
+        constexpr const char* CONST_S_UTF8_MSG_FW_UPDATE_READ_SECTOR_SPACE = "read sector ";
+
+        constexpr const wchar_t* CONST_S_MSG_FW_UPDATE_WRITE_AND_VERIFY_SECTOR_SPACE = L"write & verify sector ";
+        constexpr const char* CONST_S_UTF8_MSG_FW_UPDATE_WRITE_AND_VERIFY_SECTOR_SPACE = "write & verify sector ";
+
+        constexpr const wchar_t* CONST_S_MSG_FW_UPDATE_RUN_APPLICATION_DOT = L"run application.";
+        constexpr const char* CONST_S_UTF8_MSG_FW_UPDATE_RUN_APPLICATION_DOT = "run application.";
+
+        constexpr const wchar_t* CONST_S_MSG_FW_UPDATE_DETECT_PLUGOUT_BOOTLOADER_DOT = L"detect plugout bootloader.";
+        constexpr const char* CONST_S_UTF8_MSG_FW_UPDATE_DETECT_PLUGOUT_BOOTLOADER_DOT = "detect plugout bootloader.";
+
+        constexpr const wchar_t* CONST_S_MSG_FW_UPDATE_DETECTED_PLUGIN_LPU23X_DOT = L"detected plugin lpu23x.";
+        constexpr const char* CONST_S_UTF8_MSG_FW_UPDATE_DETECTED_PLUGIN_LPU23X_DOT = "detected plugin lpu23x.";
+
+        constexpr const wchar_t* CONST_S_MSG_FW_UPDATE_NO_RECOVERY_OF_SYSTEM_PARAMETERS_IS_NEEDED_DOT = L"No recovery of system parameters is needed.";
+        constexpr const char* CONST_S_UTF8_MSG_FW_UPDATE_NO_RECOVERY_OF_SYSTEM_PARAMETERS_IS_NEEDED_DOT = "No recovery of system parameters is needed.";
+
+        constexpr const wchar_t* CONST_S_MSG_FW_UPDATE_NO_RECOVERING_SYSTEM_PARAMETERS = L"recovering system parameters";
+        constexpr const char* CONST_S_UTF8_MSG_FW_UPDATE_NO_RECOVERING_SYSTEM_PARAMETERS = "recovering system parameters";
+
+        constexpr const wchar_t* CONST_S_MSG_FW_UPDATE_FIRMWARE_UPDATE_COMPLETE_DOT_SPACE = L" * Firmware update complete. *";
+        constexpr const char* CONST_S_UTF8_MSG_FW_UPDATE_FIRMWARE_UPDATE_COMPLETE_DOT_SPACE = " * Firmware update complete. *";
 
 #ifdef _WIN32
         ////////////////// WIN

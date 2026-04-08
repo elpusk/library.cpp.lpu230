@@ -100,7 +100,7 @@ private:
 		bool b_result(false);
 		std::wstring s_deb;
 		std::list<std::wstring> list_s_deb;
-		long n_fw_step_cur(0), n_fw_step_max(0);
+		long n_fw_step_cur(-1), n_fw_step_max(-1);
 		wchar_t* endptr = nullptr;
 
 		do {
@@ -165,6 +165,9 @@ private:
 #if defined(_WIN32) && defined(_DEBUG)
 			ATLTRACE(L"^^^^^^ %ls : %d(n_rx = %u).\n", __WFUNCTION__, last_action, n_rx);
 #endif
+			_mp::casync_parameter_result::type_ptr_ct_async_parameter_result ptr_result_for_boot;
+			bool b_remove_result_index_with_pop(true);
+
 			switch (last_action)
 			{
 			case capi_client::act_create:
@@ -265,52 +268,53 @@ private:
 					ATLTRACE(L"~~~~~ ::::: %ls\n", s.c_str());
 				}
 #endif
-				n_result_index = _mp::casync_result_manager::get_instance(std::wstring(L"lpu237_of_client")).pop_result_index(n_device_index,false);
+				if (s_last_run_type.compare(L"start") == 0) {
+					if (set_s_out.find(L"success") != set_s_out.end()) {
+						// start 일 때는 fw 진행이므로, 정상 처리 응답에 해당하는 값인 "success" 가 있으면 제거해서는 안된다. 
+						b_remove_result_index_with_pop = false;
+
+						//
+						if (v_s_out.size() >= 3) {
+							// 처리 중인 fw update 단계(cur, max) 값이 있으므로, 값을 얻느다.
+							// fw update 의 현재 처리 단계 값을 얻음.( zero base 값이므로 허용되는 값은 0 ~ n_fw_step_max-1 )
+							if (_mp::cconvert::get_value(n_fw_step_cur, v_s_out[1], 10)) {
+								// fw update 의 총 처리 단계 값을 얻음.
+								if (_mp::cconvert::get_value(n_fw_step_max, v_s_out[2], 10)) {
+									if (n_fw_step_cur >= (n_fw_step_max - 1)) {
+										// 모두 정상으로 끝남.
+										// 주의. (n_fw_step_max-1) == n_fw_step_cur 인 message 가 두번 오는데, 마지막 것은 무시해도 됨.
+										// 끝난 것을 한 번 더 다름 메시지와 함께 보냄.
+										// 이제 result index 를 제거해야 한다
+										b_remove_result_index_with_pop = true;
+									}
+								}
+								else {
+									n_fw_step_cur = n_fw_step_max = -1;
+								}
+							}
+							else {
+								n_fw_step_cur = -1;
+							}
+						}
+					}
+				}
+
+				//ptr_result_for_boot->notify() 호출 전에,
+				// pop_result_index() 를 하면서 result index 를 제거 할지 결정 하기 위해서,
+				// 위에서 처럼 b_remove_result_index_with_pop 값을 설정한다.
+				n_result_index = _mp::casync_result_manager::get_instance(std::wstring(L"lpu237_of_client")).pop_result_index(n_device_index, b_remove_result_index_with_pop);
 				if (n_result_index < 0) {
 					// 에러(n_result_index 없음)나서 계속 사용 중지.
 #if defined(_WIN32) && defined(_DEBUG)
 					ATLTRACE(L"~~~~~ +++++ none result index of device index %u.\n", n_device_index);
 #endif
+					break;//exit switch
 				}
-				else{
-					_mp::casync_parameter_result::type_ptr_ct_async_parameter_result& ptr_result = _mp::casync_result_manager::get_instance(std::wstring(L"lpu237_of_client")).get_async_parameter_result(n_device_index, n_result_index);
-					ptr_result->reset_notify_event(); // 재사용을 위한 조건 설정.
-					ptr_result->set_result(b_result, n_result_code);
-					ptr_result->set_result(b_result, v_s_out);
-					ptr_result->notify();
-
-					if (s_last_key.compare(L"start") != 0) {
-						_mp::casync_result_manager::get_instance(std::wstring(L"lpu237_of_client")).pop_result_index(n_device_index, true);
-						break;
-					}
-					// start 이 후 들어오는 서버 메시지는 fw 진행 이므로, "start" 에 사용된 result index 를 제거해서는 안된다.
-					if(set_s_out.find(L"success") == set_s_out.end()){
-						// "start" 에 대해 "success" 응답이 없으면 실패 한 것이므로 result index 를 제거( 진행 중 실패 한것도 포함.)
-						_mp::casync_result_manager::get_instance(std::wstring(L"lpu237_of_client")).pop_result_index(n_device_index, true);
-						break;
-					}
-
-					// "start" 에 대해 "success" 응답이 있으면 성공 한 것이므로 result index 를 유지
-					if (v_s_out.size() < 3) {
-						break;
-					}
-					if (!_mp::cconvert::get_value(n_fw_step_cur, v_s_out[1], 10)) {
-						break;
-					}
-					if (!_mp::cconvert::get_value(n_fw_step_max, v_s_out[2], 10)) {
-						break;
-					}
-					if (n_fw_step_cur >= (n_fw_step_max - 1)) {
-						// 모두 정상으로 끝남.
-						// 주의. (n_fw_step_max-1) == n_fw_step_cur 인 message 가 두번 오는데, 마지막 것은 무시해도 됨.
-						// 끝난 것을 한 번 더 다름 메시지와 함께 보냄.
-						// 이제 result index 를 제거해야 한다
-						_mp::casync_result_manager::get_instance(std::wstring(L"lpu237_of_client")).pop_result_index(n_device_index, true);
-#if defined(_WIN32) && defined(_DEBUG)
-						ATLTRACE(L"~~~~~ ::::: removed result index queue of device index %u.\n", n_device_index);
-#endif
-					}
-				}
+				ptr_result_for_boot = _mp::casync_result_manager::get_instance(std::wstring(L"lpu237_of_client")).get_async_parameter_result(n_device_index, n_result_index);
+				ptr_result_for_boot->reset_notify_event(); // 재사용을 위한 조건 설정.
+				ptr_result_for_boot->set_result(b_result, n_result_code);
+				ptr_result_for_boot->set_result(b_result, v_s_out);
+				ptr_result_for_boot->notify();
 				break;
 			default:
 #if defined(_WIN32) && defined(_DEBUG)

@@ -13,6 +13,9 @@
 
 namespace _mp
 {
+	/**
+	* @brief class 비동기 처리 결과를 저장하고, 알리기 위해 호출자에서 받은 콜백함수, 사용자 데이터, 윈도우 핸들, 메시지 번호 등을 저장하는 클래스.
+	*/
 	class casync_parameter_result
 	{
 	public:

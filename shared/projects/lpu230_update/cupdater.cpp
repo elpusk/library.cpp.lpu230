@@ -1680,7 +1680,7 @@ void cupdater::_updates_thread_function()
 
 		///////////////////////////////////////////////////
 		_update_state(cupdater::AppEvent::e_ulstep_s);
-		_push_message(n_step, true, " * Firmware update complete. *");
+		_push_message(n_step, true, _mp::_coffee::CONST_S_UTF8_MSG_FW_UPDATE_FIRMWARE_UPDATE_COMPLETE_DOT_SPACE);
 		m_b_is_running = false; // 정상 종료
 	}//running
 
@@ -1727,13 +1727,13 @@ bool cupdater::_updates_sub_thread_backup_system_param(int& n_step)
 #ifdef _WIN32
 				ATLTRACE(L"SUCCESS : %d step : io_save_all_variable_sys_parameter().\n", n_step);
 #endif
-				_push_message(n_step,true,"backup system parameters");
+				_push_message(n_step,true,_mp::_coffee::CONST_S_UTF8_MSG_FW_UPDATE_BACKUP_SYSTEM_PARAMETERS);
 			}
 			else {
 #ifdef _WIN32
 				ATLTRACE(L"ERROR : %d step : io_save_all_variable_sys_parameter().\n", n_step);
 #endif
-				_push_message(n_step, false, "backup system parameters");
+				_push_message(n_step, false, _mp::_coffee::CONST_S_UTF8_MSG_FW_UPDATE_BACKUP_SYSTEM_PARAMETERS);
 				break;
 			}
 		} while (!b_complete && m_b_is_running);
@@ -1774,10 +1774,10 @@ bool cupdater::_updates_sub_thread_run_bootloader(int& n_step)
 	//
 	b_result = sh.io_run_bootloader();
 	if (b_result) {
-		_push_message(n_step,true,"run bootloader.");
+		_push_message(n_step,true,_mp::_coffee::CONST_S_UTF8_MSG_FW_UPDATE_RUN_BOOTLOADER_DOT);
 	}
 	else {
-		_push_message(n_step, false,"run bootloader.");
+		_push_message(n_step, false, _mp::_coffee::CONST_S_UTF8_MSG_FW_UPDATE_RUN_BOOTLOADER_DOT);
 #ifdef _WIN32
 		ATLTRACE(L"ERROR : io_run_bootloader().\n");
 #endif
@@ -1848,11 +1848,11 @@ std::pair<bool, bool> cupdater::_updates_sub_thread_wait_plugout_lpu23x(int& n_s
 	} while (b_wait);
 
 	if (!b_result) {
-		_push_message(n_step, false, "detect plugout lpu23x.");
+		_push_message(n_step, false, _mp::_coffee::CONST_S_UTF8_MSG_FW_UPDATE_DETECT_PLUGOUT_LPU23X_DOT);
 	}
 	else {
 		if (b_detect_plugin_hidboot) {
-			_push_message(n_step, true,"detected plugout lpu23x and plugin bootloader.");
+			_push_message(n_step, true, _mp::_coffee::CONST_S_UTF8_MSG_FW_UPDATE_DETECT_PLUGOUT_LPU23X_AND_PLUGIN_BOOTLOADER_DOT);
 		}
 	}
 	return std::make_pair(b_result, b_detect_plugin_hidboot);
@@ -1909,7 +1909,7 @@ bool cupdater::_updates_sub_thread_wait_plugin_bootloader(int& n_step)
 	} while (b_wait);
 
 	if (!b_result) {
-		_push_message(n_step,false, "detect plugin bootloader.");
+		_push_message(n_step,false, _mp::_coffee::CONST_S_UTF8_MSG_FW_UPDATE_DETECT_PLUGIN_BOOTLOADER_DOT);
 	}
 	return b_result;
 }
@@ -1946,11 +1946,11 @@ bool cupdater::_updates_sub_thread_setup_bootloader(int& n_step)
 		m_p_mgmt->UnselectDevice();
 	}
 	if (!b_result) {
-		_push_message(n_step, false,"setup bootloader.");
+		_push_message(n_step, false, _mp::_coffee::CONST_S_UTF8_MSG_FW_UPDATE_SETUP_BOOTLOADER_DOT);
 	}
 	else {
 		//
-		_push_message(n_step, true,"setup bootloader.");
+		_push_message(n_step, true, _mp::_coffee::CONST_S_UTF8_MSG_FW_UPDATE_SETUP_BOOTLOADER_DOT);
 		std::this_thread::sleep_for(std::chrono::milliseconds(500));
 	}
 
@@ -1978,7 +1978,7 @@ bool cupdater::_updates_sub_thread_erase_sector(int& n_step)
 			++n_step;
 			std::tie(b_result, s_error) = m_p_mgmt->do_erase_in_worker(n_sec);
 			if (!b_result) {
-				s_msg = "erase sector ";
+				s_msg = _mp::_coffee::CONST_S_UTF8_MSG_FW_UPDATE_ERASE_SECTOR_SPACE;
 				s_msg += std::to_string(n_sec);
 				s_msg += "(";
 				s_msg += s_error;
@@ -1987,7 +1987,7 @@ bool cupdater::_updates_sub_thread_erase_sector(int& n_step)
 				break;//exit for
 			}
 			else {
-				s_msg = "erase sector ";
+				s_msg = _mp::_coffee::CONST_S_UTF8_MSG_FW_UPDATE_ERASE_SECTOR_SPACE;
 				s_msg += std::to_string(n_sec);
 				s_msg += ".";
 				_push_message(n_step, true, s_msg);
@@ -2028,7 +2028,7 @@ _mp::type_pair_bool_result_bool_complete cupdater::_updates_sub_thread_read_one_
 			,b_first_read
 		
 		);
-		s_msg = "read sector ";
+		s_msg = _mp::_coffee::CONST_S_UTF8_MSG_FW_UPDATE_READ_SECTOR_SPACE;
 		s_msg += std::to_string(n_out_zero_base_sector_number);
 		s_msg += " from file.";
 		s_msg += s_error;
@@ -2060,7 +2060,7 @@ bool cupdater::_updates_sub_thread_write_one_sector(
 
 	++n_step;
 
-	s_msg = "write & verify sector ";
+	s_msg = _mp::_coffee::CONST_S_UTF8_MSG_FW_UPDATE_WRITE_AND_VERIFY_SECTOR_SPACE;
 	s_msg += std::to_string(n_zero_base_sector_number);
 	s_msg += "(7 seconds).";
 	_push_message(n_step, true, s_msg);
@@ -2070,7 +2070,7 @@ bool cupdater::_updates_sub_thread_write_one_sector(
 	std::tie(b_result, s_error) = m_p_mgmt->do_write_sector(n_zero_base_sector_number, v_sector, opened_debug_file);
 
 	if (!b_result) {
-		s_msg = "write & verify sector ";
+		s_msg = _mp::_coffee::CONST_S_UTF8_MSG_FW_UPDATE_WRITE_AND_VERIFY_SECTOR_SPACE;
 		s_msg += std::to_string(n_zero_base_sector_number);
 		s_msg += "(";
 		s_msg += s_error;
@@ -2102,10 +2102,10 @@ bool cupdater::_updates_sub_thread_run_app(int& n_step)
 	} while (false);
 
 	if (!b_result) {
-		_push_message(n_step, false, "run application.");
+		_push_message(n_step, false, _mp::_coffee::CONST_S_UTF8_MSG_FW_UPDATE_RUN_APPLICATION_DOT);
 	}
 	else {
-		_push_message(n_step, true, "run application.");
+		_push_message(n_step, true, _mp::_coffee::CONST_S_UTF8_MSG_FW_UPDATE_RUN_APPLICATION_DOT);
 	}
 
 	return b_result;
@@ -2166,7 +2166,7 @@ bool cupdater::_updates_sub_thread_wait_plugout_bootloader(int& n_step)
 	} while (b_wait);
 
 	if (!b_result) {
-		_push_message(n_step,false, "detect plugout bootloader.");
+		_push_message(n_step,false, _mp::_coffee::CONST_S_UTF8_MSG_FW_UPDATE_DETECT_PLUGOUT_BOOTLOADER_DOT);
 	}
 	return b_result;
 }
@@ -2229,10 +2229,10 @@ std::pair<bool, _mp::clibhid_dev_info> cupdater::_updates_sub_thread_wait_plugin
 	} while (b_wait);
 
 	if (!b_result) {
-		_push_message(n_step,false, "detect plugin lpu23x.");
+		_push_message(n_step,false, _mp::_coffee::CONST_S_UTF8_MSG_FW_UPDATE_DETECTED_PLUGIN_LPU23X_DOT);
 	}
 	else {
-		_push_message(n_step,true, "detected plugin lpu23x.");
+		_push_message(n_step,true, _mp::_coffee::CONST_S_UTF8_MSG_FW_UPDATE_DETECTED_PLUGIN_LPU23X_DOT);
 	}
 	return std::make_pair(b_result, dev_plug_in);
 }
@@ -2255,7 +2255,7 @@ bool cupdater::_updates_sub_thread_recover_system_param(int& n_step, const _mp::
 
 	do {
 		if (sh.get_start_from_bootloader()) {
-			s_msg_success = "No recovery of system parameters is needed.";
+			s_msg_success = _mp::_coffee::CONST_S_UTF8_MSG_FW_UPDATE_NO_RECOVERY_OF_SYSTEM_PARAMETERS_IS_NEEDED_DOT;
 			b_result = true;
 			continue; // bootloader 에서 시작했으므로 system parameter 를 복구 불요.
 		}
@@ -2278,11 +2278,11 @@ bool cupdater::_updates_sub_thread_recover_system_param(int& n_step, const _mp::
 			std::tie(b_result, b_complete) = sh.io_recover_all_variable_sys_parameter(b_first, ptr_dev);
 			b_first = false;
 			if (b_result) {
-				_push_message(n_step,true, "recovering system parameters");
+				_push_message(n_step,true, _mp::_coffee::CONST_S_UTF8_MSG_FW_UPDATE_NO_RECOVERING_SYSTEM_PARAMETERS);
 				std::this_thread::sleep_for(std::chrono::milliseconds(250));//
 			}
 			else {
-				_push_message(n_step, false,"recovering system parameters");
+				_push_message(n_step, false, _mp::_coffee::CONST_S_UTF8_MSG_FW_UPDATE_NO_RECOVERING_SYSTEM_PARAMETERS);
 #ifdef _WIN32
 				ATLTRACE(L"ERROR : io_recover_all_variable_sys_parameter().\n");
 #endif

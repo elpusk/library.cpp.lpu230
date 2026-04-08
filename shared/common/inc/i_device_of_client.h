@@ -132,7 +132,10 @@ public:
 	*
 	*   pair.second : bootloader_operation() 실행이 성공한 경우 펌웨어 업데이트 진행 상황을 기다리는 비동기 함수의 result index, 실패한 경우 -1
 	*/
-	std::pair<bool, int> bootloader_operation_start(_mp::casync_parameter_result::type_callback p_fun, void* p_para)
+	std::pair<bool, int> bootloader_operation_start(
+		_mp::casync_parameter_result::type_callback p_fun
+		, void* p_para
+	)
 	{
 		bool b_result(false);
 		unsigned long n_device_index(const_invalied_device_index);
@@ -149,7 +152,7 @@ public:
 			if (is_null_device())
 				continue;
 			//
-			n_result_index = _create_async_result_for_transaction();
+			n_result_index = _create_async_result_for_transaction(p_fun, p_para,0,0);
 			if (n_result_index < 0)
 				continue;
 			if (!capi_client::get_instance().bootloader_operation(m_n_client_index, m_n_device_index, L"start", L"", L"")) {
@@ -157,6 +160,8 @@ public:
 				continue;
 			}
 			_mp::casync_parameter_result::type_ptr_ct_async_parameter_result& ptr_async_parameter_result = get_async_parameter_result_for_transaction(n_result_index);
+
+			// 첫 "start" 에 대한 결과를 기다림.
 			if (!ptr_async_parameter_result->waits()) {
 				b_remove_async_result_for_transaction = true;
 				continue;

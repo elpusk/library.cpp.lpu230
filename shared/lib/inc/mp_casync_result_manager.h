@@ -23,14 +23,26 @@ namespace _mp
 		};
 
 	public:
+		// key : result index
+		// value : async parameter result ptr(비동기 처리 파라메터 및 결과).
 		typedef	std::map<int, casync_parameter_result::type_ptr_ct_async_parameter_result >	_type_map_result_index_ptr_ct_async_parameter_result;
+
+
 		typedef std::shared_ptr< casync_result_manager::_type_map_result_index_ptr_ct_async_parameter_result >	_type_ptr_map_result_index_ptr_ct_async_parameter_result;
 
+		// _type_map_result_index_ptr_ct_async_parameter_result 의 key(result index) 를 저장하는 큐.
+		// result index map 의 키 이므로 고유값.
+		// 해당 result index 가 생성된 순서를 _type_map_result_index_ptr_ct_async_parameter_result 에서는 알수 가 없어서	큐로 별도 관리한다.
 		typedef	std::deque<int>	_type_queue_result_index;
+
 		typedef	std::shared_ptr< casync_result_manager::_type_queue_result_index >	_type_ptr_queue_result_index;
 
+		// first : _type_queue_result_index 의 shared_ptr
+		// second : _type_map_result_index_ptr_ct_async_parameter_result 의 shared_ptr
 		typedef std::pair< casync_result_manager::_type_ptr_queue_result_index, casync_result_manager::_type_ptr_map_result_index_ptr_ct_async_parameter_result > _type_pair_info;
 
+		// key : device index
+		// value : pair of _type_queue_result_index and _type_map_result_index_ptr_ct_async_parameter_result
 		typedef	std::map<unsigned long, casync_result_manager::_type_pair_info > _type_map_device_index_pair;
 
 	public:
@@ -246,6 +258,15 @@ namespace _mp
 			return b_result;
 
 		}
+
+		/**
+		* @brief n_device_index 에 해당하는 result index 큐에서 result index 하나를 얻는다.(FIFO)
+		* @param n_device_index - 특정 device 를 나타내는 index
+		* @param b_remove 가 true 인 경우, 큐에서 얻은 result index 는 큐에서 제거한다.
+		* @return result index. 큐에서 얻은 result index 가 없는 경우, const_invalied_result_index 를 반환한다.
+		*	
+		*	이 result index 값을 가지고 get_async_parameter_result() 함수를 호출하여 비동기 처리 결과를 얻을 수 있다.
+		*/
 		int pop_result_index(unsigned long n_device_index, bool b_remove = true)
 		{
 			int n_result_index(casync_result_manager::const_invalied_result_index);
@@ -323,6 +344,10 @@ namespace _mp
 	private:
 		const std::wstring m_s_manager_name;
 		std::mutex m_mutex_for_result_manager;
+
+		//key : device index
+		//value : first : _type_queue_result_index - result index 가	생성된 순서를 관리하는 큐. result index 는 고유값이므로 큐에서 중복되지 않는다.
+		//value : second : _type_map_result_index_ptr_ct_async_parameter_result - result index 를 key 로 하는 map. value 는 result index 에 해당하는 casync_parameter_result 의 shared_ptr.
 		_type_map_device_index_pair m_map_device_index_pair;
 
 	private://don't call these methods

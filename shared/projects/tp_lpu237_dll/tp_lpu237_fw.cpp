@@ -21,10 +21,10 @@ static unsigned long _CALLTYPE_ _cbUpdate(void* pPara, unsigned long dw_result, 
 			std::wcout << L" : I : found bootloader." << std::endl;
 			break;
 		case LPU237_FW_WPARAM_SECTOR_ERASE:
-			std::wcout << L" : I : erease secotor." << std::endl;
+			std::wcout << L" : I : erase sector." << std::endl;
 			break;
 		case LPU237_FW_WPARAM_SECTOR_WRITE:
-			std::wcout << L" : I : write & verify secotor." << std::endl;
+			std::wcout << L" : I : write & verify sector." << std::endl;
 			break;
 		case LPU237_FW_WPARAM_COMPLETE:
 			std::wcout << L" : I : complete." << std::endl;
@@ -32,6 +32,7 @@ static unsigned long _CALLTYPE_ _cbUpdate(void* pPara, unsigned long dw_result, 
 				*p_b_complete = true;
 			}
 			break;
+		case LPU237_FW_WPARAM_IGNORE:
 		default:
 			break;
 		}//end switch
