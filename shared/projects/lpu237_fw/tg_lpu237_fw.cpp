@@ -1,5 +1,7 @@
 #include <websocket/mp_win_nt.h>
 
+#include <mp_os_type.h>
+
 #include <iostream>
 #include <algorithm>
 #include <tuple>
@@ -124,6 +126,7 @@ static std::pair<unsigned long,std::wstring> _get_wparam_from_fw_update_message(
 std::pair<unsigned long, std::wstring> _get_wparam_from_fw_update_message(const std::wstring& s_message)
 {
 	// 메시지 step 이 전혀 맞질 않아서, 적절하게 조정함.
+	// 
 	unsigned long wparam = LPU237_FW_WPARAM_IGNORE;
 	std::wstring s_param = L"LPU237_FW_WPARAM_IGNORE";
 	
@@ -294,38 +297,57 @@ void __stdcall _cb_fw(void* p_user)
 		// ptr_result->get_result(v_out_wstring_result) 의 return 이 true 라면,
 		// 아래 ptr_result->get_result 도 true 이므로 체크불요.
 		ptr_result->get_result(dw_client_result);
-		if (p_fun) {
-			unsigned long dw_w_param(LPU237_FW_WPARAM_ERROR);
+		unsigned long dw_w_param(LPU237_FW_WPARAM_ERROR);
 
-			switch (dw_client_result) {
-			case LPU237_FW_RESULT_SUCCESS:
-				if (n_fw_step_max > 0 && (n_fw_step_cur >= (n_fw_step_max - 1))) {
-					dw_w_param = LPU237_FW_WPARAM_COMPLETE;
-					s_w_param = L"LPU237_FW_WPARAM_COMPLETE";
-				}
-				else {
-					std::tie(dw_w_param, s_w_param) = _get_wparam_from_fw_update_message(s_message);
-				}
-				break;
-			case LPU237_FW_RESULT_CANCEL:
-				dw_w_param = LPU237_FW_WPARAM_ERROR;
-				s_w_param = L"LPU237_FW_WPARAM_ERROR";
-				break;
-			case LPU237_FW_RESULT_ERROR:
-			default:
-				dw_client_result = LPU237_FW_RESULT_ERROR;
-				dw_w_param = LPU237_FW_WPARAM_ERROR;
-				s_w_param = L"LPU237_FW_WPARAM_ERROR";
-				break;
-			}//end switch
+		// by lpu230_fw_api_UM_KOR_V5.0.pdf
+		// 정상 처리의 경우 LPU237 은 LPU237_FW_WPARAM_FOUND_BL 한 번
+		// , LPU237_FW_WPARAM_SECTOR_ERASE 한 번
+		// , LPU237_FW_WPARAM_SECTOR_WRITE 여섯번
+		// , LPU237_FW_WPARAM_COMPLETE 한 번이 전달 된다.
+		// lpu230_fw_api_UM_KOR_V5.0.pdf 에 있는 위 문장은 LPC1343 마이컴만을 기준으로 한 것으로.
+		// 업데이트 프로그램이 lpu230_update 로 독립해서 완전히 변경되었음.
+		// 따라서 위 문자에 따라 프로그래밍한 application 은 문제가 생길 수 있다. 
+		// 호환성을 위한 "뭔가"가 필여하다.
+
+		switch (dw_client_result) {
+		case LPU237_FW_RESULT_SUCCESS:
+			if (n_fw_step_max > 0 && (n_fw_step_cur >= (n_fw_step_max - 1))) {
+				dw_w_param = LPU237_FW_WPARAM_COMPLETE;
+				s_w_param = L"LPU237_FW_WPARAM_COMPLETE";
+			}
+			else {
+				std::tie(dw_w_param, s_w_param) = _get_wparam_from_fw_update_message(s_message);
+			}
+			break;
+		case LPU237_FW_RESULT_CANCEL:
+			dw_w_param = LPU237_FW_WPARAM_ERROR;
+			s_w_param = L"LPU237_FW_WPARAM_ERROR";
+			break;
+		case LPU237_FW_RESULT_ERROR:
+		default:
+			dw_client_result = LPU237_FW_RESULT_ERROR;
+			dw_w_param = LPU237_FW_WPARAM_ERROR;
+			s_w_param = L"LPU237_FW_WPARAM_ERROR";
+			break;
+		}//end switch
+
+		if (p_fun) {
 			// 1'st - user defined data.
 			// 2'nd - current processing result : LPU237_FW_RESULT_x
 			// 3'th - LPU237_FW_WPARAM_x.
 
 			p_fun(p_para, dw_client_result, dw_w_param);
+			_mp::clog::get_instance().log_fmt(L" : INF : %ls : callbacked(item index=%d) : wparam = %ls.\n", __WFUNCTION__, n_item_index, s_w_param.c_str());
 		}
-
-		_mp::clog::get_instance().log_fmt(L" : INF : %ls : callbacked(item index=%d) : wparam = %ls.\n", __WFUNCTION__, n_item_index, s_w_param.c_str());
+#ifdef _WIN32
+		else if (h_win != 0 && h_win != INVALID_HANDLE_VALUE) {
+			//Windows system only
+			//By lpu230_fw_api_UM_KOR_V5.0.pdf
+			PostMessage(h_win, n_msg, (WPARAM)dw_w_param, (LPARAM)dw_client_result);
+			_mp::clog::get_instance().log_fmt(L" : INF : %ls : messaged(item index=%d) : wparam = %ls.\n", __WFUNCTION__, n_item_index, s_w_param.c_str());
+		}
+#endif
+		
 
 	} while (false);
 
@@ -995,7 +1017,11 @@ unsigned long _CALLTYPE_ LPU237_fw_msr_update_callback_a(const unsigned char* sI
 
 unsigned long _CALLTYPE_ LPU237_fw_msr_update_wnd_w(const unsigned char* sId, HWND hWnd, UINT uMsg, const wchar_t* sRomFileName, unsigned long dwIndex)
 {
+#ifdef _WIN32
 	return _fw_msr_update_ex_w(sId, 0, nullptr, nullptr, hWnd, uMsg, sRomFileName, dwIndex);
+#else
+	return LPU237_FW_RESULT_ERROR; // not support in linux.
+#endif
 }
 
 unsigned long _CALLTYPE_ LPU237_fw_msr_update_wnd_a(const unsigned char* sId, HWND hWnd, UINT uMsg, const char* sRomFileName, unsigned long dwIndex)

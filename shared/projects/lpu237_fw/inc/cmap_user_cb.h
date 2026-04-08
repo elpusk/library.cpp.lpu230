@@ -81,6 +81,22 @@ private:
 	bool _remove_callback(long n_item_index);
 
 private:
+	// by lpu230_fw_api_UM_KOR_V5.0.pdf
+	// 정상 처리의 경우 LPU237 은 LPU237_FW_WPARAM_FOUND_BL 한 번
+	// , LPU237_FW_WPARAM_SECTOR_ERASE 한 번
+	// , LPU237_FW_WPARAM_SECTOR_WRITE 여섯번
+	// , LPU237_FW_WPARAM_COMPLETE 한 번이 전달 된다.
+	// lpu230_fw_api_UM_KOR_V5.0.pdf 에 있는 위 문장은 LPC1343 마이컴만을 기준으로 한 것으로.
+	// 업데이트 프로그램이 lpu230_update 로 독립해서 완전히 변경되었음.
+	// 따라서 위 문자에 따라 프로그래밍한 application 은 문제가 생길 수 있다. 
+	// 호환성을 위해 메시지 카운터가 필요하다고 판단하여, 추가함.
+
+	// std::get<0> - LPU237_FW_WPARAM_SECTOR_ERASE wparam counter
+	// std::get<1> - LPU237_FW_WPARAM_SECTOR_WRITE wparam counter
+	// std::get<2> - LPU237_FW_WPARAM_COMPLETE wparam counter
+	typedef std::tuple<	int, int, int> _type_tuple_msg_counter; 
+
+
 	// 0- result index, 
 	// 1 - device id vector, 
 	// 2 - callback function, 
@@ -102,6 +118,9 @@ private:
 
 	// key - item index
 	typedef std::map<long, cmap_user_cb::_type_tuple_item  > _type_map_cb;
+
+	// key - item index
+	typedef std::map<long, cmap_user_cb::_type_tuple_msg_counter  > _type_map_msg_cnt;
 
 private:
 	std::mutex m_mutex;
