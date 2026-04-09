@@ -26,3 +26,4 @@ EXPORTS
 	LPU237_fw_rom_load_a
 	LPU237_fw_rom_get_index_w
 	LPU237_fw_rom_get_index_a
+	LPU237_fw_set_mode

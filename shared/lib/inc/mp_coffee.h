@@ -113,8 +113,8 @@ namespace _mp{
         constexpr const wchar_t* CONST_S_MSG_FW_UPDATE_NO_RECOVERY_OF_SYSTEM_PARAMETERS_IS_NEEDED_DOT = L"No recovery of system parameters is needed.";
         constexpr const char* CONST_S_UTF8_MSG_FW_UPDATE_NO_RECOVERY_OF_SYSTEM_PARAMETERS_IS_NEEDED_DOT = "No recovery of system parameters is needed.";
 
-        constexpr const wchar_t* CONST_S_MSG_FW_UPDATE_NO_RECOVERING_SYSTEM_PARAMETERS = L"recovering system parameters";
-        constexpr const char* CONST_S_UTF8_MSG_FW_UPDATE_NO_RECOVERING_SYSTEM_PARAMETERS = "recovering system parameters";
+        constexpr const wchar_t* CONST_S_MSG_FW_UPDATE_RECOVERING_SYSTEM_PARAMETERS = L"recovering system parameters";
+        constexpr const char* CONST_S_UTF8_MSG_FW_UPDATE_RECOVERING_SYSTEM_PARAMETERS = "recovering system parameters";
 
         constexpr const wchar_t* CONST_S_MSG_FW_UPDATE_FIRMWARE_UPDATE_COMPLETE_DOT_SPACE = L" * Firmware update complete. *";
         constexpr const char* CONST_S_UTF8_MSG_FW_UPDATE_FIRMWARE_UPDATE_COMPLETE_DOT_SPACE = " * Firmware update complete. *";

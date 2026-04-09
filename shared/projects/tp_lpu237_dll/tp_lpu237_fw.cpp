@@ -32,7 +32,6 @@ static unsigned long _CALLTYPE_ _cbUpdate(void* pPara, unsigned long dw_result, 
 				*p_b_complete = true;
 			}
 			break;
-		case LPU237_FW_WPARAM_IGNORE:
 		default:
 			break;
 		}//end switch

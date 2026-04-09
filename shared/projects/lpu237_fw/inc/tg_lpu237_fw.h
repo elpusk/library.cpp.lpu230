@@ -24,18 +24,72 @@
 
 /*!
 *	windows' message wparam value.
+*   if tg_lpu237_fw.dll version is less than v6.0, wparam value is defined as below.
 */
 #define	LPU237_FW_WPARAM_COMPLETE		0	//firmware update complete.
-#define	LPU237_FW_WPARAM_SUCCESS			0	//firmware update complete.
+#define	LPU237_FW_WPARAM_SUCCESS		0	//firmware update complete.
 #define	LPU237_FW_WPARAM_FOUND_BL		1	//found bootloader.
 #define	LPU237_FW_WPARAM_SECTOR_ERASE	2
-#define	LPU237_FW_WPARAM_SECTOR_WRITE	3
+#define	LPU237_FW_WPARAM_SECTOR_WRITE	3	//includes write and verify sector space.
 
 #define	LPU237_FW_WPARAM_ERROR			0xFFFF
-// ! ignore this message.
-// the handler of callback of this wparam should ignore this message and do nothing.
-// add 2026.04.08
-#define	LPU237_FW_WPARAM_IGNORE			0x7FFF 
+
+/////////////////////////////////////////////////
+// add 2026.04.08. 
+// from tg_lpu237_fw.dll(libtg_lpu237.so) v6.x.
+/*!
+*	windows' message wparam value.
+*   if tg_lpu237_fw.dll(libtg_lpu237.so) version is greater than equal v6.0, wparam value is defined as below.
+*/
+
+// internal use only. 
+// if you are application develeoper, Don't considerate this value.
+#define	_LPU237_FW_WPARAM_IGNORE		0x7FFF 
+
+// firmware update step max. this value is for progress bar. 
+// if the zero-base current step is greater than or equal to this value-1, the progress bar is full.
+#define	LPU237_FW_STEP_MAX			0b11111111111111 // 16383 in decimal. 14 bits for step value.
+#define	LPU237_FW_STEP_MIN			0b00000000000001 // 1 in decimal. 14 bits for step value.
+
+#define	LPU237_FW_STEP_MASK			LPU237_FW_STEP_MAX
+
+#define	LPU237_FW_STEP_INDEX_MIN	0	// zero base current step index min value.(10 bits)
+#define	LPU237_FW_STEP_INDEX_MAX	(LPU237_FW_STEP_MAX-1) // zero base current step index max value.(10 bits)
+
+#define	LPU237_FW_WPARAM_EX_MASK	0b1111
+
+// NEW wparam!
+// format of wparam is 0x0000WWWW, where WWWW is defined above. (ex. LPU237_FW_WPARAM_ERROR is 0x0000FFFF)
+// NNNN NNNN NNNN NNnn nnnn nnnn nnnn xxxx
+// n bits for firmware update step zero-base index. (14 bits, LPU237_FW_STEP_INDEX_MIN~LPU237_FW_STEP_INDEX_MAX)
+// N bits for firmware update step max.(14 bits, LPU237_FW_STEP_MIN~LPU237_FW_STEP_MAX)
+// x bits for processing result
+#define	LPU237_FW_GET_TOTAL_STEP(_wparam)	((_wparam & (LPU237_FW_STEP_MASK<<18))>>18)
+#define	LPU237_FW_GET_STEP_INDEX(_wparam)	((_wparam & (LPU237_FW_STEP_MASK<<4))>>4)
+#define	LPU237_FW_GET_RESULT_CODE(_wparam)	(_wparam & LPU237_FW_WPARAM_EX_MASK) // get LPU237_FW_WPARAM_EX_.... value.
+
+#define	LPU237_FW_SET_TOTAL_STEP_TO_WPARAM(_wparam,_n_total)	(_wparam = ( ((_n_total & LPU237_FW_STEP_MASK)<<18) | (_wparam & ~(LPU237_FW_STEP_MASK<<18)) ))
+#define	LPU237_FW_SET_STEP_INDEX_TO_WPARAM(_wparam,_n_index)	(_wparam = ( ((_n_index & LPU237_FW_STEP_MASK)<<4) | (_wparam & ~(LPU237_FW_STEP_MASK<<4)) ))
+#define	LPU237_FW_SET_PROCESS_RESULT_TO_WPARAM(_wparam,_n_result)	(_wparam = ( (_n_result & LPU237_FW_WPARAM_EX_MASK) | (_wparam & ~LPU237_FW_WPARAM_EX_MASK) ))
+
+#define	LPU237_FW_WPARAM_EX_COMPLETE		0x0	//firmware update complete.
+#define	LPU237_FW_WPARAM_EX_FOUND_BL		0x1	//found bootloader.detected plug-in of bootloader.
+#define	LPU237_FW_WPARAM_EX_DETECT_PLUGIN_BOOTLOADER	0x1	// = LPU237_FW_WPARAM_EX_FOUND_BL
+#define	LPU237_FW_WPARAM_EX_SECTOR_ERASE	0x2
+#define	LPU237_FW_WPARAM_EX_SECTOR_WRITE	0x3	//includes write and verify sector space.
+
+#define	LPU237_FW_WPARAM_EX_BACKUP_PARAMETERS	0x4	//backup parameters.
+#define	LPU237_FW_WPARAM_EX_RUN_BOOTLOADER	0x5	//run bootloader.
+#define	LPU237_FW_WPARAM_EX_SETUP_BOOTLOADER	0x6	//set up bootloader.
+#define	LPU237_FW_WPARAM_EX_READ_SECTOR		0x7	//read sector from file.
+#define	LPU237_FW_WPARAM_EX_DETECT_PLUGOUT_LPU23X	0x8	//detect plug-out of lpu23x device.
+#define	LPU237_FW_WPARAM_EX_RUN_APP					0x9	//run application in bootloader.
+#define	LPU237_FW_WPARAM_EX_DETECT_PLUGOUT_BOOTLOADER	0xa	//detect plug-out of lpu237 device.
+#define	LPU237_FW_WPARAM_EX_DETECT_PLUGIN_LPU23X		0xb	//detect plug-in of lpu23x device.
+#define	LPU237_FW_WPARAM_EX_RECOVER_PARAMETERS			0xc	//recover parameters.
+#define	LPU237_FW_WPARAM_EX_MORE_PROCESS				0xd	//extented job is proceeed.
+#define	LPU237_FW_WPARAM_EX_ERROR				0xF
+
 
 /*!
 *	the callback function type.
@@ -76,6 +130,20 @@ extern "C" {
 	*
 	*/
 	unsigned long _CALLTYPE_ LPU237_fw_off();
+
+	/*!
+	* function
+	*	set lpu237 firmware update mode.
+	*	this function is exported from version 6.0
+	*	"Strongly recommend" - this function must be called after calling LPU237_fw_on() immediately, and before calling any other function.
+	*	if this function is not called, the firmware update process is performed as old style. (for backward compatibility, LPU237_FW_WPARAM_x value will be used)
+	* 
+	* 
+	* parameters
+	*	nMode : 6 - the firmware update process is performed as new format.(LPU237_FW_WPARAM_EX_x value will be used)
+	*		else - Don't use the other mode. This value is for future extension.
+	*/
+	void _CALLTYPE_ LPU237_fw_set_mode(unsigned long nMode);
 
 	/*!
 	* function

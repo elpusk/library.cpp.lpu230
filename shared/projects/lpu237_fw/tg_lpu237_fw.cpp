@@ -121,34 +121,222 @@ static std::tuple<bool, std::wstring, long, long, std::wstring>_get_fw_update_pr
 	const _mp::type_v_wstring& v_wstring_result
 );
 
-static std::pair<unsigned long,std::wstring> _get_wparam_from_fw_update_message(const std::wstring& s_message);
+static std::pair<unsigned long, std::wstring> _get_wparam(
+	int n_item_index
+	, int dw_client_result
+	, int n_fw_step_cur
+	, int n_fw_step_max
+	, const std::wstring& s_message
+);
 
-std::pair<unsigned long, std::wstring> _get_wparam_from_fw_update_message(const std::wstring& s_message)
+static std::pair<unsigned long, std::wstring> _get_old_wparam_from_fw_update_message(int n_item_index, const std::wstring& s_message);
+
+static std::pair<unsigned long, std::wstring> _get_v6_process_result_code_from_fw_update_message(int n_item_index, const std::wstring& s_message);
+
+std::pair<unsigned long, std::wstring> _get_wparam(
+	int n_item_index
+	, int dw_client_result
+	, int n_fw_step_cur
+	, int n_fw_step_max
+	, const std::wstring& s_message
+)
+{
+	unsigned long wparam = 0;
+	unsigned long l_msg = 0;
+	std::wstring s_param = L"none";
+
+	// by lpu230_fw_api_UM_KOR_V5.0.pdf
+	// 정상 처리의 경우 LPU237 은 LPU237_FW_WPARAM_FOUND_BL 한 번
+	// , LPU237_FW_WPARAM_SECTOR_ERASE 한 번
+	// , LPU237_FW_WPARAM_SECTOR_WRITE 여섯번
+	// , LPU237_FW_WPARAM_COMPLETE 한 번이 전달 된다.
+	// lpu230_fw_api_UM_KOR_V5.0.pdf 에 있는 위 문장은 LPC1343 마이컴만을 기준으로 한 것으로.
+	// 업데이트 프로그램이 lpu230_update 로 독립해서 완전히 변경되었음.
+	// 따라서 위 문자에 따라 프로그래밍한 application 은 문제가 생길 수 있다. 
+	// 호환성을 위한 "뭔가"가 필여하다.
+	if (g_map_user_cb.get_mode() == 6) {
+		LPU237_FW_SET_TOTAL_STEP_TO_WPARAM(wparam, n_fw_step_max);
+		LPU237_FW_SET_STEP_INDEX_TO_WPARAM(wparam, n_fw_step_cur);
+
+		switch (dw_client_result) {
+		case LPU237_FW_RESULT_SUCCESS:
+			if (n_fw_step_max > 0 && (n_fw_step_cur >= (n_fw_step_max - 1))) {
+				LPU237_FW_SET_PROCESS_RESULT_TO_WPARAM(wparam, LPU237_FW_WPARAM_EX_COMPLETE);
+				s_param = L"LPU237_FW_WPARAM_EX_COMPLETE";
+			}
+			else {
+				std::tie(l_msg, s_param) = _get_v6_process_result_code_from_fw_update_message(n_item_index, s_message);
+				LPU237_FW_SET_PROCESS_RESULT_TO_WPARAM(wparam, l_msg);
+			}
+			break;
+		case LPU237_FW_RESULT_CANCEL:
+			LPU237_FW_SET_PROCESS_RESULT_TO_WPARAM(wparam, LPU237_FW_WPARAM_EX_ERROR);
+			s_param = L"LPU237_FW_WPARAM_EX_ERROR";
+			break;
+		case LPU237_FW_RESULT_ERROR:
+		default:
+			LPU237_FW_SET_PROCESS_RESULT_TO_WPARAM(wparam, LPU237_FW_WPARAM_EX_ERROR);
+			s_param = L"LPU237_FW_WPARAM_EX_ERROR";
+			break;
+		}//end switch
+	}
+	else {
+		// 기존 방식 유지.
+		switch (dw_client_result) {
+		case LPU237_FW_RESULT_SUCCESS:
+			if (n_fw_step_max > 0 && (n_fw_step_cur >= (n_fw_step_max - 1))) {
+				wparam = LPU237_FW_WPARAM_COMPLETE;
+				s_param = L"LPU237_FW_WPARAM_COMPLETE";
+			}
+			else {
+				std::tie(wparam, s_param) = _get_old_wparam_from_fw_update_message(n_item_index, s_message);
+				if (LPU237_FW_WPARAM_SECTOR_ERASE == wparam) {
+					if (std::get<0>(g_map_user_cb.get_msg_counter(n_item_index)) > 1) {
+						// erase sector 메시지가 2번 이상 전달되는 경우, 호환성을 위해 wparam 을 LPU237_FW_WPARAM_IGNORE 로 변경.
+						wparam = _LPU237_FW_WPARAM_IGNORE;
+					}
+				}
+				else if (LPU237_FW_WPARAM_SECTOR_WRITE == wparam) {
+					if (std::get<1>(g_map_user_cb.get_msg_counter(n_item_index)) > 7) {
+						// erase sector 메시지가 8번 이상 전달되는 경우, 호환성을 위해 wparam 을 LPU237_FW_WPARAM_IGNORE 로 변경.
+						wparam = _LPU237_FW_WPARAM_IGNORE;
+					}
+				}
+			}
+			break;
+		case LPU237_FW_RESULT_CANCEL:
+			wparam = LPU237_FW_WPARAM_ERROR;
+			s_param = L"LPU237_FW_WPARAM_ERROR";
+			break;
+		case LPU237_FW_RESULT_ERROR:
+		default:
+			wparam = LPU237_FW_WPARAM_ERROR;
+			s_param = L"LPU237_FW_WPARAM_ERROR";
+			break;
+		}//end switch
+
+	}
+
+	return std::make_pair(wparam, s_param);
+}
+
+std::pair<unsigned long, std::wstring> _get_old_wparam_from_fw_update_message(int n_item_index, const std::wstring& s_message)
 {
 	// 메시지 step 이 전혀 맞질 않아서, 적절하게 조정함.
 	// 
-	unsigned long wparam = LPU237_FW_WPARAM_IGNORE;
-	std::wstring s_param = L"LPU237_FW_WPARAM_IGNORE";
+
+	unsigned long wparam = _LPU237_FW_WPARAM_IGNORE;
+	std::wstring s_param = L"_LPU237_FW_WPARAM_IGNORE";
 	
 	if (s_message.find(_mp::_coffee::CONST_S_MSG_FW_UPDATE_SETUP_BOOTLOADER_DOT) != std::wstring::npos) {
 		wparam = LPU237_FW_WPARAM_FOUND_BL;
 		s_param = L"LPU237_FW_WPARAM_FOUND_BL";
 	}
 	else if (s_message.find(_mp::_coffee::CONST_S_MSG_FW_UPDATE_ERASE_SECTOR_SPACE) != std::wstring::npos) {
+		g_map_user_cb.inc_msg_counter(n_item_index, 1, 0, 0);
 		wparam = LPU237_FW_WPARAM_SECTOR_ERASE;
 		s_param = L"LPU237_FW_WPARAM_SECTOR_ERASE";
 	}
 	else if (s_message.find(_mp::_coffee::CONST_S_MSG_FW_UPDATE_WRITE_AND_VERIFY_SECTOR_SPACE) != std::wstring::npos) {
+		g_map_user_cb.inc_msg_counter(n_item_index, 0, 1, 0);
 		wparam = LPU237_FW_WPARAM_SECTOR_WRITE;
 		s_param = L"LPU237_FW_WPARAM_SECTOR_WRITE";
 	}
-	else if (s_message.find(_mp::_coffee::CONST_S_MSG_FW_UPDATE_NO_RECOVERING_SYSTEM_PARAMETERS) != std::wstring::npos) {
+	else if (s_message.find(_mp::_coffee::CONST_S_MSG_FW_UPDATE_RECOVERING_SYSTEM_PARAMETERS) != std::wstring::npos) {
+		g_map_user_cb.inc_msg_counter(n_item_index, 0, 1, 0);
 		wparam = LPU237_FW_WPARAM_SECTOR_WRITE;
 		s_param = L"LPU237_FW_WPARAM_SECTOR_WRITE";
 	}
+	else if (s_message.find(_mp::_coffee::CONST_S_MSG_FW_UPDATE_FIRMWARE_UPDATE_COMPLETE_DOT_SPACE) != std::wstring::npos) {
+		g_map_user_cb.inc_msg_counter(n_item_index, 0, 0, 1);
+		wparam = LPU237_FW_WPARAM_SECTOR_WRITE;
+		s_param = L"LPU237_FW_WPARAM_SECTOR_WRITE";
+	}
+	else {
+		// 나머지는 호환성을 유지하기 위해, 콜백이나 postmessage 가 동작하지 않도록 _LPU237_FW_WPARAM_IGNORE 으로 처리.
+	}
+
 	return std::make_pair(wparam,s_param);
 }
 
+std::pair<unsigned long, std::wstring> _get_v6_process_result_code_from_fw_update_message(int n_item_index, const std::wstring& s_message)
+{
+	// 메시지 step 이 전혀 맞질 않아서, 적절하게 조정함.
+	// 
+
+	unsigned long n_result_code_of_wparam = 0;
+	std::wstring s_result_code_of_wparam;
+
+	if (s_message.find(_mp::_coffee::CONST_S_MSG_FW_UPDATE_BACKUP_SYSTEM_PARAMETERS) != std::wstring::npos) {
+		n_result_code_of_wparam = LPU237_FW_WPARAM_EX_BACKUP_PARAMETERS;
+		s_result_code_of_wparam = L"LPU237_FW_WPARAM_EX_BACKUP_PARAMETERS";
+	}
+	else if(s_message.find(_mp::_coffee::CONST_S_MSG_FW_UPDATE_RUN_BOOTLOADER_DOT) != std::wstring::npos) {
+		n_result_code_of_wparam = LPU237_FW_WPARAM_EX_RUN_BOOTLOADER;
+		s_result_code_of_wparam = L"LPU237_FW_WPARAM_EX_RUN_BOOTLOADER";
+	}
+	else if (s_message.find(_mp::_coffee::CONST_S_MSG_FW_UPDATE_DETECT_PLUGOUT_LPU23X_DOT) != std::wstring::npos) {
+		n_result_code_of_wparam = LPU237_FW_WPARAM_EX_DETECT_PLUGOUT_LPU23X;
+		s_result_code_of_wparam = L"LPU237_FW_WPARAM_EX_DETECT_PLUGOUT_LPU23X";
+	}
+	else if (s_message.find(_mp::_coffee::CONST_S_MSG_FW_UPDATE_DETECT_PLUGOUT_LPU23X_AND_PLUGIN_BOOTLOADER_DOT) != std::wstring::npos) {
+		n_result_code_of_wparam = LPU237_FW_WPARAM_EX_DETECT_PLUGIN_BOOTLOADER;
+		s_result_code_of_wparam = L"LPU237_FW_WPARAM_EX_DETECT_PLUGIN_BOOTLOADER";
+	}
+	else if (s_message.find(_mp::_coffee::CONST_S_MSG_FW_UPDATE_DETECT_PLUGIN_BOOTLOADER_DOT) != std::wstring::npos) {
+		n_result_code_of_wparam = LPU237_FW_WPARAM_EX_DETECT_PLUGIN_BOOTLOADER;
+		s_result_code_of_wparam = L"LPU237_FW_WPARAM_EX_DETECT_PLUGIN_BOOTLOADER";
+	}
+	else if (s_message.find(_mp::_coffee::CONST_S_MSG_FW_UPDATE_SETUP_BOOTLOADER_DOT) != std::wstring::npos) {
+		n_result_code_of_wparam = LPU237_FW_WPARAM_EX_SETUP_BOOTLOADER;
+		s_result_code_of_wparam = L"LPU237_FW_WPARAM_EX_SETUP_BOOTLOADER";
+	}
+	else if (s_message.find(_mp::_coffee::CONST_S_MSG_FW_UPDATE_ERASE_SECTOR_SPACE) != std::wstring::npos) {
+		n_result_code_of_wparam = LPU237_FW_WPARAM_EX_SECTOR_ERASE;
+		s_result_code_of_wparam = L"LPU237_FW_WPARAM_EX_SECTOR_ERASE";
+	}
+	else if (s_message.find(_mp::_coffee::CONST_S_MSG_FW_UPDATE_READ_SECTOR_SPACE) != std::wstring::npos) {
+		n_result_code_of_wparam = LPU237_FW_WPARAM_EX_READ_SECTOR;
+		s_result_code_of_wparam = L"LPU237_FW_WPARAM_EX_READ_SECTOR";
+	}
+	else if (s_message.find(_mp::_coffee::CONST_S_MSG_FW_UPDATE_WRITE_AND_VERIFY_SECTOR_SPACE) != std::wstring::npos) {
+		n_result_code_of_wparam = LPU237_FW_WPARAM_EX_SECTOR_WRITE;
+		s_result_code_of_wparam = L"LPU237_FW_WPARAM_EX_SECTOR_WRITE";
+	}
+	else if (s_message.find(_mp::_coffee::CONST_S_MSG_FW_UPDATE_RUN_APPLICATION_DOT) != std::wstring::npos) {
+		n_result_code_of_wparam = LPU237_FW_WPARAM_EX_RUN_APP;
+		s_result_code_of_wparam = L"LPU237_FW_WPARAM_EX_RUN_APP";
+	}
+	else if (s_message.find(_mp::_coffee::CONST_S_MSG_FW_UPDATE_DETECT_PLUGOUT_BOOTLOADER_DOT) != std::wstring::npos) {
+		n_result_code_of_wparam = LPU237_FW_WPARAM_EX_DETECT_PLUGOUT_BOOTLOADER;
+		s_result_code_of_wparam = L"LPU237_FW_WPARAM_EX_DETECT_PLUGOUT_BOOTLOADER";
+	}
+	else if (s_message.find(_mp::_coffee::CONST_S_MSG_FW_UPDATE_DETECTED_PLUGIN_LPU23X_DOT) != std::wstring::npos) {
+		n_result_code_of_wparam = LPU237_FW_WPARAM_EX_DETECT_PLUGIN_LPU23X;
+		s_result_code_of_wparam = L"LPU237_FW_WPARAM_EX_DETECT_PLUGIN_LPU23X";
+	}
+	else if (s_message.find(_mp::_coffee::CONST_S_MSG_FW_UPDATE_NO_RECOVERY_OF_SYSTEM_PARAMETERS_IS_NEEDED_DOT) != std::wstring::npos) {
+		n_result_code_of_wparam = LPU237_FW_WPARAM_EX_MORE_PROCESS;
+		s_result_code_of_wparam = L"LPU237_FW_WPARAM_EX_MORE_PROCESS-MSG_FW_UPDATE_NO_RECOVERY_OF_SYSTEM_PARAMETERS_IS_NEEDED";
+	}
+	else if (s_message.find(_mp::_coffee::CONST_S_MSG_FW_UPDATE_RECOVERING_SYSTEM_PARAMETERS) != std::wstring::npos) {
+		n_result_code_of_wparam = LPU237_FW_WPARAM_EX_RECOVER_PARAMETERS;
+		s_result_code_of_wparam = L"LPU237_FW_WPARAM_EX_RECOVER_PARAMETERS";
+	}
+	else if (s_message.find(_mp::_coffee::CONST_S_MSG_FW_UPDATE_FIRMWARE_UPDATE_COMPLETE_DOT_SPACE) != std::wstring::npos) {
+		n_result_code_of_wparam = LPU237_FW_WPARAM_EX_COMPLETE;
+		s_result_code_of_wparam = L"LPU237_FW_WPARAM_EX_COMPLETE";
+	}
+	else {
+		n_result_code_of_wparam = LPU237_FW_WPARAM_EX_MORE_PROCESS;
+		s_result_code_of_wparam = L"LPU237_FW_WPARAM_EX_MORE_PROCESS-UNDEFINED";
+	}
+
+
+
+
+	return std::make_pair(n_result_code_of_wparam, s_result_code_of_wparam);
+}
 /////////////////////////////////////////////////////////////////////////
 // local function body
 /////////////////////////////////////////////////////////////////////////
@@ -297,40 +485,24 @@ void __stdcall _cb_fw(void* p_user)
 		// ptr_result->get_result(v_out_wstring_result) 의 return 이 true 라면,
 		// 아래 ptr_result->get_result 도 true 이므로 체크불요.
 		ptr_result->get_result(dw_client_result);
-		unsigned long dw_w_param(LPU237_FW_WPARAM_ERROR);
-
-		// by lpu230_fw_api_UM_KOR_V5.0.pdf
-		// 정상 처리의 경우 LPU237 은 LPU237_FW_WPARAM_FOUND_BL 한 번
-		// , LPU237_FW_WPARAM_SECTOR_ERASE 한 번
-		// , LPU237_FW_WPARAM_SECTOR_WRITE 여섯번
-		// , LPU237_FW_WPARAM_COMPLETE 한 번이 전달 된다.
-		// lpu230_fw_api_UM_KOR_V5.0.pdf 에 있는 위 문장은 LPC1343 마이컴만을 기준으로 한 것으로.
-		// 업데이트 프로그램이 lpu230_update 로 독립해서 완전히 변경되었음.
-		// 따라서 위 문자에 따라 프로그래밍한 application 은 문제가 생길 수 있다. 
-		// 호환성을 위한 "뭔가"가 필여하다.
-
+		//dw_client_result 값을 재조정.
 		switch (dw_client_result) {
 		case LPU237_FW_RESULT_SUCCESS:
-			if (n_fw_step_max > 0 && (n_fw_step_cur >= (n_fw_step_max - 1))) {
-				dw_w_param = LPU237_FW_WPARAM_COMPLETE;
-				s_w_param = L"LPU237_FW_WPARAM_COMPLETE";
-			}
-			else {
-				std::tie(dw_w_param, s_w_param) = _get_wparam_from_fw_update_message(s_message);
-			}
-			break;
 		case LPU237_FW_RESULT_CANCEL:
-			dw_w_param = LPU237_FW_WPARAM_ERROR;
-			s_w_param = L"LPU237_FW_WPARAM_ERROR";
 			break;
 		case LPU237_FW_RESULT_ERROR:
-		default:
 			dw_client_result = LPU237_FW_RESULT_ERROR;
-			dw_w_param = LPU237_FW_WPARAM_ERROR;
-			s_w_param = L"LPU237_FW_WPARAM_ERROR";
+		default:
 			break;
 		}//end switch
+		unsigned long dw_w_param(_LPU237_FW_WPARAM_IGNORE);
 
+		std::tie(dw_w_param, s_w_param) = _get_wparam(n_item_index, dw_client_result, n_fw_step_cur, n_fw_step_max, s_message);
+
+		if (dw_w_param == _LPU237_FW_WPARAM_IGNORE) {
+			_mp::clog::get_instance().log_fmt(L" : INF : %ls : item index = %d : ignore callback for this message : wparam = %ls.\n", __WFUNCTION__, n_item_index, s_w_param.c_str());
+			continue;
+		}
 		if (p_fun) {
 			// 1'st - user defined data.
 			// 2'nd - current processing result : LPU237_FW_RESULT_x
@@ -586,6 +758,15 @@ unsigned long _CALLTYPE_ LPU237_fw_off()
 	manager_of_device_of_client<lpu237_of_client>::get_instance(true);//remove manager
 	_mp::clog::get_instance().log_fmt(L" : RET : %ls.\n", __WFUNCTION__);
 	return dwResult;
+}
+
+void _CALLTYPE_ LPU237_fw_set_mode(unsigned long nMode)
+{
+	_mp::clog::get_instance().log_fmt(L" : CAL : %ls : mode = %u.\n", __WFUNCTION__, nMode);
+
+	g_map_user_cb.set_mode(nMode);
+
+	_mp::clog::get_instance().log_fmt(L" : RET : %ls.\n", __WFUNCTION__);
 }
 
 

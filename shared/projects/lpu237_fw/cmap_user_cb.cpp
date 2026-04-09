@@ -10,6 +10,7 @@ cmap_user_cb::cmap_user_cb() : m_n_cur_item_index(0)
 cmap_user_cb::~cmap_user_cb()
 {
 	m_map_cb.clear();
+	m_map_msg_cnt.clear();
 }
 
 long cmap_user_cb::add_callback(
@@ -42,6 +43,8 @@ long cmap_user_cb::add_callback(
 			, std::wstring(sRomFileName)
 			, dwIndex
 		);
+		m_map_msg_cnt[m_n_cur_item_index] = std::make_tuple(0, 0, 0); // initialize message counter
+
 		n_item_index = m_n_cur_item_index;
 		++m_n_cur_item_index;
 		if (m_n_cur_item_index < 0) {
@@ -120,6 +123,10 @@ bool cmap_user_cb::_remove_callback(long n_item_index)
 			continue;
 		}
 		m_map_cb.erase(it);
+		auto it_cnt = m_map_msg_cnt.find(n_item_index);
+		if (it_cnt != m_map_msg_cnt.end()) {
+			m_map_msg_cnt.erase(it_cnt);
+		}
 		b_reslt = true;
 	} while (false);
 	return b_reslt;
@@ -162,4 +169,47 @@ bool cmap_user_cb::get_callback(
 		b_reslt = true;
 	} while (false);
 	return b_reslt;
+}
+
+void cmap_user_cb::set_msg_counter(long n_item_index, int n_sector_erase_cnt, int n_sector_write_cnt, int n_complete_cnt)
+{
+	std::lock_guard<std::mutex> lock(m_mutex);
+	auto it = m_map_msg_cnt.find(n_item_index);
+	if (it != m_map_msg_cnt.end()) {
+		std::get<0>(it->second) = n_sector_erase_cnt;
+		std::get<1>(it->second) = n_sector_write_cnt;
+		std::get<2>(it->second) = n_complete_cnt;
+	}
+}
+
+cmap_user_cb::type_tuple_msg_counter cmap_user_cb::get_msg_counter(long n_item_index)
+{
+	cmap_user_cb::type_tuple_msg_counter cnt(-1, -1, -1);
+	std::lock_guard<std::mutex> lock(m_mutex);
+	auto it = m_map_msg_cnt.find(n_item_index);
+	if (it != m_map_msg_cnt.end()) {
+		cnt = it->second;
+	}
+	return cnt;
+}
+
+void cmap_user_cb::inc_msg_counter(long n_item_index, int n_sector_erase_inc, int n_sector_write_inc, int n_complete_inc)
+{
+	std::lock_guard<std::mutex> lock(m_mutex);
+	auto it = m_map_msg_cnt.find(n_item_index);
+	if (it != m_map_msg_cnt.end()) {
+		std::get<0>(it->second) += n_sector_erase_inc;
+		std::get<1>(it->second) += n_sector_write_inc;
+		std::get<2>(it->second) += n_complete_inc;
+	}
+}
+
+void cmap_user_cb::set_mode(int n_mode)
+{
+	m_n_mode = n_mode;
+}
+
+int cmap_user_cb::get_mode() const
+{
+	return m_n_mode;
 }
