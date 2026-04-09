@@ -133,6 +133,10 @@ static std::pair<unsigned long, std::wstring> _get_old_wparam_from_fw_update_mes
 
 static std::pair<unsigned long, std::wstring> _get_v6_process_result_code_from_fw_update_message(int n_item_index, const std::wstring& s_message);
 
+/////////////////////////////////////////////////////////////////////////
+// local function body
+/////////////////////////////////////////////////////////////////////////
+
 std::pair<unsigned long, std::wstring> _get_wparam(
 	int n_item_index
 	, int dw_client_result
@@ -337,9 +341,7 @@ std::pair<unsigned long, std::wstring> _get_v6_process_result_code_from_fw_updat
 
 	return std::make_pair(n_result_code_of_wparam, s_result_code_of_wparam);
 }
-/////////////////////////////////////////////////////////////////////////
-// local function body
-/////////////////////////////////////////////////////////////////////////
+
 std::tuple<bool, std::wstring, long, long, std::wstring>_get_fw_update_progress(
 	const _mp::type_v_wstring& v_wstring_result
 )

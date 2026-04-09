@@ -43,6 +43,7 @@ private:
 	typedef	unsigned long(_CALLTYPE_* typeLPU237_fw_msr_get_version)(HANDLE hDev, unsigned char*);
 	typedef	unsigned long(_CALLTYPE_* typeLPU237_fw_msr_get_version_major)(const unsigned char*);
 	typedef	unsigned long(_CALLTYPE_* typeLPU237_fw_msr_get_version_minor)(const unsigned char*);
+	typedef	void(_CALLTYPE_* typeLPU237_fw_set_mode)(unsigned long);
 
 public:
 	static clpu237_fw& get_instance()
@@ -269,6 +270,7 @@ public:
 			m_FunLPU237_fw_msr_get_version_major = reinterpret_cast<typeLPU237_fw_msr_get_version_major>(_load_symbol(m_hMode, "LPU237_fw_msr_get_version_major"));
 			m_FunLPU237_fw_msr_get_version_minor = reinterpret_cast<typeLPU237_fw_msr_get_version_minor>(_load_symbol(m_hMode, "LPU237_fw_msr_get_version_minor"));
 
+			m_FunLPU237_fw_set_mode = reinterpret_cast<typeLPU237_fw_set_mode>(_load_symbol(m_hMode, "LPU237_fw_set_mode"));
 			//
 			if (m_FunLPU237_fw_get_list == NULL)	continue;
 			if (m_FunLPU237_fw_open == NULL)	continue;
@@ -296,6 +298,8 @@ public:
 			if (m_FunLPU237_fw_msr_get_version == NULL)	continue;
 			if (m_FunLPU237_fw_msr_get_version_major == NULL)	continue;
 			if (m_FunLPU237_fw_msr_get_version_minor == NULL)	continue;
+
+			// m_FunLPU237_fw_set_mode can be null, because it is optional function.( from v6.0, supported)
 
 			b_result = true;
 		} while (false);
@@ -617,6 +621,29 @@ public:
 		return b_result;
 	}
 
+	/**
+	* @brief set mode for activating new funcationality.
+	* @param n_mode - 6(activate  funcationality that is supported from v6.0)
+	*	
+	*	- 0 : old type 
+	*   - else : don't use
+	*/
+	bool LPU237_fw_set_mode(int n_mode)
+	{
+		bool b_result(false);
+		do {
+			std::lock_guard<std::mutex> lock(m_mutex);
+			if (!m_FunLPU237_fw_set_mode) {
+				continue;
+			}
+
+			m_FunLPU237_fw_set_mode(n_mode);
+			b_result = true;
+		} while (false);
+
+		return b_result;
+	}
+
 	std::vector<unsigned char> LPU237_fw_msr_get_id(HANDLE hDev)
 	{
 		std::vector<unsigned char> vId(0);
@@ -752,6 +779,8 @@ private:
 		m_FunLPU237_fw_msr_get_version = NULL;
 		m_FunLPU237_fw_msr_get_version_major = NULL;
 		m_FunLPU237_fw_msr_get_version_minor = NULL;
+
+		m_FunLPU237_fw_set_mode = NULL;
 	}
 
 private:
@@ -781,6 +810,7 @@ private:
 	typeLPU237_fw_msr_get_version m_FunLPU237_fw_msr_get_version;
 	typeLPU237_fw_msr_get_version_major m_FunLPU237_fw_msr_get_version_major;
 	typeLPU237_fw_msr_get_version_minor m_FunLPU237_fw_msr_get_version_minor;
+	typeLPU237_fw_set_mode m_FunLPU237_fw_set_mode;
 
 private://don't call these methods
 	clpu237_fw(const clpu237_fw&);
