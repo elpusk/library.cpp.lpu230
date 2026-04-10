@@ -1,0 +1,221 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="common">
+      <UniqueIdentifier>{4dfbf8af-259e-41b4-afac-424ed1f33861}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="inc">
+      <UniqueIdentifier>{0e3628f6-d6b0-44e7-bf96-3d41685f464c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib">
+      <UniqueIdentifier>{10c41161-d565-4496-beb7-31e6af89f90f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lpu237_dll_inc">
+      <UniqueIdentifier>{316f16a0-2128-46d6-9648-d30b41fbb848}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4d8ce79a-55d9-43e1-bbf3-376034d979b2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common\ini">
+      <UniqueIdentifier>{9ef68430-b018-4ffd-97af-c1ac2e418e81}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common\lpu230">
+      <UniqueIdentifier>{39f66671-8502-4387-8428-6bf8e8bb023f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common\lpu230\config">
+      <UniqueIdentifier>{7bc6e258-6178-4f9d-a7cd-2c9065709edb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\svr">
+      <UniqueIdentifier>{92fa8d63-44ff-48c5-ab1e-5e26c5a2e41b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\ws">
+      <UniqueIdentifier>{75eecfff-2390-41c1-8862-96289bb2fcba}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="rom_dll_inc">
+      <UniqueIdentifier>{86bb1517-3f56-4cfe-b22a-d3f5420a4a77}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\shared\projects\lpu237_fw\tg_lpu237_fw.ini">
+      <Filter>common\ini</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\shared\common\inc\lpu230\config\cfg_msrlib.h">
+      <Filter>common\lpu230\config</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\lpu230\compiler.h">
+      <Filter>common\lpu230</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\lpu230\info_msr.h">
+      <Filter>common\lpu230</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\lpu230\info_sys.h">
+      <Filter>common\lpu230</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\lpu230\info_sys_cnst.h">
+      <Filter>common\lpu230</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\lpu230\KBConst.h">
+      <Filter>common\lpu230</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\capi_client.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\cdef.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\cdll_ini.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\cfun_lpu237.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\ckey_map.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\cprotocol_lpu237.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\i_device_of_client.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\common\inc\manager_of_device_of_client.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\projects\lpu237_fw\inc\cmap_user_cb.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\projects\lpu237_fw\inc\tg_lpu237_fw.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\server\mp_cclient.h">
+      <Filter>lib\svr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\server\mp_cclient_cb.h">
+      <Filter>lib\svr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\server\mp_cclient_cb_qitem.h">
+      <Filter>lib\svr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\server\mp_cclient_manager.h">
+      <Filter>lib\svr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\websocket\mp_cws_client.h">
+      <Filter>lib\ws</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\websocket\mp_win_nt.h">
+      <Filter>lib\ws</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\websocket\mp_ws_tools.h">
+      <Filter>lib\ws</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_casync_parameter_result.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_casync_result_manager.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cconsole.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cconvert.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cio_packet.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_clog.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cnamed_pipe_.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_coffee.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_coffee_path.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_coperation.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cqitem_dev.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cqueue.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cstring.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_csystem_.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cversion.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cwait.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_elpusk.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_icprotocol.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_os_type.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_type.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_vcpacket.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_vcworker.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\projects\lpu237_dll\inc\ccb_client.h">
+      <Filter>lpu237_dll_inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\projects\lpu237_dll\inc\lpu237_of_client.h">
+      <Filter>lpu237_dll_inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\projects\lpu237_dll\inc\tg_lpu237_dll.h">
+      <Filter>lpu237_dll_inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cfile.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\projects\rom\inc\tg_rom.h">
+      <Filter>rom_dll_inc</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\shared\common\src\capi_client.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\lib\src\server\mp_cclient.cpp">
+      <Filter>lib\svr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\lib\src\server\mp_cclient_cb.cpp">
+      <Filter>lib\svr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\lib\inc\mp_cnamed_pipe_.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\lib\inc\mp_csystem_.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\projects\lpu237_fw\cmap_user_cb.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\projects\lpu237_fw\tg_lpu237_fw.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\projects\lpu237_dll\lpu237_of_client.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

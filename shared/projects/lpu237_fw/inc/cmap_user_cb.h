@@ -35,9 +35,11 @@ public:
 	* @param v_dev_id - device ID, the size of vector can be 0
 	* @param p_fun - callback function
 	* @param p_para - user parameter of callback function
-	* @return item index of callback function, or -1 if error.
+	* @return first - item index of callback function, or -1 if error.
+	* 
+	*	second - for sync prrocessing, complete event(success or error)
 	*/
-	long add_callback(
+	std::pair<long,_mp::cwait::type_ptr> add_callback(
 		int n_result_index
 		, const _mp::type_v_buffer & v_dev_id
 		, type_lpu237_fw_callback p_fun
@@ -80,7 +82,14 @@ public:
 	);
 
 	bool remove_callback(long n_item_index);
-	bool get_callback(
+
+	/**
+	* @brief get callback to map
+	* @return first - true : found item.
+	*
+	*	second - for sync prrocessing, complete event(success or error)
+	*/
+	std::pair<bool, _mp::cwait::type_ptr> get_callback(
 		long n_item_index
 		, bool b_remove_after_get
 		, int &n_result_index
@@ -125,6 +134,20 @@ public:
 
 	int get_mode() const;
 
+	/**
+	* @brief get a sync processing result.
+	* @param n_item_index - item index of callback function
+	* @return LPU237_FW_RESULT_SUCCESS, LPU237_FW_RESULT_ERROR, LPU237_FW_RESULT_CANCEL, LPU237_FW_RESULT_TIMEOUT or LPU237_FW_RESULT_NO_MSR
+	*/
+	unsigned long get_sync_result(long n_item_index);
+
+	/**
+	* @brief set a sync processing result.
+	* @param n_item_index - item index of callback function
+	* @param dw_result - LPU237_FW_RESULT_SUCCESS, LPU237_FW_RESULT_ERROR, LPU237_FW_RESULT_CANCEL, LPU237_FW_RESULT_TIMEOUT or LPU237_FW_RESULT_NO_MSR
+	*/
+	void set_sync_result(long n_item_index, unsigned long dw_result);
+
 private:
 	bool _remove_callback(long n_item_index);
 
@@ -138,6 +161,8 @@ private:
 	// 5 - callback window message(only windows system)
 	// 6 - rom file path
 	// 7 - firmware index in rom file.
+	// 8 - for sync, complete event
+	// 9 - for sync, processing result
 	typedef std::tuple<
 		int
 		, _mp::type_v_buffer 
@@ -146,6 +171,8 @@ private:
 		, HWND
 		, UINT
 		,std::wstring
+		, unsigned long
+		, _mp::cwait::type_ptr
 		, unsigned long
 	> _type_tuple_item;
 

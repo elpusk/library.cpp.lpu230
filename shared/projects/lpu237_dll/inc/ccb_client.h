@@ -18,11 +18,16 @@ class ccb_client
 public:
 	//
 	enum : unsigned long {
-		const_dll_result_success = 0,// = LPU237_DLL_RESULT_SUCCESS and LPU237LOCK_DLL_RESULT_SUCCESS
-		const_dll_result_error = 0xFFFFFFFF, //(-1) = LPU237_DLL_RESULT_ERROR and LPU237LOCK_DLL_RESULT_ERROR
-		const_dll_result_cancel = 0xFFFFFFFE, //(-2) = LPU237_DLL_RESULT_CANCEL and LPU237LOCK_DLL_RESULT_CANCEL
+		const_dll_result_success = 0,// = LPU237_DLL_RESULT_SUCCESS and LPU237LOCK_DLL_RESULT_SUCCESS, LPU237_FW_RESULT_SUCCESS
+		const_dll_result_error = 0xFFFFFFFF, //(-1) = LPU237_DLL_RESULT_ERROR and LPU237LOCK_DLL_RESULT_ERROR, LPU237_FW_RESULT_ERROR
+		const_dll_result_cancel = 0xFFFFFFFE, //(-2) = LPU237_DLL_RESULT_CANCEL and LPU237LOCK_DLL_RESULT_CANCEL, LPU237_FW_RESULT_CANCEL
 		const_dll_result_icc_inserted = 0xFFFFFFFC, //(-4) = LPU237_DLL_RESULT_ICC_INSERTED
 		const_dll_result_icc_removed = 0xFFFFFFFB //(-5) = LPU237_DLL_RESULT_ICC_REMOVED
+	};
+
+	enum : unsigned long {//only used in tg_lpu237_fw.dll(libtg_lpu237_fw.so)
+		const_dll_result_timeout = 0xFFFFFFFC, //(-4) = LPU237_FW_RESULT_TIMEOUT
+		const_dll_result_no_msr = 0xFFFFFFFB //(-5) = LPU237_FW_RESULT_NO_MSR
 	};
 
 public://this class must be have a static member only.

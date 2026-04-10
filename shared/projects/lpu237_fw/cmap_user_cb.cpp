@@ -3,7 +3,9 @@
 #include <cmap_user_cb.h>
 
 
-cmap_user_cb::cmap_user_cb() : m_n_cur_item_index(0)
+cmap_user_cb::cmap_user_cb() : 
+	m_n_cur_item_index(0)
+	, m_n_mode(0)
 {
 }
 
@@ -13,7 +15,7 @@ cmap_user_cb::~cmap_user_cb()
 	m_map_msg_cnt.clear();
 }
 
-long cmap_user_cb::add_callback(
+std::pair<long, _mp::cwait::type_ptr> cmap_user_cb::add_callback(
 	int n_result_index
 	, const _mp::type_v_buffer& v_dev_id
 	, type_lpu237_fw_callback p_fun
@@ -25,6 +27,7 @@ long cmap_user_cb::add_callback(
 )
 {
 	long n_item_index(-1);
+	_mp::cwait::type_ptr ptr_evt;
 
 	do {
 		std::lock_guard<std::mutex> lock(m_mutex);
@@ -33,6 +36,8 @@ long cmap_user_cb::add_callback(
 			continue; // error
 		}
 		//add new callback
+		ptr_evt = std::make_shared<_mp::cwait>();
+		ptr_evt->generate_new_event(); // event 는 한개만 사용 할 것이어서, 이벤트 인덱스 번호 저장 불요.
 		m_map_cb[m_n_cur_item_index] = std::make_tuple(
 			n_result_index
 			, v_dev_id
@@ -42,6 +47,8 @@ long cmap_user_cb::add_callback(
 			, uMsg
 			, std::wstring(sRomFileName)
 			, dwIndex
+			, ptr_evt
+			, LPU237_FW_RESULT_ERROR
 		);
 		m_map_msg_cnt[m_n_cur_item_index] = std::make_tuple(0, 0, 0); // initialize message counter
 
@@ -51,7 +58,7 @@ long cmap_user_cb::add_callback(
 			m_n_cur_item_index = 0; //reset index
 		}
 	} while (false);
-	return n_item_index;
+	return std::make_pair(n_item_index, ptr_evt);
 }
 
 bool cmap_user_cb::change_callback(
@@ -113,6 +120,32 @@ bool cmap_user_cb::remove_callback(long n_item_index)
 	return _remove_callback(n_item_index);
 }
 
+unsigned long cmap_user_cb::get_sync_result(long n_item_index)
+{
+	unsigned long n_result(LPU237_FW_RESULT_ERROR);
+	do {
+		std::lock_guard<std::mutex> lock(m_mutex);
+		auto it = m_map_cb.find(n_item_index);
+		if (it == m_map_cb.end()) {
+			continue; // not found
+		}
+		n_result = std::get<9>(it->second);
+	} while (false);
+	return n_result;
+}
+
+void cmap_user_cb::set_sync_result(long n_item_index, unsigned long dw_result)
+{
+	do {
+		std::lock_guard<std::mutex> lock(m_mutex);
+		auto it = m_map_cb.find(n_item_index);
+		if (it == m_map_cb.end()) {
+			continue; // not found
+		}
+		std::get<9>(it->second) = dw_result;
+	} while (false);
+}
+
 bool cmap_user_cb::_remove_callback(long n_item_index)
 {
 	bool b_reslt(false);
@@ -133,7 +166,7 @@ bool cmap_user_cb::_remove_callback(long n_item_index)
 }
 
 
-bool cmap_user_cb::get_callback(
+std::pair<bool, _mp::cwait::type_ptr> cmap_user_cb::get_callback(
 	long n_item_index
 	, bool b_remove_after_get
 	, int& n_result_index
@@ -147,6 +180,7 @@ bool cmap_user_cb::get_callback(
 )
 {
 	bool b_reslt(false);
+	_mp::cwait::type_ptr ptr_evt;
 
 	do {
 		std::lock_guard<std::mutex> lock(m_mutex);
@@ -163,12 +197,13 @@ bool cmap_user_cb::get_callback(
 		u_new_Msg = std::get<5>(it->second);
 		s_new_RomFileName = std::get<6>(it->second);
 		dw_new_Index = std::get<7>(it->second);
+		ptr_evt = std::get<8>(it->second);
 		if (b_remove_after_get) {
-			m_map_cb.erase(it);
+			m_map_cb.erase(it); // 여기서 지워도 ptr_evt 은 shared_ptr 이므로 제거 되지 않는다.
 		}
 		b_reslt = true;
 	} while (false);
-	return b_reslt;
+	return std::make_pair(b_reslt,ptr_evt);
 }
 
 void cmap_user_cb::set_msg_counter(long n_item_index, int n_sector_erase_cnt, int n_sector_write_cnt, int n_complete_cnt)

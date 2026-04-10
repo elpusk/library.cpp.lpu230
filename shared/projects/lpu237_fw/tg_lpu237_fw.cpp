@@ -78,7 +78,7 @@ std::filesystem::path _get_module_directory() {
 #else
 	Dl_info info;
 	if (dladdr((void*)&_get_module_directory, &info)) {
-		return fs::absolute(fs::path(info.dli_fname)).parent_path();
+		return std::filesystem::absolute(std::filesystem::path(info.dli_fname)).parent_path();
 	}
 #endif
 	return std::filesystem::path(""); // error
@@ -123,7 +123,7 @@ static std::tuple<bool, std::wstring, long, long, std::wstring>_get_fw_update_pr
 
 static std::pair<unsigned long, std::wstring> _get_wparam(
 	int n_item_index
-	, int dw_client_result
+	, unsigned long dw_client_result
 	, int n_fw_step_cur
 	, int n_fw_step_max
 	, const std::wstring& s_message
@@ -139,7 +139,7 @@ static std::pair<unsigned long, std::wstring> _get_v6_process_result_code_from_f
 
 std::pair<unsigned long, std::wstring> _get_wparam(
 	int n_item_index
-	, int dw_client_result
+	, unsigned long dw_client_result
 	, int n_fw_step_cur
 	, int n_fw_step_max
 	, const std::wstring& s_message
@@ -388,28 +388,30 @@ void __stdcall _cb_fw(void* p_user)
 	unsigned long n_device_index(i_device_of_client::const_invalied_device_index);
 	int n_result_index(-1);
 	long n_item_index = (long)p_user; // item index of callback function in g_map_user_cb
-	bool b_get_param(false);
+	
 	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
 	_mp::casync_parameter_result::type_ptr_ct_async_parameter_result ptr_result;
 
 	long n_fw_step_cur(-1), n_fw_step_max(-1);
 	_mp::type_v_wstring v_out_wstring_result;
 
+	_mp::cwait::type_ptr ptr_evt_complete;
+	bool b_sync(false); // true 이면, g_map_user_cb 에서 콜백 item 정상적으로 얻고, 콜백 item 은 동기식 구성임.
+	bool b_set_sync_event(false); // 이 값이 true 이면, sync_event 를 set 해야 함.
+	unsigned long n_sync_result(LPU237_FW_RESULT_ERROR);
+	bool b_remove_callback_item(true); // g_map_user_cb 에서 n_item_index 을 제거하라.
+
 	do {
-		if (!ptr_manager_of_device_of_client) {
-			_mp::clog::get_instance().log_fmt(L" : RET : %ls : none manager_of_device_of_client.\n", __WFUNCTION__);
-			continue;
-		}
-		
+		bool b_get(false);
 		_mp::type_v_buffer v_dev_id(0);
-		type_lpu237_fw_callback p_fun(nullptr);
-		void* p_para(nullptr);
-		HWND h_win(nullptr);
+		type_lpu237_fw_callback p_fun(NULL);
+		void* p_para(NULL);
+		HWND h_win(NULL);
 		UINT n_msg(0);
 		std::wstring s_rom_file_name;
 		unsigned long dw_fw_index(-1);
 
-		if (!g_map_user_cb.get_callback(
+		std::tie(b_get, ptr_evt_complete) = g_map_user_cb.get_callback(
 			n_item_index
 			, false // 계속 콜백 가능성이	있기 때문에 콜백 정보를 얻은 후에도 콜백 정보를 유지한다. (예를 들어, 콜백이 여러번 호출되는 경우)
 			, n_result_index
@@ -420,10 +422,27 @@ void __stdcall _cb_fw(void* p_user)
 			, n_msg
 			, s_rom_file_name
 			, dw_fw_index
-		)) {
+		);
+
+		if (!b_get) {
 			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : get_callback fail for item index %d.\n", __WFUNCTION__, n_item_index);
 			continue;
 		}
+
+		///////////////////////////////////////////////////////////////////
+		if (p_fun == 0 && (h_win == INVALID_HANDLE_VALUE || h_win == 0)) {
+			b_sync = true;
+		}
+
+		if (!ptr_manager_of_device_of_client) {
+			if (b_sync) {
+				b_set_sync_event = true;	n_sync_result = LPU237_FW_RESULT_ERROR;
+				b_remove_callback_item = false;
+			}
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : none manager_of_device_of_client.\n", __WFUNCTION__);
+			continue;
+		}
+		
 		//
 		
 		lpu237_of_client::type_ptr_lpu237_of_client& ptr_device = ptr_manager_of_device_of_client->get_device(v_dev_id);
@@ -441,12 +460,20 @@ void __stdcall _cb_fw(void* p_user)
 			ptr_result = ptr_manager_of_device_of_client->get_async_parameter_result_for_manager(n_device_index,n_result_index);
 		}
 		if (!ptr_result) {
-			_mp::clog::get_instance().log_fmt(L" : RET : %ls : INVALID_HANDLE_VALUE : n_result_index = %d.\n", __WFUNCTION__, n_result_index);
+			if (b_sync) {
+				b_set_sync_event = true;	n_sync_result = LPU237_FW_RESULT_ERROR;
+				b_remove_callback_item = false;
+			}
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : INVALID_HANDLE_VALUE : n_result_index = %d.\n", __WFUNCTION__, n_result_index);
 			continue;
 		}
 
 		if (!ptr_result->get_result(v_out_wstring_result)) {
-			_mp::clog::get_instance().log_fmt(L" : RET : %ls : get_result() - error\n", __WFUNCTION__);
+			if (b_sync) {
+				b_set_sync_event = true;	n_sync_result = LPU237_FW_RESULT_ERROR;
+				b_remove_callback_item = false;
+			}
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : get_result() - error\n", __WFUNCTION__);
 			continue;
 		}
 
@@ -455,20 +482,31 @@ void __stdcall _cb_fw(void* p_user)
 		std::tie(b_parse, s_result, n_fw_step_cur, n_fw_step_max, s_message) = _get_fw_update_progress(v_out_wstring_result);
 
 		if (!b_parse) {
+			if (b_sync) {
+				b_set_sync_event = true;	n_sync_result = LPU237_FW_RESULT_ERROR;
+				b_remove_callback_item = false;
+			}
 			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : item index = %d : result invalid format.\n", __WFUNCTION__, n_item_index);
-			continue;
+			continue;// g_map_user_cb 에서 n_item_index 을 제거
 		}
 		if (s_result.compare(L"success") != 0) {
 			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : item index = %d : process result = %ls.\n", __WFUNCTION__, n_item_index, v_out_wstring_result[0]);
-			continue;
+			if (b_sync) {
+				b_set_sync_event = true;	n_sync_result = LPU237_FW_RESULT_ERROR;
+				b_remove_callback_item = false;
+			}
+			continue;// g_map_user_cb 에서 n_item_index 을 제거
 		}
 
-		b_get_param = true; // 재사용을 위해서 콜백 정보를 유지.
+		b_remove_callback_item = false; // 재사용을 위해서 콜백 정보를 유지.
 
 		if (v_out_wstring_result.size() == 1) {
 			// 첫 "start" 에 대한 응답 이므로, n_fw_step_max 이런 애들 없음.
 			// 콜백도 필요 없음.
-			continue;
+			if (b_sync) {
+				b_set_sync_event = false;
+			}
+			continue;// 동기 비동기에 무관하게 n_item_index 유지.
 		}
 
 		if (b_parse && n_fw_step_max > 0) {
@@ -477,7 +515,12 @@ void __stdcall _cb_fw(void* p_user)
 				// 주의. (n_fw_step_max-1) == n_fw_step_cur 인 message 가 두번 오는데, 마지막 것은 무시해도 됨.
 				// 끝난 것을 한 번 더 다름 메시지와 함께 보냄.
 				// 이제 result index 를 제거해야 한다
-				b_get_param = false;
+				if (b_sync) {
+					b_set_sync_event = true;
+				}
+				else {
+					b_remove_callback_item = true;
+				}
 			}
 		}
 
@@ -491,12 +534,17 @@ void __stdcall _cb_fw(void* p_user)
 		switch (dw_client_result) {
 		case LPU237_FW_RESULT_SUCCESS:
 		case LPU237_FW_RESULT_CANCEL:
-			break;
 		case LPU237_FW_RESULT_ERROR:
-			dw_client_result = LPU237_FW_RESULT_ERROR;
+			break;
 		default:
+			dw_client_result = LPU237_FW_RESULT_ERROR;
 			break;
 		}//end switch
+		
+		if (b_sync) {
+			n_sync_result = dw_client_result;
+		}
+
 		unsigned long dw_w_param(_LPU237_FW_WPARAM_IGNORE);
 
 		std::tie(dw_w_param, s_w_param) = _get_wparam(n_item_index, dw_client_result, n_fw_step_cur, n_fw_step_max, s_message);
@@ -521,33 +569,53 @@ void __stdcall _cb_fw(void* p_user)
 			_mp::clog::get_instance().log_fmt(L" : INF : %ls : messaged(item index=%d) : wparam = %ls.\n", __WFUNCTION__, n_item_index, s_w_param.c_str());
 		}
 #endif
-		
 
 	} while (false);
 
-	///////////////////////////
-	// log for debugging
-	if (v_out_wstring_result.size() > 3) {
-		_mp::clog::get_instance().log_fmt(L" : INF : %ls : n_item_index =  %d : %ls : (cur,max) = (%d,%d) : %ls.\n"
-			, __WFUNCTION__
-			, n_item_index
-			, v_out_wstring_result[0].c_str()
-			, n_fw_step_cur
-			, n_fw_step_max
-			, v_out_wstring_result[3].c_str()
-		);
-	}
-	else if (v_out_wstring_result.size() > 2) {
-		_mp::clog::get_instance().log_fmt(L" : INF : %ls : n_item_index =  %d : %ls : (cur,max) = (%d,%d).\n"
-			, __WFUNCTION__
-			, n_item_index
-			, v_out_wstring_result[0].c_str()
-			, n_fw_step_cur
-			, n_fw_step_max
-		);
-	}
+	do {
+		///////////////////////////
+		// log for debugging
+		if (v_out_wstring_result.size() > 3) {
+			_mp::clog::get_instance().log_fmt(L" : INF : %ls : n_item_index =  %d : %ls : (cur,max) = (%d,%d) : %ls.\n"
+				, __WFUNCTION__
+				, n_item_index
+				, v_out_wstring_result[0].c_str()
+				, n_fw_step_cur
+				, n_fw_step_max
+				, v_out_wstring_result[3].c_str()
+			);
+		}
+		else if (v_out_wstring_result.size() > 2) {
+			_mp::clog::get_instance().log_fmt(L" : INF : %ls : n_item_index =  %d : %ls : (cur,max) = (%d,%d).\n"
+				, __WFUNCTION__
+				, n_item_index
+				, v_out_wstring_result[0].c_str()
+				, n_fw_step_cur
+				, n_fw_step_max
+			);
+		}
+	}while(false);
 
-	if (!b_get_param) {// 파라메터 얻기를 실패하면 콜백을 제거한다. (예를 들어, 콜백이 이미 제거된 경우)
+	// 여기는 동기식으로 최종끝난는지, -> ptr_evt_complete->set(), g_map_user_cb 에서 n_item_index 제거 금지.
+	// 동기식이지만 아직 끝나지 않았는지, -> g_map_user_cb 에서 n_item_index 제거 금지.
+	// 비동기식으로 끝났는지, -> g_map_user_cb 에서 n_item_index 제거.
+	// 비동기식으로 계속 처리가 필요 한지 -> g_map_user_cb 에서 n_item_index 제거 금지.
+	// 여부에 따라 처리 할 것.
+
+	if (b_set_sync_event) {
+		// 동기식 이므로 n_item_index 을 여기서 제거하지 말고, 
+		// _fw_msr_update_ex_w() 에서 결과를 얻은 후, _fw_msr_update_ex_w() 에서 제거.
+
+		if (ptr_manager_of_device_of_client) {
+			ptr_manager_of_device_of_client->remove_async_result_for_manager(n_device_index, n_result_index);
+			ptr_result.reset(); // release result
+			ptr_manager_of_device_of_client.reset();
+		}
+
+		g_map_user_cb.set_sync_result(n_item_index,n_sync_result);
+		ptr_evt_complete->set();// 동기식으로 기다리는 _fw_msr_update_ex_w() 에게 알림.
+	}
+	if (b_remove_callback_item) {// 콜백을 제거한다.
 		g_map_user_cb.remove_callback(n_item_index); // remove invalid callback
 
 		if (ptr_manager_of_device_of_client) {
@@ -555,6 +623,7 @@ void __stdcall _cb_fw(void* p_user)
 			ptr_result.reset(); // release result
 		}
 	}
+
 }
 
 unsigned long _fw_msr_update_ex_w(
@@ -573,22 +642,22 @@ unsigned long _fw_msr_update_ex_w(
 
 	do {
 		if (sId == NULL) {
-			_mp::clog::get_instance().log_fmt(L" : RET : %ls : ID is NULL.\n", __WFUNCTION__);
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : ID is NULL.\n", __WFUNCTION__);
 			continue;
 		}
 		std::error_code ec;
 		std::filesystem::path abs_path_rom_file = std::filesystem::absolute(sRomFileName, ec);
 		if (ec) {
-			_mp::clog::get_instance().log_fmt(L" : RET : %ls : ERR change abs path. - %ls.\n", __WFUNCTION__, sRomFileName);
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : change abs path. - %ls.\n", __WFUNCTION__, sRomFileName);
 			continue;
 		}
 		if (!std::filesystem::exists(abs_path_rom_file) || !std::filesystem::is_regular_file(abs_path_rom_file)) {
-			_mp::clog::get_instance().log_fmt(L" : RET : %ls : ROM file not found - %ls.\n", __WFUNCTION__, sRomFileName);
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : ROM file not found - %ls.\n", __WFUNCTION__, sRomFileName);
 			continue;
 		}
 
 		if (!ptr_manager_of_device_of_client) {
-			_mp::clog::get_instance().log_fmt(L" : RET : %ls : none manager_of_device_of_client.\n", __WFUNCTION__);
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : none manager_of_device_of_client.\n", __WFUNCTION__);
 			continue;
 		}
 		
@@ -597,44 +666,53 @@ unsigned long _fw_msr_update_ex_w(
 
 		lpu237_of_client::type_ptr_lpu237_of_client& ptr_device = ptr_manager_of_device_of_client->get_device(v_id);
 		if (ptr_device->is_null_device()) {
-			_mp::clog::get_instance().log_fmt(L" : RET : %ls : not found device is\n", __WFUNCTION__);
+			dw_result = ccb_client::const_dll_result_no_msr;
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : not found device is\n", __WFUNCTION__);
 			continue;
 		}
 		if (!ptr_device->reset()) {
-			_mp::clog::get_instance().log_fmt(L" : RET : %ls : reset.\n", __WFUNCTION__);
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : reset.\n", __WFUNCTION__);
 			continue;
 		}
 
 		// set bootloader parameters
 		std::wstring s_name = ptr_device->get_name_by_wstring();
 		if (!ptr_device->bootloader_operation(L"set",L"model_name", s_name)) {
-			_mp::clog::get_instance().log_fmt(L" : RET : %ls : error bootloader_operation for model_name.\n", __WFUNCTION__);
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : error bootloader_operation for model_name.\n", __WFUNCTION__);
 			continue;
 		}
 		cprotocol_lpu237::type_version version = ptr_device->get_system_version();
 		std::wstring s_version = version.get_by_string();
 		if (!ptr_device->bootloader_operation(L"set", L"system_version", s_version)) {
-			_mp::clog::get_instance().log_fmt(L" : RET : %ls : error bootloader_operation for system_version.\n", __WFUNCTION__);
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : error bootloader_operation for system_version.\n", __WFUNCTION__);
 			continue;
 		}
 		if (!ptr_device->bootloader_operation(L"set", L"_cf_bl_progress_", L"true")) {
-			_mp::clog::get_instance().log_fmt(L" : RET : %ls : error bootloader_operation for _cf_bl_progress_.\n", __WFUNCTION__);
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : error bootloader_operation for _cf_bl_progress_.\n", __WFUNCTION__);
 			continue;
 		}
+
+#if defined(_WIN32) && defined(_DEBUG)
 		if (!ptr_device->bootloader_operation(L"set", L"_cf_bl_window_", L"true")) {// for debugging - true, must be false in release 
-			_mp::clog::get_instance().log_fmt(L" : RET : %ls : error bootloader_operation for _cf_bl_window_.\n", __WFUNCTION__);
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : error bootloader_operation for _cf_bl_window_.\n", __WFUNCTION__);
 			continue;
 		}
+#else
+		if (!ptr_device->bootloader_operation(L"set", L"_cf_bl_window_", L"false")) {
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : error bootloader_operation for _cf_bl_window_.\n", __WFUNCTION__);
+			continue;
+		}
+#endif
 		
 		// 주의 s_key 가 "file" 이면  abs_path_rom_file.wstring() 의 ":" 은 "::" 로 변경되지 않는다.
 		if (!ptr_device->bootloader_operation(L"set", L"file", abs_path_rom_file.wstring())) {
-			_mp::clog::get_instance().log_fmt(L" : RET : %ls : error bootloader_operation for file.\n", __WFUNCTION__);
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : error bootloader_operation for file.\n", __WFUNCTION__);
 			continue;
 		}
 		
 		if (dwFwIndex >= 0 && dwFwIndex < 256) {
 			if (!ptr_device->bootloader_operation(L"set", L"firmware_index", std::to_wstring(dwFwIndex))) {
-				_mp::clog::get_instance().log_fmt(L" : RET : %ls : %u : error bootloader_operation for firmware_index.\n", __WFUNCTION__, dwFwIndex);
+				_mp::clog::get_instance().log_fmt(L" : ERR : %ls : %u : error bootloader_operation for firmware_index.\n", __WFUNCTION__, dwFwIndex);
 				continue;
 			}
 		}
@@ -645,7 +723,8 @@ unsigned long _fw_msr_update_ex_w(
 
 
 		long n_item_index(-1);
-		n_item_index = g_map_user_cb.add_callback(
+		_mp::cwait::type_ptr ptr_evet_complete;
+		std::tie(n_item_index, ptr_evet_complete) = g_map_user_cb.add_callback(
 			-1
 			, v_id
 			, cbUpdate
@@ -656,7 +735,7 @@ unsigned long _fw_msr_update_ex_w(
 			, dwFwIndex
 		);
 		if (n_item_index < 0) {
-			_mp::clog::get_instance().log_fmt(L" : RET : %ls : [critical error]add_callback error.\n", __WFUNCTION__);
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : [critical error]add_callback error.\n", __WFUNCTION__);
 			continue;
 		}
 		
@@ -665,22 +744,58 @@ unsigned long _fw_msr_update_ex_w(
 		std::tie(b_result,n_result_index) = ptr_device->bootloader_operation_start(_cb_fw, (void*)n_item_index);
 		if (!b_result) {
 			g_map_user_cb.remove_callback(n_item_index);
-			_mp::clog::get_instance().log_fmt(L" : RET : %ls : error bootloader_operation for starting.\n", __WFUNCTION__);
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : error bootloader_operation for starting.\n", __WFUNCTION__);
 			continue;
 		}
 
 		g_map_user_cb.change_result_index(n_item_index, n_result_index);
 
+		bool b_sync(false);
+		if (hWnd == INVALID_HANDLE_VALUE || hWnd == 0) {
+			if (cbUpdate == 0) {
+				b_sync = true;
+			}
+		}
 
-		dw_result = (unsigned long)n_item_index;
+		if (b_sync) {
+			// sync type operation
+			// g_map_user_cb 에 생성된 callback item 은 
+			// 결과를 얻어야 하므로 _cb_fw 에서 제거 되지 않고 여기서 제거 한다.
+
+			std::vector<int> v_evt_index = ptr_evet_complete->wait_for_at_once((int)dwWaitTime);
+			if (v_evt_index.empty()) {
+				//timeout 의 경우,
+				dw_result = ccb_client::const_dll_result_timeout;
+			}
+			else{
+
+				dw_result = g_map_user_cb.get_sync_result(n_item_index); // 동기식 처리의 경우. 처리 완료.
+			}
+			g_map_user_cb.remove_callback(n_item_index); // remove invalid callback
+		}
+		else {
+			dw_result = (unsigned long)n_item_index;
+		}
 	} while (false);
 
-	if (dw_result == ccb_client::const_dll_result_error) {
-		_mp::clog::get_instance().log_fmt(L" : RET : %ls : error - %u.\n", __WFUNCTION__, dw_result);
-	}
-	else {
+	switch (dw_result) {
+	case ccb_client::const_dll_result_success:
 		_mp::clog::get_instance().log_fmt(L" : RET : %ls : success - %u.\n", __WFUNCTION__, dw_result);
-	}
+		break;
+
+	case ccb_client::const_dll_result_error:
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : error - %u.\n", __WFUNCTION__, dw_result);
+		break;
+	case ccb_client::const_dll_result_timeout:
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : timeout - %u.\n", __WFUNCTION__, dw_result);
+		break;
+	case ccb_client::const_dll_result_no_msr:
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : no msr - %u.\n", __WFUNCTION__, dw_result);
+		break;
+	default:
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : %u.\n", __WFUNCTION__, dw_result);
+		break;
+	}//end switch
 	return dw_result;
 }
 
@@ -1156,7 +1271,7 @@ unsigned long _CALLTYPE_ LPU237_fw_msr_cancel_update()
 
 unsigned long _CALLTYPE_ LPU237_fw_msr_update_w(const unsigned char* sId, unsigned long dwWaitTime, const wchar_t* sRomFileName, unsigned long dwIndex)
 {
-	return _fw_msr_update_ex_w(sId, dwWaitTime, nullptr, nullptr, nullptr, 0, sRomFileName, dwIndex);
+	return _fw_msr_update_ex_w(sId, dwWaitTime, nullptr, nullptr, NULL, 0, sRomFileName, dwIndex);
 }
 
 unsigned long _CALLTYPE_ LPU237_fw_msr_update_a(const unsigned char* sId, unsigned long dwWaitTime, const char* sRomFileName, unsigned long dwIndex)
@@ -1178,7 +1293,7 @@ unsigned long _CALLTYPE_ LPU237_fw_msr_update_a(const unsigned char* sId, unsign
 
 unsigned long _CALLTYPE_ LPU237_fw_msr_update_callback_w(const unsigned char* sId, type_lpu237_fw_callback cbUpdate, void* pUser, const wchar_t* sRomFileName, unsigned long dwIndex)
 {
-	return _fw_msr_update_ex_w(sId, 0, cbUpdate, pUser, nullptr, 0, sRomFileName, dwIndex);
+	return _fw_msr_update_ex_w(sId, 0, cbUpdate, pUser, NULL, 0, sRomFileName, dwIndex);
 }
 
 unsigned long _CALLTYPE_ LPU237_fw_msr_update_callback_a(const unsigned char* sId, type_lpu237_fw_callback cbUpdate, void* pUser, const char* sRomFileName, unsigned long dwIndex)

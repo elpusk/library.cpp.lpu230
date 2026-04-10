@@ -382,7 +382,7 @@ namespace _mp {
 			return { exe };//no terminal
 		}
 	}
-#endif !_WIN32
+#endif //!_WIN32
 
 	csystem::~csystem()
 	{

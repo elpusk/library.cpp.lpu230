@@ -9,9 +9,9 @@
 /*!
 *	constant definition.
 */
-#define	LPU237_FW_SIZE_ID					16			//device ID is 16 bytes.
+#define	LPU237_FW_SIZE_ID			16			//device ID is 16 bytes.
 #define	LPU237_FW_SIZE_NAME			16			//device Name is 16 bytes.
-#define	LPU237_FW_SIZE_VERSION			4			//firmware version is 4 bytes.
+#define	LPU237_FW_SIZE_VERSION		4			//firmware version is 4 bytes.
 
 /*!
 *	return value definition.
@@ -19,7 +19,7 @@
 #define	LPU237_FW_RESULT_SUCCESS			0		//! processing success.
 #define	LPU237_FW_RESULT_ERROR			0xFFFFFFFF	//! processing error.( maybe system or communication error ); (-1)
 #define	LPU237_FW_RESULT_CANCEL			0xFFFFFFFE	//! processing is canceled by another reqest.(-2)
-#define	LPU237_FW_RESULT_TIMEOUT			0xFFFFFFFC	//! processing is timeout.(-4)
+#define	LPU237_FW_RESULT_TIMEOUT		0xFFFFFFFC	//! processing is timeout.(-4)
 #define	LPU237_FW_RESULT_NO_MSR			0xFFFFFFFb	//! processing not found MSR .(-5)
 
 /*!
@@ -185,7 +185,7 @@ extern "C" {
 	*	if success, return device handle.
 	*	else return INVALID_HANDLE_VALUE
 	*/
-	HANDLE _CALLTYPE_ LPU237_fw_open_w(CONST wchar_t* sDevPath);
+	HANDLE _CALLTYPE_ LPU237_fw_open_w(const wchar_t* sDevPath);
 
 	/*!
 	* function
@@ -198,7 +198,7 @@ extern "C" {
 	*	if success, return device handle.
 	*	else return INVALID_HANDLE_VALUE
 	*/
-	HANDLE _CALLTYPE_ LPU237_fw_open_a(CONST char* sDevPath);
+	HANDLE _CALLTYPE_ LPU237_fw_open_a(const char* sDevPath);
 
 	/*!
 	* function

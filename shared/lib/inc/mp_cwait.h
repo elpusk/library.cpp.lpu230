@@ -68,6 +68,27 @@ namespace _mp{
         }
 
         /**
+        * trigger all event
+        */
+        bool set()
+        {
+            bool b_result(false);
+            do {
+                std::lock_guard<std::mutex> lock(m_mutex);
+                if (m_v_generated_event.empty()) {
+                    continue; 
+                }
+                //
+                for (auto n_event : m_v_generated_event) {
+                    m_list_int_event_index.push_back(n_event);
+                }//end for
+                m_cv.notify_one();
+                b_result = true;
+            } while (false);
+            return b_result;
+        }
+
+        /**
         * cancel trigger
         */
         void reset(int n_event = -1)

@@ -1,0 +1,34 @@
+# li_lpu237_fw.ld
+{
+    global:
+		LPU237_fw_on;
+		LPU237_fw_off;
+		LPU237_fw_get_list_w;
+		LPU237_fw_get_list_a;
+		LPU237_fw_open_w;
+		LPU237_fw_open_a;
+		LPU237_fw_close;
+		LPU237_fw_msr_save_setting;
+		LPU237_fw_msr_recover_setting;
+		LPU237_fw_msr_get_id;
+		LPU237_fw_msr_get_name;
+		LPU237_fw_msr_get_version;
+		LPU237_fw_msr_get_version_major;
+		LPU237_fw_msr_get_version_minor;
+		LPU237_fw_msr_cancel_update;
+		LPU237_fw_msr_update_w;
+		LPU237_fw_msr_update_a;
+		LPU237_fw_msr_update_callback_w;
+		LPU237_fw_msr_update_callback_a;
+		LPU237_fw_msr_update_wnd_w;
+		LPU237_fw_msr_update_wnd_a;
+		LPU237_fw_rom_load_w;
+		LPU237_fw_rom_load_a;
+		LPU237_fw_rom_get_index_w;
+		LPU237_fw_rom_get_index_a;
+		LPU237_fw_set_mode;
+		_so_init;
+		_so_fini;
+    local:
+        *;
+};

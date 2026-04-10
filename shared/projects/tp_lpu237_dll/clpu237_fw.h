@@ -448,10 +448,15 @@ public:
 		return b_result;
 	}
 
-	std::pair<bool,unsigned long> LPU237_fw_msr_update(const unsigned char* sId, unsigned long dwWaitTime, const wchar_t* sRomFileName, unsigned long dwIndex)
+	std::pair<bool,unsigned long> LPU237_fw_msr_update(
+		const std::vector<unsigned char>& vId
+		, unsigned long dwWaitTime
+		, const std::wstring& sRomFileName
+		, unsigned long dwIndex
+	)
 	{
 		bool b_result(false);
-		unsigned long n_buffer_index(LPU237_FW_RESULT_ERROR);
+		unsigned long n_result(LPU237_FW_RESULT_ERROR);
 #ifdef _WIN32
 		do {
 			std::lock_guard<std::mutex> lock(m_mutex);
@@ -459,15 +464,15 @@ public:
 				continue;
 			}
 
-			n_buffer_index = m_FunLPU237_fw_msr_update(sId,dwWaitTime,sRomFileName,dwIndex);
-			if (n_buffer_index == LPU237_FW_RESULT_ERROR) {
+			n_result = m_FunLPU237_fw_msr_update(&vId[0], dwWaitTime, sRomFileName.c_str(), dwIndex);
+			if (n_result == LPU237_FW_RESULT_ERROR) {
 				continue;
 			}
 
 			b_result = true;
 		} while (false);
 #endif
-		return std::make_pair(b_result, n_buffer_index);
+		return std::make_pair(b_result, n_result);
 
 	}
 
