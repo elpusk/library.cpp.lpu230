@@ -39,6 +39,7 @@
     <None Include="..\shared\projects\lpu237_fw\tg_lpu237_fw.ini">
       <Filter>common\ini</Filter>
     </None>
+    <None Include="li_lpu237_fw.ld" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\common\inc\lpu230\config\cfg_msrlib.h">

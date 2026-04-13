@@ -4,16 +4,15 @@
 #include <sstream>
 #include <fstream>
 #include <limits>
+#include <cwctype>
 #include <time.h>
 
 #include <cstring> // For std::strrchr
 
 #include <string>
+#include <filesystem>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <boost/filesystem.hpp>
-#include <boost/algorithm/string.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -46,7 +45,7 @@ namespace _mp{
 			file_time_last_write
 		};
 
-		typedef std::pair<std::wstring, boost::filesystem::directory_entry> type_pair_find_data;
+		typedef std::pair<std::wstring, std::filesystem::directory_entry> type_pair_find_data;
 		typedef std::list<type_pair_find_data>  type_list_pair_find_data;
 
 	public:
@@ -94,7 +93,7 @@ namespace _mp{
 
 		static bool is_exist_file(const std::wstring& s_file_path)
 		{
-			return boost::filesystem::exists(s_file_path);
+			return std::filesystem::exists(s_file_path);
 		}
 
 #ifdef _WIN32
@@ -280,7 +279,7 @@ namespace _mp{
 		}
 
 		static unsigned long long get_folder_size(
-			const boost::filesystem::path& s_find_root_folder,
+			const std::filesystem::path& s_find_root_folder,
 			type_find_folder_area find_area = folder_area_all_sub_folder)
 		{
 			unsigned long long ll_size = 0;
@@ -290,10 +289,10 @@ namespace _mp{
 
 			try
 			{
-				boost::filesystem::directory_iterator end_iter;
-				for (boost::filesystem::directory_iterator dir_iter(s_find_root_folder); dir_iter != end_iter; ++dir_iter)
+				std::filesystem::directory_iterator end_iter;
+				for (std::filesystem::directory_iterator dir_iter(s_find_root_folder); dir_iter != end_iter; ++dir_iter)
 				{
-					if (boost::filesystem::is_directory(dir_iter->status()))
+					if (std::filesystem::is_directory(dir_iter->status()))
 					{
 						if (find_area != folder_area_current_folder)
 						{
@@ -302,13 +301,13 @@ namespace _mp{
 								static_cast<type_find_folder_area>(find_area - 1));
 						}
 					}
-					else if (boost::filesystem::is_regular_file(dir_iter->status()))
+					else if (std::filesystem::is_regular_file(dir_iter->status()))
 					{
-						ll_size += boost::filesystem::file_size(dir_iter->path());
+						ll_size += std::filesystem::file_size(dir_iter->path());
 					}
 				}
 			}
-			catch (const boost::filesystem::filesystem_error& e)
+			catch (const std::filesystem::filesystem_error& e)
 			{
 				(void)e;
 				ll_size = 0;
@@ -331,22 +330,18 @@ namespace _mp{
 		{
 			if (find_area == folder_area_none)
 				return;
-
 			try
 			{
-				boost::filesystem::path root_path(s_find_root_folder);
-				boost::filesystem::directory_iterator end_iter;
-
-				for (boost::filesystem::directory_iterator dir_iter(root_path); dir_iter != end_iter; ++dir_iter)
+				std::filesystem::path root_path(s_find_root_folder);
+				std::filesystem::directory_iterator end_iter;
+				for (std::filesystem::directory_iterator dir_iter(root_path); dir_iter != end_iter; ++dir_iter)
 				{
-					boost::filesystem::path current_path = dir_iter->path();
+					std::filesystem::path current_path = dir_iter->path();
 					std::wstring current_path_str = current_path.wstring();
-
-					if (boost::filesystem::is_directory(current_path))
+					if (std::filesystem::is_directory(current_path))
 					{
 						if (b_include_folder)
 							list_found.push_back(current_path_str);
-
 						if (find_area != folder_area_current_folder)
 						{
 							get_find_file_list(
@@ -357,16 +352,28 @@ namespace _mp{
 								b_include_folder);
 						}
 					}
-					else if (boost::filesystem::is_regular_file(current_path))
+					else if (std::filesystem::is_regular_file(current_path))
 					{
-						if (s_filter == L"*.*" || s_filter == L"*" || boost::algorithm::iends_with(current_path_str, s_filter))
+						// boost::algorithm::iends_with tp std lamda
+						auto iends_with = [](const std::wstring& str, const std::wstring& suffix) -> bool {
+							if (suffix.size() > str.size())
+								return false;
+							return std::equal(
+								suffix.rbegin(), suffix.rend(),
+								str.rbegin(),
+								[](wchar_t a, wchar_t b) {
+									return std::towlower(a) == std::towlower(b);
+								});
+							};
+
+						if (s_filter == L"*.*" || s_filter == L"*" || iends_with(current_path_str, s_filter))
 						{
 							list_found.push_back(current_path_str);
 						}
 					}
 				}
 			}
-			catch (const boost::filesystem::filesystem_error& e)
+			catch (const std::filesystem::filesystem_error& e)
 			{
 				(void)e;
 				list_found.clear();
@@ -389,15 +396,15 @@ namespace _mp{
 
 			try
 			{
-				boost::filesystem::path root_path(s_find_root_folder);
-				boost::filesystem::directory_iterator end_iter;
+				std::filesystem::path root_path(s_find_root_folder);
+				std::filesystem::directory_iterator end_iter;
 
-				for (boost::filesystem::directory_iterator dir_iter(root_path); dir_iter != end_iter; ++dir_iter)
+				for (std::filesystem::directory_iterator dir_iter(root_path); dir_iter != end_iter; ++dir_iter)
 				{
-					boost::filesystem::path current_path = dir_iter->path();
+					std::filesystem::path current_path = dir_iter->path();
 					std::wstring current_path_str = current_path.wstring();
 
-					if (boost::filesystem::is_directory(current_path))
+					if (std::filesystem::is_directory(current_path))
 					{
 						if (s_filter == L"\\*" || s_filter == L"*.*" || s_filter == L"*")
 						{
@@ -415,7 +422,7 @@ namespace _mp{
 					}
 				}
 			}
-			catch (const boost::filesystem::filesystem_error& e)
+			catch (const std::filesystem::filesystem_error& e)
 			{
 				(void)e;
 				list_found.clear();
@@ -438,15 +445,15 @@ namespace _mp{
 
 			try
 			{
-				boost::filesystem::path root_path(s_find_root_folder);
-				boost::filesystem::directory_iterator end_iter;
+				std::filesystem::path root_path(s_find_root_folder);
+				std::filesystem::directory_iterator end_iter;
 
-				for (boost::filesystem::directory_iterator dir_iter(root_path); dir_iter != end_iter; ++dir_iter)
+				for (std::filesystem::directory_iterator dir_iter(root_path); dir_iter != end_iter; ++dir_iter)
 				{
-					boost::filesystem::path current_path = dir_iter->path();
+					std::filesystem::path current_path = dir_iter->path();
 					std::wstring current_path_str = current_path.wstring();
 
-					if (boost::filesystem::is_directory(current_path))
+					if (std::filesystem::is_directory(current_path))
 					{
 						list_pair_found.push_back(std::make_pair(current_path_str, *dir_iter));
 
@@ -459,16 +466,28 @@ namespace _mp{
 								static_cast<type_find_folder_area>(find_area - 1));
 						}
 					}
-					else if (boost::filesystem::is_regular_file(current_path))
+					else if (std::filesystem::is_regular_file(current_path))
 					{
-						if (s_filter == L"*.*" || s_filter == L"*" || boost::algorithm::iends_with(current_path_str, s_filter))
+						// boost::algorithm::iends_with tp std lamda
+						auto iends_with = [](const std::wstring& str, const std::wstring& suffix) -> bool {
+							if (suffix.size() > str.size())
+								return false;
+							return std::equal(
+								suffix.rbegin(), suffix.rend(),
+								str.rbegin(),
+								[](wchar_t a, wchar_t b) {
+									return std::towlower(a) == std::towlower(b);
+								});
+							};
+
+						if (s_filter == L"*.*" || s_filter == L"*" || iends_with(current_path_str, s_filter))
 						{
 							list_pair_found.push_back(std::make_pair(current_path_str, *dir_iter));
 						}
 					}
 				}
 			}
-			catch (const boost::filesystem::filesystem_error& e)
+			catch (const std::filesystem::filesystem_error& e)
 			{
 				(void)e;
 				list_pair_found.clear();
@@ -488,32 +507,71 @@ namespace _mp{
 			unsigned long long ll_limit_minute,
 			unsigned long long ll_limit_second,
 			bool b_remove_if_found_file_time_is_past_then_limit_time_from_base_time,
-			const boost::posix_time::ptime& base_time = boost::posix_time::second_clock::local_time())
+			const std::chrono::system_clock::time_point& base_time = std::chrono::system_clock::now())
 		{
 			size_t n_find(0);
 
+			// Calculate the limit duration
+			auto limit_duration =
+				std::chrono::hours(ll_limit_day * 24)
+				+ std::chrono::hours(ll_limit_hour)
+				+ std::chrono::minutes(ll_limit_minute)
+				+ std::chrono::seconds(ll_limit_second);
+
 			// Calculate the limit time from the base time
-			boost::posix_time::ptime limit_time = base_time - boost::gregorian::days(static_cast<long>(ll_limit_day))
-				- boost::posix_time::hours(static_cast<long>(ll_limit_hour))
-				- boost::posix_time::minutes(static_cast<long>(ll_limit_minute))
-				- boost::posix_time::seconds(static_cast<long>(ll_limit_second));
+			std::chrono::system_clock::time_point limit_time = base_time - limit_duration;
 
 			in_out_list_pair_found.remove_if([&](const type_pair_find_data& pair_data) -> bool {
 				bool b_result(false);
-				const boost::filesystem::directory_entry& entry = pair_data.second;
+				const std::filesystem::directory_entry& entry = pair_data.second;
 
-				boost::posix_time::ptime file_time;
+				std::chrono::system_clock::time_point file_time;
+
 				if (found_file_time_type == file_time_create)
 				{
-					file_time = boost::posix_time::from_time_t(boost::filesystem::last_write_time(entry)); // Boost.Filesystem does not support creation time
+					// std::filesystem does not support creation time directly
+					// fall back to last write time
+					file_time = std::chrono::system_clock::now(); // placeholder
+#if defined(_WIN32)
+					// Windows: use std::filesystem::last_write_time (closest available)
+					file_time = std::chrono::system_clock::time_point(
+						std::chrono::duration_cast<std::chrono::system_clock::duration>(
+							entry.last_write_time().time_since_epoch()
+							- (std::filesystem::file_time_type::clock::now().time_since_epoch()
+								- std::chrono::system_clock::now().time_since_epoch())
+						)
+					);
+#else
+					file_time = std::chrono::system_clock::time_point(
+						std::chrono::duration_cast<std::chrono::system_clock::duration>(
+							entry.last_write_time().time_since_epoch()
+							- (std::filesystem::file_time_type::clock::now().time_since_epoch()
+								- std::chrono::system_clock::now().time_since_epoch())
+						)
+					);
+#endif
 				}
 				else if (found_file_time_type == file_time_last_access)
 				{
-					file_time = boost::posix_time::from_time_t(boost::filesystem::last_write_time(entry)); // Boost.Filesystem does not support last access time
+					// std::filesystem does not support last access time directly
+					// fall back to last write time
+					file_time = std::chrono::system_clock::time_point(
+						std::chrono::duration_cast<std::chrono::system_clock::duration>(
+							entry.last_write_time().time_since_epoch()
+							- (std::filesystem::file_time_type::clock::now().time_since_epoch()
+								- std::chrono::system_clock::now().time_since_epoch())
+						)
+					);
 				}
 				else // file_time_last_write
 				{
-					file_time = boost::posix_time::from_time_t(boost::filesystem::last_write_time(entry));
+					file_time = std::chrono::system_clock::time_point(
+						std::chrono::duration_cast<std::chrono::system_clock::duration>(
+							entry.last_write_time().time_since_epoch()
+							- (std::filesystem::file_time_type::clock::now().time_since_epoch()
+								- std::chrono::system_clock::now().time_since_epoch())
+						)
+					);
 				}
 
 				if (b_remove_if_found_file_time_is_past_then_limit_time_from_base_time)
@@ -524,7 +582,6 @@ namespace _mp{
 				{
 					b_result = (file_time >= limit_time);
 				}
-
 				return b_result;
 				});
 
@@ -596,12 +653,12 @@ namespace _mp{
 			if (length > 0) {
 				std::string p;
 				p.assign(path_buffer.data(), length);
-				boost::filesystem::path exePath(p);
+				std::filesystem::path exePath(p);
 				path = exePath.parent_path().string();
 			}
 #else
 			try {
-				boost::filesystem::path exePath = boost::filesystem::read_symlink("/proc/self/exe");
+				std::filesystem::path exePath = std::filesystem::read_symlink("/proc/self/exe");
 				path = exePath.parent_path().string();
 			}
 			catch (const std::exception& e) {

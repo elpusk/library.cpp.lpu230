@@ -35,11 +35,13 @@ public:
 	* @param v_dev_id - device ID, the size of vector can be 0
 	* @param p_fun - callback function
 	* @param p_para - user parameter of callback function
-	* @return first - item index of callback function, or -1 if error.
+	* @return get<0> - item index of callback function, or -1 if error.
 	* 
-	*	second - for sync prrocessing, complete event(success or error)
+	*	get<1> - for sync prrocessing, complete event(success or error)
+	* 
+	*	get<2> - std::shared_ptr<std::mutex> for sync between add_callback() & get_callback().
 	*/
-	std::pair<long,_mp::cwait::type_ptr> add_callback(
+	std::tuple<long,_mp::cwait::type_ptr, std::shared_ptr<std::mutex>> add_callback(
 		int n_result_index
 		, const _mp::type_v_buffer & v_dev_id
 		, type_lpu237_fw_callback p_fun
@@ -85,11 +87,13 @@ public:
 
 	/**
 	* @brief get callback to map
-	* @return first - true : found item.
+	* @return get<0> - true : found item.
 	*
-	*	second - for sync prrocessing, complete event(success or error)
+	*	get<1> - for sync prrocessing, complete event(success or error)
+	* 
+	*	get<2> - std::shared_ptr<std::mutex> for sync between add_callback() & get_callback().
 	*/
-	std::pair<bool, _mp::cwait::type_ptr> get_callback(
+	std::tuple<bool, _mp::cwait::type_ptr, std::shared_ptr<std::mutex>> get_callback(
 		long n_item_index
 		, bool b_remove_after_get
 		, int &n_result_index
@@ -163,6 +167,7 @@ private:
 	// 7 - firmware index in rom file.
 	// 8 - for sync, complete event
 	// 9 - for sync, processing result
+	// 10 - add_callback() 후, result indx 가 업데이트 전에, 다른 쓰레드에서 get_callback() 이 불려져서, 잘못된 result index 얻는 갓을 방지 하기 위한 동기화 object
 	typedef std::tuple<
 		int
 		, _mp::type_v_buffer 
@@ -174,6 +179,7 @@ private:
 		, unsigned long
 		, _mp::cwait::type_ptr
 		, unsigned long
+		, std::shared_ptr<std::mutex>
 	> _type_tuple_item;
 
 	// key - item index

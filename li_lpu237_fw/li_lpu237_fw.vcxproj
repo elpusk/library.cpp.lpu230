@@ -199,7 +199,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <ClCompile>
       <AdditionalIncludeDirectories>$(SolutionDir)shared/projects/lpu237_dll/inc;$(SolutionDir)shared/projects/lpu237_fw/inc;$(SolutionDir)shared/projects/rom/inc;%(ClCompile.AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>__linux__;</PreprocessorDefinitions>
+      <PreprocessorDefinitions>__linux__;_DEBUG</PreprocessorDefinitions>
       <PositionIndependentCode>false</PositionIndependentCode>
       <CppLanguageStandard>c++17</CppLanguageStandard>
       <AdditionalOptions>-fPIC %(AdditionalOptions)</AdditionalOptions>
@@ -233,7 +233,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <ClCompile>
       <AdditionalIncludeDirectories>$(SolutionDir)shared/projects/lpu237_dll/inc;$(SolutionDir)shared/projects/lpu237_fw/inc;$(SolutionDir)shared/projects/rom/inc;%(ClCompile.AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>__linux__;</PreprocessorDefinitions>
+      <PreprocessorDefinitions>__linux__;_DEBUG</PreprocessorDefinitions>
       <PositionIndependentCode>false</PositionIndependentCode>
       <CppLanguageStandard>c++17</CppLanguageStandard>
       <AdditionalOptions>-fPIC %(AdditionalOptions)</AdditionalOptions>
@@ -267,7 +267,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <AdditionalIncludeDirectories>$(SolutionDir)shared/projects/lpu237_dll/inc;$(SolutionDir)shared/projects/lpu237_fw/inc;$(SolutionDir)shared/projects/rom/inc;%(ClCompile.AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>__linux__;</PreprocessorDefinitions>
+      <PreprocessorDefinitions>__linux__;_DEBUG</PreprocessorDefinitions>
       <PositionIndependentCode>false</PositionIndependentCode>
       <CppLanguageStandard>c++17</CppLanguageStandard>
       <AdditionalOptions>-fPIC %(AdditionalOptions)</AdditionalOptions>
@@ -301,7 +301,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
     <ClCompile>
       <AdditionalIncludeDirectories>$(SolutionDir)shared/projects/lpu237_dll/inc;$(SolutionDir)shared/projects/lpu237_fw/inc;$(SolutionDir)shared/projects/rom/inc;%(ClCompile.AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>__linux__;</PreprocessorDefinitions>
+      <PreprocessorDefinitions>__linux__;_DEBUG</PreprocessorDefinitions>
       <PositionIndependentCode>false</PositionIndependentCode>
       <CppLanguageStandard>c++17</CppLanguageStandard>
       <AdditionalOptions>-fPIC %(AdditionalOptions)</AdditionalOptions>

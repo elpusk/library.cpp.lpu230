@@ -251,8 +251,9 @@ public:
 
 			m_FunLPU237_fw_msr_cancel_update = reinterpret_cast<typeLPU237_fw_msr_cancel_update>(_load_symbol(m_hMode, "LPU237_fw_msr_cancel_update"));
 
-#ifdef _WIN32
+
 			m_FunLPU237_fw_msr_update = reinterpret_cast<typeLPU237_fw_msr_update>(_load_symbol(m_hMode, "LPU237_fw_msr_update_w"));
+#ifdef _WIN32
 			m_FunLPU237_fw_msr_update_wnd = reinterpret_cast<typeLPU237_fw_msr_update_wnd>(_load_symbol(m_hMode, "LPU237_fw_msr_update_wnd_w"));
 #endif // _WIN32
 
@@ -281,8 +282,8 @@ public:
 
 			if (m_FunLPU237_fw_msr_cancel_update == NULL)	continue;
 
-#ifdef _WIN32
 			if (m_FunLPU237_fw_msr_update == NULL)	continue;
+#ifdef _WIN32
 			if (m_FunLPU237_fw_msr_update_wnd == NULL)	continue;
 #endif
 			if (m_FunLPU237_fw_msr_update_callback == NULL)	continue;
@@ -457,7 +458,6 @@ public:
 	{
 		bool b_result(false);
 		unsigned long n_result(LPU237_FW_RESULT_ERROR);
-#ifdef _WIN32
 		do {
 			std::lock_guard<std::mutex> lock(m_mutex);
 			if (!m_FunLPU237_fw_msr_update) {
@@ -471,7 +471,6 @@ public:
 
 			b_result = true;
 		} while (false);
-#endif
 		return std::make_pair(b_result, n_result);
 
 	}

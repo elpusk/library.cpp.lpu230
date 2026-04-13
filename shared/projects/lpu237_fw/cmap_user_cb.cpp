@@ -15,7 +15,7 @@ cmap_user_cb::~cmap_user_cb()
 	m_map_msg_cnt.clear();
 }
 
-std::pair<long, _mp::cwait::type_ptr> cmap_user_cb::add_callback(
+std::tuple<long, _mp::cwait::type_ptr, std::shared_ptr<std::mutex>> cmap_user_cb::add_callback(
 	int n_result_index
 	, const _mp::type_v_buffer& v_dev_id
 	, type_lpu237_fw_callback p_fun
@@ -28,6 +28,7 @@ std::pair<long, _mp::cwait::type_ptr> cmap_user_cb::add_callback(
 {
 	long n_item_index(-1);
 	_mp::cwait::type_ptr ptr_evt;
+	std::shared_ptr<std::mutex> ptr_m;
 
 	do {
 		std::lock_guard<std::mutex> lock(m_mutex);
@@ -38,6 +39,8 @@ std::pair<long, _mp::cwait::type_ptr> cmap_user_cb::add_callback(
 		//add new callback
 		ptr_evt = std::make_shared<_mp::cwait>();
 		ptr_evt->generate_new_event(); // event 는 한개만 사용 할 것이어서, 이벤트 인덱스 번호 저장 불요.
+
+		ptr_m = std::make_shared<std::mutex>();
 		m_map_cb[m_n_cur_item_index] = std::make_tuple(
 			n_result_index
 			, v_dev_id
@@ -49,6 +52,7 @@ std::pair<long, _mp::cwait::type_ptr> cmap_user_cb::add_callback(
 			, dwIndex
 			, ptr_evt
 			, LPU237_FW_RESULT_ERROR
+			, ptr_m
 		);
 		m_map_msg_cnt[m_n_cur_item_index] = std::make_tuple(0, 0, 0); // initialize message counter
 
@@ -58,7 +62,7 @@ std::pair<long, _mp::cwait::type_ptr> cmap_user_cb::add_callback(
 			m_n_cur_item_index = 0; //reset index
 		}
 	} while (false);
-	return std::make_pair(n_item_index, ptr_evt);
+	return std::make_tuple(n_item_index, ptr_evt, ptr_m);
 }
 
 bool cmap_user_cb::change_callback(
@@ -166,7 +170,7 @@ bool cmap_user_cb::_remove_callback(long n_item_index)
 }
 
 
-std::pair<bool, _mp::cwait::type_ptr> cmap_user_cb::get_callback(
+std::tuple<bool, _mp::cwait::type_ptr, std::shared_ptr<std::mutex>> cmap_user_cb::get_callback(
 	long n_item_index
 	, bool b_remove_after_get
 	, int& n_result_index
@@ -181,6 +185,7 @@ std::pair<bool, _mp::cwait::type_ptr> cmap_user_cb::get_callback(
 {
 	bool b_reslt(false);
 	_mp::cwait::type_ptr ptr_evt;
+	std::shared_ptr<std::mutex> ptr_m;
 
 	do {
 		std::lock_guard<std::mutex> lock(m_mutex);
@@ -198,12 +203,15 @@ std::pair<bool, _mp::cwait::type_ptr> cmap_user_cb::get_callback(
 		s_new_RomFileName = std::get<6>(it->second);
 		dw_new_Index = std::get<7>(it->second);
 		ptr_evt = std::get<8>(it->second);
+
+		ptr_m = std::get<10>(it->second);
+		
 		if (b_remove_after_get) {
 			m_map_cb.erase(it); // 여기서 지워도 ptr_evt 은 shared_ptr 이므로 제거 되지 않는다.
 		}
 		b_reslt = true;
 	} while (false);
-	return std::make_pair(b_reslt,ptr_evt);
+	return std::make_tuple(b_reslt,ptr_evt, ptr_m);
 }
 
 void cmap_user_cb::set_msg_counter(long n_item_index, int n_sector_erase_cnt, int n_sector_write_cnt, int n_complete_cnt)

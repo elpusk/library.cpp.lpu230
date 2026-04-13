@@ -55,10 +55,15 @@ void _so_fini(void)
 }
 #endif // _WIN32
 
+static std::pair<bool, std::wstring> _setup_rom_dll();
+static std::filesystem::path _get_module_directory();
+
 /////////////////////////////////////////////////////////////////////////
 // global variable
 /////////////////////////////////////////////////////////////////////////
 static cmap_user_cb g_map_user_cb; //global user callback map
+
+static std::shared_ptr<CRom> g_ptr_rom_dll; // tg_rom dll warpper
 
 /////////////////////////////////////////////////////////////////////////
 // local class
@@ -66,7 +71,70 @@ static cmap_user_cb g_map_user_cb; //global user callback map
 /////////////////////////////////////////////////////////////////////////
 // local function prototype
 /////////////////////////////////////////////////////////////////////////
-std::filesystem::path _get_module_directory() {
+
+/**
+* @brief initialze g_ptr_rom_dll variable
+* @return first - ini OK tg_rom.dll(so), second - debugging message( always have a message )
+*/
+std::pair<bool,std::wstring> _setup_rom_dll()
+{
+	bool b_result(false);
+	std::wstring s_deb(L"none message")
+		;
+	do {
+		if (g_ptr_rom_dll) {
+			if (g_ptr_rom_dll->is_ini()) {
+				s_deb = L"tg_dll initialization was tried already successfully";
+			}
+			else {
+				s_deb = L"tg_dll initialization was tried already and failed";
+			}
+			continue;
+		}
+
+		std::error_code ec;
+		// 1. 현재 tg_lpu237_fw.dll(libtg_lpu237_fw.so) 가 있는 디렉토리에서 tg_rom 을 찾아 본다.
+		std::filesystem::path rom_lib = _get_module_directory();
+#ifdef _WIN32
+		rom_lib /= "tg_rom.dll";
+#else
+		rom_lib /= "libtg_rom.so";
+#endif
+		//
+		if (std::filesystem::exists(rom_lib, ec) && std::filesystem::is_regular_file(rom_lib, ec)) {
+			g_ptr_rom_dll = std::make_shared<CRom>(rom_lib.wstring().c_str());
+			if (g_ptr_rom_dll) {
+				if (g_ptr_rom_dll->is_ini()) {
+					b_result = true;
+					_mp::clog::get_instance().log_fmt(L" : INF :  loaded rg_rom : %ls.\n", rom_lib.wstring().c_str());
+					continue;
+				}
+			}
+		}
+
+		//2. 현재 디렉토리에서 라이브러리 못찾으면, 기본path 에서 찾기.
+		g_ptr_rom_dll.reset();
+		rom_lib = _mp::ccoffee_path::get_abs_full_path_of_rom_dll();
+		g_ptr_rom_dll = std::make_shared<CRom>(rom_lib.wstring().c_str());
+		if (!g_ptr_rom_dll) {
+			s_deb = rom_lib.wstring() + L" is not constructed";
+			continue;
+		}
+		if (!g_ptr_rom_dll->is_ini()) {
+			s_deb = rom_lib.wstring() + L" is not initialized";
+			continue;
+		}
+
+		_mp::clog::get_instance().log_fmt(L" : INF :  loaded rg_rom : %ls.\n", rom_lib.wstring().c_str());
+
+		b_result = true; // 현재 디렉토리에 있는 dll 초기화 성공.
+
+	} while (false);
+	return std::make_pair(b_result,s_deb);
+}
+
+std::filesystem::path _get_module_directory()
+{
 #ifdef _WIN32
 	wchar_t buffer[MAX_PATH];
 	HMODULE hModule = NULL;
@@ -410,8 +478,17 @@ void __stdcall _cb_fw(void* p_user)
 		UINT n_msg(0);
 		std::wstring s_rom_file_name;
 		unsigned long dw_fw_index(-1);
+		std::shared_ptr<std::mutex> ptr_mutex;
 
-		std::tie(b_get, ptr_evt_complete) = g_map_user_cb.get_callback(
+		// this is dregon!
+		// _fw_msr_update_ex_w() 가 change_result_index() 에 도달하기 전에 이 callback 이 호출되어서 get_callback() 을 호츨하여,
+		// 아직 설정되지 않은 n_result_index 값을 얻는을 수 있다,
+		// 따라서
+		// 먼저 mutex 만 얻고, lock() 시도해서 걸릴때 까지, 기다린다. 
+		// _fw_msr_update_ex_w() 는 change_result_index() 실행 후, unlock() 하므로.
+		// 여기서 lock() 이 되면 change_result_index()가 실행되었다는 의미 이므로,
+		// 다시 get_callback() 을 호츨하여, 업데이트된 최종 데이터를 얻는다.
+		std::tie(b_get, ptr_evt_complete, ptr_mutex) = g_map_user_cb.get_callback(
 			n_item_index
 			, false // 계속 콜백 가능성이	있기 때문에 콜백 정보를 얻은 후에도 콜백 정보를 유지한다. (예를 들어, 콜백이 여러번 호출되는 경우)
 			, n_result_index
@@ -428,6 +505,21 @@ void __stdcall _cb_fw(void* p_user)
 			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : get_callback fail for item index %d.\n", __WFUNCTION__, n_item_index);
 			continue;
 		}
+
+		ptr_mutex->lock();
+		std::tie(b_get, ptr_evt_complete, ptr_mutex) = g_map_user_cb.get_callback(
+			n_item_index
+			, false // 계속 콜백 가능성이	있기 때문에 콜백 정보를 얻은 후에도 콜백 정보를 유지한다. (예를 들어, 콜백이 여러번 호출되는 경우)
+			, n_result_index
+			, v_dev_id
+			, p_fun
+			, p_para
+			, h_win
+			, n_msg
+			, s_rom_file_name
+			, dw_fw_index
+		);
+		ptr_mutex->unlock();
 
 		///////////////////////////////////////////////////////////////////
 		if (p_fun == 0 && (h_win == INVALID_HANDLE_VALUE || h_win == 0)) {
@@ -453,12 +545,7 @@ void __stdcall _cb_fw(void* p_user)
 
 		_mp::clog::get_instance().log_fmt(L" : INF :  %ls : n_device_index = %u.\n", __WFUNCTION__, n_device_index);
 
-		if (n_device_index == i_device_of_client::const_invalied_device_index) {
-			ptr_result = ptr_manager_of_device_of_client->get_async_parameter_result_for_manager_from_all_device(n_result_index);
-		}
-		else {
-			ptr_result = ptr_manager_of_device_of_client->get_async_parameter_result_for_manager(n_device_index,n_result_index);
-		}
+		ptr_result = ptr_manager_of_device_of_client->get_async_parameter_result_for_manager_from_all_device(n_result_index);
 		if (!ptr_result) {
 			if (b_sync) {
 				b_set_sync_event = true;	n_sync_result = LPU237_FW_RESULT_ERROR;
@@ -724,7 +811,8 @@ unsigned long _fw_msr_update_ex_w(
 
 		long n_item_index(-1);
 		_mp::cwait::type_ptr ptr_evet_complete;
-		std::tie(n_item_index, ptr_evet_complete) = g_map_user_cb.add_callback(
+		std::shared_ptr<std::mutex> ptr_mutex;
+		std::tie(n_item_index, ptr_evet_complete, ptr_mutex) = g_map_user_cb.add_callback(
 			-1
 			, v_id
 			, cbUpdate
@@ -738,17 +826,31 @@ unsigned long _fw_msr_update_ex_w(
 			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : [critical error]add_callback error.\n", __WFUNCTION__);
 			continue;
 		}
+		if (!ptr_mutex) {
+			g_map_user_cb.remove_callback(n_item_index);
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : add_callback error : create mutex ptr.\n", __WFUNCTION__);
+			continue;
+		}
 		
 		bool b_result(false);
 		int n_result_index(-1);
+
+		// _cb_fw 가 change_result_index() 에 도달하기 전에 호출되어서 get_callback() 을 호츨하여,
+		// 아직 설정되지 않은 n_result_index 값을 얻는 것을 방지 한다.
+		ptr_mutex->lock();
+		
 		std::tie(b_result,n_result_index) = ptr_device->bootloader_operation_start(_cb_fw, (void*)n_item_index);
 		if (!b_result) {
+			ptr_mutex->unlock();
 			g_map_user_cb.remove_callback(n_item_index);
 			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : error bootloader_operation for starting.\n", __WFUNCTION__);
 			continue;
 		}
-
-		g_map_user_cb.change_result_index(n_item_index, n_result_index);
+		else {
+			_mp::clog::get_instance().log_fmt(L" : INF : %ls : created result index = %u.\n", __WFUNCTION__, n_result_index);
+			g_map_user_cb.change_result_index(n_item_index, n_result_index);
+			ptr_mutex->unlock();
+		}
 
 		bool b_sync(false);
 		if (hWnd == INVALID_HANDLE_VALUE || hWnd == 0) {
@@ -780,20 +882,20 @@ unsigned long _fw_msr_update_ex_w(
 
 	switch (dw_result) {
 	case ccb_client::const_dll_result_success:
-		_mp::clog::get_instance().log_fmt(L" : RET : %ls : success - %u.\n", __WFUNCTION__, dw_result);
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : success - %u(cb=0x%x,hwd=0x%x).\n", __WFUNCTION__, dw_result, cbUpdate, hWnd);
 		break;
 
 	case ccb_client::const_dll_result_error:
-		_mp::clog::get_instance().log_fmt(L" : RET : %ls : error - %u.\n", __WFUNCTION__, dw_result);
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : error - %u(cb=0x%x,hwd=0x%x).\n", __WFUNCTION__, dw_result, cbUpdate, hWnd);
 		break;
 	case ccb_client::const_dll_result_timeout:
-		_mp::clog::get_instance().log_fmt(L" : RET : %ls : timeout - %u.\n", __WFUNCTION__, dw_result);
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : timeout - %u(cb=0x%x,hwd=0x%x).\n", __WFUNCTION__, dw_result, cbUpdate, hWnd);
 		break;
 	case ccb_client::const_dll_result_no_msr:
-		_mp::clog::get_instance().log_fmt(L" : RET : %ls : no msr - %u.\n", __WFUNCTION__, dw_result);
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : no msr - %u(cb=0x%x,hwd=0x%x).\n", __WFUNCTION__, dw_result, cbUpdate, hWnd);
 		break;
 	default:
-		_mp::clog::get_instance().log_fmt(L" : RET : %ls : %u.\n", __WFUNCTION__, dw_result);
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : %u(cb=0x%x,hwd=0x%x).\n", __WFUNCTION__, dw_result, cbUpdate, hWnd);
 		break;
 	}//end switch
 	return dw_result;
@@ -826,6 +928,14 @@ unsigned long _CALLTYPE_ LPU237_fw_on()
 #endif
 	unsigned long dwResult(ccb_client::const_dll_result_error);
 	_mp::clog::get_instance().log_fmt(L" : CAL : %ls.\n", __WFUNCTION__);
+
+	bool b_setup(false);
+	std::wstring s_deb;
+	std::tie(b_setup, s_deb) = _setup_rom_dll();
+	if (!b_setup) {
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : setup tg_rom library L %ls.\n", __WFUNCTION__, s_deb.c_str());
+		return dwResult;
+	}
 	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
 
 	do {
@@ -859,6 +969,9 @@ unsigned long _CALLTYPE_ LPU237_fw_off()
 	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
 
 	do {
+
+		g_ptr_rom_dll.reset(); // release tg_rom library.
+
 		if (!ptr_manager_of_device_of_client) {
 			_mp::clog::get_instance().log_fmt(L" : RET : %ls : none manager_of_device_of_client.\n", __WFUNCTION__);
 			continue;
@@ -1354,15 +1467,19 @@ unsigned long _CALLTYPE_ LPU237_fw_rom_load_w(const wchar_t* sRomFileName)
 			continue;
 		}
 
-		//
-		std::filesystem::path rom_lib = _get_module_directory();
-		rom_lib /= "tg_rom.dll";
-		CRom dll_rom(rom_lib.wstring().c_str());
+		if (!g_ptr_rom_dll) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : ERR : tg_rom library : not constructed\n", __WFUNCTION__);
+			continue;
+		}
+		if (!g_ptr_rom_dll->is_ini()) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : ERR : tg_rom library : not initialized\n", __WFUNCTION__);
+			continue;
+		}
 
 		CRom::ROMFILE_HEAD Header = { 0, };
-		result_rom = dll_rom.LoadHeader(sRomFileName, &Header);
+		result_rom = g_ptr_rom_dll->LoadHeader(sRomFileName, &Header);
 		if (result_rom != CRom::result_success) {
-			_mp::clog::get_instance().log_fmt(L" : RET : %ls : LoadHeader() ERR\n", __WFUNCTION__);
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : ERR : LoadHeader()\n", __WFUNCTION__);
 			continue;
 		}
 		dw_result = LPU237_FW_RESULT_SUCCESS;
@@ -1401,15 +1518,20 @@ unsigned long _CALLTYPE_ LPU237_fw_rom_get_index_w(const wchar_t* sRomFileName, 
 			_mp::clog::get_instance().log_fmt(L" : RET : %s : sName or sVersion\n", __WFUNCTION__);
 			continue;
 		}
-		//
-		std::filesystem::path rom_lib = _get_module_directory();
-		rom_lib /= "tg_rom.dll";
-		CRom dll_rom(rom_lib.wstring().c_str());
+
+		if (!g_ptr_rom_dll) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : ERR : tg_rom library : not constructed\n", __WFUNCTION__);
+			continue;
+		}
+		if (!g_ptr_rom_dll->is_ini()) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : ERR : tg_rom library : not initialized\n", __WFUNCTION__);
+			continue;
+		}
 
 		CRom::ROMFILE_HEAD Header = { 0, };
 
 		if (sRomFileName != NULL) {
-			result_rom = dll_rom.LoadHeader(sRomFileName, &Header);
+			result_rom = g_ptr_rom_dll->LoadHeader(sRomFileName, &Header);
 			if (result_rom != CRom::result_success) {
 				_mp::clog::get_instance().log_fmt(" : RET : %s : LPU237_fw_rom_load_w : ERR\n", __WFUNCTION__);
 				continue;
@@ -1417,7 +1539,7 @@ unsigned long _CALLTYPE_ LPU237_fw_rom_get_index_w(const wchar_t* sRomFileName, 
 		}
 		//
 		//
-		int nIndex = dll_rom.GetUpdatableItemIndex(sName, sVersion[0], sVersion[1], sVersion[2], sVersion[3]);
+		int nIndex = g_ptr_rom_dll->GetUpdatableItemIndex(sName, sVersion[0], sVersion[1], sVersion[2], sVersion[3]);
 		if (nIndex < 0) {
 			_mp::clog::get_instance().log_fmt(" : RET : %s : grom.GetUpdatableItemIndex\n", __WFUNCTION__);
 			continue;
