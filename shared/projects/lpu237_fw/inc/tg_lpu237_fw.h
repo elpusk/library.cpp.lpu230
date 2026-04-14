@@ -1,7 +1,7 @@
 #pragma once
 
 /**
-* 2025.03.18  - release version 6.0 : wss client
+* 2025.03.18  - release version 6.2 : wss client
 */
 
 #include <mp_os_type.h>
@@ -23,6 +23,7 @@
 #define	LPU237_FW_RESULT_NO_MSR			0xFFFFFFFb	//! processing not found MSR .(-5)
 
 /*!
+*	deprecated - In new project, Don't use LPU237_FW_WPARAM_COMPLETE ~ LPU237_FW_WPARAM_ERROR
 *	windows' message wparam value.
 *   if tg_lpu237_fw.dll version is less than v6.0, wparam value is defined as below.
 */
@@ -58,8 +59,8 @@
 
 #define	LPU237_FW_WPARAM_EX_MASK	0b1111
 
-// NEW wparam!
-// format of wparam is 0x0000WWWW, where WWWW is defined above. (ex. LPU237_FW_WPARAM_ERROR is 0x0000FFFF)
+// NEW combination wparam!
+// the format of combination wparam is 0x0000WWWW, where WWWW is defined above. (ex. LPU237_FW_WPARAM_ERROR is 0x0000FFFF)
 // NNNN NNNN NNNN NNnn nnnn nnnn nnnn xxxx
 // n bits for firmware update step zero-base index. (14 bits, LPU237_FW_STEP_INDEX_MIN~LPU237_FW_STEP_INDEX_MAX)
 // N bits for firmware update step max.(14 bits, LPU237_FW_STEP_MIN~LPU237_FW_STEP_MAX)
@@ -98,7 +99,11 @@
 *	parameters
 *		1'st - user defined data.
 *		2'nd - current processing result : LPU237_FW_RESULT_x
-*		3'th - LPU237_FW_WPARAM_x.
+*		3'th - (deprecated) LPU237_FW_WPARAM_COMPLETE ~ LPU237_FW_WPARAM_ERROR. 
+*			or 4 bytes message combination wparam 
+*			you can get the number of fw-update step by LPU237_FW_GET_TOTAL_STEP(combination wparam) macro.
+*			you can get the current of fw-update zero base step index by LPU237_FW_GET_STEP_INDEX(combination wparam) macro.
+*			you can get the result code of fw-update current step by LPU237_FW_GET_RESULT_CODE(combination wparam) macro.
 */
 typedef	unsigned long(_CALLTYPE_* type_lpu237_fw_callback)(void*, unsigned long, unsigned long);
 

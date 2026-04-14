@@ -51,8 +51,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 6,0,0,0
- PRODUCTVERSION 6,0,0,0
+ FILEVERSION 6,2,0,0
+ PRODUCTVERSION 6,2,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -69,12 +69,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Elpusk.Co.,Ltd"
             VALUE "FileDescription", "lpu237fw"
-            VALUE "FileVersion", "6.0.0.0"
+            VALUE "FileVersion", "6.2.0.0"
             VALUE "InternalName", "wi_lpu23.dll"
             VALUE "LegalCopyright", "Copyright (C) 2026 Elpusk.Co.,Ltd"
             VALUE "OriginalFilename", "wi_lpu23.dll"
             VALUE "ProductName", "tg_lpu237_fw.dll"
-            VALUE "ProductVersion", "6.0.0.0"
+            VALUE "ProductVersion", "6.2.0.0"
         END
     END
     BLOCK "VarFileInfo"

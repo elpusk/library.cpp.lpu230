@@ -51,10 +51,21 @@
 *                               : 9BEFD1A0-59EB-4492-99C9-78A529FC5B20
 *                               : coffee_sevice.exe - v2.1(공용라이브러리 변경으로 업데이트)
 *                               : elpusk-hid-d.exe - v2.9( 가끔 응답 놓치는 문제 수정을 위한 변경.)
-*                               : lpu237_dll.dll - v6.1(공용라이브러리 변경으로 업데이트)
-*                               : lpu237_ibutton.dll - v6.1(공용라이브러리 변경으로 업데이트)
+*                               : tg_lpu237_dll.dll - v6.1(공용라이브러리 변경으로 업데이트)
+*                               : tg_lpu237_ibutton.dll - v6.1(공용라이브러리 변경으로 업데이트)
 *                               : dev_lib.dll - v1.1( 가끔 응답 놓치는 문제 수정을 위한 변경.)
 *                               : lpu230_update.exe - v2.7( 가끔 응답 놓치는 문제 수정을 위한 변경.)
+*
+* 2026.04.14 - package v 2.11.0 : coffee manager 2nd project(v2.11)
+*                               : 5746120D-5888-4DAE-805B-6123B6B21D09
+*                               : coffee_sevice.exe - v2.2(공용라이브러리 변경으로 업데이트)
+*                               : dev_lib.dll - v1.2(공용라이브러리 변경으로 업데이트)
+*                               : lpu230_update.exe - v2.8(공용라이브러리 변경으로 업데이트)
+*                               : tg_lpu237_dll.dll - v6.2(공용라이브러리 변경으로 업데이트)
+*                               : tg_lpu237_fw.dll - v6.2(처음으로 포함됨, 이 것 지원하는 과정에서 공용라이브러리 변경으로 업데이트) 
+*                               : tg_lpu237_ibutton.dll - v6.2(공용라이브러리 변경으로 업데이트)
+*                               : tg_rom.dll - v1.3(공용라이브러리 변경으로 업데이트)
+*                               : elpusk-hid-d.exe - v2.10(공용라이브러리 변경으로 업데이트)
 *
 -->
 
@@ -72,8 +83,8 @@
 <?define Pre_ProductName = "coffee_manager_2nd"?>
 
 <!-- Pre_ProductVersion 값이 변경되면, Pre_ProductCode 는 새로 생성해야함.-->
-<?define Pre_ProductVersion = "2.10.0"?>
-<?define Pre_ProductCode = "9BEFD1A0-59EB-4492-99C9-78A529FC5B20"?>
+<?define Pre_ProductVersion = "2.11.0"?>
+<?define Pre_ProductCode = "5746120D-5888-4DAE-805B-6123B6B21D09"?>
 
 <!-- 같은 프로그래은 버전이 달라져도 Pre_ProductUpgradeCode 는 항상 동일해야 함.-->
 <?define Pre_ProductUpgradeCode = "B9BF3037-BD17-4F00-BA59-C5CE301723D6"?>
@@ -325,6 +336,7 @@
         <File Id="file_lpu237_setting_guide.md" Name="lpu237_setting_guide.md" Source="!(wix.DIR_SRC_DOC)lpu237_setting_guide.md" KeyPath="yes"/>
         <File Id="file_lpu230_api_user_manual.md" Name="lpu230_api_user_manual.md" Source="!(wix.DIR_SRC_DOC)lpu230_api_user_manual.md" />
         <File Id="file_lpu237_api_ibutton_user_manual.md" Name="lpu237_api_ibutton_user_manual.md" Source="!(wix.DIR_SRC_DOC)lpu237_api_ibutton_user_manual.md" />
+        <File Id="file_lpu237_api_fw_user_manual.md" Name="lpu237_api_fw_user_manual.md" Source="!(wix.DIR_SRC_DOC)lpu237_api_fw_user_manual.md" />
       </Component>
     </ComponentGroup>
   </Fragment>
@@ -360,6 +372,10 @@
         <File Id="file_tg_lpu237_ibutton.dll_x86" Name="tg_lpu237_ibutton.dll" Source="!(wix.DIR_SRC_DLL_x86)tg_lpu237_ibutton.dll" KeyPath="yes" Checksum="yes" />
       </Component>
 
+      <Component Id="co_tg_lpu237_fw.dll_x86" Guid = "0E38806D-E6E6-430E-9B73-4010E72A1371">
+        <File Id="file_tg_lpu237_fw.dll_x86" Name="tg_lpu237_fw.dll" Source="!(wix.DIR_SRC_DLL_x86)tg_lpu237_fw.dll" KeyPath="yes" Checksum="yes" />
+      </Component>
+
       <Component Id="co_dev_lib.dll_x86" Guid = "508B7C0A-CBDD-44CB-819E-4A97276305C6">
         <File Id="file_dev_lib.dll_x86" Name="dev_lib.dll" Source="!(wix.DIR_SRC_DLL_x86)dev_lib.dll" KeyPath="yes" Checksum="yes" />
       </Component>
@@ -380,6 +396,11 @@
 
       <Component Id="co_tg_lpu237_ibutton.dll_x64" Guid = "4BD9DE56-7B5C-478D-A8C7-60FE09A5DA78">
         <File Id="file_tg_lpu237_ibutton.dll_x64" Name="tg_lpu237_ibutton.dll" Source="!(wix.DIR_SRC_DLL_x64)tg_lpu237_ibutton.dll" KeyPath="yes" Checksum="yes"/>
+        <Condition> VersionNT64 </Condition>
+      </Component>
+
+      <Component Id="co_tg_lpu237_fw.dll_x64" Guid = "7EEE161D-0224-4B96-B28F-58C143D63D22">
+        <File Id="file_tg_lpu237_fw.dll_x64" Name="tg_lpu237_fw.dll" Source="!(wix.DIR_SRC_DLL_x64)tg_lpu237_fw.dll" KeyPath="yes" Checksum="yes" />
         <Condition> VersionNT64 </Condition>
       </Component>
 

@@ -12,28 +12,32 @@ lpu23x device c++ library
 + deb package directory : /home/tester/build_deb/
 + FTXUI 6.1.9 lib - path : /home/tester/FTXUI/
 
-## the current developed version(pkg v2.10)
-+ coffee_sevice : 2.1
+## the current version(pkg v2.11)
++ coffee_sevice : 2.2
   - rebuilded with the changed library.
   - Windows only service program for running elpusk-hid-d.exe
 
-+ elpusk-hid-d : v2.9
-  - certificate and key file permission are changed.
-
-+ tg_lpu237_dll : v6.1
++ elpusk-hid-d : v2.10
   - rebuilded with the changed library.
 
-+ tg_lpu237_ibutton : v6.1
++ tg_lpu237_dll : v6.2
   - rebuilded with the changed library.
 
-+ dev_lib : v1.1
-  - library is redesigned.
++ tg_lpu237_ibutton : v6.2
+  - rebuilded with the changed library.
 
-+ lpu230_update : v2.7
-  - at windows, logging folder is equal to lpu230_update.exe_ logging folder.
-  - run by elpusk-hid-d server.
++ tg_lpu237_fw : v6.2
+  - the first release.
 
-+ tg_rom : v1.2
++ dev_lib : v1.2
+  - rebuilded with the changed library.
+
++ lpu230_update : v2.8
+  - rebuilded with the changed library.
+
++ tg_rom : v1.3
+  - rebuilded with the changed library.
+
 + tg_rom_build : v1.3
   - rebuilded with the changed library.
 
@@ -138,7 +142,7 @@ lpu23x device c++ library
 ## build & install
 ### deb package
 + In Debian12, copy build-coffee-manager-2nd.sh to /home/tester/build_deb/
-+ run as like, sudo sh build-coffee-manager-2nd.sh
++ run as like, sh build-coffee-manager-2nd.sh
 + installation, sudo dpkg -i coffee-manager-2nd_x.y_amd64.deb
 + uninstallation(pure), sudo dpkg -P coffee-manager-2nd
 
@@ -152,6 +156,7 @@ sudo rm /var/lib/dpkg/info/coffee-manager*
 ### elpusk-hid-d file.(elpusk-hid-d.exe on Windows)
 
 #### common
+
 + trace pipe name : _mp::_coffee::CONST_S_COFFEE_MGMT_TRACE_PIPE_NAME = L"PIPE_NAME_COFFEE_MGMT_TRACE_036423FC_2189_423D_8D0E_75992725F843"
 + for single instance, file lock : _mp::_coffee::CONST_S_COFFEE_MGMT_FILE_LOCK_FOR_SINGLE = L"FILE_LOCK_COFFEE_MGMT_E0A38B4D_DBE7_4F77_A657_45BD8A19B923"
 + for controll object, pipe name : _mp::_coffee::CONST_S_COFFEE_MGMT_CTL_PIPE_NAME = L"PIPE_NAME_COFFEE_MGMT_CTL_6B092EC7_0D20_4123_8165_2C1DE27C9AAF"
@@ -160,6 +165,7 @@ sudo rm /var/lib/dpkg/info/coffee-manager*
 
 
 #### Windows x86 and x64
+
 + common
   - PID file path : none
 + debug build
@@ -175,6 +181,7 @@ sudo rm /var/lib/dpkg/info/coffee-manager*
   - virtual drive root directory : _mp::_coffee::CONST_S_ROOT_DIR_EXCEPT_BACKSLASH = L"%ProgramData%\\elpusk\\programdata\\00000006\\coffee_manager\\root"
 
 #### Linux build x64
+
 + common
   - PID file path : _mp::_coffee::CONST_S_PID_FILE_FULL_PATH = L"/var/run/elpusk-hid-d.pid"
 
@@ -190,11 +197,14 @@ sudo rm /var/lib/dpkg/info/coffee-manager*
   - log directory : _mp::_coffee::CONST_S_LOG_DIR_EXCEPT_BACKSLASH = L"/var/log/elpusk/00000006/coffee_manager/elpusk-hid-d"
   - virtual drive root directory : _mp::_coffee::CONST_S_ROOT_DIR_EXCEPT_BACKSLASH = L"/usr/share/elpusk/programdata/00000006/coffee_manager/root"
 
-
 ### libtg_lpu237_dll.so file.(tg_lpu237_dll.dll on Windows)
 
 #### common
+
++ none info
+
 #### Windows x86 and x64
+
 + debug build
   - ini file : L"C:\\job\\library.cpp.lpu230\\shared\\projects\\lpu237_dll\\tg_lpu237_dll.ini"
   - log directory : L"C:\\ProgramData\\Elpusk\\00000006\\tg_lpu237_dll\\log"
@@ -238,3 +248,25 @@ sudo rm /var/lib/dpkg/info/coffee-manager*
     + root user : L"/var/log/elpusk/00000006/coffee_manager/tg_lpu237_ibutton"
     + normal user : L"~/.elpusk/log/00000006/coffee_manager/tg_lpu237_ibutton"
 
+### libtg_lpu237_fw.so file.(tg_lpu237_fw.dll on Windows)
+
+#### common
+#### Windows x86 and x64
++ debug build
+  - ini file : L"C:\\job\\library.cpp.lpu230\\shared\\projects\\lpu237_fw\\tg_lpu237_fw.ini"
+  - log directory : L"C:\\ProgramData\\Elpusk\\00000006\\tg_lpu237_fw\\log"
++ release build
+  - ini file : L"C:\\ProgramData\\Elpusk\\00000006\\tg_lpu237_fw\\tg_lpu237_fw.ini"
+  - log directory : L"C:\\ProgramData\\Elpusk\\00000006\\tg_lpu237_fw\\log"
+
+#### Linux build x64
++ debug build
+  - ini file : L"/home/tester/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/projects/tg_lpu237_fw/tg_lpu237_fw.ini"
+  - log directory
+    + root user : L"/home/tester/projects/LiElpuskHidDaemon/bin/x64/Debug/00000006/coffee_manager/tg_lpu237_ibutton"
+    + normal user : L"/home/tester/projects/LiElpuskHidDaemon/bin/x64/Debug/00000006/coffee_manager/tg_lpu237_ibutton"
++ release build
+  - ini file : L"/usr/share/elpusk/programdata/00000006/coffee_manager/tg_lpu237_fw/tg_lpu237_fw.ini"
+  - log directory
+    + root user : L"/var/log/elpusk/00000006/coffee_manager/tg_lpu237_fw"
+    + normal user : L"~/.elpusk/log/00000006/coffee_manager/tg_lpu237_fw"

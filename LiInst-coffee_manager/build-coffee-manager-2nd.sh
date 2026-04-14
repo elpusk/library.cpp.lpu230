@@ -6,7 +6,7 @@ set -e # Exit immediately if a command exits with a non-zero status.
 
 # 패키지 정보 설정
 PACKAGE_NAME="coffee-manager-2nd"
-VERSION="2.10"
+VERSION="2.11"
 ARCH="amd64" # 또는 'arm64', 'i386' 등 실제 아키텍처에 맞게 수정
 DEB_PACKAGE_NAME="${PACKAGE_NAME}_${VERSION}_${ARCH}.deb"
 
@@ -19,10 +19,10 @@ gCA_CERT_ALIAS="ca-coffee_server"
 SRC_BASE_DIR="/home/tester/projects"
 
 # 라이브러리 버전 정보
-LIBDEV_LIB_VERSION="1.1.0"
-LIBTG_LPU237_DLL_VERSION="6.1.0"
-LIBTG_LPU237_IBUTTON_VERSION="6.1.0"
-LIBTG_ROM_VERSION="1.2.0"
+LIBDEV_LIB_VERSION="1.2.0"
+LIBTG_LPU237_DLL_VERSION="6.2.0"
+LIBTG_LPU237_IBUTTON_VERSION="6.2.0"
+LIBTG_ROM_VERSION="1.3.0"
 
 # 원본 파일 전체 경로
 ORIGIN_ELPUSK_HID_D="${SRC_BASE_DIR}/LiElpuskHidDaemon/bin/x64/Release/elpusk-hid-d"
@@ -36,6 +36,7 @@ ORIGIN_LIBTG_ROM_XYZ="${SRC_BASE_DIR}/li_rom/bin/x64/Release/libtg_rom.so.${LIBT
 
 ORIGIN_TG_LPU237_DLL_INI="${SRC_BASE_DIR}/li_lpu237_dll/shared/projects/lpu237_dll/tg_lpu237_dll.ini"
 ORIGIN_TG_LPU237_IBUTTON_INI="${SRC_BASE_DIR}/li_lpu237_ibutton/shared/projects/lpu237_ibutton/tg_lpu237_ibutton.ini"
+ORIGIN_TG_LPU237_FW_INI="${SRC_BASE_DIR}/li_lpu237_fw/shared/projects/lpu237_fw/tg_lpu237_fw.ini"
 ### --- 설정 변수 끝 --- ###
 
 # 임시 빌드 디렉토리 생성
@@ -58,6 +59,7 @@ echo "파일 복사 중..."
 cp "${ORIGIN_ELPUSK_HID_D_JSON}" "${DEB_DIR}/usr/share/elpusk/programdata/00000006/coffee_manager/elpusk-hid-d/"
 cp "${ORIGIN_TG_LPU237_DLL_INI}" "${DEB_DIR}/usr/share/elpusk/programdata/00000006/coffee_manager/tg_lpu237_dll/"
 cp "${ORIGIN_TG_LPU237_IBUTTON_INI}" "${DEB_DIR}/usr/share/elpusk/programdata/00000006/coffee_manager/tg_lpu237_ibutton/"
+cp "${ORIGIN_TG_LPU237_FW_INI}" "${DEB_DIR}/usr/share/elpusk/programdata/00000006/coffee_manager/tg_lpu237_fw/"
 cp "${ORIGIN_ELPUSK_HID_D}" "${DEB_DIR}/usr/share/elpusk/program/00000006/coffee_manager/bin/"
 cp "${ORIGIN_LPU230_UPDATE}" "${DEB_DIR}/usr/share/elpusk/program/00000006/coffee_manager/bin/lpu230_update"
 cp "${ORIGIN_LIBDEV_LIB_XYZ}" "${DEB_DIR}/usr/share/elpusk/program/00000006/coffee_manager/so/"
@@ -77,7 +79,7 @@ Version: ${VERSION}
 Architecture: ${ARCH}
 Pre-Depends: libnss3-tools
 Maintainer: Elpusk<elpusk@naver.com>
-Description: Coffee Manager 2nd Daemon 2.9 & Updater 2.7
+Description: Coffee Manager 2nd Daemon 2.10 & Updater 2.8
  Provides the necessary daemon, libraries and fw-updater, for the coffee manager 2nd system.
 EOF
 
@@ -143,6 +145,7 @@ chmod 755 /usr/share/elpusk/program/00000006/coffee_manager/bin/lpu230_update
 chmod 644 /usr/share/elpusk/programdata/00000006/coffee_manager/elpusk-hid-d/elpusk-hid-d.json
 chmod 644 /usr/share/elpusk/programdata/00000006/coffee_manager/tg_lpu237_dll/tg_lpu237_dll.ini
 chmod 644 /usr/share/elpusk/programdata/00000006/coffee_manager/tg_lpu237_ibutton/tg_lpu237_ibutton.ini
+chmod 644 /usr/share/elpusk/programdata/00000006/coffee_manager/tg_lpu237_fw/tg_lpu237_fw.ini
 chmod 755 /var/log/elpusk/00000006/coffee_manager -R
 
 

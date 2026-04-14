@@ -92,42 +92,42 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <TargetName>libtg_rom</TargetName>
-    <TargetExt>.so.1.2.0</TargetExt>
+    <TargetExt>.so.1.3.0</TargetExt>
     <IncludePath>$(SolutionDir)\shared\lib\inc;$(SolutionDir)shared/projects/rom;$(IncludePath);~/projects/li_rom/shared/projects/rom;~/projects/li_rom/shared/lib/inc</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
     <TargetName>libtg_rom</TargetName>
-    <TargetExt>.so.1.2.0</TargetExt>
+    <TargetExt>.so.1.3.0</TargetExt>
     <IncludePath>$(SolutionDir)\shared\lib\inc;$(SolutionDir)shared/projects/rom;$(IncludePath);~/projects/li_rom/shared/projects/rom;~/projects/li_rom/shared/lib/inc</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <TargetName>libtg_rom</TargetName>
-    <TargetExt>.so.1.2.0</TargetExt>
+    <TargetExt>.so.1.3.0</TargetExt>
     <IncludePath>$(SolutionDir)\shared\lib\inc;$(SolutionDir)shared/projects/rom;$(IncludePath);~/projects/li_rom/shared/projects/rom;~/projects/li_rom/shared/lib/inc</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <TargetName>libtg_rom</TargetName>
-    <TargetExt>.so.1.2.0</TargetExt>
+    <TargetExt>.so.1.3.0</TargetExt>
     <IncludePath>$(SolutionDir)\shared\lib\inc;$(SolutionDir)shared/projects/rom;$(IncludePath);~/projects/li_rom/shared/projects/rom;~/projects/li_rom/shared/lib/inc</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <TargetName>libtg_rom</TargetName>
-    <TargetExt>.so.1.2.0</TargetExt>
+    <TargetExt>.so.1.3.0</TargetExt>
     <IncludePath>$(SolutionDir)\shared\lib\inc;$(SolutionDir)shared/projects/rom;$(IncludePath);~/projects/li_rom/shared/projects/rom;~/projects/li_rom/shared/lib/inc</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <TargetName>libtg_rom</TargetName>
-    <TargetExt>.so.1.2.0</TargetExt>
+    <TargetExt>.so.1.3.0</TargetExt>
     <IncludePath>$(SolutionDir)\shared\lib\inc;$(SolutionDir)shared/projects/rom;$(IncludePath);~/projects/li_rom/shared/projects/rom;~/projects/li_rom/shared/lib/inc</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
     <TargetName>libtg_rom</TargetName>
-    <TargetExt>.so.1.2.0</TargetExt>
+    <TargetExt>.so.1.3.0</TargetExt>
     <IncludePath>$(SolutionDir)\shared\lib\inc;$(SolutionDir)shared/projects/rom;$(IncludePath);~/projects/li_rom/shared/projects/rom;~/projects/li_rom/shared/lib/inc</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
     <TargetName>libtg_rom</TargetName>
-    <TargetExt>.so.1.2.0</TargetExt>
+    <TargetExt>.so.1.3.0</TargetExt>
     <IncludePath>$(SolutionDir)\shared\lib\inc;$(SolutionDir)shared/projects/rom;$(IncludePath);~/projects/li_rom/shared/projects/rom;~/projects/li_rom/shared/lib/inc</IncludePath>
   </PropertyGroup>
   <ItemGroup>

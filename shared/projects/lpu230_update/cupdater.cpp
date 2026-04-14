@@ -2278,11 +2278,11 @@ bool cupdater::_updates_sub_thread_recover_system_param(int& n_step, const _mp::
 			std::tie(b_result, b_complete) = sh.io_recover_all_variable_sys_parameter(b_first, ptr_dev);
 			b_first = false;
 			if (b_result) {
-				_push_message(n_step,true, _mp::_coffee::CONST_S_UTF8_MSG_FW_UPDATE_NO_RECOVERING_SYSTEM_PARAMETERS);
+				_push_message(n_step,true, _mp::_coffee::CONST_S_UTF8_MSG_FW_UPDATE_RECOVERING_SYSTEM_PARAMETERS);
 				std::this_thread::sleep_for(std::chrono::milliseconds(250));//
 			}
 			else {
-				_push_message(n_step, false, _mp::_coffee::CONST_S_UTF8_MSG_FW_UPDATE_NO_RECOVERING_SYSTEM_PARAMETERS);
+				_push_message(n_step, false, _mp::_coffee::CONST_S_UTF8_MSG_FW_UPDATE_RECOVERING_SYSTEM_PARAMETERS);
 #ifdef _WIN32
 				ATLTRACE(L"ERROR : io_recover_all_variable_sys_parameter().\n");
 #endif

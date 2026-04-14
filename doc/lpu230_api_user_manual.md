@@ -1,6 +1,6 @@
 # LPU230 API User Manual
 
-Version 6.0
+Version 6.2
 
 ## API Basic Information
 
