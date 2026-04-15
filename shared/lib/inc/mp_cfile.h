@@ -125,7 +125,7 @@ namespace _mp{
 
 			// '~'를 홈 디렉토리 경로로 변환
 			if (_path[0] == '~') {
-				std::string home_dir = cfile::_get_home_directory();
+				std::string home_dir = cfile::_get_home_directory().string();
 				_path.replace(0, 1, home_dir);
 			}
 
@@ -175,7 +175,7 @@ namespace _mp{
 
 				s_expand = s_path;
 				if (s_expand[0] == '~') {
-					std::string home_dir = cfile::_get_home_directory();
+					std::string home_dir = cfile::_get_home_directory().string();
 					s_expand.replace(0, 1, home_dir);
 				}
 
@@ -183,6 +183,26 @@ namespace _mp{
 
 			return s_expand;
 		}
+		static std::wstring expand_home_directory_in_linux(const std::wstring& s_path)
+		{
+			std::wstring s_expand;
+
+			do {
+				if (s_path.empty()) {
+					continue;
+				}
+
+				s_expand = s_path;
+				if (s_expand[0] == L'~') {
+					std::wstring home_dir = cfile::_get_home_directory().wstring();
+					s_expand.replace(0, 1, home_dir);
+				}
+
+			} while (false);
+
+			return s_expand;
+		}
+
 #endif //_WIN32
 
 #ifdef _WIN32
@@ -707,13 +727,18 @@ namespace _mp{
 		}
 #else
 	private:
-		static std::string _get_home_directory() 
+		static std::filesystem::path _get_home_directory() 
 		{
-			const char* homedir;
-			if ((homedir = getenv("HOME")) == nullptr) {
+			const char* homedir(getenv("HOME"));
+			if (homedir == NULL) {
 				homedir = getpwuid(getuid())->pw_dir;
 			}
-			return std::string(homedir);
+			if (homedir == NULL) {
+				return std::filesystem::path(L"");
+			}
+			else {
+				return std::filesystem::path(homedir);
+			}
 		}
 #endif
 

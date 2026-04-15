@@ -5,6 +5,7 @@
 
 # My add
 shared/data_for_debug/cert/
+shared/data_for_debug/logs_root/
 
 # User-specific files
 yt_sign_code.exe

@@ -162,6 +162,9 @@ namespace _mp{
 #endif //_DEBUG
 #else
         ////////////////// LINUX
+        constexpr const wchar_t* CONST_S_PID_FILE_FULL_PATH = L"/var/run/elpusk-hid-d.pid";
+        constexpr const wchar_t* CONST_S_PID_FILE_FULL_PATH_LPU230_UPDATE = L"/var/run/lpu230_update.pid";
+
 #ifdef _DEBUG
         constexpr const wchar_t* CONST_S_CERT_ABS_FULL_PATH = L"/home/tester/projects/LiElpuskHidDaemon/bin/x64/Debug/coffee_server.crt";
         constexpr const wchar_t* CONST_S_PRIVATE_KEY_ABS_FULL_PATH = L"/home/tester/projects/LiElpuskHidDaemon/bin/x64/Debug/coffee_server.key";
@@ -169,8 +172,6 @@ namespace _mp{
         constexpr const wchar_t* CONST_S_NOT_ROOT_USER_LOGS_ROOT_DIR_EXCEPT_BACKSLASH = L"/home/tester/projects/LiElpuskHidDaemon/bin/x64/Debug";
 
         constexpr const wchar_t* CONST_S_ROOT_DIR_EXCEPT_BACKSLASH = L"/home/tester/projects/LiElpuskHidDaemon/bin/x64/Debug";
-        constexpr const wchar_t* CONST_S_PID_FILE_FULL_PATH = L"/var/run/elpusk-hid-d.pid";
-        constexpr const wchar_t* CONST_S_PID_FILE_FULL_PATH_LPU230_UPDATE = L"/var/run/lpu230_update.pid";
         constexpr const wchar_t* CONST_S_COFFEE_MGMT_INI_DIR_EXCEPT_BACKSLASH = L"/home/tester/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/projects/ElpuskHidDaemon";
 		constexpr const wchar_t* CONST_S_COFFEE_SVR_INI_DIR_EXCEPT_BACKSLASH = L"/home/tester/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/projects/coffee_service";
 
@@ -191,8 +192,6 @@ namespace _mp{
         constexpr const wchar_t* CONST_S_NOT_ROOT_USER_LOGS_ROOT_DIR_EXCEPT_BACKSLASH = L"~/.elpusk/log";
 
         constexpr const wchar_t* CONST_S_ROOT_DIR_EXCEPT_BACKSLASH = L"/usr/share/elpusk/programdata/00000006/coffee_manager/root";
-        constexpr const wchar_t* CONST_S_PID_FILE_FULL_PATH = L"/var/run/elpusk-hid-d.pid";
-        constexpr const wchar_t* CONST_S_PID_FILE_FULL_PATH_LPU230_UPDATE = L"/var/run/lpu230_update.pid";
         constexpr const wchar_t* CONST_S_COFFEE_MGMT_INI_DIR_EXCEPT_BACKSLASH = L"/usr/share/elpusk/programdata/00000006/coffee_manager/elpusk-hid-d";
 		constexpr const wchar_t* CONST_S_COFFEE_SVR_INI_DIR_EXCEPT_BACKSLASH = L"/usr/share/elpusk/programdata/00000006/coffee_manager/coffee_service";
 
