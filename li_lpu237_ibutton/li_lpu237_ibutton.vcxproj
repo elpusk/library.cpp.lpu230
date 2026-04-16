@@ -215,7 +215,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <ClCompile>
       <AdditionalIncludeDirectories>$(SolutionDir)shared/projects/lpu237_dll/inc;$(SolutionDir)shared/projects/lpu237_ibutton/inc;%(ClCompile.AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>__linux__;</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_SET_THREAD_NAME_;__linux__;</PreprocessorDefinitions>
       <PositionIndependentCode>false</PositionIndependentCode>
       <CppLanguageStandard>c++17</CppLanguageStandard>
       <AdditionalOptions>-fPIC %(AdditionalOptions)</AdditionalOptions>
@@ -232,7 +232,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
     <ClCompile>
       <AdditionalIncludeDirectories>$(SolutionDir)shared/projects/lpu237_dll/inc;$(SolutionDir)shared/projects/lpu237_ibutton/inc;%(ClCompile.AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>__linux__;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_SET_THREAD_NAME_;__linux__;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PositionIndependentCode>false</PositionIndependentCode>
       <CppLanguageStandard>c++17</CppLanguageStandard>
       <AdditionalOptions>-fPIC %(AdditionalOptions)</AdditionalOptions>
@@ -249,7 +249,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <ClCompile>
       <AdditionalIncludeDirectories>$(SolutionDir)shared/projects/lpu237_dll/inc;$(SolutionDir)shared/projects/lpu237_ibutton/inc;%(ClCompile.AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>__linux__;</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_SET_THREAD_NAME_;__linux__;</PreprocessorDefinitions>
       <PositionIndependentCode>false</PositionIndependentCode>
       <CppLanguageStandard>c++17</CppLanguageStandard>
       <AdditionalOptions>-fPIC %(AdditionalOptions)</AdditionalOptions>
@@ -266,7 +266,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <ClCompile>
       <AdditionalIncludeDirectories>$(SolutionDir)shared/projects/lpu237_dll/inc;$(SolutionDir)shared/projects/lpu237_ibutton/inc;%(ClCompile.AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>__linux__;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_SET_THREAD_NAME_;__linux__;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PositionIndependentCode>false</PositionIndependentCode>
       <CppLanguageStandard>c++17</CppLanguageStandard>
       <AdditionalOptions>-fPIC %(AdditionalOptions)</AdditionalOptions>
@@ -283,7 +283,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <AdditionalIncludeDirectories>$(SolutionDir)shared/projects/lpu237_dll/inc;$(SolutionDir)shared/projects/lpu237_ibutton/inc;%(ClCompile.AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>__linux__;</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_SET_THREAD_NAME_;__linux__;</PreprocessorDefinitions>
       <PositionIndependentCode>false</PositionIndependentCode>
       <CppLanguageStandard>c++17</CppLanguageStandard>
       <AdditionalOptions>-fPIC %(AdditionalOptions)</AdditionalOptions>
@@ -300,7 +300,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <AdditionalIncludeDirectories>$(SolutionDir)shared/projects/lpu237_dll/inc;$(SolutionDir)shared/projects/lpu237_ibutton/inc;%(ClCompile.AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>__linux__;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_SET_THREAD_NAME_;__linux__;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PositionIndependentCode>false</PositionIndependentCode>
       <CppLanguageStandard>c++17</CppLanguageStandard>
       <AdditionalOptions>-fPIC %(AdditionalOptions)</AdditionalOptions>
@@ -317,7 +317,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
     <ClCompile>
       <AdditionalIncludeDirectories>$(SolutionDir)shared/projects/lpu237_dll/inc;$(SolutionDir)shared/projects/lpu237_ibutton/inc;%(ClCompile.AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>__linux__;</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_SET_THREAD_NAME_;__linux__;</PreprocessorDefinitions>
       <PositionIndependentCode>false</PositionIndependentCode>
       <CppLanguageStandard>c++17</CppLanguageStandard>
       <AdditionalOptions>-fPIC %(AdditionalOptions)</AdditionalOptions>
@@ -334,7 +334,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
     <ClCompile>
       <AdditionalIncludeDirectories>$(SolutionDir)shared/projects/lpu237_dll/inc;$(SolutionDir)shared/projects/lpu237_ibutton/inc;%(ClCompile.AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>__linux__;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_SET_THREAD_NAME_;__linux__;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PositionIndependentCode>false</PositionIndependentCode>
       <CppLanguageStandard>c++17</CppLanguageStandard>
       <AdditionalOptions>-fPIC %(AdditionalOptions)</AdditionalOptions>
