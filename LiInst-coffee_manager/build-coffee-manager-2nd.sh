@@ -22,6 +22,7 @@ SRC_BASE_DIR="/home/tester/projects"
 LIBDEV_LIB_VERSION="1.2.0"
 LIBTG_LPU237_DLL_VERSION="6.2.0"
 LIBTG_LPU237_IBUTTON_VERSION="6.2.0"
+LIBTG_LPU237_FW_VERSION="6.2.0"
 LIBTG_ROM_VERSION="1.3.0"
 
 # 원본 파일 전체 경로
@@ -32,6 +33,7 @@ ORIGIN_ELPUSK_HID_D_JSON="${SRC_BASE_DIR}/LiElpuskHidDaemon/job/library.cpp.lpu2
 ORIGIN_LIBDEV_LIB_XYZ="${SRC_BASE_DIR}/li_dev_lib/bin/x64/Release/libdev_lib.so.${LIBDEV_LIB_VERSION}"
 ORIGIN_LIBTG_LPU237_DLL_XYZ="${SRC_BASE_DIR}/li_lpu237_dll/bin/x64/Release/libtg_lpu237_dll.so.${LIBTG_LPU237_DLL_VERSION}"
 ORIGIN_LIBTG_LPU237_IBUTTON_XYZ="${SRC_BASE_DIR}/li_lpu237_ibutton/bin/x64/Release/libtg_lpu237_ibutton.so.${LIBTG_LPU237_IBUTTON_VERSION}"
+ORIGIN_LIBTG_LPU237_FW_XYZ="${SRC_BASE_DIR}/li_lpu237_fw/bin/x64/Release/libtg_lpu237_fw.so.${LIBTG_LPU237_FW_VERSION}"
 ORIGIN_LIBTG_ROM_XYZ="${SRC_BASE_DIR}/li_rom/bin/x64/Release/libtg_rom.so.${LIBTG_ROM_VERSION}"
 
 ORIGIN_TG_LPU237_DLL_INI="${SRC_BASE_DIR}/li_lpu237_dll/shared/projects/lpu237_dll/tg_lpu237_dll.ini"
@@ -50,6 +52,8 @@ mkdir -p "${DEB_DIR}/usr/share/elpusk/programdata/00000006/coffee_manager/tg_lpu
 mkdir -p "${DEB_DIR}/var/log/elpusk/00000006/coffee_manager/tg_lpu237_dll"
 mkdir -p "${DEB_DIR}/usr/share/elpusk/programdata/00000006/coffee_manager/tg_lpu237_ibutton"
 mkdir -p "${DEB_DIR}/var/log/elpusk/00000006/coffee_manager/tg_lpu237_ibutton"
+mkdir -p "${DEB_DIR}/usr/share/elpusk/programdata/00000006/coffee_manager/tg_lpu237_fw"
+mkdir -p "${DEB_DIR}/var/log/elpusk/00000006/coffee_manager/tg_lpu237_fw"
 mkdir -p "${DEB_DIR}/usr/share/elpusk/program/00000006/coffee_manager/bin"
 mkdir -p "${DEB_DIR}/usr/share/elpusk/program/00000006/coffee_manager/so"
 
@@ -65,6 +69,7 @@ cp "${ORIGIN_LPU230_UPDATE}" "${DEB_DIR}/usr/share/elpusk/program/00000006/coffe
 cp "${ORIGIN_LIBDEV_LIB_XYZ}" "${DEB_DIR}/usr/share/elpusk/program/00000006/coffee_manager/so/"
 cp "${ORIGIN_LIBTG_LPU237_DLL_XYZ}" "${DEB_DIR}/usr/share/elpusk/program/00000006/coffee_manager/so/"
 cp "${ORIGIN_LIBTG_LPU237_IBUTTON_XYZ}" "${DEB_DIR}/usr/share/elpusk/program/00000006/coffee_manager/so/"
+cp "${ORIGIN_LIBTG_LPU237_FW_XYZ}" "${DEB_DIR}/usr/share/elpusk/program/00000006/coffee_manager/so/"
 cp "${ORIGIN_LIBTG_ROM_XYZ}" "${DEB_DIR}/usr/share/elpusk/program/00000006/coffee_manager/so/"
 
 
@@ -170,6 +175,7 @@ create_symlinks() {
 create_symlinks "libdev_lib" "${LIBDEV_LIB_VERSION}"
 create_symlinks "libtg_lpu237_dll" "${LIBTG_LPU237_DLL_VERSION}"
 create_symlinks "libtg_lpu237_ibutton" "${LIBTG_LPU237_IBUTTON_VERSION}"
+create_symlinks "libtg_lpu237_fw" "${LIBTG_LPU237_FW_VERSION}"
 create_symlinks "libtg_rom" "${LIBTG_ROM_VERSION}"
 
 
@@ -346,6 +352,14 @@ for USER_HOME in /home/*; do
             echo "delete log file:"
             find "\${LOG_DIR}/tg_lpu237_ibutton" -type f -name "*.txt"
             find "\${LOG_DIR}/tg_lpu237_ibutton" -type f -name "*.txt" -exec rm -f {} \;
+        fi
+
+        echo "find log directory: \${LOG_DIR}/tg_lpu237_fw"
+        if [ -d "\${LOG_DIR}/tg_lpu237_fw" ]; then
+            echo "user log directory: \${LOG_DIR}/tg_lpu237_fw"
+            echo "delete log file:"
+            find "\${LOG_DIR}/tg_lpu237_fw" -type f -name "*.txt"
+            find "\${LOG_DIR}/tg_lpu237_fw" -type f -name "*.txt" -exec rm -f {} \;
         fi
 
         # .elpusk 하위 비어 있는 디렉토리 제거 (깊은 곳부터)

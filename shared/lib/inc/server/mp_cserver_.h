@@ -20,7 +20,7 @@ namespace _mp{
 	{
 	public:
 		enum {
-			const_default_worker_sleep_interval_mmsec = 3,
+			const_default_worker_sleep_interval_mmsec = 5, // vcworker idle time
 		};
 	public:
 		static cserver& get_instance(

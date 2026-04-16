@@ -59,7 +59,7 @@ int main_wss(const _mp::type_set_wstring &set_parameters)
 
 	std::wstring s_dev_lib_dll_abs_full_path(_mp::ccoffee_path::get_abs_full_path_of_dev_lib_dll());
 
-	long long ll_server_worker_sleep_interval_mmsec = 3;
+	long long ll_server_worker_sleep_interval_mmsec = _mp::cserver::const_default_worker_sleep_interval_mmsec;//
 
 #if !defined(_WIN32) && defined(_SET_THREAD_NAME_)
 	pthread_setname_np(pthread_self(), "main_wss");

@@ -25,7 +25,7 @@ namespace _mp{
 		)
 		{
 			static bool b_first = true;
-			static std::shared_ptr<cserver> ptr_obj; (new cserver(ll_worker_sleep_interval_mmsec));
+			static std::shared_ptr<cserver> ptr_obj;
 
 			if (b_first) {
 				b_first = false;

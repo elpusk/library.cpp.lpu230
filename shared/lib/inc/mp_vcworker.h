@@ -53,18 +53,34 @@ namespace _mp {
 			}
 		}
 
-		vcworker(clog* p_log, long long ll_worker_sleep_interval_mmsec) :
+		/**
+		* @param s_worker_name - for debugging
+		*/
+		vcworker(clog* p_log, long long ll_worker_sleep_interval_mmsec,const std::string &s_worker_name) :
 			m_b_run_th_worker(true)
 			, m_p_log(p_log)
 			, m_atll_worker_sleep_interval_mmsec(ll_worker_sleep_interval_mmsec)
 		{
+			std::string s_worker("vcworker");
+
+			if (!s_worker_name.empty()) {
+				s_worker += std::string("-");
+				s_worker += s_worker_name;
+			}
+
 			if(ll_worker_sleep_interval_mmsec <= 0) {
 				m_atll_worker_sleep_interval_mmsec.store( vcworker::_const_worker_sleep_interval_mmsec, std::memory_order_relaxed);
+				s_worker += std::string("-");
+				s_worker += std::to_string(vcworker::_const_worker_sleep_interval_mmsec);
+			}
+			else {
+				s_worker += std::string("-");
+				s_worker += std::to_string(ll_worker_sleep_interval_mmsec);
 			}
 
 			m_ptr_th_worker = std::shared_ptr<std::thread>(new std::thread(vcworker::_worker, std::ref(*this)));
 #if !defined(_WIN32) && defined(_SET_THREAD_NAME_)
-			pthread_setname_np(m_ptr_th_worker->native_handle(), "vcworker");
+			pthread_setname_np(m_ptr_th_worker->native_handle(), s_worker.c_str());
 #endif
 		}
 

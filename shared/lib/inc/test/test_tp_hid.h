@@ -789,8 +789,7 @@ namespace _test{
 					_mp::type_bm_dev_hid,
 					_mp::type_bm_dev_lpu200_msr,
 					_mp::type_bm_dev_lpu200_scr0,
-					_mp::type_bm_dev_lpu200_ibutton,
-					_mp::type_bm_dev_lpu200_switch0
+					_mp::type_bm_dev_lpu200_ibutton
 				};
 
 					

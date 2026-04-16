@@ -1022,8 +1022,8 @@ unsigned long _CALLTYPE_ LPU237_fw_get_list_w(wchar_t* ssDevPaths)
 
 		list_dev_path = ptr_manager_of_device_of_client->get_device_list(s_filter);
 
-		// 받은 리스트에서 특정 suffix로 끝나는 항목을 제거한다. (예를 들어, msr, ibutton, scr0, switch0 등으로 끝나는 항목을 제거한다.)
-		std::vector<std::wstring> v_suffix{ L"&msr",L"&ibutton",L"&scr0",L"&switch0" };
+		// 받은 리스트에서 특정 suffix로 끝나는 항목을 제거한다. (예를 들어, msr, ibutton, scr0 등으로 끝나는 항목을 제거한다.)
+		std::vector<std::wstring> v_suffix{ L"&msr",L"&ibutton",L"&scr0" };
 		list_dev_path.remove_if([&v_suffix](const std::wstring& s) {
 			bool b_remove = false;
 

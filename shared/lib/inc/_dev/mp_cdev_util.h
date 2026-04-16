@@ -55,9 +55,6 @@ namespace _mp {
 				if (s_data.compare(L"ibutton") == 0) {
 					continue;
 				}
-				if (s_data.compare(L"switch0") == 0) {
-					continue;
-				}
 				b_result = false;
 			} while (false);
 			return b_result;
@@ -78,16 +75,11 @@ namespace _mp {
 					v_type.push_back(type_bm_dev_lpu200_ibutton);
 					continue;
 				}
-				if (s_data.compare(L"switch0") == 0) {
-					v_type.push_back(type_bm_dev_lpu200_switch0);
-					continue;
-				}
 
 				//here all sun component type
 				v_type.push_back(type_bm_dev_lpu200_msr);
 				v_type.push_back(type_bm_dev_lpu200_scr0);
 				v_type.push_back(type_bm_dev_lpu200_ibutton);
-				v_type.push_back(type_bm_dev_lpu200_switch0);
 			} while (false);
 			return v_type;
 		}

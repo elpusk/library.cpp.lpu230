@@ -186,7 +186,6 @@ namespace _mp{
         , type_bm_dev_lpu200_msr = 0x00020001//low 2bytes is leaf device type. the sub device of hid.
         , type_bm_dev_lpu200_scr0 = 0x00020010//low 2bytes is leaf device type. the sub device of hid.
         , type_bm_dev_lpu200_ibutton = 0x00020020//low 2bytes is leaf device type. the sub device of hid.
-        , type_bm_dev_lpu200_switch0 = 0x00020040//low 2bytes is leaf device type. the sub device of hid.
     }type_bm_dev;
 
     typedef	std::vector< type_bm_dev > type_v_bm_dev;
