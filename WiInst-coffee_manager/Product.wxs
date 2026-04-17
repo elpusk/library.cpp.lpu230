@@ -56,7 +56,9 @@
 *                               : dev_lib.dll - v1.1( 가끔 응답 놓치는 문제 수정을 위한 변경.)
 *                               : lpu230_update.exe - v2.7( 가끔 응답 놓치는 문제 수정을 위한 변경.)
 *
-* 2026.04.14 - package v 2.11.0 : coffee manager 2nd project(v2.11)
+* 2026.04.17 - package v 2.11.0 : coffee manager 2nd project(v2.11)
+*                               : 설치 directory 가 "Elpusk" 를 "elpusk" 로 변경.( 코드상 문제 발생함.)
+*                               : Pre_DirName_Manufacturer 의 값을 "Elpusk" 에서 "elpusk" 로 변경.
 *                               : 5746120D-5888-4DAE-805B-6123B6B21D09
 *                               : coffee_sevice.exe - v2.2(공용라이브러리 변경으로 업데이트)
 *                               : dev_lib.dll - v1.2(공용라이브러리 변경으로 업데이트)
@@ -71,7 +73,7 @@
 
 <!-- 기본적으로 %ProgramFiles%\Pre_DirName_ProductName\Pre_DirName_Manufacturer 형식으로 설치됨.-->
 <!-- Pre_DirName_ 시작하는 정의값은 폴더의 이름임. -->
-<?define Pre_DirName_Manufacturer = "Elpusk" ?>
+<?define Pre_DirName_Manufacturer = "elpusk" ?>
 <?define Pre_DirName_developer_id = "00000006" ?>
 <?define Pre_DirName_ProductName = "coffee_manager" ?>
 <?define Pre_DirName_ServiceName = "coffee_service" ?>

@@ -8,7 +8,7 @@
 - Windows 11, Linux(debian 12 와 Ubuntu 24.04) 에서 테스트.
 
 # 개발환경
-- C++ 14
+- C++ 17
 - Vsiual Studio 2022(이하 vs2022)
 - Linux 는 vs2022 remote ssh 연결을 통한 개발.
 - 사용 라이브러리는 README.md 에 영어로 명시.

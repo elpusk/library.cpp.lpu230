@@ -1,5 +1,5 @@
 # Software components information
-package release 2.10
+package release 2.11
 
 ## LiMgmtLpu230
 - for Debian 12.(x64)
@@ -62,6 +62,20 @@ package release 2.10
 - executable file name : tg_lpu237_ibutton.dll
 - for native client application, dynamic linked library.
 - supports lpu237 ibutton functionality.
+
+## li_lpu237_fw
+- from package release 2.11
+- for Debian 12.(x64)
+- executable file name : libtg_lpu237_fw.so
+- for native client application, shared object.
+- supports lpu237 firmware update functionality.
+
+## wi_lpu237_fw
+- from package release 2.11
+- for windows 11.(x64, x86)
+- executable file name : tg_lpu237_fw.dll
+- for native client application, dynamic linked library.
+- supports lpu237 firmware update functionality.
 
 ## tp_li_lpu237
 - for Debian 12.(x64)
