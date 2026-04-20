@@ -326,6 +326,15 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)common\inc\cdev_lib.h">
       <Filter>common\inc</Filter>
     </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\hid\_vhid_info_lpu237.h">
+      <Filter>lib\inc\hid</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\hid\_vhid_info_lpu238.h">
+      <Filter>lib\inc\hid</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\hid\_vhid_info.h">
+      <Filter>lib\inc\hid</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)..\README.md" />

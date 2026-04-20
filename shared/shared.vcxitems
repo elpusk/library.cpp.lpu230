@@ -59,6 +59,9 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\hid\mp_clibhid.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\hid\mp_clibhid_dev.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\hid\mp_clibhid_dev_info.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\hid\_vhid_info.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\hid\_vhid_info_lpu237.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\hid\_vhid_info_lpu238.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\mp_casync_parameter_result.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\mp_casync_result_manager.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)lib\inc\mp_cconvert.h" />

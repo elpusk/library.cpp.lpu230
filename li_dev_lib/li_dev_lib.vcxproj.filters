@@ -122,6 +122,9 @@
     </ClInclude>
     <ClInclude Include="..\shared\lib\inc\hid\_hid_api_bridge.h" />
     <ClInclude Include="..\shared\lib\inc\hid\_vhid_api_bridge.h" />
+    <ClInclude Include="..\shared\lib\inc\hid\_vhid_info_lpu238.h">
+      <Filter>lib\hid</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\shared\projects\dev_lib\src\dev_lib.cpp">

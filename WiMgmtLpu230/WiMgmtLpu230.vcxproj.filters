@@ -176,5 +176,8 @@
     <ClInclude Include="..\shared\common\inc\cprotocol_lpu237.h">
       <Filter>common</Filter>
     </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\hid\_vhid_info_lpu238.h">
+      <Filter>lib\hid</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

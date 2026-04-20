@@ -3,6 +3,7 @@
 #include <mp_elpusk.h>
 
 #include <hid/_vhid_info_lpu237.h>
+#include <hid/_vhid_info_lpu238.h>
 #include <hid/_vhid_api_bridge.h>
 #include <hid/_vhid_info.h>
 
@@ -163,22 +164,19 @@ int _vhid_api_bridge::api_open_path(const char* path)
                         // lpu237 장비면.
                         m_map_ptr_hid_info[n_primitive_map_index] = ptr_vhid_info = std::make_shared<_vhid_info_lpu237>(t); // in constructure, type open counter is increased.
 #if defined(_WIN32) && defined(_DEBUG)
-                        ATLTRACE(L"_create_new_map_compositive_item : index = 0x%x.\n", n_map_index);
+                        ATLTRACE(L"_create_new_map_compositive_item(lpu237) : index = 0x%x.\n", n_map_index);
 #endif
                         break; //exit for
                     }
                 }
                 else if (w_pid == _mp::_elpusk::_lpu238::const_usb_pid) {
                     if (s_in_path.find(s_path) == 0) {
-                        // lpu238 장비면....... ,아직 lpu238 지원 않함.
-                        if (m_p_clog) {
-                            std::wstring _ws(_mp::cstring::get_unicode_from_mcsc(path));
-                            m_p_clog->log_fmt(L"[E] %ls : _create_new_map_compositive_item : not support : lpu238 device(%ls).\n", __WFUNCTION__, _ws.c_str());
-                            m_p_clog->trace(L"[E] %ls : _create_new_map_compositive_item : not support : lpu238 device.\n", __WFUNCTION__, _ws.c_str());
-                        }
+                        // lpu238 장비면.
+                        m_map_ptr_hid_info[n_primitive_map_index] = ptr_vhid_info = std::make_shared<_vhid_info_lpu238>(t); // in constructure, type open counter is increased.
 #if defined(_WIN32) && defined(_DEBUG)
-                        ATLTRACE(L"_create_new_map_compositive_item : not support : lpu238 device.\n");
+                        ATLTRACE(L"_create_new_map_compositive_item(lpu238) : index = 0x%x.\n", n_map_index);
 #endif
+                        break; //exit for
                     }
                 }
                 else if (w_pid == _mp::_elpusk::const_usb_pid_hidbl) {
