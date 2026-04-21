@@ -6,6 +6,7 @@
 # My add
 shared/data_for_debug/cert/
 shared/data_for_debug/logs_root/
+mcp-svr-lpu23x/target
 
 # User-specific files
 yt_sign_code.exe
