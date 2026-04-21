@@ -14,6 +14,8 @@ yt_sign_code.exe
 *.user
 *.userosscache
 *.sln.docstates
+deb_file_dump.bin
+deb_file_tx_dump.bin
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
