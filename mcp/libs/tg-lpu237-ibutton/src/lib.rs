@@ -30,7 +30,7 @@ pub struct Lpu237IButton {
 
 impl Lpu237IButton {
     pub unsafe fn new<P: AsRef<OsStr>>(path: P) -> Result<Self, Box<dyn std::error::Error>> {
-        let lib = Arc::new(unsafe { Library::new(path)? });
+        let lib = Arc::new(unsafe { Library::new(path.as_ref())? });
 
         let fn_on = *unsafe { lib.get(b"LPU237Lock_dll_on")? };
         let fn_off = *unsafe { lib.get(b"LPU237Lock_dll_off")? };

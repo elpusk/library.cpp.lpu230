@@ -31,7 +31,7 @@ pub struct Lpu237Dll {
 
 impl Lpu237Dll {
     pub unsafe fn new<P: AsRef<OsStr>>(path: P) -> Result<Self, Box<dyn std::error::Error>> {
-        let lib = Arc::new(unsafe { Library::new(path)? });
+        let lib = Arc::new(unsafe { Library::new(path.as_ref())? });
 
         let fn_on = *unsafe { lib.get(b"LPU237_dll_on")? };
         let fn_off = *unsafe { lib.get(b"LPU237_dll_off")? };
