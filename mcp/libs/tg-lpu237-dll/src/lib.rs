@@ -3,28 +3,29 @@ use lpu237_common::{HANDLE, INVALID_HANDLE_VALUE};
 use std::sync::Arc;
 use widestring::U16CString;
 use std::ffi::OsStr;
+use libc::c_ulong;
 
-pub const LPU237_DLL_RESULT_SUCCESS: u32 = 0;
-pub const LPU237_DLL_RESULT_ERROR: u32 = 0xFFFFFFFF;
-pub const LPU237_DLL_RESULT_CANCEL: u32 = 0xFFFFFFFE;
-pub const LPU237_DLL_RESULT_ERROR_MSR: u32 = 0xFFFFFFFD;
+pub const LPU237_DLL_RESULT_SUCCESS: c_ulong = 0;
+pub const LPU237_DLL_RESULT_ERROR: c_ulong = !0; // Equivalent to 0xFFFFFFFF on 32-bit and 0xFFFFFFFFFFFFFFFF on 64-bit
+pub const LPU237_DLL_RESULT_CANCEL: c_ulong = !0 - 1;
+pub const LPU237_DLL_RESULT_ERROR_MSR: c_ulong = !0 - 2;
 
 pub type TypeCallback = extern "C" fn(*mut std::ffi::c_void);
 
 pub struct Lpu237Dll {
     lib: Arc<Library>,
-    // Function pointers
-    fn_on: unsafe extern "C" fn() -> u32,
-    fn_off: unsafe extern "C" fn() -> u32,
-    fn_get_list: unsafe extern "C" fn(*mut u16) -> u32,
+    // Function pointers using libc::c_ulong for unsigned long
+    fn_on: unsafe extern "C" fn() -> c_ulong,
+    fn_off: unsafe extern "C" fn() -> c_ulong,
+    fn_get_list: unsafe extern "C" fn(*mut u16) -> c_ulong,
     fn_open: unsafe extern "C" fn(*const u16) -> HANDLE,
-    fn_close: unsafe extern "C" fn(HANDLE) -> u32,
-    fn_enable: unsafe extern "C" fn(HANDLE) -> u32,
-    fn_disable: unsafe extern "C" fn(HANDLE) -> u32,
-    fn_cancel_wait_swipe: unsafe extern "C" fn(HANDLE) -> u32,
-    fn_wait_swipe_with_callback: unsafe extern "C" fn(HANDLE, TypeCallback, *mut std::ffi::c_void) -> u32,
-    fn_get_data: unsafe extern "C" fn(u32, u32, *mut u8) -> u32,
-    fn_get_id: unsafe extern "C" fn(HANDLE, *mut u8) -> u32,
+    fn_close: unsafe extern "C" fn(HANDLE) -> c_ulong,
+    fn_enable: unsafe extern "C" fn(HANDLE) -> c_ulong,
+    fn_disable: unsafe extern "C" fn(HANDLE) -> c_ulong,
+    fn_cancel_wait_swipe: unsafe extern "C" fn(HANDLE) -> c_ulong,
+    fn_wait_swipe_with_callback: unsafe extern "C" fn(HANDLE, TypeCallback, *mut std::ffi::c_void) -> c_ulong,
+    fn_get_data: unsafe extern "C" fn(c_ulong, c_ulong, *mut u8) -> c_ulong,
+    fn_get_id: unsafe extern "C" fn(HANDLE, *mut u8) -> c_ulong,
 }
 
 impl Lpu237Dll {
@@ -59,15 +60,15 @@ impl Lpu237Dll {
         })
     }
 
-    pub fn dll_on(&self) -> u32 {
+    pub fn dll_on(&self) -> c_ulong {
         unsafe { (self.fn_on)() }
     }
 
-    pub fn dll_off(&self) -> u32 {
+    pub fn dll_off(&self) -> c_ulong {
         unsafe { (self.fn_off)() }
     }
 
-    pub fn get_list(&self) -> Result<Vec<String>, u32> {
+    pub fn get_list(&self) -> Result<Vec<String>, c_ulong> {
         unsafe {
             let size = (self.fn_get_list)(std::ptr::null_mut());
             if size == 0 {
@@ -81,7 +82,6 @@ impl Lpu237Dll {
                 return Err(LPU237_DLL_RESULT_ERROR);
             }
 
-            // The buffer contains multiple null-terminated strings, ending with an extra null.
             let mut result = Vec::new();
             let mut current_pos = 0;
             while current_pos < buffer.len() && buffer[current_pos] != 0 {
@@ -106,27 +106,27 @@ impl Lpu237Dll {
         }
     }
 
-    pub fn close(&self, h_dev: HANDLE) -> u32 {
+    pub fn close(&self, h_dev: HANDLE) -> c_ulong {
         unsafe { (self.fn_close)(h_dev) }
     }
 
-    pub fn enable(&self, h_dev: HANDLE) -> u32 {
+    pub fn enable(&self, h_dev: HANDLE) -> c_ulong {
         unsafe { (self.fn_enable)(h_dev) }
     }
 
-    pub fn disable(&self, h_dev: HANDLE) -> u32 {
+    pub fn disable(&self, h_dev: HANDLE) -> c_ulong {
         unsafe { (self.fn_disable)(h_dev) }
     }
 
-    pub fn cancel_wait_swipe(&self, h_dev: HANDLE) -> u32 {
+    pub fn cancel_wait_swipe(&self, h_dev: HANDLE) -> c_ulong {
         unsafe { (self.fn_cancel_wait_swipe)(h_dev) }
     }
 
-    pub fn wait_swipe_with_callback(&self, h_dev: HANDLE, cb: TypeCallback, param: *mut std::ffi::c_void) -> u32 {
+    pub fn wait_swipe_with_callback(&self, h_dev: HANDLE, cb: TypeCallback, param: *mut std::ffi::c_void) -> c_ulong {
         unsafe { (self.fn_wait_swipe_with_callback)(h_dev, cb, param) }
     }
 
-    pub fn get_data(&self, index: u32, track: u32) -> Result<Vec<u8>, u32> {
+    pub fn get_data(&self, index: c_ulong, track: c_ulong) -> Result<Vec<u8>, c_ulong> {
         unsafe {
             let len = (self.fn_get_data)(index, track, std::ptr::null_mut());
             if len == LPU237_DLL_RESULT_ERROR {
@@ -145,7 +145,7 @@ impl Lpu237Dll {
         }
     }
 
-    pub fn get_id(&self, h_dev: HANDLE) -> Result<Vec<u8>, u32> {
+    pub fn get_id(&self, h_dev: HANDLE) -> Result<Vec<u8>, c_ulong> {
         unsafe {
             let len = (self.fn_get_id)(h_dev, std::ptr::null_mut());
             if len == LPU237_DLL_RESULT_ERROR {
@@ -161,6 +161,3 @@ impl Lpu237Dll {
         }
     }
 }
-
-// Ensure the library is not dropped while the struct is alive.
-// Library is wrapped in Arc so it can be cloned if needed.
