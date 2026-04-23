@@ -14,13 +14,15 @@ use std::path::PathBuf;
 struct ServerState {
     dll: Option<Lpu237IButton>,
     h_dev: HANDLE,
-    tx: Option<oneshot::Sender<c_ulong>>,
+    buf_index: c_ulong, // Store the index returned by wait_key_with_callback
+    tx: Option<oneshot::Sender<()>>, // Signal touch completion
 }
 
 static STATE: Lazy<Arc<Mutex<ServerState>>> = Lazy::new(|| {
     Arc::new(Mutex::new(ServerState {
         dll: None,
         h_dev: INVALID_HANDLE_VALUE,
+        buf_index: 0,
         tx: None,
     }))
 });
@@ -47,11 +49,11 @@ struct ReadIButtonResponse {
 struct EmptyArgs {}
 
 /// Callback from DLL
-extern "C" fn ibutton_callback(param: *mut std::ffi::c_void) {
-    let index = param as c_ulong;
+extern "C" fn ibutton_callback(_param: *mut std::ffi::c_void) {
+    // Signal completion
     let mut state = STATE.lock().unwrap();
     if let Some(tx) = state.tx.take() {
-        let _ = tx.send(index);
+        let _ = tx.send(());
     }
 }
 
@@ -62,7 +64,7 @@ impl IButtonServer {
         let (tx, rx) = oneshot::channel();
         
         let res = (|| async {
-            let (dll, h_dev) = {
+            let (dll, h_dev, buf_index) = {
                 let mut state = STATE.lock().unwrap();
                 
                 if state.tx.is_some() {
@@ -82,9 +84,12 @@ impl IButtonServer {
                 
                 dll.enable(h_dev);
                 state.tx = Some(tx);
-                dll.wait_key_with_callback(h_dev, ibutton_callback, std::ptr::null_mut());
                 
-                (dll, h_dev)
+                // Use the return value as the buffer index
+                let idx = dll.wait_key_with_callback(h_dev, ibutton_callback, std::ptr::null_mut());
+                state.buf_index = idx;
+                
+                (dll, h_dev, idx)
             };
 
             let result = timeout(Duration::from_secs(args.timeout_sec), rx).await;
@@ -94,8 +99,8 @@ impl IButtonServer {
             state.tx.take();
 
             match result {
-                Ok(Ok(index)) => {
-                    if index == LPU237LOCK_DLL_RESULT_CANCEL {
+                Ok(Ok(())) => {
+                    if buf_index == LPU237LOCK_DLL_RESULT_CANCEL {
                          cleanup(&dll, h_dev);
                          Ok(ReadIButtonResponse {
                             success: false,
@@ -105,7 +110,7 @@ impl IButtonServer {
                             cancelled: true,
                         })
                     } else {
-                        let data = dll.get_data(index).ok().map(|d| hex::encode(d));
+                        let data = dll.get_data(buf_index).ok().map(|d| hex::encode(d));
                         let id = dll.get_id(h_dev).ok().map(|d| hex::encode(d));
                         
                         cleanup(&dll, h_dev);
