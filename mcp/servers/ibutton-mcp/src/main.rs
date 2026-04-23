@@ -30,7 +30,7 @@ struct IButtonServer;
 
 #[derive(Deserialize, JsonSchema)]
 struct ReadIButtonArgs {
-    /// Timeout in seconds for the ibutton touch
+    /// Timeout in seconds for the ibutton touch (default 30)
     timeout_sec: u64,
 }
 
@@ -43,6 +43,9 @@ struct ReadIButtonResponse {
     cancelled: bool,
 }
 
+#[derive(Deserialize, JsonSchema)]
+struct EmptyArgs {}
+
 /// Callback from DLL
 extern "C" fn ibutton_callback(param: *mut std::ffi::c_void) {
     let index = param as c_ulong;
@@ -54,8 +57,8 @@ extern "C" fn ibutton_callback(param: *mut std::ffi::c_void) {
 
 #[tool_router(server_handler)]
 impl IButtonServer {
-    #[tool(description = "Wait for an I-Button touch and return its data/id")]
-    async fn read_ibutton(&self, Parameters(args): Parameters<ReadIButtonArgs>) -> String {
+    #[tool(description = "Wait for an I-Button touch and return its data/id from LPU237 device")]
+    async fn read_ibutton(&self, Parameters(args): Parameters<ReadIButtonArgs>) -> Result<String, String> {
         let (tx, rx) = oneshot::channel();
         
         let res = (|| async {
@@ -140,24 +143,24 @@ impl IButtonServer {
         })().await;
 
         match res {
-            Ok(resp) => serde_json::to_string(&resp).unwrap(),
-            Err(e) => format!("Error: {}", e),
+            Ok(resp) => Ok(serde_json::to_string(&resp).unwrap()),
+            Err(e) => Err(e),
         }
     }
 
-    #[tool(description = "Cancel a pending I-Button read operation")]
-    async fn cancel_ibutton(&self, _params: Parameters<serde_json::Value>) -> String {
+    #[tool(description = "Cancel any pending I-Button read operation on LPU237 device")]
+    async fn cancel_ibutton(&self, _params: Parameters<EmptyArgs>) -> Result<String, String> {
         let mut state = STATE.lock().unwrap();
         if state.h_dev == INVALID_HANDLE_VALUE {
-            return "false".to_string();
+            return Ok("No pending operation to cancel".to_string());
         }
         
         if let Some(dll) = &state.dll {
             dll.cancel_wait_key(state.h_dev);
             state.tx.take();
-            "true".to_string()
+            Ok("Successfully cancelled".to_string())
         } else {
-            "Error: DLL not loaded".to_string()
+            Err("DLL not loaded".to_string())
         }
     }
 }
@@ -173,7 +176,6 @@ fn cleanup(dll: &Lpu237IButton, h_dev: HANDLE) {
 fn local_get_lpu237_ibutton_path() -> PathBuf {
     #[cfg(target_os = "windows")]
     {
-        // ProgramFiles 경로 얻기 (x64/x86 구분 포함)
         let base = if cfg!(target_pointer_width = "64") {
             std::env::var("ProgramFiles")
         } else {
@@ -203,17 +205,33 @@ fn local_get_lpu237_ibutton_path() -> PathBuf {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let dll_path = local_get_lpu237_ibutton_path();
+    eprintln!("Starting LPU237 I-Button MCP Server...");
 
-    let dll = unsafe { Lpu237IButton::new(dll_path).map_err(|e| anyhow::anyhow!("Failed to load DLL: {}", e))? };
+    let dll_path = local_get_lpu237_ibutton_path();
+    eprintln!("Loading DLL from: {:?}", dll_path);
+
+    let dll = unsafe { 
+        Lpu237IButton::new(&dll_path).map_err(|e| {
+            let err = format!("Failed to load DLL from {:?}: {}", dll_path, e);
+            eprintln!("{}", err);
+            anyhow::anyhow!(err)
+        })? 
+    };
     
     {
         let mut state = STATE.lock().unwrap();
         state.dll = Some(dll);
     }
 
+    eprintln!("DLL loaded successfully. Starting stdio transport...");
+
     let transport = (tokio::io::stdin(), tokio::io::stdout());
-    let service = IButtonServer.serve(transport).await?;
+    let service = IButtonServer.serve(transport).await.map_err(|e| {
+        eprintln!("Failed to start service: {}", e);
+        e
+    })?;
+    
+    eprintln!("I-Button MCP Server is running and waiting for commands.");
     service.waiting().await?;
     
     Ok(())

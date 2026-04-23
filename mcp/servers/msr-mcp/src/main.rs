@@ -30,7 +30,7 @@ struct MsrServer;
 
 #[derive(Deserialize, JsonSchema)]
 struct ReadCardArgs {
-    /// Timeout in seconds for the card swipe
+    /// Timeout in seconds for the card swipe (default 30)
     timeout_sec: u64,
 }
 
@@ -44,6 +44,9 @@ struct ReadCardResponse {
     cancelled: bool,
 }
 
+#[derive(Deserialize, JsonSchema)]
+struct EmptyArgs {}
+
 /// Callback from DLL
 extern "C" fn msr_callback(param: *mut std::ffi::c_void) {
     let index = param as c_ulong;
@@ -55,8 +58,8 @@ extern "C" fn msr_callback(param: *mut std::ffi::c_void) {
 
 #[tool_router(server_handler)]
 impl MsrServer {
-    #[tool(description = "Wait for a magnetic card swipe and return track data")]
-    async fn read_card(&self, Parameters(args): Parameters<ReadCardArgs>) -> String {
+    #[tool(description = "Wait for a magnetic card swipe and return track data from LPU237 device")]
+    async fn read_card(&self, Parameters(args): Parameters<ReadCardArgs>) -> Result<String, String> {
         let (tx, rx) = oneshot::channel();
         
         let res = (|| async {
@@ -145,24 +148,24 @@ impl MsrServer {
         })().await;
 
         match res {
-            Ok(resp) => serde_json::to_string(&resp).unwrap(),
-            Err(e) => format!("Error: {}", e),
+            Ok(resp) => Ok(serde_json::to_string(&resp).unwrap()),
+            Err(e) => Err(e),
         }
     }
 
-    #[tool(description = "Cancel a pending card read operation")]
-    async fn cancel_card(&self, _params: Parameters<serde_json::Value>) -> String {
+    #[tool(description = "Cancel any pending card read operation on LPU237 device")]
+    async fn cancel_card(&self, _params: Parameters<EmptyArgs>) -> Result<String, String> {
         let mut state = STATE.lock().unwrap();
         if state.h_dev == INVALID_HANDLE_VALUE {
-            return "false".to_string();
+            return Ok("No pending operation to cancel".to_string());
         }
         
         if let Some(dll) = &state.dll {
             dll.cancel_wait_swipe(state.h_dev);
             state.tx.take();
-            "true".to_string()
+            Ok("Successfully cancelled".to_string())
         } else {
-            "Error: DLL not loaded".to_string()
+            Err("DLL not loaded".to_string())
         }
     }
 }
@@ -178,7 +181,6 @@ fn cleanup(dll: &Lpu237Dll, h_dev: HANDLE) {
 fn local_get_lpu237_dll_path() -> PathBuf {
     #[cfg(target_os = "windows")]
     {
-        // ProgramFiles 경로 얻기 (x64/x86 구분 포함)
         let base = if cfg!(target_pointer_width = "64") {
             std::env::var("ProgramFiles")
         } else {
@@ -208,17 +210,34 @@ fn local_get_lpu237_dll_path() -> PathBuf {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let dll_path = local_get_lpu237_dll_path();
+    // Standard logger for MCP often writes to stderr
+    eprintln!("Starting LPU237 MSR MCP Server...");
 
-    let dll = unsafe { Lpu237Dll::new(dll_path).map_err(|e| anyhow::anyhow!("Failed to load DLL: {}", e))? };
+    let dll_path = local_get_lpu237_dll_path();
+    eprintln!("Loading DLL from: {:?}", dll_path);
+
+    let dll = unsafe { 
+        Lpu237Dll::new(&dll_path).map_err(|e| {
+            let err = format!("Failed to load DLL from {:?}: {}", dll_path, e);
+            eprintln!("{}", err);
+            anyhow::anyhow!(err)
+        })? 
+    };
     
     {
         let mut state = STATE.lock().unwrap();
         state.dll = Some(dll);
     }
 
+    eprintln!("DLL loaded successfully. Starting stdio transport...");
+
     let transport = (tokio::io::stdin(), tokio::io::stdout());
-    let service = MsrServer.serve(transport).await?;
+    let service = MsrServer.serve(transport).await.map_err(|e| {
+        eprintln!("Failed to start service: {}", e);
+        e
+    })?;
+    
+    eprintln!("MSR MCP Server is running and waiting for commands.");
     service.waiting().await?;
     
     Ok(())
