@@ -1,0 +1,4 @@
+[workspace]
+members = [
+    "libs/lpu237-common", "libs/tg-lpu237-dll", "libs/tg-lpu237-ibutton", "servers/ibutton-mcp", "servers/msr-mcp",
+]

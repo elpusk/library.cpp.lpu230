@@ -1,0 +1,8 @@
+[package]
+name = "ibutton-mcp"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+lpu237-common = { path = "../../libs/lpu237-common" }
+tg-lpu237-ibutton = { path = "../../libs/tg-lpu237-ibutton" }

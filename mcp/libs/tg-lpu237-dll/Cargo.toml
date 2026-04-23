@@ -1,0 +1,7 @@
+[package]
+name = "tg-lpu237-dll"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+lpu237-common = { path = "../lpu237-common" }
