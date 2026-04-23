@@ -14,13 +14,15 @@ use std::path::PathBuf;
 struct ServerState {
     dll: Option<Lpu237Dll>,
     h_dev: HANDLE,
-    tx: Option<oneshot::Sender<c_ulong>>,
+    buf_index: c_ulong, // Store the index returned by wait_swipe_with_callback
+    tx: Option<oneshot::Sender<()>>, // Changed to unit type, only signals swipe completion
 }
 
 static STATE: Lazy<Arc<Mutex<ServerState>>> = Lazy::new(|| {
     Arc::new(Mutex::new(ServerState {
         dll: None,
         h_dev: INVALID_HANDLE_VALUE,
+        buf_index: 0,
         tx: None,
     }))
 });
@@ -48,11 +50,11 @@ struct ReadCardResponse {
 struct EmptyArgs {}
 
 /// Callback from DLL
-extern "C" fn msr_callback(param: *mut std::ffi::c_void) {
-    let index = param as c_ulong;
+extern "C" fn msr_callback(_param: *mut std::ffi::c_void) {
+    // Just signal completion, the index is already stored in STATE
     let mut state = STATE.lock().unwrap();
     if let Some(tx) = state.tx.take() {
-        let _ = tx.send(index);
+        let _ = tx.send(());
     }
 }
 
@@ -63,7 +65,7 @@ impl MsrServer {
         let (tx, rx) = oneshot::channel();
         
         let res = (|| async {
-            let (dll, h_dev) = {
+            let (dll, h_dev, buf_index) = {
                 let mut state = STATE.lock().unwrap();
                 
                 if state.tx.is_some() {
@@ -83,9 +85,12 @@ impl MsrServer {
                 
                 dll.enable(h_dev);
                 state.tx = Some(tx);
-                dll.wait_swipe_with_callback(h_dev, msr_callback, std::ptr::null_mut());
                 
-                (dll, h_dev)
+                // Use the return value as the buffer index
+                let idx = dll.wait_swipe_with_callback(h_dev, msr_callback, std::ptr::null_mut());
+                state.buf_index = idx;
+                
+                (dll, h_dev, idx)
             };
 
             let result = timeout(Duration::from_secs(args.timeout_sec), rx).await;
@@ -95,10 +100,12 @@ impl MsrServer {
             state.tx.take();
 
             match result {
-                Ok(Ok(index)) => {
-                    if index == LPU237_DLL_RESULT_CANCEL {
+                Ok(Ok(())) => {
+                    // Swipe completed. Note: The return value of the call might have been CANCEL 
+                    // if it was called while closing, but usually we check index after swipe.
+                    if buf_index == LPU237_DLL_RESULT_CANCEL {
                          cleanup(&dll, h_dev);
-                         Ok(ReadCardResponse {
+                         return Ok(ReadCardResponse {
                             success: false,
                             track1: None,
                             track2: None,
@@ -106,20 +113,20 @@ impl MsrServer {
                             error: None,
                             cancelled: true,
                         })
-                    } else {
-                        let t1 = dll.get_data(index, 1).ok().map(|d| String::from_utf8_lossy(&d).to_string());
-                        let t2 = dll.get_data(index, 2).ok().map(|d| String::from_utf8_lossy(&d).to_string());
-                        let t3 = dll.get_data(index, 3).ok().map(|d| String::from_utf8_lossy(&d).to_string());
-                        cleanup(&dll, h_dev);
-                        Ok(ReadCardResponse {
-                            success: true,
-                            track1: t1,
-                            track2: t2,
-                            track3: t3,
-                            error: None,
-                            cancelled: false,
-                        })
                     }
+
+                    let t1 = dll.get_data(buf_index, 1).ok().map(|d| String::from_utf8_lossy(&d).to_string());
+                    let t2 = dll.get_data(buf_index, 2).ok().map(|d| String::from_utf8_lossy(&d).to_string());
+                    let t3 = dll.get_data(buf_index, 3).ok().map(|d| String::from_utf8_lossy(&d).to_string());
+                    cleanup(&dll, h_dev);
+                    Ok(ReadCardResponse {
+                        success: true,
+                        track1: t1,
+                        track2: t2,
+                        track3: t3,
+                        error: None,
+                        cancelled: false,
+                    })
                 }
                 Ok(Err(_)) => {
                     cleanup(&dll, h_dev);
@@ -210,7 +217,6 @@ fn local_get_lpu237_dll_path() -> PathBuf {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    // Standard logger for MCP often writes to stderr
     eprintln!("Starting LPU237 MSR MCP Server...");
 
     let dll_path = local_get_lpu237_dll_path();
