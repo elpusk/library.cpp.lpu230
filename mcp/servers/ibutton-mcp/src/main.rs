@@ -8,6 +8,7 @@ use once_cell::sync::Lazy;
 use tg_lpu237_ibutton::{Lpu237IButton, LPU237LOCK_DLL_RESULT_CANCEL};
 use lpu237_common::{HANDLE, INVALID_HANDLE_VALUE};
 use libc::c_ulong;
+use std::path::PathBuf;
 
 // Global state for the MCP server
 struct ServerState {
@@ -169,13 +170,40 @@ fn cleanup(dll: &Lpu237IButton, h_dev: HANDLE) {
     dll.dll_off();
 }
 
+fn local_get_lpu237_ibutton_path() -> PathBuf {
+    #[cfg(target_os = "windows")]
+    {
+        // ProgramFiles 경로 얻기 (x64/x86 구분 포함)
+        let base = if cfg!(target_pointer_width = "64") {
+            std::env::var("ProgramFiles")
+        } else {
+            std::env::var("ProgramFiles(x86)")
+        }.expect("ProgramFiles env not found");
+
+        let arch_dir = if cfg!(target_pointer_width = "64") {
+            "x64"
+        } else {
+            "x86"
+        };
+
+        PathBuf::from(base)
+            .join("elpusk")
+            .join("00000006")
+            .join("coffee_manager")
+            .join("dll")
+            .join(arch_dir)
+            .join("tg_lpu237_ibutton.dll")
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        PathBuf::from("/usr/share/elpusk/program/00000006/coffee_manager/so/libtg_lpu237_ibutton.so")
+    }
+}
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let dll_path = if cfg!(windows) {
-        "tg_lpu237_ibutton.dll"
-    } else {
-        "libtg_lpu237_ibutton.so"
-    };
+    let dll_path = local_get_lpu237_ibutton_path();
 
     let dll = unsafe { Lpu237IButton::new(dll_path).map_err(|e| anyhow::anyhow!("Failed to load DLL: {}", e))? };
     
