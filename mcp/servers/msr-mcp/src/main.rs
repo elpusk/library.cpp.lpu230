@@ -1,4 +1,4 @@
-use rmcp::{tool, tool_router, ServiceExt, transport::stdio, handler::server::wrapper::Parameters};
+use rmcp::{tool, tool_router, ServiceExt, handler::server::wrapper::Parameters};
 use serde::{Deserialize, Serialize};
 use schemars::JsonSchema;
 use std::sync::{Arc, Mutex};

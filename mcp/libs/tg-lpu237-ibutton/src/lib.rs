@@ -13,7 +13,7 @@ pub type TypeKeyCallback = extern "C" fn(*mut std::ffi::c_void);
 
 #[derive(Clone)]
 pub struct Lpu237IButton {
-    lib: Arc<Library>,
+    _lib: Arc<Library>, //libloading::Library가 drop 되면 함수 포인터가 무효가 되니까, struct 안에 들고 있으면서 lifetime 유지하려는 것
     // Function pointers using libc::c_ulong for unsigned long
     fn_on: unsafe extern "C" fn() -> c_ulong,
     fn_off: unsafe extern "C" fn() -> c_ulong,
@@ -30,22 +30,22 @@ pub struct Lpu237IButton {
 
 impl Lpu237IButton {
     pub unsafe fn new<P: AsRef<OsStr>>(path: P) -> Result<Self, Box<dyn std::error::Error>> {
-        let lib = Arc::new(unsafe { Library::new(path.as_ref())? });
+        let _lib = Arc::new(unsafe { Library::new(path.as_ref())? });
 
-        let fn_on = *unsafe { lib.get(b"LPU237Lock_dll_on")? };
-        let fn_off = *unsafe { lib.get(b"LPU237Lock_dll_off")? };
-        let fn_get_list = *unsafe { lib.get(b"LPU237Lock_get_list")? };
-        let fn_open = *unsafe { lib.get(b"LPU237Lock_open")? };
-        let fn_close = *unsafe { lib.get(b"LPU237Lock_close")? };
-        let fn_enable = *unsafe { lib.get(b"LPU237Lock_enable")? };
-        let fn_disable = *unsafe { lib.get(b"LPU237Lock_disable")? };
-        let fn_cancel_wait_key = *unsafe { lib.get(b"LPU237Lock_cancel_wait_key")? };
-        let fn_wait_key_with_callback = *unsafe { lib.get(b"LPU237Lock_wait_key_with_callback")? };
-        let fn_get_data = *unsafe { lib.get(b"LPU237Lock_get_data")? };
-        let fn_get_id = *unsafe { lib.get(b"LPU237Lock_get_id")? };
+        let fn_on = *unsafe { _lib.get(b"LPU237Lock_dll_on")? };
+        let fn_off = *unsafe { _lib.get(b"LPU237Lock_dll_off")? };
+        let fn_get_list = *unsafe { _lib.get(b"LPU237Lock_get_list")? };
+        let fn_open = *unsafe { _lib.get(b"LPU237Lock_open")? };
+        let fn_close = *unsafe { _lib.get(b"LPU237Lock_close")? };
+        let fn_enable = *unsafe { _lib.get(b"LPU237Lock_enable")? };
+        let fn_disable = *unsafe { _lib.get(b"LPU237Lock_disable")? };
+        let fn_cancel_wait_key = *unsafe { _lib.get(b"LPU237Lock_cancel_wait_key")? };
+        let fn_wait_key_with_callback = *unsafe { _lib.get(b"LPU237Lock_wait_key_with_callback")? };
+        let fn_get_data = *unsafe { _lib.get(b"LPU237Lock_get_data")? };
+        let fn_get_id = *unsafe { _lib.get(b"LPU237Lock_get_id")? };
 
         Ok(Self {
-            lib,
+            _lib,
             fn_on,
             fn_off,
             fn_get_list,
