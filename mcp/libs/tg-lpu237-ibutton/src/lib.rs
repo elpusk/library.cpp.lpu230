@@ -1,4 +1,4 @@
-use libloading::{Library, Symbol};
+use libloading::Library;
 use lpu237_common::{HANDLE, INVALID_HANDLE_VALUE};
 use std::sync::Arc;
 use widestring::U16CString;
@@ -11,6 +11,7 @@ pub const LPU237LOCK_DLL_RESULT_CANCEL: c_ulong = !0 - 1;
 
 pub type TypeKeyCallback = extern "C" fn(*mut std::ffi::c_void);
 
+#[derive(Clone)]
 pub struct Lpu237IButton {
     lib: Arc<Library>,
     // Function pointers using libc::c_ulong for unsigned long
@@ -29,19 +30,19 @@ pub struct Lpu237IButton {
 
 impl Lpu237IButton {
     pub unsafe fn new<P: AsRef<OsStr>>(path: P) -> Result<Self, Box<dyn std::error::Error>> {
-        let lib = Arc::new(Library::new(path)?);
+        let lib = Arc::new(unsafe { Library::new(path)? });
 
-        let fn_on = *lib.get(b"LPU237Lock_dll_on")?;
-        let fn_off = *lib.get(b"LPU237Lock_dll_off")?;
-        let fn_get_list = *lib.get(b"LPU237Lock_get_list")?;
-        let fn_open = *lib.get(b"LPU237Lock_open")?;
-        let fn_close = *lib.get(b"LPU237Lock_close")?;
-        let fn_enable = *lib.get(b"LPU237Lock_enable")?;
-        let fn_disable = *lib.get(b"LPU237Lock_disable")?;
-        let fn_cancel_wait_key = *lib.get(b"LPU237Lock_cancel_wait_key")?;
-        let fn_wait_key_with_callback = *lib.get(b"LPU237Lock_wait_key_with_callback")?;
-        let fn_get_data = *lib.get(b"LPU237Lock_get_data")?;
-        let fn_get_id = *lib.get(b"LPU237Lock_get_id")?;
+        let fn_on = *unsafe { lib.get(b"LPU237Lock_dll_on")? };
+        let fn_off = *unsafe { lib.get(b"LPU237Lock_dll_off")? };
+        let fn_get_list = *unsafe { lib.get(b"LPU237Lock_get_list")? };
+        let fn_open = *unsafe { lib.get(b"LPU237Lock_open")? };
+        let fn_close = *unsafe { lib.get(b"LPU237Lock_close")? };
+        let fn_enable = *unsafe { lib.get(b"LPU237Lock_enable")? };
+        let fn_disable = *unsafe { lib.get(b"LPU237Lock_disable")? };
+        let fn_cancel_wait_key = *unsafe { lib.get(b"LPU237Lock_cancel_wait_key")? };
+        let fn_wait_key_with_callback = *unsafe { lib.get(b"LPU237Lock_wait_key_with_callback")? };
+        let fn_get_data = *unsafe { lib.get(b"LPU237Lock_get_data")? };
+        let fn_get_id = *unsafe { lib.get(b"LPU237Lock_get_id")? };
 
         Ok(Self {
             lib,
@@ -84,8 +85,7 @@ impl Lpu237IButton {
             let mut result = Vec::new();
             let mut current_pos = 0;
             while current_pos < buffer.len() && buffer[current_pos] != 0 {
-                let s = U16CString::from_ptr_with_nul(buffer.as_ptr().add(current_pos), buffer.len() - current_pos)
-                    .map_err(|_| LPU237LOCK_DLL_RESULT_ERROR)?;
+                let s = U16CString::from_ptr_str(buffer.as_ptr().add(current_pos));
                 result.push(s.to_string_lossy());
                 current_pos += s.len() + 1;
             }

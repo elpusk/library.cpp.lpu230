@@ -1,4 +1,4 @@
-use libloading::{Library, Symbol};
+use libloading::Library;
 use lpu237_common::{HANDLE, INVALID_HANDLE_VALUE};
 use std::sync::Arc;
 use widestring::U16CString;
@@ -12,6 +12,7 @@ pub const LPU237_DLL_RESULT_ERROR_MSR: c_ulong = !0 - 2;
 
 pub type TypeCallback = extern "C" fn(*mut std::ffi::c_void);
 
+#[derive(Clone)]
 pub struct Lpu237Dll {
     lib: Arc<Library>,
     // Function pointers using libc::c_ulong for unsigned long
@@ -30,19 +31,19 @@ pub struct Lpu237Dll {
 
 impl Lpu237Dll {
     pub unsafe fn new<P: AsRef<OsStr>>(path: P) -> Result<Self, Box<dyn std::error::Error>> {
-        let lib = Arc::new(Library::new(path)?);
+        let lib = Arc::new(unsafe { Library::new(path)? });
 
-        let fn_on = *lib.get(b"LPU237_dll_on")?;
-        let fn_off = *lib.get(b"LPU237_dll_off")?;
-        let fn_get_list = *lib.get(b"LPU237_get_list")?;
-        let fn_open = *lib.get(b"LPU237_open")?;
-        let fn_close = *lib.get(b"LPU237_close")?;
-        let fn_enable = *lib.get(b"LPU237_enable")?;
-        let fn_disable = *lib.get(b"LPU237_disable")?;
-        let fn_cancel_wait_swipe = *lib.get(b"LPU237_cancel_wait_swipe")?;
-        let fn_wait_swipe_with_callback = *lib.get(b"LPU237_wait_swipe_with_callback")?;
-        let fn_get_data = *lib.get(b"LPU237_get_data")?;
-        let fn_get_id = *lib.get(b"LPU237_get_id")?;
+        let fn_on = *unsafe { lib.get(b"LPU237_dll_on")? };
+        let fn_off = *unsafe { lib.get(b"LPU237_dll_off")? };
+        let fn_get_list = *unsafe { lib.get(b"LPU237_get_list")? };
+        let fn_open = *unsafe { lib.get(b"LPU237_open")? };
+        let fn_close = *unsafe { lib.get(b"LPU237_close")? };
+        let fn_enable = *unsafe { lib.get(b"LPU237_enable")? };
+        let fn_disable = *unsafe { lib.get(b"LPU237_disable")? };
+        let fn_cancel_wait_swipe = *unsafe { lib.get(b"LPU237_cancel_wait_swipe")? };
+        let fn_wait_swipe_with_callback = *unsafe { lib.get(b"LPU237_wait_swipe_with_callback")? };
+        let fn_get_data = *unsafe { lib.get(b"LPU237_get_data")? };
+        let fn_get_id = *unsafe { lib.get(b"LPU237_get_id")? };
 
         Ok(Self {
             lib,
@@ -85,8 +86,7 @@ impl Lpu237Dll {
             let mut result = Vec::new();
             let mut current_pos = 0;
             while current_pos < buffer.len() && buffer[current_pos] != 0 {
-                let s = U16CString::from_ptr_with_nul(buffer.as_ptr().add(current_pos), buffer.len() - current_pos)
-                    .map_err(|_| LPU237_DLL_RESULT_ERROR)?;
+                let s = U16CString::from_ptr_str(buffer.as_ptr().add(current_pos));
                 result.push(s.to_string_lossy());
                 current_pos += s.len() + 1;
             }
