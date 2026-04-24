@@ -72,7 +72,6 @@ impl IButtonServer {
                 }
 
                 let dll = state.dll.as_ref().ok_or("DLL not loaded")?.clone();
-                dll.dll_on();
                 
                 let devices = dll.get_list().map_err(|e| format!("Failed to get device list: {}", e))?;
                 if devices.is_empty() {
@@ -175,7 +174,6 @@ fn cleanup(dll: &Lpu237IButton, h_dev: HANDLE) {
         dll.disable(h_dev);
         dll.close(h_dev);
     }
-    dll.dll_off();
 }
 
 fn local_get_lpu237_ibutton_path() -> PathBuf {
@@ -223,12 +221,15 @@ async fn main() -> anyhow::Result<()> {
         })? 
     };
     
+    // Initialize DLL once
+    dll.dll_on();
+
     {
         let mut state = STATE.lock().unwrap();
-        state.dll = Some(dll);
+        state.dll = Some(dll.clone());
     }
 
-    eprintln!("DLL loaded successfully. Starting stdio transport...");
+    eprintln!("DLL loaded and initialized successfully. Starting stdio transport...");
 
     let transport = (tokio::io::stdin(), tokio::io::stdout());
     let service = IButtonServer.serve(transport).await.map_err(|e| {
@@ -238,6 +239,9 @@ async fn main() -> anyhow::Result<()> {
     
     eprintln!("I-Button MCP Server is running and waiting for commands.");
     service.waiting().await?;
+    
+    // De-initialize DLL once
+    dll.dll_off();
     
     Ok(())
 }
