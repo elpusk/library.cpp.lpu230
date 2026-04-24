@@ -44,6 +44,12 @@ lpu23x device c++ library
 + tg_rom_build : v1.3
   + rebuilded with the changed library.
 
++ lpu23x-msr-mcp : v1.0
+  + the first release.
+
++ lpu23x-ibutton-mcp : v1.0
+  + the first release.
+
 ## build on debian12
 
 + notice
@@ -76,7 +82,7 @@ lpu23x device c++ library
     + sudo make install
     + sudo cp -r /usr/local/libusb/include/* /usr/local/include/
     + sudo cp -r /usr/local/libusb/lib/* /usr/local/lib/
-            
+
 + openssl
   + use version 1.1.1s, static lib
   + buid
@@ -291,3 +297,44 @@ sudo rm /var/lib/dpkg/info/coffee-manager*
   + log directory
     + root user : L"/var/log/elpusk/00000006/coffee_manager/tg_lpu237_fw"
     + normal user : L"~/.elpusk/log/00000006/coffee_manager/tg_lpu237_fw"
+
+---------------------------------------------
+---------------------------------------------
+
+## MCP Server
+
+### env
+
++ vscode IDE
++ rust language
++ stdio type MCP Server
+
+### build
+
++ debug - `solution root/mcp/cargo build`
++ release - `solution root/mcp/cargo build --release`
+
+### etc 
+
++ clear builded data - `solution root/mcp/cargo clear`
++ check source code error - `solution root/mcp/cargo check`
+
+### projects
+
++ ibutton-mcp : i-button reader MCP server
+  + tg_lpu237_ibutton.dll(libtg_lpu237_ibutton.so) 사용
+  + stdio type MCP server
+  + exported functions
+    + start_read_ibutton : start a waitig a i-button data
+    + cancel_ibutton : stop a waitig a i-button data
+    + get_ibutton_result : get the received i-button data 
+    + read_ibutton : read a i-button by sync method
+
++ msr-mcp : msr reader MCP server
+  + tg_lpu237_msr.dll(libtg_lpu237_msr.so) 사용
+  + stdio type MCP server
+  + exported functions
+    + start_read_card : start a waitig a card data
+    + cancel_card : stop a waitig a card data
+    + get_read_card_result : get the received card data 
+    + read_card : read a magnetic card by sync method
