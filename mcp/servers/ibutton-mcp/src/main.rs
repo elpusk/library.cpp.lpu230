@@ -54,8 +54,32 @@ struct EmptyArgs {}
 
 /// Callback from DLL
 extern "C" fn ibutton_callback(_param: *mut std::ffi::c_void) {
-    // Just signal completion. Do not overwrite state.buf_index.
     let mut state = STATE.lock().unwrap();
+    let index = state.buf_index; // Use the index stored when wait_key was called
+    
+    if let Some(dll) = state.dll.clone() {
+        let result = if index == LPU237LOCK_DLL_RESULT_CANCEL {
+            ReadIButtonResponse {
+                success: false,
+                data: None,
+                id: None,
+                error: None,
+                cancelled: true,
+            }
+        } else {
+            let data = dll.get_data(index).ok().map(|d| hex::encode(d));
+            let id = dll.get_id(state.h_dev).ok().map(|d| hex::encode(d));
+            ReadIButtonResponse {
+                success: true,
+                data,
+                id,
+                error: None,
+                cancelled: false,
+            }
+        };
+        state.last_result = Some(result);
+    }
+    
     if let Some(tx) = state.tx.take() {
         let _ = tx.send(());
     }
@@ -67,188 +91,109 @@ impl IButtonServer {
     async fn read_ibutton(&self, Parameters(args): Parameters<ReadIButtonArgs>) -> Result<String, String> {
         let (tx, rx) = oneshot::channel();
         
-        let res = (|| async {
-            let (dll, h_dev, buf_index) = {
-                let mut state = STATE.lock().unwrap();
-                
-                if state.is_running {
-                    return Err("An operation is already in progress".to_string());
-                }
-
-                let dll = state.dll.as_ref().ok_or("DLL not loaded")?.clone();
-                
-                let devices = dll.get_list().map_err(|e| format!("Failed to get device list: {}", e))?;
-                if devices.is_empty() {
-                    return Err("No LPU237 I-Button device found".to_string());
-                }
-                
-                let h_dev = dll.open(&devices[0]).map_err(|_| "Failed to open device".to_string())?;
-                state.h_dev = h_dev;
-                state.last_result = None;
-                state.is_running = true;
-                
-                dll.enable(h_dev);
-                state.tx = Some(tx);
-                
-                // Use the return value as the buffer index
-                let idx = dll.wait_key_with_callback(h_dev, ibutton_callback, std::ptr::null_mut());
-                state.buf_index = idx;
-                
-                (dll, h_dev, idx)
-            };
-
-            let result = timeout(Duration::from_secs(args.timeout_sec), rx).await;
-            
+        let (dll, h_dev) = {
             let mut state = STATE.lock().unwrap();
-            state.h_dev = INVALID_HANDLE_VALUE;
-            state.tx.take();
-            state.is_running = false;
+            if state.is_running { return Err("An operation is already in progress".to_string()); }
 
-            match result {
-                Ok(Ok(())) => {
-                    if buf_index == LPU237LOCK_DLL_RESULT_CANCEL {
-                         cleanup(&dll, h_dev);
-                         Ok(ReadIButtonResponse {
-                            success: false,
-                            data: None,
-                            id: None,
-                            error: None,
-                            cancelled: true,
-                        })
-                    } else {
-                        let data = dll.get_data(buf_index).ok().map(|d| hex::encode(d));
-                        let id = dll.get_id(h_dev).ok().map(|d| hex::encode(d));
-                        
-                        cleanup(&dll, h_dev);
-                        Ok(ReadIButtonResponse {
-                            success: true,
-                            data,
-                            id,
-                            error: None,
-                            cancelled: false,
-                        })
-                    }
-                }
-                Ok(Err(_)) => {
-                    cleanup(&dll, h_dev);
-                    Ok(ReadIButtonResponse {
-                        success: false,
-                        data: None,
-                        id: None,
-                        error: Some("Operation cancelled".to_string()),
-                        cancelled: true,
-                    })
-                }
-                Err(_) => {
-                    dll.cancel_wait_key(h_dev);
-                    cleanup(&dll, h_dev);
-                    Ok(ReadIButtonResponse {
-                        success: false,
-                        data: None,
-                        id: None,
-                        error: Some("Timeout".to_string()),
-                        cancelled: false,
-                    })
+            let dll = state.dll.as_ref().ok_or("DLL not loaded")?.clone();
+            let devices = dll.get_list().map_err(|e| format!("Failed to get device list: {}", e))?;
+            if devices.is_empty() { return Err("No LPU237 I-Button device found".to_string()); }
+            
+            let h_dev = dll.open(&devices[0]).map_err(|_| "Failed to open device".to_string())?;
+            state.h_dev = h_dev;
+            state.last_result = None;
+            state.is_running = true;
+            dll.enable(h_dev);
+            state.tx = Some(tx);
+            
+            // Capture and store the index returned by the DLL
+            let idx = dll.wait_key_with_callback(h_dev, ibutton_callback, std::ptr::null_mut());
+            state.buf_index = idx;
+            
+            (dll, h_dev)
+        };
+
+        let res = match timeout(Duration::from_secs(args.timeout_sec), rx).await {
+            Ok(Ok(())) => {
+                let mut state = STATE.lock().unwrap();
+                state.last_result.take().ok_or("Failed to retrieve data from buffer".to_string())?
+            }
+            Ok(Err(_)) => ReadIButtonResponse {
+                success: false, data: None, id: None,
+                error: Some("Operation cancelled".to_string()), cancelled: true,
+            },
+            Err(_) => {
+                dll.cancel_wait_key(h_dev);
+                ReadIButtonResponse {
+                    success: false, data: None, id: None,
+                    error: Some("Timeout".to_string()), cancelled: false,
                 }
             }
-        })().await;
+        };
 
-        match res {
-            Ok(resp) => Ok(serde_json::to_string(&resp).unwrap()),
-            Err(e) => Err(e),
+        {
+            let mut state = STATE.lock().unwrap();
+            state.h_dev = INVALID_HANDLE_VALUE;
+            state.is_running = false;
+            state.tx.take();
         }
+        cleanup(&dll, h_dev);
+
+        Ok(serde_json::to_string(&res).unwrap())
     }
 
     #[tool(description = "Start waiting for an I-Button touch in the background. AI Agent can continue while waiting.")]
     async fn start_read_ibutton(&self, Parameters(args): Parameters<ReadIButtonArgs>) -> Result<String, String> {
         let (tx, rx) = oneshot::channel();
         
-        let (dll, h_dev, buf_index) = {
+        let (dll, h_dev) = {
             let mut state = STATE.lock().unwrap();
-            
-            if state.is_running {
-                return Err("An operation is already in progress".to_string());
-            }
+            if state.is_running { return Err("An operation is already in progress".to_string()); }
 
             let dll = state.dll.as_ref().ok_or("DLL not loaded")?.clone();
-            
             let devices = dll.get_list().map_err(|e| format!("Failed to get device list: {}", e))?;
-            if devices.is_empty() {
-                return Err("No LPU237 I-Button device found".to_string());
-            }
+            if devices.is_empty() { return Err("No LPU237 I-Button device found".to_string()); }
             
             let h_dev = dll.open(&devices[0]).map_err(|_| "Failed to open device".to_string())?;
             state.h_dev = h_dev;
             state.last_result = None;
             state.is_running = true;
-            
             dll.enable(h_dev);
             state.tx = Some(tx);
             
+            // Capture and store the index returned by the DLL
             let idx = dll.wait_key_with_callback(h_dev, ibutton_callback, std::ptr::null_mut());
             state.buf_index = idx;
             
-            (dll, h_dev, idx)
+            (dll, h_dev)
         };
 
-        // Spawn background task
+        // Background task only for timeout handling and final cleanup
         tokio::spawn(async move {
-            // 1. Wait for callback signal (triggered by ibutton_callback)
             let result = timeout(Duration::from_secs(args.timeout_sec), rx).await;
             
-            // 2. Retrieval phase: Only happens after signal or timeout
-            let final_resp = match result {
-                Ok(Ok(())) => {
-                    // Signal received! Now get the data using the captured buf_index.
-                    if buf_index == LPU237LOCK_DLL_RESULT_CANCEL {
-                         ReadIButtonResponse {
-                            success: false,
-                            data: None,
-                            id: None,
-                            error: None,
-                            cancelled: true,
-                        }
-                    } else {
-                        let data = dll.get_data(buf_index).ok().map(|d| hex::encode(d));
-                        let id = dll.get_id(h_dev).ok().map(|d| hex::encode(d));
-                        ReadIButtonResponse {
-                            success: true,
-                            data,
-                            id,
-                            error: None,
-                            cancelled: false,
-                        }
-                    }
-                }
-                Ok(Err(_)) => {
-                    ReadIButtonResponse {
-                        success: false,
-                        data: None,
-                        id: None,
-                        error: Some("Operation cancelled".to_string()),
-                        cancelled: true,
-                    }
-                }
-                Err(_) => {
-                    // Timeout: cancel the operation in DLL
+            if let Err(_) = result {
+                // Timeout case
+                let mut state = STATE.lock().unwrap();
+                if state.is_running && state.h_dev == h_dev {
                     dll.cancel_wait_key(h_dev);
-                    ReadIButtonResponse {
-                        success: false,
-                        data: None,
-                        id: None,
-                        error: Some("Timeout".to_string()),
-                        cancelled: false,
-                    }
+                    state.last_result = Some(ReadIButtonResponse {
+                        success: false, data: None, id: None,
+                        error: Some("Timeout".to_string()), cancelled: false,
+                    });
                 }
-            };
+            }
 
+            // Final state cleanup
+            {
+                let mut state = STATE.lock().unwrap();
+                if state.h_dev == h_dev {
+                    state.h_dev = INVALID_HANDLE_VALUE;
+                    state.is_running = false;
+                    state.tx.take();
+                }
+            }
             cleanup(&dll, h_dev);
-            
-            let mut state = STATE.lock().unwrap();
-            state.h_dev = INVALID_HANDLE_VALUE;
-            state.tx.take();
-            state.last_result = Some(final_resp);
-            state.is_running = false;
         });
 
         Ok("I-Button reading started in background. Please touch the key.".to_string())
