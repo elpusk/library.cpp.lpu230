@@ -14,8 +14,10 @@ use std::path::PathBuf;
 struct ServerState {
     dll: Option<Lpu237Dll>,
     h_dev: HANDLE,
-    buf_index: c_ulong, // Store the index returned by wait_swipe_with_callback
-    tx: Option<oneshot::Sender<()>>, // Changed to unit type, only signals swipe completion
+    buf_index: c_ulong,
+    tx: Option<oneshot::Sender<()>>,
+    is_running: bool, // Track if background operation is active
+    last_result: Option<ReadCardResponse>,
 }
 
 static STATE: Lazy<Arc<Mutex<ServerState>>> = Lazy::new(|| {
@@ -24,6 +26,8 @@ static STATE: Lazy<Arc<Mutex<ServerState>>> = Lazy::new(|| {
         h_dev: INVALID_HANDLE_VALUE,
         buf_index: 0,
         tx: None,
+        is_running: false,
+        last_result: None,
     }))
 });
 
@@ -36,7 +40,7 @@ struct ReadCardArgs {
     timeout_sec: u64,
 }
 
-#[derive(Serialize, JsonSchema)]
+#[derive(Serialize, Clone, JsonSchema)]
 struct ReadCardResponse {
     success: bool,
     track1: Option<String>,
@@ -51,7 +55,7 @@ struct EmptyArgs {}
 
 /// Callback from DLL
 extern "C" fn msr_callback(_param: *mut std::ffi::c_void) {
-    // Just signal completion, the index is already stored in STATE
+    // Just signal completion. Do not overwrite state.buf_index.
     let mut state = STATE.lock().unwrap();
     if let Some(tx) = state.tx.take() {
         let _ = tx.send(());
@@ -60,7 +64,7 @@ extern "C" fn msr_callback(_param: *mut std::ffi::c_void) {
 
 #[tool_router(server_handler)]
 impl MsrServer {
-    #[tool(description = "Wait for a magnetic card swipe and return track data from LPU237 device")]
+    #[tool(description = "Wait for a magnetic card swipe and return track data from LPU237 device (Blocking)")]
     async fn read_card(&self, Parameters(args): Parameters<ReadCardArgs>) -> Result<String, String> {
         let (tx, rx) = oneshot::channel();
         
@@ -68,8 +72,8 @@ impl MsrServer {
             let (dll, h_dev, buf_index) = {
                 let mut state = STATE.lock().unwrap();
                 
-                if state.tx.is_some() {
-                    return Err("Already reading a card".to_string());
+                if state.is_running {
+                    return Err("An operation is already in progress".to_string());
                 }
 
                 let dll = state.dll.as_ref().ok_or("DLL not loaded")?.clone();
@@ -81,6 +85,8 @@ impl MsrServer {
                 
                 let h_dev = dll.open(&devices[0]).map_err(|_| "Failed to open device".to_string())?;
                 state.h_dev = h_dev;
+                state.last_result = None;
+                state.is_running = true;
                 
                 dll.enable(h_dev);
                 state.tx = Some(tx);
@@ -97,11 +103,10 @@ impl MsrServer {
             let mut state = STATE.lock().unwrap();
             state.h_dev = INVALID_HANDLE_VALUE;
             state.tx.take();
+            state.is_running = false;
 
             match result {
                 Ok(Ok(())) => {
-                    // Swipe completed. Note: The return value of the call might have been CANCEL 
-                    // if it was called while closing, but usually we check index after swipe.
                     if buf_index == LPU237_DLL_RESULT_CANCEL {
                          cleanup(&dll, h_dev);
                          return Ok(ReadCardResponse {
@@ -156,6 +161,117 @@ impl MsrServer {
         match res {
             Ok(resp) => Ok(serde_json::to_string(&resp).unwrap()),
             Err(e) => Err(e),
+        }
+    }
+
+    #[tool(description = "Start waiting for a magnetic card swipe in the background. AI Agent can continue while waiting.")]
+    async fn start_read_card(&self, Parameters(args): Parameters<ReadCardArgs>) -> Result<String, String> {
+        let (tx, rx) = oneshot::channel();
+        
+        let (dll, h_dev, buf_index) = {
+            let mut state = STATE.lock().unwrap();
+            
+            if state.is_running {
+                return Err("An operation is already in progress".to_string());
+            }
+
+            let dll = state.dll.as_ref().ok_or("DLL not loaded")?.clone();
+            
+            let devices = dll.get_list().map_err(|e| format!("Failed to get device list: {}", e))?;
+            if devices.is_empty() {
+                return Err("No LPU237 device found".to_string());
+            }
+            
+            let h_dev = dll.open(&devices[0]).map_err(|_| "Failed to open device".to_string())?;
+            state.h_dev = h_dev;
+            state.last_result = None;
+            state.is_running = true;
+            
+            dll.enable(h_dev);
+            state.tx = Some(tx);
+            
+            let idx = dll.wait_swipe_with_callback(h_dev, msr_callback, std::ptr::null_mut());
+            state.buf_index = idx;
+            
+            (dll, h_dev, idx)
+        };
+
+        // Spawn background task
+        tokio::spawn(async move {
+            // 1. Wait for callback signal (triggered by msr_callback)
+            let result = timeout(Duration::from_secs(args.timeout_sec), rx).await;
+
+            // 2. Retrieval phase: Only happens after signal or timeout
+            let final_resp = match result {
+                Ok(Ok(())) => {
+                    // Signal received! Now get the data using the captured buf_index.
+                    if buf_index == LPU237_DLL_RESULT_CANCEL {
+                         ReadCardResponse {
+                            success: false,
+                            track1: None,
+                            track2: None,
+                            track3: None,
+                            error: None,
+                            cancelled: true,
+                        }
+                    } else {
+                        let t1 = dll.get_data(buf_index, 1).ok().map(|d| String::from_utf8_lossy(&d).to_string());
+                        let t2 = dll.get_data(buf_index, 2).ok().map(|d| String::from_utf8_lossy(&d).to_string());
+                        let t3 = dll.get_data(buf_index, 3).ok().map(|d| String::from_utf8_lossy(&d).to_string());
+                        ReadCardResponse {
+                            success: true,
+                            track1: t1,
+                            track2: t2,
+                            track3: t3,
+                            error: None,
+                            cancelled: false,
+                        }
+                    }
+                }
+                Ok(Err(_)) => {                    ReadCardResponse {
+                        success: false,
+                        track1: None,
+                        track2: None,
+                        track3: None,
+                        error: Some("Operation cancelled".to_string()),
+                        cancelled: true,
+                    }
+                }
+                Err(_) => {
+                    // Timeout: cancel the operation in DLL
+                    dll.cancel_wait_swipe(h_dev);
+                    ReadCardResponse {
+                        success: false,
+                        track1: None,
+                        track2: None,
+                        track3: None,
+                        error: Some("Timeout".to_string()),
+                        cancelled: false,
+                    }
+                }
+            };
+
+            cleanup(&dll, h_dev);
+
+            let mut state = STATE.lock().unwrap();
+            state.h_dev = INVALID_HANDLE_VALUE;
+            state.tx.take();
+            state.last_result = Some(final_resp);
+            state.is_running = false;
+        });
+
+        Ok("MSR card reading started in background. Please swipe the card.".to_string())
+    }
+
+    #[tool(description = "Check the result of the background card reading operation")]
+    async fn get_read_card_result(&self, _params: Parameters<EmptyArgs>) -> Result<String, String> {
+        let mut state = STATE.lock().unwrap();
+        if let Some(res) = state.last_result.take() {
+            Ok(serde_json::to_string(&res).unwrap())
+        } else if state.is_running {
+            Ok("Still waiting for card swipe...".to_string())
+        } else {
+            Ok("No background operation in progress or results already retrieved.".to_string())
         }
     }
 
