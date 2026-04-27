@@ -146,7 +146,7 @@ impl MsrServer {
         Ok(serde_json::to_string(&res).unwrap())
     }
 
-    #[tool(description = "Start waiting for a magnetic card swipe in the background. AI Agent can continue while waiting.")]
+    #[tool(description = "Start waiting for a magnetic card swipe in the the worker of lpu237 dynamic library. AI Agent have to check the reading status while waiting.")]
     async fn start_read_card(&self, Parameters(args): Parameters<ReadCardArgs>) -> Result<String, String> {
         let (tx, rx) = oneshot::channel();
 
@@ -203,8 +203,8 @@ impl MsrServer {
         Ok("MSR card reading started in background. Please swipe the card.".to_string())
     }
 
-    #[tool(description = "Check the result of the background card reading operation")]
-    async fn get_read_card_result(&self, _params: Parameters<EmptyArgs>) -> Result<String, String> {
+    #[tool(description = "Check the result of the status of card reading operation")]
+    async fn get_card_result(&self, _params: Parameters<EmptyArgs>) -> Result<String, String> {
         let mut state = STATE.lock().unwrap();
         if let Some(res) = state.last_result.take() {
             Ok(serde_json::to_string(&res).unwrap())

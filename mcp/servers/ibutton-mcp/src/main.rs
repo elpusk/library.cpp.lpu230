@@ -142,7 +142,7 @@ impl IButtonServer {
         Ok(serde_json::to_string(&res).unwrap())
     }
 
-    #[tool(description = "Start waiting for an I-Button touch in the background. AI Agent can continue while waiting.")]
+    #[tool(description = "Start waiting for an I-Button touch in the worker of lpu237 dynamic library. AI Agent have to check the reading status while waiting.")]
     async fn start_read_ibutton(&self, Parameters(args): Parameters<ReadIButtonArgs>) -> Result<String, String> {
         let (tx, rx) = oneshot::channel();
         
@@ -199,7 +199,7 @@ impl IButtonServer {
         Ok("I-Button reading started in background. Please touch the key.".to_string())
     }
 
-    #[tool(description = "Check the result of the background I-Button reading operation")]
+    #[tool(description = "Check the result of the status of I-Button reading operation")]
     async fn get_ibutton_result(&self, _params: Parameters<EmptyArgs>) -> Result<String, String> {
         let mut state = STATE.lock().unwrap();
         if let Some(res) = state.last_result.take() {
