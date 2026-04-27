@@ -9,7 +9,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="build-coffee-manager.sh">
+    <None Include="build-coffee-manager-2nd.sh">
       <Filter>home\build_deb</Filter>
     </None>
   </ItemGroup>
