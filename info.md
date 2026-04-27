@@ -1,5 +1,5 @@
 # Software components information
-package release 2.11
+package release 2.12
 
 ## LiMgmtLpu230
 - for Debian 12.(x64)
@@ -130,4 +130,16 @@ package release 2.11
 - executable file name : libdev_lib.so
 - for native client application, shared object.
 - for elpusk-hid-d and lpu230_update(lpu230_update.out), service hid device io.
+
+## MCP
+
+### ibutton-mcp
+- for win11(x64) & Debian 12.(x64)
+- executable file name : lpu23x-ibutton-mcp.exe(lpu23x-ibutton-mcp)
+- AI agent MCP of magnetic card read(tg_lpu237_dll.dll/libtg_lpu237_dll.so)
+
+### msr-mcp
+- for win11(x64) & Debian 12.(x64)
+- executable file name : lpu23x-msr-mcp.exe(lpu23x-msr-mcp)
+- AI agent MCP of i-button read(tg_lpu237_ibutton.dll/libtg_lpu237_ibutton.so)
 

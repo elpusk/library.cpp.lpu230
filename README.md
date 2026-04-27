@@ -14,34 +14,34 @@ lpu23x device c++ library
 + deb package directory : /home/tester/build_deb/
 + FTXUI 6.1.9 lib - path : /home/tester/FTXUI/
 
-## the current version(pkg v2.11)
+## the current version(pkg v2.12)
 
 + coffee_sevice : 2.2
   + rebuilded with the changed library.
   + Windows only service program for running elpusk-hid-d.exe
 
-+ elpusk-hid-d : v2.10
++ elpusk-hid-d : v2.11
+  + add virtual lpu238 class
+
++ tg_lpu237_dll : v6.3
+  + add virtual lpu238 class
+
++ tg_lpu237_ibutton : v6.3
+  + add virtual lpu238 class
+
++ tg_lpu237_fw : v6.3
+  + add virtual lpu238 class
+
++ dev_lib : v1.3
+  + add virtual lpu238 class
+
++ lpu230_update : v2.9
+  + add virtual lpu238 class
+
++ tg_rom : v1.4
   + rebuilded with the changed library.
 
-+ tg_lpu237_dll : v6.2
-  + rebuilded with the changed library.
-
-+ tg_lpu237_ibutton : v6.2
-  + rebuilded with the changed library.
-
-+ tg_lpu237_fw : v6.2
-  + the first release.
-
-+ dev_lib : v1.2
-  + rebuilded with the changed library.
-
-+ lpu230_update : v2.8
-  + rebuilded with the changed library.
-
-+ tg_rom : v1.3
-  + rebuilded with the changed library.
-
-+ tg_rom_build : v1.3
++ tg_rom_build : v1.4
   + rebuilded with the changed library.
 
 + lpu23x-msr-mcp : v1.0
