@@ -305,16 +305,26 @@ sudo rm /var/lib/dpkg/info/coffee-manager*
 
 ### env
 
++ Windows host
++ installed docker
 + vscode IDE
 + rust language
 + stdio type MCP Server
 
 ### build
 
-+ debug - `solution root/mcp/cargo build`
-+ release - `solution root/mcp/cargo build --release`
++ For Windows
+  + debug - `solution root/mcp/cargo build`
+  + release - `solution root/mcp/cargo build --release`
++ For Linux
+  + common setup
+    + install cross - `solution root/mcp/cargo install cross`
+    + setup target - `solution root/mcp/rustup target add x86_64-unknown-linux-musl`
+    + cross target setting  - `solution root/mcp/Cross.toml`
+  + debug - `solution root/mcp/cross build --debug --target x86_64-unknown-linux-musl`
+  + release - `solution root/mcp/cross build --release --target x86_64-unknown-linux-musl`
 
-### etc 
+### etc
 
 + clear builded data - `solution root/mcp/cargo clear`
 + check source code error - `solution root/mcp/cargo check`
