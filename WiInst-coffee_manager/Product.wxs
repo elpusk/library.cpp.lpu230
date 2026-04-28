@@ -69,6 +69,20 @@
 *                               : tg_rom.dll - v1.3(공용라이브러리 변경으로 업데이트)
 *                               : elpusk-hid-d.exe - v2.10(공용라이브러리 변경으로 업데이트)
 *
+* 2026.04.28 - package v 2.12.0 : coffee manager 2nd project(v2.12)
+*                               : 9E8A2FA1-C02E-4BB1-BC17-7CC7150EED6B
+*                               : PKG : 2.11 -> 2.12
+*                               : coffee_sevice : 2.1 -> 2.2  : rebuilded with the changed library.
+*                               : dev_lib : 1.2 -> 1.3 : _vhid_info_lpu238.h 추가
+*                               : lpu230_update : 2.8 -> 2.9 : _vhid_info_lpu238.h 추가
+*                               : tg_lpu237_dll : 6.2 -> 6.3 : _vhid_info_lpu238.h 추가
+*                               : tg_lpu237_fw : 6.2 -> 6.3 : _vhid_info_lpu238.h 추가
+*                               : tg_lpu237_ibutton : 6.2 -> 6.3 : _vhid_info_lpu238.h 추가
+*                               : tg_rom : 1.3 -> 1.4 :  : rebuilded with the changed library.
+*                               : elpusk-hid-d : 2.10 -> 2.11 : _vhid_info_lpu238.h 추가
+*                               : lpu23x-ibutton-mcp : x -> 1.0 : the first release( x64 만 )
+*                               : lpu23x-msr-mcp : x -> 1.0 : the first release( x64 만 )
+*
 -->
 
 <!-- 기본적으로 %ProgramFiles%\Pre_DirName_ProductName\Pre_DirName_Manufacturer 형식으로 설치됨.-->
@@ -85,8 +99,8 @@
 <?define Pre_ProductName = "coffee_manager_2nd"?>
 
 <!-- Pre_ProductVersion 값이 변경되면, Pre_ProductCode 는 새로 생성해야함.-->
-<?define Pre_ProductVersion = "2.11.0"?>
-<?define Pre_ProductCode = "5746120D-5888-4DAE-805B-6123B6B21D09"?>
+<?define Pre_ProductVersion = "2.12.0"?>
+<?define Pre_ProductCode = "9E8A2FA1-C02E-4BB1-BC17-7CC7150EED6B"?>
 
 <!-- 같은 프로그래은 버전이 달라져도 Pre_ProductUpgradeCode 는 항상 동일해야 함.-->
 <?define Pre_ProductUpgradeCode = "B9BF3037-BD17-4F00-BA59-C5CE301723D6"?>
@@ -212,6 +226,7 @@
       <ComponentGroupRef Id="CG_DLL_x86" />
       <?if $(var.Pre_PlatformPath) = "x64" ?>
         <ComponentGroupRef Id="CG_DLL_x64" />
+      <ComponentGroupRef Id="CG_MCP" />
       <?endif ?>
       
       <!-- program data -->
@@ -263,6 +278,8 @@
     <WixVariable Id="DIR_SRC_DLL_x64" Overridable="yes" Value="$(var.SolutionDir)x64\Release\"  />
     <WixVariable Id="DIR_SRC_DLL_x64_EXTERN" Overridable="yes" Value="$(var.SolutionDir)extern\dll\x64\"  />
 
+    <WixVariable Id="DIR_SRC_MCP" Overridable="yes" Value="$(var.SolutionDir)mcp\target\release\"  />
+    
     <WixVariable Id="DIR_SRC_DOC" Overridable="yes" Value="$(var.SolutionDir)doc\"  />
 
     <WixVariable Id="PATH_SRC_ICON_COFFEE_MANAGER" Overridable="yes" Value="$(var.SolutionDir)coffee_manager\res\coffee_manager.ico"  />
@@ -291,6 +308,7 @@
             <Directory Id="APPLICATIONFOLDER" Name="$(var.Pre_DirName_ProductName)">
               <Directory Id="DOC_FOLDER" Name="doc"/>
               <Directory Id="BIN_FOLDER" Name="bin"/>
+              <Directory Id="MCP_FOLDER" Name="mcp"/>
               <Directory Id="DLL_BASE_FOLDER" Name="dll">
                 <Directory Id="DLL_x86_FOLDER" Name="x86"/>
                 <Directory Id="DLL_x64_FOLDER" Name="x64"/>
@@ -408,6 +426,20 @@
 
       <Component Id="co_dev_lib.dll_x64" Guid = "B4D3CECF-5928-4094-851A-80422F3B1E81">
         <File Id="file_dev_lib.dll_x64" Name="dev_lib.dll" Source="!(wix.DIR_SRC_DLL_x64)dev_lib.dll" KeyPath="yes" Checksum="yes" />
+        <Condition> VersionNT64 </Condition>
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+
+  <Fragment>
+    <ComponentGroup Id="CG_MCP" Directory="MCP_FOLDER">
+      <Component Id="co_lpu23x_ibutton_mcp" Guid = "8A441DB3-DD3E-414C-93B7-91E705DD9672">
+        <File Id="file_lpu23x_ibutton_mcp" Name="lpu23x-ibutton-mcp.exe" Source="!(wix.DIR_SRC_MCP)lpu23x-ibutton-mcp.exe" KeyPath="yes" Checksum="yes" />
+        <Condition> VersionNT64 </Condition>
+      </Component>
+
+      <Component Id="co_lpu23x_msr_mcp" Guid = "00809629-342C-4251-8848-C6A60C354C83">
+        <File Id="file_lpu23x_msr_mcp" Name="lpu23x-msr-mcp.exe" Source="!(wix.DIR_SRC_MCP)lpu23x-msr-mcp.exe" KeyPath="yes" Checksum="yes" />
         <Condition> VersionNT64 </Condition>
       </Component>
     </ComponentGroup>
