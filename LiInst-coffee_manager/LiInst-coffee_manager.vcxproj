@@ -141,6 +141,9 @@
       <Message>
       </Message>
     </RemotePostBuildEvent>
+    <PostBuildEvent>
+      <AdditionalSourcesToCopyMapping>$(SolutionDir)mcp\target\x86_64-unknown-linux-gnu\release\lpu23x-ibutton-mcp;$(SolutionDir)mcp\target\x86_64-unknown-linux-gnu\release\lpu23x-msr-mcp;%(AdditionalSourcesToCopyMapping)</AdditionalSourcesToCopyMapping>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
     <RemotePostBuildEvent>

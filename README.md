@@ -319,9 +319,9 @@ sudo rm /var/lib/dpkg/info/coffee-manager*
 + For Linux
   + common setup
     + install cross - `solution root/mcp/cargo install cross`
-    + setup target - `solution root/mcp/rustup target add x86_64-unknown-linux-musl`
+    + setup target - `solution root/mcp/rustup target add x86_64-unknown-linux-gnu`
     + cross target setting  - `solution root/mcp/Cross.toml`
-  + release - `solution root/mcp/cross build --release --target x86_64-unknown-linux-musl`
+  + release - `solution root/mcp/cross build --release --target x86_64-unknown-linux-gnu`
 
 ### etc
 

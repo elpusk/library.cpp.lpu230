@@ -103,7 +103,7 @@ impl MsrServer {
             let devices = dll.get_list().map_err(|e| format!("Failed to get device list: {}", e))?;
             if devices.is_empty() { return Err("No LPU237 device found".to_string()); }
 
-            let h_dev = dll.open(&devices[0]).map_err(|_| "Failed to open device".to_string())?;
+            let h_dev = dll.open(&devices[0]).map_err(|_| format!("Failed to open device: {}", devices[0]))?;
             state.h_dev = h_dev;
             state.last_result = None;
             state.is_running = true;

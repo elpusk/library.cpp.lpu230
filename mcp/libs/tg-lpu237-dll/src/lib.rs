@@ -1,7 +1,6 @@
 use libloading::Library;
 use lpu237_common::{HANDLE, INVALID_HANDLE_VALUE};
 use std::sync::Arc;
-use widestring::U16CString;
 use std::ffi::OsStr;
 use libc::c_ulong;
 
@@ -12,14 +11,20 @@ pub const LPU237_DLL_RESULT_ERROR_MSR: c_ulong = !0 - 2;
 
 pub type TypeCallback = extern "C" fn(*mut std::ffi::c_void);
 
+#[cfg(target_os = "windows")]
+pub type WChar = u16;
+
+#[cfg(not(target_os = "windows"))]
+pub type WChar = u32;
+
 #[derive(Clone)]
 pub struct Lpu237Dll {
     _lib: Arc<Library>,//libloading::Library가 drop 되면 함수 포인터가 무효가 되니까, struct 안에 들고 있으면서 lifetime 유지하려는 것
     // Function pointers using libc::c_ulong for unsigned long
     fn_on: unsafe extern "C" fn() -> c_ulong,
     fn_off: unsafe extern "C" fn() -> c_ulong,
-    fn_get_list: unsafe extern "C" fn(*mut u16) -> c_ulong,
-    fn_open: unsafe extern "C" fn(*const u16) -> HANDLE,
+    fn_get_list: unsafe extern "C" fn(*mut WChar) -> c_ulong,
+    fn_open: unsafe extern "C" fn(*const WChar) -> HANDLE,
     fn_close: unsafe extern "C" fn(HANDLE) -> c_ulong,
     fn_enable: unsafe extern "C" fn(HANDLE) -> c_ulong,
     fn_disable: unsafe extern "C" fn(HANDLE) -> c_ulong,
@@ -76,7 +81,7 @@ impl Lpu237Dll {
                 return Ok(Vec::new());
             }
 
-            let mut buffer = vec![0u16; size as usize];
+            let mut buffer = vec![0 as WChar; size as usize];
             let count = (self.fn_get_list)(buffer.as_mut_ptr());
             
             if count == LPU237_DLL_RESULT_ERROR {
@@ -86,16 +91,51 @@ impl Lpu237Dll {
             let mut result = Vec::new();
             let mut current_pos = 0;
             while current_pos < buffer.len() && buffer[current_pos] != 0 {
-                let s = U16CString::from_ptr_str(buffer.as_ptr().add(current_pos));
-                result.push(s.to_string_lossy());
-                current_pos += s.len() + 1;
+                #[cfg(target_os = "windows")]
+                {
+                    use widestring::U16CString;
+
+                    let s = U16CString::from_ptr_str(buffer.as_ptr().add(current_pos));
+                    result.push(s.to_string_lossy());
+                    current_pos += s.len() + 1;
+                }
+
+                #[cfg(not(target_os = "windows"))]
+                {
+                    let start = current_pos;
+                    let mut end = start;
+
+                    while end < buffer.len() && buffer[end] != 0 {
+                        end += 1;
+                    }
+
+                    let slice = &buffer[start..end];
+                    let s: String = slice.iter().map(|&c| char::from_u32(c).unwrap_or('\u{FFFD}')).collect();
+                    result.push(s);
+
+                    current_pos = end + 1;
+                }                
             }
             Ok(result)
         }
     }
 
     pub fn open(&self, path: &str) -> Result<HANDLE, HANDLE> {
-        let wpath = U16CString::from_str(path).map_err(|_| INVALID_HANDLE_VALUE)?;
+        #[cfg(target_os = "windows")]
+        let wpath: Vec<WChar> = {
+            use widestring::U16CString;
+            U16CString::from_str(path)
+                .map_err(|_| INVALID_HANDLE_VALUE)?
+                .into_vec_with_nul()
+        };
+
+        #[cfg(not(target_os = "windows"))]
+        let wpath: Vec<WChar> = {
+            let mut v: Vec<u32> = path.chars().map(|c| c as u32).collect();
+            v.push(0);
+            v
+        };        
+
         unsafe {
             let h = (self.fn_open)(wpath.as_ptr());
             if h == INVALID_HANDLE_VALUE {
