@@ -1,6 +1,6 @@
 # library.cpp.lpu230
 
-lpu23x device c++ library
+lpu23x device c++ library & MCP Server
 
 ## env
 
@@ -145,7 +145,7 @@ lpu23x device c++ library
 + Win11 : use services.msc
 + Debian : sudo systemctl stop coffee-manager-2nd
 
-### start termainl
+### start terminal
 
 + control "security websocket server and device manager".
 + Win11 : elpusk-hid-d.exe /terminal
@@ -290,8 +290,8 @@ sudo rm /var/lib/dpkg/info/coffee-manager*
 + debug build
   + ini file : L"/home/tester/projects/LiElpuskHidDaemon/job/library.cpp.lpu230/shared/projects/tg_lpu237_fw/tg_lpu237_fw.ini"
   + log directory
-    + root user : L"/home/tester/projects/LiElpuskHidDaemon/bin/x64/Debug/00000006/coffee_manager/tg_lpu237_ibutton"
-    + normal user : L"/home/tester/projects/LiElpuskHidDaemon/bin/x64/Debug/00000006/coffee_manager/tg_lpu237_ibutton"
+    + root user : L"/home/tester/projects/LiElpuskHidDaemon/bin/x64/Debug/00000006/coffee_manager/tg_lpu237_fw"
+    + normal user : L"/home/tester/projects/LiElpuskHidDaemon/bin/x64/Debug/00000006/coffee_manager/tg_lpu237_fw"
 + release build
   + ini file : L"/usr/share/elpusk/programdata/00000006/coffee_manager/tg_lpu237_fw/tg_lpu237_fw.ini"
   + log directory
@@ -313,15 +313,17 @@ sudo rm /var/lib/dpkg/info/coffee-manager*
 
 ### build
 
-+ For Windows
++ For Windows x64
   + debug - `solution root/mcp/cargo build`
   + release - `solution root/mcp/cargo build --release`
-+ For Linux
+  + test - Claude desktop nad Cursor
++ For Linux x64
   + common setup
     + install cross - `solution root/mcp/cargo install cross`
-    + setup target - `solution root/mcp/rustup target add x86_64-unknown-linux-gnu`
+    + setup target - `solution root/mcp/rustup target add x86_64-unknown-linux-gnu` __DONT WITH musl__
     + cross target setting  - `solution root/mcp/Cross.toml`
-  + release - `solution root/mcp/cross build --release --target x86_64-unknown-linux-gnu`
+  + release - `solution root/mcp/cross build --release --target x86_64-unknown-linux-gnu` __DONT WITH musl__
+  + test - Cursor
 
 ### etc
 
@@ -331,7 +333,7 @@ sudo rm /var/lib/dpkg/info/coffee-manager*
 ### projects
 
 + ibutton-mcp : i-button reader MCP server
-  + tg_lpu237_ibutton.dll(libtg_lpu237_ibutton.so) 사용
+  + using tg_lpu237_ibutton.dll(libtg_lpu237_ibutton.so)
   + stdio type MCP server
   + exported functions
     + start_read_ibutton : start a waitig a i-button data
@@ -340,10 +342,52 @@ sudo rm /var/lib/dpkg/info/coffee-manager*
     + read_ibutton : read a i-button by sync method
 
 + msr-mcp : msr reader MCP server
-  + tg_lpu237_msr.dll(libtg_lpu237_msr.so) 사용
+  + using tg_lpu237_msr.dll(libtg_lpu237_msr.so)
   + stdio type MCP server
   + exported functions
     + start_read_card : start a waitig a card data
     + cancel_card : stop a waitig a card data
     + get_read_card_result : get the received card data 
     + read_card : read a magnetic card by sync method
+
+### test seup
+
++ For Windows
+  + Claude Desktop - open C:\Users\your-account\AppData\Roaming\Claude\claude_desktop_config.json
+  + Cursor - open  C:\Users\your-account\.cursor\mcp.json
+
+``` json
+{
+  ...
+
+  "mcpServers":{
+    "msr-mcp": {
+    "command": "C:\Program Files\elpusk\00000006\coffee_manager\mcp\lpu23x-msr-mcp"
+    },
+    "ibutton-mcp": {
+    "command": "C:\Program Files\elpusk\00000006\coffee_manager\mcp\lpu23x-ibutton-mcp"
+    }
+  }
+
+  ...
+}
+```
+
++ For Linux
+  + Cursor - open  ~/.cursor/mcp.json
+``` json
+{
+  ...
+
+  "mcpServers":{
+    "msr-mcp": {
+    "command": "/usr/share/elpusk/program/00000006/coffee_manager/mcp/lpu23x-msr-mcp"
+    },
+    "ibutton-mcp": {
+    "command": "/usr/share/elpusk/program/00000006/coffee_manager/mcp/lpu23x-ibutton-mcp"
+    }
+  }
+
+  ...
+}
+```
