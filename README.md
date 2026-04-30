@@ -362,10 +362,10 @@ sudo rm /var/lib/dpkg/info/coffee-manager*
 
   "mcpServers":{
     "msr-mcp": {
-    "command": "C:\Program Files\elpusk\00000006\coffee_manager\mcp\lpu23x-msr-mcp"
+    "command": "C:\\Program Files\\elpusk\\00000006\\coffee_manager\\mcp\\lpu23x-msr-mcp"
     },
     "ibutton-mcp": {
-    "command": "C:\Program Files\elpusk\00000006\coffee_manager\mcp\lpu23x-ibutton-mcp"
+    "command": "C:\\Program Files\\elpusk\\00000006\\coffee_manager\\mcp\\lpu23x-ibutton-mcp"
     }
   }
 
