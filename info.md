@@ -134,12 +134,12 @@ package release 2.12
 ## MCP
 
 ### ibutton-mcp
-- for win11(x64) & Debian 12.(x64)
+- for win11(x64,Claude Desktop and Cursor) & Debian 12.(x64, Cursor)  
 - executable file name : lpu23x-ibutton-mcp.exe(lpu23x-ibutton-mcp)
 - AI agent MCP of magnetic card read(tg_lpu237_dll.dll/libtg_lpu237_dll.so)
 
 ### msr-mcp
-- for win11(x64) & Debian 12.(x64)
+- for win11(x64,Claude Desktop and Cursor) & Debian 12.(x64, Cursor)
 - executable file name : lpu23x-msr-mcp.exe(lpu23x-msr-mcp)
 - AI agent MCP of i-button read(tg_lpu237_ibutton.dll/libtg_lpu237_ibutton.so)
 
