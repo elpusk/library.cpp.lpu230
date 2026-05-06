@@ -1,0 +1,6 @@
+{
+    "read_card" : "Synchronous a magnetic card read. Blocks until response or timeout. Use get_card_result() on success.",
+    "start_read_card" : "Asynchronous a magnetic card read. Poll get_card_result() every 500 ms–1 s to check for a response.",
+    "get_card_result" : "Get magnetic card result.",
+    "cancel_card" : "Set a magnetic card data ignore mode."
+}

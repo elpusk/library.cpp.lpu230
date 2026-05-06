@@ -1,0 +1,6 @@
+{
+    "read_ibutton" : "Synchronous i-button read. Blocks until response or timeout. Use get_ibutton_result() on success.",
+    "start_read_ibutton" : "Asynchronous i-button read. Poll get_ibutton_result() every 500 ms–1 s to check for a response.",
+    "get_ibutton_result" : "Get i-button result.",
+    "cancel_ibutton" : "Set i-button data ignore mode."
+}

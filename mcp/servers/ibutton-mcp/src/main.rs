@@ -1,4 +1,4 @@
-use rmcp::{tool, tool_router, ServiceExt, handler::server::wrapper::Parameters};
+use rmcp::{tool, tool_router, ServiceExt, handler::server::wrapper::Parameters, model::ListToolsResult};
 use serde::{Deserialize, Serialize};
 use schemars::JsonSchema;
 use std::sync::{Arc, Mutex};
@@ -9,6 +9,8 @@ use tg_lpu237_ibutton::{Lpu237IButton, LPU237LOCK_DLL_RESULT_CANCEL};
 use lpu237_common::{HANDLE, INVALID_HANDLE_VALUE};
 use libc::c_ulong;
 use std::path::PathBuf;
+use std::collections::HashMap;
+use std::future::Future;
 
 // Global state for the MCP server
 struct ServerState {
@@ -87,7 +89,7 @@ extern "C" fn ibutton_callback(_param: *mut std::ffi::c_void) {
 
 #[tool_router(server_handler)]
 impl IButtonServer {
-    #[tool(description = "Wait for an I-Button touch and return its data/id from LPU237 device (Blocking)")]
+    #[tool(description = "Wait for an I-Button touch and return its data/id from LPU237 device (Blocking)")]  // runtime: read_ibutton
     async fn read_ibutton(&self, Parameters(args): Parameters<ReadIButtonArgs>) -> Result<String, String> {
         let (tx, rx) = oneshot::channel();
         
@@ -142,7 +144,7 @@ impl IButtonServer {
         Ok(serde_json::to_string(&res).unwrap())
     }
 
-    #[tool(description = "Start waiting for an I-Button touch in the worker of lpu237 dynamic library. AI Agent have to check the reading status while waiting.")]
+    #[tool(description = "Start waiting for an I-Button touch in the worker of lpu237 dynamic library. AI Agent have to check the reading status while waiting.")]  // runtime: start_read_ibutton
     async fn start_read_ibutton(&self, Parameters(args): Parameters<ReadIButtonArgs>) -> Result<String, String> {
         let (tx, rx) = oneshot::channel();
         
@@ -199,7 +201,7 @@ impl IButtonServer {
         Ok("I-Button reading started in background. Please touch the key.".to_string())
     }
 
-    #[tool(description = "Check the result of the status of I-Button reading operation")]
+    #[tool(description = "Check the result of the status of I-Button reading operation")]  // runtime: get_ibutton_result
     async fn get_ibutton_result(&self, _params: Parameters<EmptyArgs>) -> Result<String, String> {
         let mut state = STATE.lock().unwrap();
         if let Some(res) = state.last_result.take() {
@@ -211,7 +213,7 @@ impl IButtonServer {
         }
     }
 
-    #[tool(description = "Cancel any pending I-Button read operation on LPU237 device")]
+    #[tool(description = "Cancel any pending I-Button read operation on LPU237 device")]  // runtime: cancel_ibutton
     async fn cancel_ibutton(&self, _params: Parameters<EmptyArgs>) -> Result<String, String> {
         let mut state = STATE.lock().unwrap();
         if state.h_dev == INVALID_HANDLE_VALUE {
@@ -234,6 +236,118 @@ fn cleanup(dll: &Lpu237IButton, h_dev: HANDLE) {
         dll.close(h_dev);
     }
 }
+
+// ---------- description override wrapper ----------
+
+/// IButtonServer 를 감싸서 list_tools 의 description 을 런타임 값으로 교체
+#[derive(Clone)]
+struct IButtonServerWithDesc;
+
+impl rmcp::handler::server::ServerHandler for IButtonServerWithDesc {
+    fn get_info(&self) -> rmcp::model::ServerInfo {
+        IButtonServer.get_info()
+    }
+
+    fn list_tools(
+        &self,
+        request: Option<rmcp::model::PaginatedRequestParams>,
+        context: rmcp::service::RequestContext<rmcp::RoleServer>,
+    ) -> impl Future<Output = Result<ListToolsResult, rmcp::ErrorData>> + Send + '_ {
+        async move {
+            let mut result = IButtonServer.list_tools(request, context).await?;
+            let map = DESCRIPTIONS.lock().unwrap();
+            for tool in &mut result.tools {
+                let key: &str = &tool.name.clone();
+                if let Some(d) = map.get(key) {
+                    tool.description = Some(d.clone().into());
+                }
+            }
+            Ok(result)
+        }
+    }
+
+    fn call_tool(
+        &self,
+        request: rmcp::model::CallToolRequestParams,
+        context: rmcp::service::RequestContext<rmcp::RoleServer>,
+    ) -> impl Future<Output = Result<rmcp::model::CallToolResult, rmcp::ErrorData>> + Send + '_ {
+        async move { IButtonServer.call_tool(request, context).await }
+    }
+}
+
+// ---------- description 로드 ----------
+
+const JSON_FILENAME: &str = "lpu23x-ibutton-mcp.json";
+
+/// MCP 설정 JSON 파일 경로 반환
+fn get_config_path() -> PathBuf {
+    #[cfg(target_os = "windows")]
+    {
+        use std::ffi::OsString;
+        use std::os::windows::ffi::OsStringExt;
+        // FOLDERID_ProgramData = {62AB5D82-FDC1-4DC3-A9DD-070D1D495D97}
+        const FOLDERID_PROGRAM_DATA: windows::core::GUID = windows::core::GUID {
+            data1: 0x62AB5D82,
+            data2: 0xFDC1,
+            data3: 0x4DC3,
+            data4: [0xA9, 0xDD, 0x07, 0x0D, 0x1D, 0x49, 0x5D, 0x97],
+        };
+        let base = unsafe {
+            windows::Win32::UI::Shell::SHGetKnownFolderPath(
+                &FOLDERID_PROGRAM_DATA,
+                windows::Win32::UI::Shell::KNOWN_FOLDER_FLAG(0),
+                None,
+            )
+            .map(|pwstr| {
+                let slice = pwstr.as_wide();
+                OsString::from_wide(slice).into_string().unwrap_or_default()
+            })
+            .unwrap_or_else(|_| {
+                std::env::var("ProgramData").unwrap_or_else(|_| "C:\\ProgramData".to_string())
+            })
+        };
+        PathBuf::from(base)
+            .join("elpusk")
+            .join("00000006")
+            .join("coffee_manager")
+            .join("mcp")
+            .join(JSON_FILENAME)
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        PathBuf::from("/usr/share/elpusk/programdata/00000006/coffee_manager/mcp")
+            .join(JSON_FILENAME)
+    }
+}
+
+/// JSON 파일에서 description 로드. 실패 시 하드코딩 기본값 반환.
+fn load_descriptions() -> HashMap<&'static str, String> {
+    let defaults: HashMap<&str, &str> = [
+        ("read_ibutton",       "Synchronous i-button read. Blocks until response or timeout. Use get_ibutton_result() on success."),
+        ("start_read_ibutton", "Asynchronous i-button read. Poll get_ibutton_result() every 500 ms\u{2013}1 s to check for a response."),
+        ("get_ibutton_result", "Get i-button result."),
+        ("cancel_ibutton",     "Set i-button data ignore mode."),
+    ].into();
+
+    let path = get_config_path();
+    if let Ok(content) = std::fs::read_to_string(&path) {
+        if let Ok(map) = serde_json::from_str::<HashMap<String, String>>(&content) {
+            eprintln!("Loaded descriptions from: {:?}", path);
+            return defaults
+                .into_iter()
+                .map(|(k, v)| (k, map.get(k).cloned().unwrap_or_else(|| v.to_string())))
+                .collect();
+        }
+    }
+    eprintln!("Using default descriptions (config not found: {:?})", path);
+    defaults.into_iter().map(|(k, v)| (k, v.to_string())).collect()
+}
+
+/// 전역 description 저장소 (main 에서 한 번 초기화)
+static DESCRIPTIONS: Lazy<Mutex<HashMap<&'static str, String>>> =
+    Lazy::new(|| Mutex::new(HashMap::new()));
+
+// ---------- DLL path ----------
 
 fn local_get_lpu237_ibutton_path() -> PathBuf {
     #[cfg(target_os = "windows")]
@@ -269,6 +383,12 @@ fn local_get_lpu237_ibutton_path() -> PathBuf {
 async fn main() -> anyhow::Result<()> {
     eprintln!("Starting LPU237 I-Button MCP Server...");
 
+    // description 로드 (JSON 또는 기본값)
+    {
+        let loaded = load_descriptions();
+        *DESCRIPTIONS.lock().unwrap() = loaded;
+    }
+
     let dll_path = local_get_lpu237_ibutton_path();
     eprintln!("Loading DLL from: {:?}", dll_path);
 
@@ -291,13 +411,14 @@ async fn main() -> anyhow::Result<()> {
     eprintln!("DLL loaded and initialized successfully. Starting stdio transport...");
 
     let transport = (tokio::io::stdin(), tokio::io::stdout());
-    let service = IButtonServer.serve(transport).await.map_err(|e| {
+    let service = IButtonServerWithDesc.serve(transport).await.map_err(|e| {
         eprintln!("Failed to start service: {}", e);
         e
     })?;
     
     eprintln!("I-Button MCP Server is running and waiting for commands.");
     service.waiting().await?;
+
     
     // De-initialize DLL once
     dll.dll_off();
