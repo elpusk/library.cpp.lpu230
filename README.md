@@ -335,6 +335,9 @@ sudo rm /var/lib/dpkg/info/coffee-manager*
 + ibutton-mcp : i-button reader MCP server
   + using tg_lpu237_ibutton.dll(libtg_lpu237_ibutton.so)
   + stdio type MCP server
+  + dynamic tool description
+    + Windows : %ProgramData%\elpusk\00000006\coffee_manager\mcp\lpu23x-ibutton-mcp.json
+    + Debian12 : /usr/share/elpusk/programdata/00000006/coffee_manager/mcp/lpu23x-ibutton-mcp.json
   + exported functions
     + start_read_ibutton : start a waitig a i-button data
     + cancel_ibutton : stop a waitig a i-button data
@@ -344,13 +347,16 @@ sudo rm /var/lib/dpkg/info/coffee-manager*
 + msr-mcp : msr reader MCP server
   + using tg_lpu237_msr.dll(libtg_lpu237_msr.so)
   + stdio type MCP server
+  + dynamic tool description
+    + Windows : %ProgramData%\elpusk\00000006\coffee_manager\mcp\lpu23x-msr-mcp.json
+    + Debian12 : /usr/share/elpusk/programdata/00000006/coffee_manager/mcp/lpu23x-msr-mcp.json
   + exported functions
     + start_read_card : start a waitig a card data
     + cancel_card : stop a waitig a card data
     + get_read_card_result : get the received card data 
     + read_card : read a magnetic card by sync method
 
-### test seup
+### test setup
 
 + For Windows
   + Claude Desktop - open C:\Users\your-account\AppData\Roaming\Claude\claude_desktop_config.json
