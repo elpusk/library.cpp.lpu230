@@ -6,7 +6,7 @@ set -e # Exit immediately if a command exits with a non-zero status.
 
 # 패키지 정보 설정
 PACKAGE_NAME="coffee-manager-2nd"
-VERSION="2.12"
+VERSION="2.13"
 ARCH="amd64" # 또는 'arm64', 'i386' 등 실제 아키텍처에 맞게 수정
 DEB_PACKAGE_NAME="${PACKAGE_NAME}_${VERSION}_${ARCH}.deb"
 
@@ -43,6 +43,9 @@ ORIGIN_TG_LPU237_FW_INI="${SRC_BASE_DIR}/li_lpu237_fw/shared/projects/lpu237_fw/
 ORIGIN_LPU23X_IBUTTON_MCP="${SRC_BASE_DIR}/LiInst-coffee_manager/lpu23x-ibutton-mcp"
 ORIGIN_LPU23X_MSR_MCP="${SRC_BASE_DIR}/LiInst-coffee_manager/lpu23x-msr-mcp"
 
+ORIGIN_LPU23X_IBUTTON_MCP_JSON="${SRC_BASE_DIR}/LiInst-coffee_manager/lpu23x-ibutton-mcp.json"
+ORIGIN_LPU23X_MSR_MCP_JSON="${SRC_BASE_DIR}/LiInst-coffee_manager/lpu23x-msr-mcp.json"
+
 ### --- 설정 변수 끝 --- ###
 
 # 임시 빌드 디렉토리 생성
@@ -61,6 +64,8 @@ mkdir -p "${DEB_DIR}/var/log/elpusk/00000006/coffee_manager/tg_lpu237_fw"
 mkdir -p "${DEB_DIR}/usr/share/elpusk/program/00000006/coffee_manager/bin"
 mkdir -p "${DEB_DIR}/usr/share/elpusk/program/00000006/coffee_manager/so"
 mkdir -p "${DEB_DIR}/usr/share/elpusk/program/00000006/coffee_manager/mcp"
+mkdir -p "${DEB_DIR}/usr/share/elpusk/programdata/00000006/coffee_manager/mcp"
+
 
 
 # 파일 복사
@@ -78,6 +83,8 @@ cp "${ORIGIN_LIBTG_LPU237_FW_XYZ}" "${DEB_DIR}/usr/share/elpusk/program/00000006
 cp "${ORIGIN_LIBTG_ROM_XYZ}" "${DEB_DIR}/usr/share/elpusk/program/00000006/coffee_manager/so/"
 cp "${ORIGIN_LPU23X_IBUTTON_MCP}" "${DEB_DIR}/usr/share/elpusk/program/00000006/coffee_manager/mcp/"
 cp "${ORIGIN_LPU23X_MSR_MCP}" "${DEB_DIR}/usr/share/elpusk/program/00000006/coffee_manager/mcp/"
+cp "${ORIGIN_LPU23X_IBUTTON_MCP_JSON}" "${DEB_DIR}/usr/share/elpusk/programdata/00000006/coffee_manager/mcp/"
+cp "${ORIGIN_LPU23X_MSR_MCP_JSON}" "${DEB_DIR}/usr/share/elpusk/programdata/00000006/coffee_manager/mcp/"
 
 # dpkg 빌드 시에는 심볼릭 링크를 직접 생성하지 않습니다.
 # 대신, postinst 스크립트에서 생성하도록 처리합니다.
@@ -90,7 +97,7 @@ Version: ${VERSION}
 Architecture: ${ARCH}
 Pre-Depends: libnss3-tools
 Maintainer: Elpusk<elpusk@naver.com>
-Description: Coffee Manager 2nd Daemon 2.12 & Updater 2.9
+Description: Coffee Manager 2nd Daemon 2.13 & Updater 2.9 & MCP Server 1.1
  Provides the necessary daemon, libraries and fw-updater, for the coffee manager 2nd system.
 EOF
 
@@ -160,6 +167,8 @@ chmod 644 /usr/share/elpusk/programdata/00000006/coffee_manager/tg_lpu237_fw/tg_
 chmod 755 /var/log/elpusk/00000006/coffee_manager -R
 chmod 755 /usr/share/elpusk/program/00000006/coffee_manager/mcp/lpu23x-ibutton-mcp
 chmod 755 /usr/share/elpusk/program/00000006/coffee_manager/mcp/lpu23x-msr-mcp
+chmod 644 /usr/share/elpusk/programdata/00000006/coffee_manager/mcp/lpu23x-ibutton-mcp.json
+chmod 644 /usr/share/elpusk/programdata/00000006/coffee_manager/mcp/lpu23x-msr-mcp.json
 
 
 # 서비스 심볼릭 링크 업데이트 및 데몬 리로드
