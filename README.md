@@ -1,12 +1,12 @@
 # library.cpp.lpu230
 
-lpu23x device c++ library & MCP Server
+lpu23x device c++ library & MCP Server by Rust
 
 ## env
 
 + vs2022
 + debian12 remote - user id : tester
-+ use static link library. 
++ use static link library
 + boost 1.80 lib
 + nlohmann json lib - path : /usr/local/json/
 + openssl-1.1.1s lib - path : /usr/local/openssl-1.1.1s/
@@ -14,14 +14,14 @@ lpu23x device c++ library & MCP Server
 + deb package directory : /home/tester/build_deb/
 + FTXUI 6.1.9 lib - path : /home/tester/FTXUI/
 
-## the current version(pkg v2.12)
+## the current version(pkg v2.13)
 
 + coffee_sevice : 2.2
   + rebuilded with the changed library.
   + Windows only service program for running elpusk-hid-d.exe
 
-+ elpusk-hid-d : v2.11
-  + add virtual lpu238 class
++ elpusk-hid-d : v2.12
+  + In removeall option, change "Elpusk" -> "elpusk" (Windows only)
 
 + tg_lpu237_dll : v6.3
   + add virtual lpu238 class
@@ -44,10 +44,10 @@ lpu23x device c++ library & MCP Server
 + tg_rom_build : v1.4
   + rebuilded with the changed library.
 
-+ lpu23x-msr-mcp : v1.0
++ lpu23x-msr-mcp : v1.1
   + the first release.
 
-+ lpu23x-ibutton-mcp : v1.0
++ lpu23x-ibutton-mcp : v1.1
   + the first release.
 
 ## build on debian12
@@ -227,11 +227,11 @@ sudo rm /var/lib/dpkg/info/coffee-manager*
 #### Windows x86 and x64
 
 + debug build
-  - ini file : L"C:\\job\\library.cpp.lpu230\\shared\\projects\\lpu237_dll\\tg_lpu237_dll.ini"
-  - log directory : L"C:\\ProgramData\\Elpusk\\00000006\\tg_lpu237_dll\\log"
+  + ini file : L"C:\\job\\library.cpp.lpu230\\shared\\projects\\lpu237_dll\\tg_lpu237_dll.ini"
+  + log directory : L"C:\\ProgramData\\Elpusk\\00000006\\tg_lpu237_dll\\log"
 + release build
-  - ini file : L"C:\\ProgramData\\Elpusk\\00000006\\tg_lpu237_dll\\tg_lpu237_dll.ini"
-  - log directory : L"C:\\ProgramData\\Elpusk\\00000006\\tg_lpu237_dll\\log"
+  + ini file : L"C:\\ProgramData\\Elpusk\\00000006\\tg_lpu237_dll\\tg_lpu237_dll.ini"
+  + log directory : L"C:\\ProgramData\\Elpusk\\00000006\\tg_lpu237_dll\\log"
 
 #### Linux build x64
 
@@ -319,6 +319,7 @@ sudo rm /var/lib/dpkg/info/coffee-manager*
   + test - Claude desktop nad Cursor
 + For Linux x64
   + common setup
+    + install [docker](https://www.docker.com/)
     + install cross - `solution root/mcp/cargo install cross`
     + setup target - `solution root/mcp/rustup target add x86_64-unknown-linux-gnu` __DONT WITH musl__
     + cross target setting  - `solution root/mcp/Cross.toml`
@@ -338,10 +339,10 @@ sudo rm /var/lib/dpkg/info/coffee-manager*
   + dynamic tool description
     + Windows : %ProgramData%\elpusk\00000006\coffee_manager\mcp\lpu23x-ibutton-mcp.json
     + Debian12 : /usr/share/elpusk/programdata/00000006/coffee_manager/mcp/lpu23x-ibutton-mcp.json
-  + exported functions
+  + exported tools
     + start_read_ibutton : start a waitig a i-button data
     + cancel_ibutton : stop a waitig a i-button data
-    + get_ibutton_result : get the received i-button data 
+    + get_ibutton_result : get the received i-button data
     + read_ibutton : read a i-button by sync method
 
 + msr-mcp : msr reader MCP server
@@ -350,10 +351,10 @@ sudo rm /var/lib/dpkg/info/coffee-manager*
   + dynamic tool description
     + Windows : %ProgramData%\elpusk\00000006\coffee_manager\mcp\lpu23x-msr-mcp.json
     + Debian12 : /usr/share/elpusk/programdata/00000006/coffee_manager/mcp/lpu23x-msr-mcp.json
-  + exported functions
+  + exported tools
     + start_read_card : start a waitig a card data
     + cancel_card : stop a waitig a card data
-    + get_read_card_result : get the received card data 
+    + get_read_card_result : get the received card data
     + read_card : read a magnetic card by sync method
 
 ### test setup
@@ -381,6 +382,7 @@ sudo rm /var/lib/dpkg/info/coffee-manager*
 
 + For Linux
   + Cursor - open  ~/.cursor/mcp.json
+  
 ``` json
 {
   ...

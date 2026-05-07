@@ -131,7 +131,7 @@ namespace _test{
 			std::wstring s_certificate_file = L"C:\\job\\library.cpp.lpu230\\shared\\data_for_debug\\cert\\coffee_server.crt";
 			std::wstring s_private_key_file = L"C:\\job\\library.cpp.lpu230\\shared\\data_for_debug\\cert\\coffee_server.key";
 			std::wstring s_root_folder_except_backslash = L"C:\\job\\library.cpp.lpu230\\shared\\data_for_debug\\win\\ProgramData\\elpusk\\00000006\\vroot";
-			std::wstring s_log_folder_except_backslash = L"C:\\ProgramData\\Elpusk\\00000006\\elpusk-hid-d\\log";
+			std::wstring s_log_folder_except_backslash = L"C:\\ProgramData\\elpusk\\00000006\\elpusk-hid-d\\log";
 #else
 			std::wstring s_certificate_file = L"/home/tester/projects/LiElpuskHidDaemon/bin/x64/Debug/coffee_server.crt";
 			std::wstring s_private_key_file = L"/home/tester/projects/LiElpuskHidDaemon/bin/x64/Debug/coffee_server.key";
@@ -443,7 +443,7 @@ namespace _test{
 		int test_start_logging()
 		{
 #ifdef _WIN32
-			_mp::clog::get_instance().config(L"C:\\ProgramData\\Elpusk\\00000006\\elpusk-hid-d\\log", -1, L"",std::wstring(L"test_tp_hid"), std::wstring(L"test_tp_hid"));
+			_mp::clog::get_instance().config(L"C:\\ProgramData\\elpusk\\00000006\\elpusk-hid-d\\log", -1, L"",std::wstring(L"test_tp_hid"), std::wstring(L"test_tp_hid"));
 #else
 			_mp::clog::get_instance().config(L"/home/tester/fordebug/var/log/elpusk/00000006/elpusk-hid-d", -1,L"", std::wstring(L"test_tp_hid"), std::wstring(L"test_tp_hid"));
 #endif

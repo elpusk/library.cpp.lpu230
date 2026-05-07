@@ -43,7 +43,7 @@ bool _clean_all_on_windows()
     try {
         // 경로 정의
         const std::filesystem::path pd = _mp::cfile::get_path_ProgramData();
-        const std::filesystem::path base = pd / "Elpusk";
+        const std::filesystem::path base = pd / "elpusk";
         const std::filesystem::path idFolder = base / "00000006";
         const std::filesystem::path manager = idFolder / "coffee_manager";
 
@@ -61,7 +61,7 @@ bool _clean_all_on_windows()
             }
         }
 
-        // 3. base(Elpusk) 폴더가 비었으면 삭제
+        // 3. base(elpusk) 폴더가 비었으면 삭제
         if (std::filesystem::exists(base) && std::filesystem::is_empty(base)) {
             bool removed = std::filesystem::remove_all(base);
             if (removed) {

@@ -83,6 +83,13 @@
 *                               : lpu23x-ibutton-mcp : x -> 1.0 : the first release( x64 만 )
 *                               : lpu23x-msr-mcp : x -> 1.0 : the first release( x64 만 )
 *
+* 2026.05.07 - package v 2.13.0 : coffee manager 2nd project(v2.13)
+*                               : 36134181-8B24-448C-9392-1CFC6FAE436F
+*                               : PKG : 2.12 -> 2.13
+*                               : elpusk-hid-d : 2.11 -> 2.12 : removeall option 에서 Elpusk -> elpusk 로 변경.
+*                               : lpu23x-ibutton-mcp : 1.0 -> 1.1 : tool description 동적으로 json파일로 부터 읽을 수 있도록 수정. 기본값도 수정.
+*                               : lpu23x-msr-mcp : 1.0 -> 1.1 : tool description 동적으로 json파일로 부터 읽을 수 있도록 수정. 기본값도 수정.
+*
 -->
 
 <!-- 기본적으로 %ProgramFiles%\Pre_DirName_ProductName\Pre_DirName_Manufacturer 형식으로 설치됨.-->
@@ -99,8 +106,8 @@
 <?define Pre_ProductName = "coffee_manager_2nd"?>
 
 <!-- Pre_ProductVersion 값이 변경되면, Pre_ProductCode 는 새로 생성해야함.-->
-<?define Pre_ProductVersion = "2.12.0"?>
-<?define Pre_ProductCode = "9E8A2FA1-C02E-4BB1-BC17-7CC7150EED6B"?>
+<?define Pre_ProductVersion = "2.13.0"?>
+<?define Pre_ProductCode = "36134181-8B24-448C-9392-1CFC6FAE436F"?>
 
 <!-- 같은 프로그래은 버전이 달라져도 Pre_ProductUpgradeCode 는 항상 동일해야 함.-->
 <?define Pre_ProductUpgradeCode = "B9BF3037-BD17-4F00-BA59-C5CE301723D6"?>
@@ -232,9 +239,14 @@
       <!-- program data -->
       <ComponentGroupRef Id="CG_SERVICE_INI" />
       <ComponentGroupRef Id="CG_APP_INI" />
+      <?if $(var.Pre_PlatformPath) = "x64" ?>
+        <ComponentGroupRef Id="CG_MCP_IBUTTON_JSON" />
+        <ComponentGroupRef Id="CG_MCP_MSR_JSON" />
+      <?endif ?>
       <ComponentGroupRef Id="CG_APP_SERVER" />
       <ComponentGroupRef Id="CG_APP_ROOT" />
       <ComponentGroupRef Id="CG_APP_TEMP" />
+      
 
       <!-- document -->
       <ComponentGroupRef Id="CG_LICENSE" />
@@ -292,6 +304,11 @@
     <WixVariable Id="DIR_SRC_APP_DATA_SERVER"      Overridable="yes" Value="$(var.SolutionDir)shared\projects\ElpuskHidDaemon\"  />
     <WixVariable Id="DIR_SRC_APP_ROOT"             Overridable="yes" Value="$(var.SolutionDir)shared\projects\ElpuskHidDaemon\vroot\"  />
     <WixVariable Id="DIR_SRC_APP_ROOT_TEMP"        Overridable="yes" Value="$(var.SolutionDir)shared\projects\ElpuskHidDaemon\vroot\temp\"  />
+
+    <!-- For MCP server json -->
+    <WixVariable Id="DIR_SRC_IBUTTON_MCP_JSON"     Overridable="yes" Value="$(var.SolutionDir)mcp\servers\ibutton-mcp\"  />
+    <WixVariable Id="DIR_SRC_MSR_MCP_JSON"         Overridable="yes" Value="$(var.SolutionDir)mcp\servers\msr-mcp\"  />
+
   </Product>
   <!-- the end fo Product element -->
   <!-- ========================== -->
@@ -323,12 +340,16 @@
           <Directory Id="CAD_DEVELOPER_ID_FOLDER" Name="$(var.Pre_DirName_developer_id)">
             <Directory Id="CAD_SERVICE_FOLDER" Name="$(var.Pre_DirName_ServiceName)"/>
             <Directory Id="CAD_APPLICATIONFOLDER" Name="$(var.Pre_DirName_ProductName)">
+
               <Directory Id="CAD_DATA_FOLDER" Name="data">
                 <Directory Id="CAD_SERVER_FOLDER" Name="server"/>
               </Directory>
               <Directory Id="CAD_ROOT_FOLDER" Name="root">
                 <Directory Id="CAD_TEMP_FOLDER" Name="temp"/>
               </Directory>
+
+              <Directory Id="CAD_MCP_JSON_FOLDER" Name="mcp"/>
+
             </Directory>
           </Directory>
         </Directory>
@@ -457,6 +478,22 @@
     <ComponentGroup Id="CG_APP_INI" Directory="CAD_APPLICATIONFOLDER">
       <Component Id="co_elpusk_hid_d.json" Guid = "4B932BC9-0C7E-4421-8789-86272917148F">
         <File Id="file_elpusk_hid_d.json" Name="elpusk-hid-d.json" Source="!(wix.DIR_SRC_APP_INI)elpusk-hid-d.json" KeyPath="yes" Checksum="no" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+
+  <Fragment>
+    <ComponentGroup Id="CG_MCP_IBUTTON_JSON" Directory="CAD_MCP_JSON_FOLDER">
+      <Component Id="co_lpu23x_ibutton_mcp.json" Guid = "1F2E7660-5ABB-4B80-90F1-62DD338EBA3B">
+        <File Id="file_lpu23x_ibutton_mcp.json" Name="lpu23x-ibutton-mcp.json" Source="!(wix.DIR_SRC_IBUTTON_MCP_JSON)lpu23x-ibutton-mcp.json" KeyPath="yes" Checksum="no" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+
+  <Fragment>
+    <ComponentGroup Id="CG_MCP_MSR_JSON" Directory="CAD_MCP_JSON_FOLDER">
+      <Component Id="co_lpu23x_msr_mcp.json" Guid = "F4E1B703-0D16-44A0-93B3-589C13C1DFB3">
+        <File Id="file_lpu23x_msr_mcp.json" Name="lpu23x-msr-mcp.json" Source="!(wix.DIR_SRC_MSR_MCP_JSON)lpu23x-msr-mcp.json" KeyPath="yes" Checksum="no" />
       </Component>
     </ComponentGroup>
   </Fragment>

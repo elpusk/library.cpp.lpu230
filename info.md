@@ -1,5 +1,5 @@
 # Software components information
-package release 2.12
+package release 2.13
 
 ## LiMgmtLpu230
 - for Debian 12.(x64)
@@ -137,9 +137,10 @@ package release 2.12
 - for win11(x64,Claude Desktop and Cursor) & Debian 12.(x64, Cursor)  
 - executable file name : lpu23x-ibutton-mcp.exe(lpu23x-ibutton-mcp)
 - AI agent MCP of magnetic card read(tg_lpu237_dll.dll/libtg_lpu237_dll.so)
+- the description of Tool is dynamic loading from lpu23x-ibutton-mcp.json
 
 ### msr-mcp
 - for win11(x64,Claude Desktop and Cursor) & Debian 12.(x64, Cursor)
 - executable file name : lpu23x-msr-mcp.exe(lpu23x-msr-mcp)
 - AI agent MCP of i-button read(tg_lpu237_ibutton.dll/libtg_lpu237_ibutton.so)
-
+- the description of Tool is dynamic loading from lpu23x-msr-mcp.json
