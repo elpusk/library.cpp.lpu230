@@ -34,25 +34,16 @@
     <ClCompile Include="SoLpu230.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\common\src\TTR_etc.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="FireEvent.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="RegControl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Log.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="DetectWnd.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SoMsr.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\common\src\EL_Support.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="IniFile.cpp">
@@ -65,12 +56,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DevUart.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\common\src\TTR_Dev.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\common\src\TTR_DevHid.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -96,25 +81,10 @@
     <ClInclude Include="SoLpu230.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\common\inc\TTR_Dev.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\inc\TTR_DevHid.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\inc\TTR_etc.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="FireEvent.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Sync.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="RegControl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Log.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DetectWnd.h">
@@ -123,19 +93,10 @@
     <ClInclude Include="SoMsr.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\common\inc\EL_Support.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="IniFile.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GlobalVar.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Lpu237Dll.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="tg_lpu237_dll.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DevUart.h">

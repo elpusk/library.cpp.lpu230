@@ -4,11 +4,8 @@
 #include <memory>
 #include <deque>
 
-#include "Sync.h"
-
 using namespace std;
 using namespace ATL;
-using namespace SYNC;
 
 class CFireEvent
 {

@@ -1,21 +1,18 @@
-// dllmain.cpp : DllMainÀÌ ±¸ÇöµÈ °ÍÀÔ´Ï´Ù.
+// dllmain.cpp : DllMainì´ êµ¬í˜„ëœ ê²ƒì…ë‹ˆë‹¤.
 
+#include <websocket/mp_win_nt.h>
 #include "stdafx.h"
 #include "resource.h"
 #include "OposLpu230_i.h"
 #include "dllmain.h"
-#include "Log.h"
 #include <shlobj.h>
 #include "DetectWnd.h"
 #include "SoMsr.h"
-#include "EL_Support.h"
 #include "GlobalVar.h"
 #include <stdlib.h>
 #include <tchar.h>
-#include <ct_ini_component.h>
 
-#include "Lpu237Dll.h"
-
+#include <mp_clog.h>
 
 COposLpu230Module _AtlModule;
 
@@ -23,7 +20,7 @@ static void ProcessAttach( HINSTANCE hInstance );
 static void ProcessDetach();
 static void IniVariables( HINSTANCE hInstance );
 
-// DLL ÁøÀÔÁ¡ÀÔ´Ï´Ù.
+// DLL ì§„ì…ì ì…ë‹ˆë‹¤.
 extern "C" BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
 	switch( dwReason ){
