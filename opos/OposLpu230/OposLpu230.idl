@@ -1,0 +1,64 @@
+// OposLpu230.idl : OposLpu230의 IDL 소스입니다.
+//
+
+// 이 파일은 MIDL 도구에 의해 처리되어
+// 형식 라이브러리(OposLpu230.tlb) 및 마샬링 코드가 생성됩니다.
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+[
+	object,
+	uuid(F03BACCD-1CC1-4F07-A38D-EBE531D74BC0),
+	dual,
+	nonextensible,
+	pointer_default(unique)
+]
+interface ISoLpu230 : IDispatch{
+	[id(1), helpstring("method OpenService")] HRESULT OpenService([in] BSTR DeviceClass, [in] BSTR DeviceName, [in] IDispatch* pDispatch, [out,retval] long* pRC);
+	[id(2), helpstring("method GetPropertyNumber")] HRESULT GetPropertyNumber([in] long PropIndex, [out,retval] long* pNumber);
+	[id(3), helpstring("method SetPropertyNumber")] HRESULT SetPropertyNumber([in] long PropIndex, [in] long Number);
+	[id(4), helpstring("GetPropertyString")] HRESULT GetPropertyString([in] long PropIndex, [out,retval] BSTR* pString);
+	[id(5), helpstring("method SetPropertyString")] HRESULT SetPropertyString([in] long PropIndex, [in] BSTR bstrString);
+	[id(6), helpstring("method GetOpenResult")] HRESULT GetOpenResult([out,retval] long* pRC);
+	[id(7), helpstring("method COFreezeEvents")] HRESULT COFreezeEvents([in] VARIANT_BOOL Freeze, [out,retval] long* pRC);
+	[id(8), helpstring("method CheckHealth")] HRESULT CheckHealth([in] long Level, [out,retval] long* pRC);
+	[id(9), helpstring("method ClaimDevice")] HRESULT ClaimDevice([in] long lTimeout, [out,retval] long* pRC);
+	[id(10), helpstring("method ClearInput")] HRESULT ClearInput([out,retval] long* pRC);
+	[id(11), helpstring("method Close")] HRESULT Close([out,retval] long* pRC);
+	[id(12), helpstring("method DirectIO")] HRESULT DirectIO([in] long Command, [in,out] long* pData, [in,out] BSTR* pString, [out,retval] long* pRC);
+	[id(13), helpstring("method ReleaseDevice")] HRESULT ReleaseDevice([out,retval] long* pRC);
+	[id(14), helpstring("method ResetStatistics")] HRESULT ResetStatistics([in] BSTR StatisticsBuffer, [out,retval] long* pRC);
+	[id(15), helpstring("method RetrieveStatistics")] HRESULT RetrieveStatistics([in,out] BSTR* StatisticsBuffer, [out,retval] long* pRC);
+	[id(16), helpstring("method UpdateStatistics")] HRESULT UpdateStatistics([in] BSTR StatisticsBuffer, [out,retval] long* pRC);
+	[id(17), helpstring("method UpdateKey")] HRESULT UpdateKey([in] BSTR Key, [in] BSTR KeyName, [out,retval] long* pRC);
+};
+[
+	uuid(D175548F-70BD-4347-972B-23889B05B672),
+	version(1.0),
+]
+library OposLpu230Lib
+{
+	importlib("stdole2.tlb");
+	[
+		uuid(BB42FD0A-547F-4F10-8661-A79D67F4697E)		
+	]
+	dispinterface _ISoLpu230Events
+	{
+		properties:
+		methods:
+			[id(1), helpstring("method DataEvent")] void DataEvent([in] long Status);
+			[id(2), helpstring("method DirectIOEvent")] void DirectIOEvent([in] long EventNumber, [in,out] long* pData, [in,out] BSTR* pString);
+			[id(3), helpstring("method ErrorEvent")] void ErrorEvent([in] long ResultCode, [in] long ResultCodeExtended, [in] long ErrorLocus, [in,out] long* pErrorResponse);
+			[id(5), helpstring("method StatusUpdateEvent")] void StatusUpdateEvent( [in] long Data );
+	};
+	[
+		uuid(84DCB695-74B1-4B09-A6F3-8E374304B9D6)		
+	]
+	coclass SoLpu230
+	{
+		[default] interface ISoLpu230;
+		[default, source] dispinterface _ISoLpu230Events;
+	};
+};
+

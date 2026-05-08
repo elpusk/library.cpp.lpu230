@@ -1,0 +1,64 @@
+// OposLpu230Lock.idl : OposLpu230Lock의 IDL 소스입니다.
+//
+
+// 이 파일은 MIDL 도구에 의해 처리되어
+// 형식 라이브러리(OposLpu230Lock.tlb) 및 마샬링 코드가 생성됩니다.
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+[
+	object,
+	uuid(E86916C1-4184-4853-B857-4036621FD1CA),
+	dual,
+	nonextensible,
+	pointer_default(unique)
+]
+interface ISoLpu230Lock : IDispatch{
+	[id(1)] HRESULT OpenService([in] BSTR DeviceClass, [in] BSTR DeviceName, [in] IDispatch* pDispatch, [out,retval] LONG* pRC);
+	[id(2)] HRESULT GetPropertyNumber([in] LONG PropIndex, [out,retval] LONG* pNumber);
+	[id(3)] HRESULT SetPropertyNumber([in] LONG PropIndex, [in] LONG Number);
+	[id(4)] HRESULT GetPropertyString([in] LONG PropIndex, [out,retval] BSTR* pString);
+	[id(5)] HRESULT SetPropertyString([in] LONG PropIndex, [in] BSTR bstrString);
+	[id(6)] HRESULT COFreezeEvents([in] VARIANT_BOOL Freeze, [out,retval] LONG* pRC);
+	[id(7)] HRESULT CheckHealth([in] LONG Level, [out,retval] LONG* pRC);
+	[id(8)] HRESULT ClaimDevice([in] LONG lTimeout, [out,retval] LONG* pRC);
+	[id(9)] HRESULT Close([out,retval] LONG* pRC);
+	[id(10)] HRESULT DirectIO([in] LONG Command, [in,out] LONG* pData, [in,out] BSTR* pString, [out,retval] LONG* pRC);
+	[id(11)] HRESULT ReleaseDevice([out,retval] LONG* pRC);
+	[id(12)] HRESULT ResetStatistics([in] BSTR StatisticsBuffer, [out,retval] LONG* pRC);
+	[id(13)] HRESULT RetrieveStatistics([in,out] BSTR* StatisticsBuffer, [out,retval] LONG* pRC);
+	[id(14)] HRESULT UpdateStatistics([in] BSTR StatisticsBuffer, [out,retval] LONG* pRC);
+	[id(15)] HRESULT WaitForKeylockChange([in] LONG nKeyPosition, [in] LONG nTimeout, [out,retval] LONG* pRC);
+	[id(16)] HRESULT CompareFirmwareVersion([in] BSTR FirmwareFileName, [out] LONG* pResult, [out,retval] LONG* pRC);
+	[id(17)] HRESULT UpdateFirmware([in] BSTR FirmwareFileName, [out,retval] LONG* pRC);
+};
+[
+	uuid(39194BD6-614A-4A57-83B6-8BFB68434E67),
+	version(1.0),
+]
+library OposLpu230LockLib
+{
+	importlib("stdole2.tlb");
+	[
+		uuid(8D5FF47B-7D2E-4162-8C8C-89678EFD7C28)		
+	]
+	dispinterface _ISoLpu230LockEvents
+	{
+		properties:
+		methods:
+			[id(1)] void DataEvent([in] LONG Status);
+			[id(2)] void DirectIOEvent([in] LONG EventNumber, [in,out] LONG* pData, [in,out] BSTR* pString);
+			[id(3)] void ErrorEvent([in] LONG ResultCode, [in] LONG ResultCodeExtended, [in] LONG ErrorLocus, [in,out] LONG* pErrorResponse);
+			[id(5)] void StatusUpdateEvent([in] LONG nData);
+	};
+	[
+		uuid(7336E808-A6C6-4E03-9A7D-02873DE93D7C)		
+	]
+	coclass SoLpu230Lock
+	{
+		[default] interface ISoLpu230Lock;
+		[default, source] dispinterface _ISoLpu230LockEvents;
+	};
+};
+

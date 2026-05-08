@@ -1,0 +1,26 @@
+HKCR
+{
+	OposSo.Lpu230Lock.1 = s 'SoLpu230Lock Class'
+	{
+		CLSID = s '{7336E808-A6C6-4E03-9A7D-02873DE93D7C}'
+	}
+	OposSo.Lpu230Lock = s 'SoLpu230Lock Class'
+	{		
+		CurVer = s 'OposSo.Lpu230Lock.1'
+	}
+	NoRemove CLSID
+	{
+		ForceRemove {7336E808-A6C6-4E03-9A7D-02873DE93D7C} = s 'SoLpu230Lock Class'
+		{
+			ProgID = s 'OposSo.Lpu230Lock.1'
+			VersionIndependentProgID = s 'OposSo.Lpu230Lock'
+			ForceRemove Programmable
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+			TypeLib = s '{39194BD6-614A-4A57-83B6-8BFB68434E67}'
+			Version = s '1.11'
+		}
+	}
+}

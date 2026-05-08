@@ -1,0 +1,69 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="CSoLpu230">
+    <Position X="1" Y="0.5" Width="3.5" />
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+      <Compartment Name="Methods" Collapsed="true" />
+    </Compartments>
+    <NestedTypes>
+      <Class Name="CSoLpu230::CMutex" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>SoLpu230.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Class>
+      <Class Name="CSoLpu230::CEventCase" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>SoLpu230.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Class>
+      <Enum Name="CSoLpu230::MsReadTransaction" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>SoLpu230.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Class Name="CSoLpu230::CDevEvent">
+        <NestedTypes>
+          <Typedef Name="CSoLpu230::CDevEvent::DataType" Collapsed="true">
+            <TypeIdentifier>
+              <NewMemberFileName>SoLpu230.h</NewMemberFileName>
+            </TypeIdentifier>
+          </Typedef>
+          <Enum Name="CSoLpu230::CDevEvent::__unnamed_enum_004e_1" Collapsed="true">
+            <TypeIdentifier>
+              <NewMemberFileName>SoLpu230.h</NewMemberFileName>
+            </TypeIdentifier>
+          </Enum>
+          <Enum Name="CSoLpu230::CDevEvent::EventType" Collapsed="true">
+            <TypeIdentifier>
+              <NewMemberFileName>SoLpu230.h</NewMemberFileName>
+            </TypeIdentifier>
+          </Enum>
+        </NestedTypes>
+        <TypeIdentifier>
+          <NewMemberFileName>SoLpu230.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Class>
+      <Typedef Name="CSoLpu230::sp_DevEvent" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>SoLpu230.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Typedef>
+      <Class Name="CSoLpu230::CWorkQueue" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>SoLpu230.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Class>
+      <Class Name="CSoLpu230::CWorker" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>SoLpu230.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Class>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>QgCIgkCExIlDgFCYEQIAgCEQmQDCBEBA0AAKAACDIEk=</HashCode>
+      <FileName>SoLpu230.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Font Name="맑은 고딕" Size="9" />
+</ClassDiagram>
