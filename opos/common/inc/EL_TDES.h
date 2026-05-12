@@ -1,0 +1,41 @@
+//EL_TDES.h
+//this file contains TDES function
+//////////////////////////////////////////////////////////
+
+
+#if !defined(__EL_TDES_HEADER_20071212__)
+#define __EL_TDES_HEADER_20071212__
+
+
+////////////////////////////////////////////////
+//1. include file
+////////////////////////////////////////////////
+
+
+////////////////////////////////////////////////
+//2. define constatns and type
+////////////////////////////////////////////////
+
+
+////////////////////////////////////////////////
+//3. the definition of data structure
+////////////////////////////////////////////////
+
+
+////////////////////////////////////////////////
+//4. the definition of TDES and DES function prototype
+////////////////////////////////////////////////
+void EL_DES_Encrypt(  BYTE* pout,BYTE* pkey, BYTE* pin );
+void EL_DES_Decrypt( BYTE* pout,BYTE* pkey, BYTE* pin );
+
+BYTE *EL_DES_DecryptEx( BYTE* pkey, BYTE* pin );
+BYTE *EL_DES_EncryptEx( BYTE* pkey, BYTE* pin );
+
+//szKey is 16 bytes arrary
+void EL_TDES_Decrypt( BYTE *sOutData,int *pnOutSize,BYTE *sInData,int nInSize,BYTE *szKey );
+void EL_TDES_Encrypt( BYTE *sOutData,int *pnOutSize,BYTE *sInData,int nInSize,BYTE *szKey );
+
+////////////////////////////////////////////////
+#endif//__EL_TDES_HEADER_20071212__
+
+//the enf of file
