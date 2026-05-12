@@ -50,6 +50,80 @@ lpu23x device c++ library & MCP Server by Rust
 + lpu23x-ibutton-mcp : v1.1
   + the first release.
 
+## build on windows11
+
++ boost library
+  + use version 1.80.0.0, static lib, target vs2022
+  + build (on C:\local\boost_1_80_0)
+    + download [boost_1_80_0.zip](https://www.boost.org/releases/1.80.0/) to C:\local directory
+    + extract boost_1_80_0.zip
+    + cd boost_1_80_0
+    + run "Developer Command Prompt for VS 2022"
+    + edit C:\local\boost_1_80_0\tools\build\src\tools\msvc.jam line 1122. see [issue](https://github.com/boostorg/boost/issues/914)
+    + run bootstrap.bat
+    + b2 -j4 -a toolset=msvc-14.3 architecture=x86 variant=debug,release link=static threading=multi address-model=32 runtime-link=static
+    + b2 -j4 -a toolset=msvc-14.3 architecture=x86 variant=debug,release link=static threading=multi address-model=64 runtime-link=static
+    + output lib files are in C:\local\boost_1_80_0\stage\lib
+
++ libusb
+  + use version 1.0, static lib
+  + build
+    + cd C:\local\libusb
+    + git clone https://github.com/libusb/libusb.git
+    + see C:\local\libusb\INSTALL_WIN.txt
+
++ openssl
+  + use version 1.1.1s, static lib, strawberry-perl
+  + buid
+    + cd C:\local
+    + download openssl-1.1.1s.tar.gz from https://openssl-library.org/source/old/1.1.1/
+    + tar xvfz openssl-1.1.1s.tar.gz
+    + perl Configure VC-WIN64A no-idea no-md2 no-mdc2 no-rc5 no-rc4  no-asm enable-static-engine --openssldir=C:\local\openssl-1.1.1s\x64\SSL --prefix=C:\local\openssl-1.1.1s\x64\OpenSSL
+    + nmake
+    + nmake test
+    + nmake install
+    + perl Configure VC-WIN32 no-idea no-md2 no-mdc2 no-rc5 no-rc4  no-asm enable-static-engine --openssldir=C:\local\openssl-1.1.1s\x86\SSL --prefix=C:\local\openssl-1.1.1s\x86\OpenSSL
+    + nmake
+    + nmake test
+    + nmake install
+
++ nlohmann/json
+  + build : no need compile, develop branch, header only No need build
+    + cd C:\local
+    + mkdir nlohmann
+    + git clone https://github.com/nlohmann/json.git
+
++ FTXUI
+  + use version 6.1.9, static lib
+  + build
+    + cd C:\local
+    + git clone https://github.com/ArthurSonzogni/FTXUI.git
+    + cd FTXUI
+    + mkdir build_x64
+    + cd build_x64
+    + cmake .. -G "Visual Studio 17 2022" -A x64
+    + load & build the created solution on vs2022
+    + mkdir C:\local\FTXU\build_x86
+    + cd C:\local\FTXU\build_x86
+    + cmake .. -G "Visual Studio 17 2022" -A Win32
+    + load & build the created solution on vs2022
+
+```
+msvc.jam file : 
+        else
+        {
+            if [ MATCH "(14.4)" : $(version) ]
+            {
+                if $(.debug-configuration)
+                {
+                    ECHO "notice: [generate-setup-cmd] $(version) is 14.4x" ;
+                }
+                parent = [ path.native [ path.join  $(parent) "..\\..\\..\\..\\..\\Auxiliary\\Build" ] ] ;
+            }
+            if [ MATCH "(14.3)" : $(version) ]
+            ...
+```
+
 ## build on debian12
 
 + notice

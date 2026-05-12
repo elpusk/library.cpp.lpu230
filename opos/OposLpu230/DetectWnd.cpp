@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "DetectWnd.h"
+#include "TTR_Dev.h"
 
 CDetectWnd*CDetectWnd::GetInstance( HINSTANCE hInstance /*=NULL*/, bool bFree /*= false*/ )
 {

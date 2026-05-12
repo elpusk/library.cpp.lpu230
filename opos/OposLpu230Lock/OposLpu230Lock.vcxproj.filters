@@ -1,6 +1,22 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <Filter Include="소스 파일">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="헤더 파일">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="리소스 파일">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="생성 파일">
+      <UniqueIdentifier>{f98ea5b4-6025-4dda-8cac-471eec71261e}</UniqueIdentifier>
+      <SourceControlFiles>False</SourceControlFiles>
+    </Filter>
     <Filter Include="common">
       <UniqueIdentifier>{783c4f28-f3e9-4de1-bdf2-d53e97bf58bc}</UniqueIdentifier>
     </Filter>
@@ -16,62 +32,46 @@
     <Filter Include="common\etc">
       <UniqueIdentifier>{81c4b890-e5ce-4ad2-9597-c6119bbf2c8f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
-    </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
-    <Filter Include="Generated Files">
-      <UniqueIdentifier>{f98ea5b4-6025-4dda-8cac-471eec71261e}</UniqueIdentifier>
-      <SourceControlFiles>False</SourceControlFiles>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="dllmain.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="OposLpu230Lock_i.c">
-      <Filter>Generated Files</Filter>
+      <Filter>생성 파일</Filter>
     </ClCompile>
     <ClCompile Include="Log.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="DetectWnd.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="GlobalVar.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="SoLock.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="SoLpu230Lock.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="IniFile.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="OposLpu230Lock.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="RegControl.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="FireEvent.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="DevUart.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="..\common\src\EL_Support.cpp">
       <Filter>common\src</Filter>
@@ -88,52 +88,52 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
-      <Filter>Header Files</Filter>
+      <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="targetver.h">
-      <Filter>Header Files</Filter>
+      <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Resource.h">
-      <Filter>Header Files</Filter>
+      <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="dllmain.h">
-      <Filter>Header Files</Filter>
+      <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="OposLpu230Lock_i.h">
-      <Filter>Generated Files</Filter>
+      <Filter>생성 파일</Filter>
     </ClInclude>
     <ClInclude Include="Log.h">
-      <Filter>Header Files</Filter>
+      <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="DetectWnd.h">
-      <Filter>Header Files</Filter>
+      <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="GlobalVar.h">
-      <Filter>Header Files</Filter>
+      <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="SoLock.h">
-      <Filter>Header Files</Filter>
+      <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="_ISoLpu230LockEvents_CP.h">
-      <Filter>Header Files</Filter>
+      <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="SoLpu230Lock.h">
-      <Filter>Header Files</Filter>
+      <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="IniFile.h">
-      <Filter>Header Files</Filter>
+      <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="RegControl.h">
-      <Filter>Header Files</Filter>
+      <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="FireEvent.h">
-      <Filter>Header Files</Filter>
+      <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="DevUart.h">
-      <Filter>Header Files</Filter>
+      <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Dll.h">
-      <Filter>Header Files</Filter>
+      <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="..\common\inc\Sync.h">
       <Filter>common\inc</Filter>
@@ -144,19 +144,19 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="OposLpu230Lock.rc">
-      <Filter>Resource Files</Filter>
+      <Filter>리소스 파일</Filter>
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />
     <None Include="OposLpu230Lock.rgs">
-      <Filter>Resource Files</Filter>
+      <Filter>리소스 파일</Filter>
     </None>
     <None Include="OposLpu230Lock.def">
-      <Filter>Source Files</Filter>
+      <Filter>소스 파일</Filter>
     </None>
     <None Include="SoLpu230Lock.rgs">
-      <Filter>Resource Files</Filter>
+      <Filter>리소스 파일</Filter>
     </None>
     <None Include="..\common\etc\OposLpu230Lock.ini">
       <Filter>common\etc</Filter>
@@ -164,7 +164,7 @@
   </ItemGroup>
   <ItemGroup>
     <Midl Include="OposLpu230Lock.idl">
-      <Filter>Source Files</Filter>
+      <Filter>소스 파일</Filter>
     </Midl>
   </ItemGroup>
 </Project>
