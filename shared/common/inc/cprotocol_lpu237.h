@@ -1822,6 +1822,13 @@ public:
 		return b_result;
 	}
 
+	/**
+	* @brief generate "get system information" requests, include  
+	* 
+	* enter config mode, get version, get device type, get version structure, get name and leave config mode.
+	*
+	* @return true if generate all requests successfully. otherwise return false.
+	*/
 	bool generate_get_system_information_with_name()
 	{
 		bool b_result(false);

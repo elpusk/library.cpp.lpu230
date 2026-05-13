@@ -8,11 +8,13 @@
 
 lpu237_of_client::lpu237_of_client() :  i_device_of_client()
 {
+	m_device_function = cprotocol_lpu237::fun_none;
 }
 
 lpu237_of_client::lpu237_of_client(unsigned long n_client_index, const std::wstring& s_device_path)
     : i_device_of_client(n_client_index, s_device_path)
 {
+    m_device_function = cprotocol_lpu237::fun_none;
 }
 
 lpu237_of_client::~lpu237_of_client()
@@ -56,6 +58,11 @@ std::wstring lpu237_of_client::get_name_by_wstring() const
 cprotocol_lpu237::type_version lpu237_of_client::get_system_version() const
 {
     return m_system_version;
+}
+
+cprotocol_lpu237::type_function lpu237_of_client::get_device_function() const
+{
+    return m_device_function;
 }
 
 bool lpu237_of_client::cmd_enter_config()
@@ -311,6 +318,11 @@ void lpu237_of_client::_set_system_version(const cprotocol_lpu237::type_version&
 	m_system_version = version;
 }
 
+void lpu237_of_client::_set_device_function(cprotocol_lpu237::type_function device_function)
+{
+    m_device_function = device_function;
+}
+
 bool lpu237_of_client::cmd_get_system_information_with_name()
 {
     std::lock_guard<std::mutex> lock(m_mutex);
@@ -381,8 +393,14 @@ bool lpu237_of_client::cmd_get_system_information_with_name()
         } while (n_remainder_transaction > 0);
 
         if (b_result) {
+            // get version, get device type, get version structure, get name 
             _set_name(m_protocol.get_name());
-			_set_system_version(m_protocol.get_system_version());
+            _set_system_version(m_protocol.get_system_version());
+
+            cprotocol_lpu237::type_function dev_type = m_protocol.get_device_function();
+            _set_device_function(dev_type);
+
+
         }
 
         m_protocol.clear_transaction();

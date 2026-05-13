@@ -32,6 +32,8 @@ public:
 
 	cprotocol_lpu237::type_version get_system_version() const;
 
+	cprotocol_lpu237::type_function get_device_function() const;
+
 	//cmd_x() : communicate with device. by device protocol.
 	bool cmd_get_system_information_with_name();
 	bool cmd_get_id();
@@ -80,9 +82,12 @@ private:
 
 	void _set_system_version(const cprotocol_lpu237::type_version &version);
 
+	void _set_device_function(cprotocol_lpu237::type_function device_function);
+
 private:
 	cprotocol_lpu237 m_protocol;
 	_mp::type_v_buffer m_v_name;
 	cprotocol_lpu237::type_version m_system_version;
+	cprotocol_lpu237::type_function m_device_function;
 };
 
