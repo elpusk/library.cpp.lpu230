@@ -62,10 +62,8 @@ static cmap_user_cb g_map_user_cb; //global user callback map
 /////////////////////////////////////////////////////////////////////////
 // local function prototype
 /////////////////////////////////////////////////////////////////////////
-
-static bool PreCheck(const _tstring& sFuntionName, DWORD dwWaitTime = 0, type_lpu237_tools_callback pFun = NULL, void* pParameter = NULL, HWND hWnd = NULL, UINT nMsg = 0);
-static bool _pre_check(const std::wstring& sFuntionName, void* p_callback_fun = NULL, void* pParameter = NULL);
-static _tg_sub_lpu237::CLinker::type_ptr& PreCheck(const _tstring& sFuntionName, HANDLE h_dev, DWORD dwWaitTime = 0, type_lpu237_tools_callback pFun = NULL, void* pParameter = NULL, HWND hWnd = NULL, UINT nMsg = 0);
+static void _CALLTYPE_ _cb_get_parameter(void*);
+static void _CALLTYPE_ _cb_set_parameter(void*);
 
 /////////////////////////////////////////////////////////////////////////
 // local function body
@@ -90,47 +88,91 @@ std::filesystem::path _get_module_directory()
 	return std::filesystem::path(""); // error
 }
 
-bool PreCheck(const _tstring& sFuntionName, DWORD dwWaitTime, type_lpu237_tools_callback pFun /*= NULL*/, void* pParameter /*=NULL*/, HWND hWnd /*= NULL*/, UINT nMsg /*= 0*/)
+void _CALLTYPE_ _cb_get_parameter(void*p_usr)
 {
-	if (CLog::GetLog())	CLog::GetLog()->Log(true, CLog::LEV_NORMAL, _T(" : CAL : %s : 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n"), sFuntionName.c_str(), dwWaitTime, pFun, pParameter, hWnd, nMsg);
+	static std::mutex mutex_for_cb_get_param;
+	std::lock_guard<std::mutex> lock(mutex_for_cb_get_param);
 
-	if (!_tg_sub_lpu237::cupdater::get_instance().is_worker()) {
-		if (CLog::GetLog())	CLog::GetLog()->Log(true, CLog::LEV_NORMAL, _T(" : RET : %s : gptrThread == nullptr\n"), sFuntionName.c_str());
-		return false;
-	}
+	unsigned long n_device_index(i_device_of_client::const_invalied_device_index);
+	int n_result_index(-1);
+	long n_item_index = (long)p_usr; // item index of callback function in g_map_user_cb
 
-	return true;
+	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
+	_mp::casync_parameter_result::type_ptr_ct_async_parameter_result ptr_result;
+
+	_mp::cwait::type_ptr ptr_evt_complete;
+
+	do {
+		bool b_get(false);
+		_mp::type_v_buffer v_dev_id(0);
+		type_lpu237_tools_callback p_fun(NULL);
+		type_lpu237_tools_callback_get_parameter p_fun_get(NULL);
+		type_lpu237_tools_callback_set_parameter p_fun_set(NULL);
+		void* p_para(NULL);
+		std::shared_ptr<std::mutex> ptr_mutex;
+
+		// this is dregon!
+		// LPU237_tools_msr_start_get_setting() 가 change_result_index() 에 도달하기 전에 이 callback 이 호출되어서 get_callback() 을 호츨하여,
+		// 아직 설정되지 않은 n_result_index 값을 얻는을 수 있다,
+		// 따라서
+		// 먼저 mutex 만 얻고, lock() 시도해서 걸릴때 까지, 기다린다. 
+		// LPU237_tools_msr_start_get_setting() 는 change_result_index() 실행 후, unlock() 하므로.
+		// 여기서 lock() 이 되면 change_result_index()가 실행되었다는 의미 이므로,
+		// 다시 get_callback() 을 호츨하여, 업데이트된 최종 데이터를 얻는다.
+		std::tie(b_get, ptr_evt_complete, ptr_mutex) = g_map_user_cb.get_callback(
+			n_item_index
+			, false // 계속 콜백 가능성이	있기 때문에 콜백 정보를 얻은 후에도 콜백 정보를 유지한다. (예를 들어, 콜백이 여러번 호출되는 경우)
+			, n_result_index
+			, v_dev_id
+			, p_fun
+			, p_fun_get
+			, p_fun_set
+			, p_para
+		);
+
+		if (!b_get) {
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : get_callback fail for item index %d.\n", __WFUNCTION__, n_item_index);
+			continue;
+		}
+
+		if (!ptr_manager_of_device_of_client) {
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : none manager_of_device_of_client.\n", __WFUNCTION__);
+			continue;
+		}
+		lpu237_of_client::type_ptr_lpu237_of_client& ptr_device = ptr_manager_of_device_of_client->get_device(v_dev_id);
+		if (ptr_device->is_null_device()) {
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : not found device is\n", __WFUNCTION__);
+			continue;
+		}
+
+		bool b_async_start(false);
+		int n_remainder_phase_num(0);
+		std::tie(b_async_start, n_result_index, n_remainder_phase_num) = ptr_device->cmd_start_async_next_phase(_cb_get_parameter, p_usr, n_result_index);
+		if(!b_async_start) {
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : cmd_start_async_next_phase() fail.\n", __WFUNCTION__);
+			continue;
+		}
+
+		if (n_remainder_phase_num == 0) {
+			continue;
+		}
+
+		// 여기는 남은 phase 가 있는 경우의 처리. 예를 들어, phase 가 3개인 transaction 의 1, 2 phase 가 완료되어서, 3 phase 가 시작된 경우.
+		g_map_user_cb.remove_callback(n_item_index); // remove invalid callback
+		if (ptr_manager_of_device_of_client) {
+			ptr_manager_of_device_of_client->remove_async_result_for_manager(n_device_index, n_result_index);
+			ptr_result.reset(); // release result
+			ptr_manager_of_device_of_client.reset();
+		}
+
+	} while (false);
+
 }
 
-bool _pre_check(const std::wstring& sFuntionName, void* p_callback_fun /*= NULL*/, void* pParameter /*=NULL*/)
+void _CALLTYPE_ _cb_set_parameter(void* p_usr)
 {
-	if (CLog::GetLog())	CLog::GetLog()->Log(true, CLog::LEV_NORMAL, _T(" : CAL : %s : 0x%x, 0x%x.\n"), sFuntionName.c_str(), p_callback_fun, pParameter);
+	long n_item_index = (long)p_usr;
 
-	if (!_tg_sub_lpu237::cupdater::get_instance().is_worker()) {
-		if (CLog::GetLog())	CLog::GetLog()->Log(true, CLog::LEV_NORMAL, _T(" : RET : %s : gptrThread == nullptr\n"), sFuntionName.c_str());
-		return false;
-	}
-
-	return true;
-}
-
-_tg_sub_lpu237::CLinker::type_ptr& PreCheck(const _tstring& sFuntionName, HANDLE h_dev, DWORD dwWaitTime /*= 0*/, type_lpu237_tools_callback pFun /*= NULL*/, void* pParameter /*= NULL*/, HWND hWnd /*= NULL*/, UINT nMsg /*= 0*/)
-{
-	static _tg_sub_lpu237::CLinker::type_ptr null_linker(nullptr);
-
-	if (CLog::GetLog())	CLog::GetLog()->Log(true, CLog::LEV_NORMAL, _T(" : CAL : %s : 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n"), sFuntionName.c_str(), dwWaitTime, pFun, pParameter, hWnd, nMsg);
-
-	if (!_tg_sub_lpu237::cupdater::get_instance().is_worker()) {
-		if (CLog::GetLog())	CLog::GetLog()->Log(true, CLog::LEV_NORMAL, _T(" : RET : %s : gptrThread == nullptr\n"), sFuntionName.c_str());
-		return null_linker;
-	}
-
-	_tg_sub_lpu237::CLinker::type_ptr& linker = _tg_sub_lpu237::cupdater::type_linker_slot_for_fw::get_instance().get_linker_without_worker(h_dev);
-	if (linker == nullptr) {
-		if (CLog::GetLog())	CLog::GetLog()->Log(true, CLog::LEV_NORMAL, _T(" : RET : %s : INVALID_HANDLE_VALUE\n"), sFuntionName.c_str());
-	}
-
-	return linker;
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -603,10 +645,15 @@ unsigned long _CALLTYPE_ LPU237_tools_msr_get_id(HANDLE hDev, unsigned char* sId
 * 	if error, return LPU237_TOOLS_RESULT_ERROR.
 *	else LPU237_TOOLS_RESULT_SUCCESS
 */
-unsigned long _CALLTYPE_ LPU237_tools_msr_start_get_setting(const unsigned char* sId, type_lpu237_tools_callback_get_parameter cb, void* pUser)
+unsigned long _CALLTYPE_ LPU237_tools_msr_start_get_setting(
+	const unsigned char* sId
+	, type_lpu237_tools_callback_get_parameter cb
+	, void* pUser
+)
 {
 	unsigned long dw_result(ccb_client::const_dll_result_error);
 	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
+	long n_item_index(-1);
 
 	do {
 		if (sId == NULL) {
@@ -631,53 +678,64 @@ unsigned long _CALLTYPE_ LPU237_tools_msr_start_get_setting(const unsigned char*
 			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : reset.\n", __WFUNCTION__);
 			continue;
 		}
-	} while (false);
+				
+		_mp::type_v_buffer v_dev_id;
+		std::shared_ptr<std::mutex> ptr_mutex;
 
-	///////////////////////////////////////////////////////////////////
-	///////////////////////////////////////////////////////////////////
-	///////////////////////////////////////////////////////////////////
-	///////////////////////////////////////////////////////////////////
-	///////////////////////////////////////////////////////////////////
-	///////////////////////////////////////////////////////////////////
-	if (CLog::GetLog())	CLog::GetLog()->Log(true, CLog::LEV_NORMAL, _T(" : INF : %s\n"), __WFUNCTION__);
-
-	DWORD dw_result(LPU237_TOOLS_RESULT_ERROR);
-	HANDLE hDev(NULL);
-	CDev::typeUid uid;
-
-	do {
-		if (!_pre_check(std::wstring(__WFUNCTION__), cb, pUser)) {
+		std::tie(n_item_index,std::ignore, ptr_mutex) = g_map_user_cb.add_callback(-1, v_dev_id, cb, pUser);
+		if (n_item_index < 0) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : [critical error]add_callback error.\n", __WFUNCTION__);
 			continue;
 		}
 
-		if (sId != NULL) {
-			uid.resize(CDev::const_size_uid, 0);
-			uid.assign(&sId[0], &sId[CDev::const_size_uid]);
+		bool b_result(false);
+		int n_result_index(_mp::casync_result_manager::const_invalied_result_index);
+		// _cb_get_parameter 가 change_result_index() 에 도달하기 전에 호출되어서 get_callback() 을 호츨하여,
+		// 아직 설정되지 않은 n_result_index 값을 얻는 것을 방지 한다.
+		ptr_mutex->lock();
 
-			_tg_sub_lpu237::CLinker::type_ptr& linker = _tg_sub_lpu237::cupdater::type_linker_slot_for_fw::get_instance().get_linker_without_worker(uid);
-			if (linker == nullptr) {
-				if (CLog::GetLog())	CLog::GetLog()->Log(true, CLog::LEV_NORMAL, _T(" : RET : %s : no device.\n"), __WFUNCTION__);
-				dw_result = LPU237_TOOLS_RESULT_NO_MSR;
-				continue;
-			}
+		// 필요한 모든 parameter 얻기 transaction 를 비동기 방식으로 시작한다.
+		// 각 phase 완료 시점(에러 또는 성공)에 _cb_get_parameter callback 함수를 호출한다.
+		// n_item_index 는 _cb_get_parameter() 호출시 전달되는 user data로써, g_map_user_cb 에서 관련 callback 정보를 얻기 위한 key값으로 사용된다.
+		std::tie(b_result, n_result_index) = ptr_device->cmd_start_async_get_parameters(_cb_get_parameter, (void*)n_item_index);
+		if(!b_result){
+			ptr_mutex->unlock();
+			g_map_user_cb.remove_callback(n_item_index);
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : cmd_start_async_get_parameters error.\n", __WFUNCTION__);
+			continue;
+		}
+		else {
+			_mp::clog::get_instance().log_fmt(L" : INF : %ls : created result index = %u.\n", __WFUNCTION__, n_result_index);
+			g_map_user_cb.change_result_index(n_item_index, n_result_index);// 얻어진 정상적인 result index로 item의 result index를 변경한다.
+			ptr_mutex->unlock();
 		}
 
-		// generate request.......
-		_tg_sub_lpu237::cupdater::type_mem_q_for_get::typePtrBuffer Req(new _tg_sub_lpu237::cupdater::type_linker_slot_for_get::type_para());
-		Req->setParameters(
-			_tg_sub_lpu237::cupdater::type_linker_slot_for_get::type_para::ReqCode_Paramter_Get,
-			uid,
-			std::make_tuple(0, cb, pUser, 0, 0, 0)
-		);
+		dw_result = ccb_client::const_dll_result_success;
 
-		_tg_sub_lpu237::cupdater::get_instance().push_request(Req);
+	} while (false);
 
-		dw_result = LPU237_TOOLS_RESULT_SUCCESS;
-		if (CLog::GetLog())	CLog::GetLog()->Log(true, CLog::LEV_NORMAL, _T(" : RET : %s : success.\n"), __WFUNCTION__);
-	} while (0);
+	switch (dw_result) {
+	case ccb_client::const_dll_result_success:
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : success - %d.\n", __WFUNCTION__, n_item_index);
+		break;
 
+	case ccb_client::const_dll_result_error:
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : error - %d.\n", __WFUNCTION__, n_item_index);
+		break;
+	case ccb_client::const_dll_result_timeout:
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : timeout - %d.\n", __WFUNCTION__, n_item_index);
+		dw_result = ccb_client::const_dll_result_error; // 기존 return 값 정의가 LPU237_TOOLS_RESULT_ERROR 또는 LPU237_TOOLS_RESULT_SUCCESS 만 있어서, timeout 의 경우 error 로 간주하기로 함.
+		break;
+	case ccb_client::const_dll_result_no_msr:
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : no msr - %d.\n", __WFUNCTION__, n_item_index);
+		dw_result = ccb_client::const_dll_result_error;// 기존 return 값 정의가 LPU237_TOOLS_RESULT_ERROR 또는 LPU237_TOOLS_RESULT_SUCCESS 만 있어서, timeout 의 경우 error 로 간주하기로 함.
+		break;
+	default:
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : %d.\n", __WFUNCTION__, n_item_index);
+		dw_result = ccb_client::const_dll_result_error;// 기존 return 값 정의가 LPU237_TOOLS_RESULT_ERROR 또는 LPU237_TOOLS_RESULT_SUCCESS 만 있어서, timeout 의 경우 error 로 간주하기로 함.
+		break;
+	}//end switch
 	return dw_result;
-
 }
 
 
@@ -694,47 +752,96 @@ unsigned long _CALLTYPE_ LPU237_tools_msr_start_get_setting(const unsigned char*
 * 	if error, return LPU237_TOOLS_RESULT_ERROR.
 *	else LPU237_TOOLS_RESULT_SUCCESS
 */
-unsigned long _CALLTYPE_ LPU237_tools_msr_start_set_setting(const unsigned char* sId, type_lpu237_tools_callback_set_parameter cb, void* pUser)
+unsigned long _CALLTYPE_ LPU237_tools_msr_start_set_setting(
+	const unsigned char* sId
+	, type_lpu237_tools_callback_set_parameter cb, void* pUser
+)
 {
-	if (CLog::GetLog())	CLog::GetLog()->Log(true, CLog::LEV_NORMAL, _T(" : INF : %s\n"), __WFUNCTION__);
-
-	DWORD dw_result(LPU237_TOOLS_RESULT_ERROR);
-	HANDLE hDev(NULL);
-	CDev::typeUid uid;
+	unsigned long dw_result(ccb_client::const_dll_result_error);
+	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
+	long n_item_index(-1);
 
 	do {
-		if (!_pre_check(std::wstring(__WFUNCTION__), cb, pUser)) {
+		if (sId == NULL) {
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : ID is NULL.\n", __WFUNCTION__);
+			continue;
+		}
+		if (!ptr_manager_of_device_of_client) {
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : none manager_of_device_of_client.\n", __WFUNCTION__);
 			continue;
 		}
 
-		if (sId != NULL) {
-			uid.resize(CDev::const_size_uid, 0);
-			uid.assign(&sId[0], &sId[CDev::const_size_uid]);
+		_mp::type_v_buffer v_id(0);
+		std::copy(&sId[0], &sId[cprotocol_lpu237::the_size_of_uid], std::back_inserter(v_id));
 
-			_tg_sub_lpu237::CLinker::type_ptr& linker = _tg_sub_lpu237::cupdater::type_linker_slot_for_fw::get_instance().get_linker_without_worker(uid);
-			if (linker == nullptr) {
-				if (CLog::GetLog())	CLog::GetLog()->Log(true, CLog::LEV_NORMAL, _T(" : RET : %s : no device.\n"), __WFUNCTION__);
-				dw_result = LPU237_TOOLS_RESULT_NO_MSR;
-				continue;
-			}
+		lpu237_of_client::type_ptr_lpu237_of_client& ptr_device = ptr_manager_of_device_of_client->get_device(v_id);
+		if (ptr_device->is_null_device()) {
+			dw_result = ccb_client::const_dll_result_no_msr;
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : not found device is\n", __WFUNCTION__);
+			continue;
+		}
+		if (!ptr_device->reset()) {
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : reset.\n", __WFUNCTION__);
+			continue;
 		}
 
-		// generate request.......
-		_tg_sub_lpu237::cupdater::type_mem_q_for_set::typePtrBuffer Req(new _tg_sub_lpu237::cupdater::type_linker_slot_for_set::type_para());
-		Req->setParameters(
-			_tg_sub_lpu237::cupdater::type_linker_slot_for_set::type_para::ReqCode_Paramter_Set,
-			uid,
-			std::make_tuple(0, cb, pUser, 0, 0, 0, 0)
-		);
+		_mp::type_v_buffer v_dev_id;
+		std::shared_ptr<std::mutex> ptr_mutex;
 
-		_tg_sub_lpu237::cupdater::get_instance().push_request(Req);
+		std::tie(n_item_index, std::ignore, ptr_mutex) = g_map_user_cb.add_callback(-1, v_dev_id, cb, pUser);
+		if (n_item_index < 0) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : [critical error]add_callback error.\n", __WFUNCTION__);
+			continue;
+		}
 
-		dw_result = LPU237_TOOLS_RESULT_SUCCESS;
-		if (CLog::GetLog())	CLog::GetLog()->Log(true, CLog::LEV_NORMAL, _T(" : RET : %s : success.\n"), __WFUNCTION__);
-	} while (0);
+		bool b_result(false);
+		int n_result_index(_mp::casync_result_manager::const_invalied_result_index);
+		// _cb_get_parameter 가 change_result_index() 에 도달하기 전에 호출되어서 get_callback() 을 호츨하여,
+		// 아직 설정되지 않은 n_result_index 값을 얻는 것을 방지 한다.
+		ptr_mutex->lock();
 
+		// 필요한 모든 parameter 얻기 transaction 를 비동기 방식으로 시작한다.
+		// 각 phase 완료 시점(에러 또는 성공)에 _cb_get_parameter callback 함수를 호출한다.
+		// n_item_index 는 _cb_get_parameter() 호출시 전달되는 user data로써, g_map_user_cb 에서 관련 callback 정보를 얻기 위한 key값으로 사용된다.
+		std::tie(b_result, n_result_index) = ptr_device->cmd_async_set_parameters(_cb_set_parameter, (void*)n_item_index);
+		if (!b_result) {
+			ptr_mutex->unlock();
+			g_map_user_cb.remove_callback(n_item_index);
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : cmd_async_set_parameters error.\n", __WFUNCTION__);
+			continue;
+		}
+		else {
+			_mp::clog::get_instance().log_fmt(L" : INF : %ls : created result index = %u.\n", __WFUNCTION__, n_result_index);
+			g_map_user_cb.change_result_index(n_item_index, n_result_index);// 얻어진 정상적인 result index로 item의 result index를 변경한다.
+			ptr_mutex->unlock();
+		}
+
+		dw_result = ccb_client::const_dll_result_success;
+
+	} while (false);
+
+	switch (dw_result) {
+	case ccb_client::const_dll_result_success:
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : success - %d.\n", __WFUNCTION__, n_item_index);
+		break;
+
+	case ccb_client::const_dll_result_error:
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : error - %d.\n", __WFUNCTION__, n_item_index);
+		break;
+	case ccb_client::const_dll_result_timeout:
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : timeout - %d.\n", __WFUNCTION__, n_item_index);
+		dw_result = ccb_client::const_dll_result_error; // 기존 return 값 정의가 LPU237_TOOLS_RESULT_ERROR 또는 LPU237_TOOLS_RESULT_SUCCESS 만 있어서, timeout 의 경우 error 로 간주하기로 함.
+		break;
+	case ccb_client::const_dll_result_no_msr:
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : no msr - %d.\n", __WFUNCTION__, n_item_index);
+		dw_result = ccb_client::const_dll_result_error;// 기존 return 값 정의가 LPU237_TOOLS_RESULT_ERROR 또는 LPU237_TOOLS_RESULT_SUCCESS 만 있어서, timeout 의 경우 error 로 간주하기로 함.
+		break;
+	default:
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : %d.\n", __WFUNCTION__, n_item_index);
+		dw_result = ccb_client::const_dll_result_error;// 기존 return 값 정의가 LPU237_TOOLS_RESULT_ERROR 또는 LPU237_TOOLS_RESULT_SUCCESS 만 있어서, timeout 의 경우 error 로 간주하기로 함.
+		break;
+	}//end switch
 	return dw_result;
-
 }
 
 
@@ -751,47 +858,97 @@ unsigned long _CALLTYPE_ LPU237_tools_msr_start_set_setting(const unsigned char*
 * 	if error, return LPU237_TOOLS_RESULT_ERROR.
 *	else LPU237_TOOLS_RESULT_SUCCESS
 */
-unsigned long _CALLTYPE_ LPU237_tools_msr_start_get_setting_except_combination(const unsigned char* sId, type_lpu237_tools_callback_get_parameter cb, void* pUser)
+unsigned long _CALLTYPE_ LPU237_tools_msr_start_get_setting_except_combination(
+	const unsigned char* sId
+	, type_lpu237_tools_callback_get_parameter cb
+	, void* pUser
+)
 {
-	if (CLog::GetLog())	CLog::GetLog()->Log(true, CLog::LEV_NORMAL, _T(" : INF : %s\n"), __WFUNCTION__);
-
-	DWORD dw_result(LPU237_TOOLS_RESULT_ERROR);
-	HANDLE hDev(NULL);
-	CDev::typeUid uid;
+	unsigned long dw_result(ccb_client::const_dll_result_error);
+	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
+	long n_item_index(-1);
 
 	do {
-		if (!_pre_check(std::wstring(__WFUNCTION__), cb, pUser)) {
+		if (sId == NULL) {
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : ID is NULL.\n", __WFUNCTION__);
+			continue;
+		}
+		if (!ptr_manager_of_device_of_client) {
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : none manager_of_device_of_client.\n", __WFUNCTION__);
 			continue;
 		}
 
-		if (sId != NULL) {
-			uid.resize(CDev::const_size_uid, 0);
-			uid.assign(&sId[0], &sId[CDev::const_size_uid]);
+		_mp::type_v_buffer v_id(0);
+		std::copy(&sId[0], &sId[cprotocol_lpu237::the_size_of_uid], std::back_inserter(v_id));
 
-			_tg_sub_lpu237::CLinker::type_ptr& linker = _tg_sub_lpu237::cupdater::type_linker_slot_for_fw::get_instance().get_linker_without_worker(uid);
-			if (linker == nullptr) {
-				if (CLog::GetLog())	CLog::GetLog()->Log(true, CLog::LEV_NORMAL, _T(" : RET : %s : no device.\n"), __WFUNCTION__);
-				dw_result = LPU237_TOOLS_RESULT_NO_MSR;
-				continue;
-			}
+		lpu237_of_client::type_ptr_lpu237_of_client& ptr_device = ptr_manager_of_device_of_client->get_device(v_id);
+		if (ptr_device->is_null_device()) {
+			dw_result = ccb_client::const_dll_result_no_msr;
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : not found device is\n", __WFUNCTION__);
+			continue;
+		}
+		if (!ptr_device->reset()) {
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : reset.\n", __WFUNCTION__);
+			continue;
 		}
 
-		// generate request.......
-		_tg_sub_lpu237::cupdater::type_mem_q_for_get::typePtrBuffer Req(new _tg_sub_lpu237::cupdater::type_linker_slot_for_get::type_para());
-		Req->setParameters(
-			_tg_sub_lpu237::cupdater::type_linker_slot_for_get::type_para::ReqCode_Paramter_Get_Except_Combination,
-			uid,
-			std::make_tuple(0, cb, pUser, 0, 0, 0)
-		);
+		_mp::type_v_buffer v_dev_id;
+		std::shared_ptr<std::mutex> ptr_mutex;
 
-		_tg_sub_lpu237::cupdater::get_instance().push_request(Req);
+		std::tie(n_item_index, std::ignore, ptr_mutex) = g_map_user_cb.add_callback(-1, v_dev_id, cb, pUser);
+		if (n_item_index < 0) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : [critical error]add_callback error.\n", __WFUNCTION__);
+			continue;
+		}
 
-		dw_result = LPU237_TOOLS_RESULT_SUCCESS;
-		if (CLog::GetLog())	CLog::GetLog()->Log(true, CLog::LEV_NORMAL, _T(" : RET : %s : success.\n"), __WFUNCTION__);
-	} while (0);
+		bool b_result(false);
+		int n_result_index(_mp::casync_result_manager::const_invalied_result_index);
+		// _cb_get_parameter 가 change_result_index() 에 도달하기 전에 호출되어서 get_callback() 을 호츨하여,
+		// 아직 설정되지 않은 n_result_index 값을 얻는 것을 방지 한다.
+		ptr_mutex->lock();
 
+		// 필요한 모든 parameter 얻기 transaction 를 비동기 방식으로 시작한다.
+		// 각 phase 완료 시점(에러 또는 성공)에 _cb_get_parameter callback 함수를 호출한다.
+		// n_item_index 는 _cb_get_parameter() 호출시 전달되는 user data로써, g_map_user_cb 에서 관련 callback 정보를 얻기 위한 key값으로 사용된다.
+		std::tie(b_result, n_result_index) = ptr_device->cmd_async_get_parameters_except_combination(_cb_get_parameter, (void*)n_item_index);
+		if (!b_result) {
+			ptr_mutex->unlock();
+			g_map_user_cb.remove_callback(n_item_index);
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : cmd_async_get_parameters_except_combination error.\n", __WFUNCTION__);
+			continue;
+		}
+		else {
+			_mp::clog::get_instance().log_fmt(L" : INF : %ls : created result index = %u.\n", __WFUNCTION__, n_result_index);
+			g_map_user_cb.change_result_index(n_item_index, n_result_index);// 얻어진 정상적인 result index로 item의 result index를 변경한다.
+			ptr_mutex->unlock();
+		}
+
+		dw_result = ccb_client::const_dll_result_success;
+
+	} while (false);
+
+	switch (dw_result) {
+	case ccb_client::const_dll_result_success:
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : success - %d.\n", __WFUNCTION__, n_item_index);
+		break;
+
+	case ccb_client::const_dll_result_error:
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : error - %d.\n", __WFUNCTION__, n_item_index);
+		break;
+	case ccb_client::const_dll_result_timeout:
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : timeout - %d.\n", __WFUNCTION__, n_item_index);
+		dw_result = ccb_client::const_dll_result_error; // 기존 return 값 정의가 LPU237_TOOLS_RESULT_ERROR 또는 LPU237_TOOLS_RESULT_SUCCESS 만 있어서, timeout 의 경우 error 로 간주하기로 함.
+		break;
+	case ccb_client::const_dll_result_no_msr:
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : no msr - %d.\n", __WFUNCTION__, n_item_index);
+		dw_result = ccb_client::const_dll_result_error;// 기존 return 값 정의가 LPU237_TOOLS_RESULT_ERROR 또는 LPU237_TOOLS_RESULT_SUCCESS 만 있어서, timeout 의 경우 error 로 간주하기로 함.
+		break;
+	default:
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : %d.\n", __WFUNCTION__, n_item_index);
+		dw_result = ccb_client::const_dll_result_error;// 기존 return 값 정의가 LPU237_TOOLS_RESULT_ERROR 또는 LPU237_TOOLS_RESULT_SUCCESS 만 있어서, timeout 의 경우 error 로 간주하기로 함.
+		break;
+	}//end switch
 	return dw_result;
-
 }
 
 
@@ -808,47 +965,97 @@ unsigned long _CALLTYPE_ LPU237_tools_msr_start_get_setting_except_combination(c
 * 	if error, return LPU237_TOOLS_RESULT_ERROR.
 *	else LPU237_TOOLS_RESULT_SUCCESS
 */
-unsigned long _CALLTYPE_ LPU237_tools_msr_start_set_setting_except_combination(const unsigned char* sId, type_lpu237_tools_callback_set_parameter cb, void* pUser)
+unsigned long _CALLTYPE_ LPU237_tools_msr_start_set_setting_except_combination(
+	const unsigned char* sId
+	, type_lpu237_tools_callback_set_parameter cb
+	, void* pUser
+)
 {
-	if (CLog::GetLog())	CLog::GetLog()->Log(true, CLog::LEV_NORMAL, _T(" : INF : %s\n"), __WFUNCTION__);
-
-	DWORD dw_result(LPU237_TOOLS_RESULT_ERROR);
-	HANDLE hDev(NULL);
-	CDev::typeUid uid;
+	unsigned long dw_result(ccb_client::const_dll_result_error);
+	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
+	long n_item_index(-1);
 
 	do {
-		if (!_pre_check(std::wstring(__WFUNCTION__), cb, pUser)) {
+		if (sId == NULL) {
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : ID is NULL.\n", __WFUNCTION__);
+			continue;
+		}
+		if (!ptr_manager_of_device_of_client) {
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : none manager_of_device_of_client.\n", __WFUNCTION__);
 			continue;
 		}
 
-		if (sId != NULL) {
-			uid.resize(CDev::const_size_uid, 0);
-			uid.assign(&sId[0], &sId[CDev::const_size_uid]);
+		_mp::type_v_buffer v_id(0);
+		std::copy(&sId[0], &sId[cprotocol_lpu237::the_size_of_uid], std::back_inserter(v_id));
 
-			_tg_sub_lpu237::CLinker::type_ptr& linker = _tg_sub_lpu237::cupdater::type_linker_slot_for_fw::get_instance().get_linker_without_worker(uid);
-			if (linker == nullptr) {
-				if (CLog::GetLog())	CLog::GetLog()->Log(true, CLog::LEV_NORMAL, _T(" : RET : %s : no device.\n"), __WFUNCTION__);
-				dw_result = LPU237_TOOLS_RESULT_NO_MSR;
-				continue;
-			}
+		lpu237_of_client::type_ptr_lpu237_of_client& ptr_device = ptr_manager_of_device_of_client->get_device(v_id);
+		if (ptr_device->is_null_device()) {
+			dw_result = ccb_client::const_dll_result_no_msr;
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : not found device is\n", __WFUNCTION__);
+			continue;
+		}
+		if (!ptr_device->reset()) {
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : reset.\n", __WFUNCTION__);
+			continue;
 		}
 
-		// generate request.......
-		_tg_sub_lpu237::cupdater::type_mem_q_for_set::typePtrBuffer Req(new _tg_sub_lpu237::cupdater::type_linker_slot_for_set::type_para());
-		Req->setParameters(
-			_tg_sub_lpu237::cupdater::type_linker_slot_for_set::type_para::ReqCode_Paramter_Set_Except_Combination,
-			uid,
-			std::make_tuple(0, cb, pUser, 0, 0, 0, 0)
-		);
+		_mp::type_v_buffer v_dev_id;
+		std::shared_ptr<std::mutex> ptr_mutex;
 
-		_tg_sub_lpu237::cupdater::get_instance().push_request(Req);
+		std::tie(n_item_index, std::ignore, ptr_mutex) = g_map_user_cb.add_callback(-1, v_dev_id, cb, pUser);
+		if (n_item_index < 0) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : [critical error]add_callback error.\n", __WFUNCTION__);
+			continue;
+		}
 
-		dw_result = LPU237_TOOLS_RESULT_SUCCESS;
-		if (CLog::GetLog())	CLog::GetLog()->Log(true, CLog::LEV_NORMAL, _T(" : RET : %s : success.\n"), __WFUNCTION__);
-	} while (0);
+		bool b_result(false);
+		int n_result_index(_mp::casync_result_manager::const_invalied_result_index);
+		// _cb_get_parameter 가 change_result_index() 에 도달하기 전에 호출되어서 get_callback() 을 호츨하여,
+		// 아직 설정되지 않은 n_result_index 값을 얻는 것을 방지 한다.
+		ptr_mutex->lock();
 
+		// 필요한 모든 parameter 얻기 transaction 를 비동기 방식으로 시작한다.
+		// 각 phase 완료 시점(에러 또는 성공)에 _cb_get_parameter callback 함수를 호출한다.
+		// n_item_index 는 _cb_get_parameter() 호출시 전달되는 user data로써, g_map_user_cb 에서 관련 callback 정보를 얻기 위한 key값으로 사용된다.
+		std::tie(b_result, n_result_index) = ptr_device->cmd_async_set_parameters_except_combination(_cb_set_parameter, (void*)n_item_index);
+		if (!b_result) {
+			ptr_mutex->unlock();
+			g_map_user_cb.remove_callback(n_item_index);
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : cmd_async_set_parameters_except_combination error.\n", __WFUNCTION__);
+			continue;
+		}
+		else {
+			_mp::clog::get_instance().log_fmt(L" : INF : %ls : created result index = %u.\n", __WFUNCTION__, n_result_index);
+			g_map_user_cb.change_result_index(n_item_index, n_result_index);// 얻어진 정상적인 result index로 item의 result index를 변경한다.
+			ptr_mutex->unlock();
+		}
+
+		dw_result = ccb_client::const_dll_result_success;
+
+	} while (false);
+
+	switch (dw_result) {
+	case ccb_client::const_dll_result_success:
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : success - %d.\n", __WFUNCTION__, n_item_index);
+		break;
+
+	case ccb_client::const_dll_result_error:
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : error - %d.\n", __WFUNCTION__, n_item_index);
+		break;
+	case ccb_client::const_dll_result_timeout:
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : timeout - %d.\n", __WFUNCTION__, n_item_index);
+		dw_result = ccb_client::const_dll_result_error; // 기존 return 값 정의가 LPU237_TOOLS_RESULT_ERROR 또는 LPU237_TOOLS_RESULT_SUCCESS 만 있어서, timeout 의 경우 error 로 간주하기로 함.
+		break;
+	case ccb_client::const_dll_result_no_msr:
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : no msr - %d.\n", __WFUNCTION__, n_item_index);
+		dw_result = ccb_client::const_dll_result_error;// 기존 return 값 정의가 LPU237_TOOLS_RESULT_ERROR 또는 LPU237_TOOLS_RESULT_SUCCESS 만 있어서, timeout 의 경우 error 로 간주하기로 함.
+		break;
+	default:
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : %d.\n", __WFUNCTION__, n_item_index);
+		dw_result = ccb_client::const_dll_result_error;// 기존 return 값 정의가 LPU237_TOOLS_RESULT_ERROR 또는 LPU237_TOOLS_RESULT_SUCCESS 만 있어서, timeout 의 경우 error 로 간주하기로 함.
+		break;
+	}//end switch
 	return dw_result;
-
 }
 
 /*!
@@ -868,14 +1075,6 @@ unsigned long _CALLTYPE_ LPU237_tools_msr_save_setting(HANDLE hDev)
 	DWORD dw_result(LPU237_TOOLS_RESULT_ERROR);
 
 	do {
-		_tg_sub_lpu237::CLinker::type_ptr& linker = PreCheck(_tstring(__WFUNCTION__), hDev);
-		if (linker == nullptr) {
-			continue;
-		}
-		// SAVE 
-		//CShare::get()->m_config = linker->get_config_parameters();// this processing is moved to worker thread.
-
-		if (CLog::GetLog())	CLog::GetLog()->Log(true, CLog::LEV_NORMAL, _T(" : RET : %s : success\n"), __WFUNCTION__);
 		dw_result = LPU237_TOOLS_RESULT_SUCCESS;
 	} while (0);
 
@@ -899,30 +1098,7 @@ unsigned long _CALLTYPE_ LPU237_tools_msr_recover_setting(HANDLE hDev)
 	DWORD dw_result(LPU237_TOOLS_RESULT_ERROR);
 
 	do {
-		_tg_sub_lpu237::CLinker::type_ptr& linker = PreCheck(_tstring(__WFUNCTION__), hDev);
-		if (linker == nullptr) {
-			continue;
-		}
-		/* this processing is moved to worker thread.
-		linker->setParameters( CShare::get()->m_config );
-		if( !linker->enter_config_with_server() ){
-			if( CLog::GetLog() )	CLog::GetLog()->Log( true, CLog::LEV_NORMAL, _T(" : RET : %s : df_enterConfig.\n"),__WFUNCTION__ );
-			continue;
-		}
-		if( !linker->set_system_parameters_to_server() ){
-			if( CLog::GetLog() )	CLog::GetLog()->Log( true, CLog::LEV_NORMAL, _T(" : RET : %s : df_setSystemParameters.\n"),__WFUNCTION__ );
-			continue;
-		}
-		if( !linker->apply_config_with_server() ){
-			if( CLog::GetLog() )	CLog::GetLog()->Log( true, CLog::LEV_NORMAL, _T(" : RET : %s : df_applyConfig.\n"),__WFUNCTION__ );
-			continue;
-		}
-		if( !linker->leave_config_with_server() ){
-			if( CLog::GetLog() )	CLog::GetLog()->Log( true, CLog::LEV_NORMAL, _T(" : RET : %s : df_leaveConfig.\n"),__WFUNCTION__ );
-			continue;
-		}
-		*/
-		if (CLog::GetLog())	CLog::GetLog()->Log(true, CLog::LEV_NORMAL, _T(" : RET : %s : success\n"), __WFUNCTION__);
+
 		dw_result = LPU237_TOOLS_RESULT_SUCCESS;
 	} while (0);
 

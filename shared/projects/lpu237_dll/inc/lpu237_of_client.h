@@ -53,21 +53,118 @@ public:
 	*/
 	bool cmd_ibutton_disble();
 
-	int cmd_async_waits_data()
-	{
-		std::lock_guard<std::mutex> lock(m_mutex);
-		return _cmd_async_waits_rx(nullptr, nullptr, NULL, 0);
-	}
-	int cmd_async_waits_data(_mp::casync_parameter_result::type_callback p_fun, void* p_para)
-	{
-		std::lock_guard<std::mutex> lock(m_mutex);
-		return _cmd_async_waits_rx(p_fun, p_para, NULL, 0);
-	}
-	int cmd_async_waits_data(HWND h_wnd, UINT n_msg)
-	{
-		std::lock_guard<std::mutex> lock(m_mutex);
-		return _cmd_async_waits_rx(nullptr, nullptr, h_wnd, n_msg);
-	}
+	/**
+	* @brief 비동기 데이터 수신을 시작한다. return 값으로 받은 result index 로, polling 방식으로 결과를 받을 수 있다.
+	* @return result index
+	*/
+	int cmd_async_waits_data();
+
+	/**
+	* @brief 비동기 데이터 수신을 시작한다. return 값으로 받은 result index 로, p_fun 이 call 되었을 때, 수신 데이터를 받을 수 있다.
+	* @param p_fun : 콜백함수 포인터. 콜백함수는 _mp::casync_parameter_result::type_callback 형식이어야 한다.
+	* @param p_para : 콜백함수에 전달할 사용자 데이터 포인터.
+	* @return result index
+	*/
+	int cmd_async_waits_data(
+		_mp::casync_parameter_result::type_callback p_fun
+		, void* p_para
+	);
+
+	/**
+	* @brief 비동기 데이터 수신을 시작한다. return 값으로 받은 result index 로, h_wnd 의 n_msg 핸들러가 호출 되었을 때,수신 데이터를 받을 수 있다.
+	* @param h_wnd : 윈도우 핸들. 메시지를 받을 윈도우의 핸들.
+	* @param n_msg : 윈도우 메시지 번호. 수신 데이터를 받을 메시지 번호.
+	* @return result index
+	*/
+	int cmd_async_waits_data(HWND h_wnd, UINT n_msg);
+
+	/**
+	* @brief 시작된 비동기 transaction 의 각 phase 끝의 콜백에서 호출되서 다음 phase 시작한다.
+	*
+	* 각 phase 가 완료되면(성공 또는 실패), p_fun(p_para) 가 호출된다.
+	*
+	* cmd_start_async_get_parameters(), cmd_start_async_set_parameters(),
+	* 
+	* cmd_start_async_get_parameters_except_combination(), cmd_start_async_set_parameters_except_combination() 시작한 후, 사용한다.
+	* 
+	* @param p_fun : 콜백함수 포인터. 콜백함수는 _mp::casync_parameter_result::type_callback 형식이어야 한다.
+	* @param p_para : 콜백함수에 전달할 사용자 데이터 포인터.
+	* @param n_result_index : result 을 얻기 위한 index code.
+	* @return 
+	* 
+	*	std::get<0> - true : phase 시작 성공
+	* 
+	*	std::get<1> - result index - std::get<0> 가 true 일때, 유효한 result index, std::get<0> 가 false 일때는 -1
+	* 
+	*	std::get<2> - remainder phase number - std::get<0> 가 true 일때	유효한 remainder phase number, 현재 transaction 에서 남은 phase 수.
+	* 
+	*	std::get<3> - true : transaction 완료, false : transaction 아직 진행 중. 
+	* 
+	*/
+	std::tuple<bool, int, size_t, bool> cmd_start_async_next_phase(
+		_mp::casync_parameter_result::type_callback p_fun
+		, void* p_para
+		, int n_result_index
+	);
+
+	/**
+	* @brief 비동기적으로 필요한 모든 parameter 받기 transaction을 시작한다. return 값으로 받은 result index 로, p_fun 이 call 되었을 때, 수신 데이터를 받을 수 있다.
+	*  
+	* 각 phase 가 완료되면(성공 또는 실패), p_fun(p_para) 가 호출된다.
+	* 
+	* @param p_fun : 콜백함수 포인터. 콜백함수는 _mp::casync_parameter_result::type_callback 형식이어야 한다.
+	* @param p_para : 콜백함수에 전달할 사용자 데이터 포인터.
+	* @return first - true : transaction 시작 성공, result index - first 가 true 일때	유효한 result index, first 가 false 일때는 -1
+	*/
+	std::pair<bool, int> cmd_start_async_get_parameters(
+		_mp::casync_parameter_result::type_callback p_fun
+		, void* p_para
+	);
+
+	/**
+	* @brief 비동기적으로 저장 할 parameter 저장 transaction을 시작한다. return 값으로 받은 result index 로, p_fun 이 call 되었을 때, 수신 데이터를 받을 수 있다.
+	*
+	* 각 phase 가 완료되면(성공 또는 실패), p_fun(p_para) 가 호출된다.
+	*
+	* @param p_fun : 콜백함수 포인터. 콜백함수는 _mp::casync_parameter_result::type_callback 형식이어야 한다.
+	* @param p_para : 콜백함수에 전달할 사용자 데이터 포인터.
+	* @return first - true : transaction 시작 성공, result index - first 가 true 일때	유효한 result index, first 가 false 일때는 -1
+	*/
+	std::pair<bool, int> cmd_start_async_set_parameters(
+		_mp::casync_parameter_result::type_callback p_fun
+		, void* p_para
+	);
+
+	/**
+	* @brief 비동기적으로 필요한 모든 parameter 받기 transaction을 시작한다. return 값으로 받은 result index 로, p_fun 이 call 되었을 때, 수신 데이터를 받을 수 있다.
+	*
+	* combination 관련 항목은 제외
+	* 
+	* 각 phase 가 완료되면(성공 또는 실패), p_fun(p_para) 가 호출된다.
+	*
+	* @param p_fun : 콜백함수 포인터. 콜백함수는 _mp::casync_parameter_result::type_callback 형식이어야 한다.
+	* @param p_para : 콜백함수에 전달할 사용자 데이터 포인터.
+	* @return first - true : transaction 시작 성공, result index - first 가 true 일때	유효한 result index, first 가 false 일때는 -1
+	*/
+	std::pair<bool, int> cmd_start_async_get_parameters_except_combination(
+		_mp::casync_parameter_result::type_callback p_fun
+		, void* p_para
+	);
+
+	/**
+	* @brief 비동기적으로 저장 할 parameter 저장 transaction을 시작한다. return 값으로 받은 result index 로, p_fun 이 call 되었을 때, 수신 데이터를 받을 수 있다.
+	*
+	* combination 관련 항목은 제외
+	* 각 phase 가 완료되면(성공 또는 실패), p_fun(p_para) 가 호출된다.
+	*
+	* @param p_fun : 콜백함수 포인터. 콜백함수는 _mp::casync_parameter_result::type_callback 형식이어야 한다.
+	* @param p_para : 콜백함수에 전달할 사용자 데이터 포인터.
+	* @return first - true : transaction 시작 성공, result index - first 가 true 일때	유효한 result index, first 가 false 일때는 -1
+	*/
+	std::pair<bool, int> cmd_start_async_set_parameters_except_combination(
+		_mp::casync_parameter_result::type_callback p_fun
+		, void* p_para
+	);
 
 private:
 	bool _cmd_get(cprotocol_lpu237::type_cmd c_cmd);

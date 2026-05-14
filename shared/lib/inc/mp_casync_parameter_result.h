@@ -9,6 +9,7 @@
 #include <Windows.h>
 #endif 
 #include <mp_type.h>
+#include <mp_os_type.h>
 #include <mp_cwait.h>
 
 namespace _mp
@@ -20,7 +21,7 @@ namespace _mp
 	{
 	public:
 		typedef	std::shared_ptr< casync_parameter_result>	type_ptr_ct_async_parameter_result;
-		typedef	void(__stdcall* type_callback)(void*);
+		typedef	void(_CALLTYPE_* type_callback)(void*);
 
 	public:
 		casync_parameter_result() : 

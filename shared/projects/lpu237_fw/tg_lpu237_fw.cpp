@@ -168,7 +168,7 @@ static unsigned long _fw_msr_update_ex_w(const unsigned char* sId,
 * 
 * the user defined callback function will be called by this function.
 */
-static void __stdcall _cb_fw(void*p_user);
+static void _CALLTYPE_ _cb_fw(void*p_user);
 
 /**
 * @brief 수신된 _mp::type_v_wstring 값으로 부터 펌웨어 업데이트 진행 상황을 얻는 함수.
@@ -448,7 +448,7 @@ std::tuple<bool, std::wstring, long, long, std::wstring>_get_fw_update_progress(
 * 
 * 결과는 b_result(bool), n_result_code(unsigned long), std::vector<std::wstring> 형식으로 주어진다.
 */
-void __stdcall _cb_fw(void* p_user)
+void _CALLTYPE_ _cb_fw(void* p_user)
 {
 	static std::mutex mutex_for_cb_fw;
 	std::lock_guard<std::mutex> lock(mutex_for_cb_fw);
