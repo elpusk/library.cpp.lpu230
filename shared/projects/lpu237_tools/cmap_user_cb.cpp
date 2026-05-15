@@ -19,6 +19,7 @@ std::tuple<long, _mp::cwait::type_ptr, std::shared_ptr<std::mutex>> cmap_user_cb
 	, const _mp::type_v_buffer& v_dev_id
 	, type_lpu237_tools_callback p_fun
 	, void* p_para
+	, size_t n_total_phase /*= 0*/
 )
 {
 	long n_item_index(-1);
@@ -46,6 +47,7 @@ std::tuple<long, _mp::cwait::type_ptr, std::shared_ptr<std::mutex>> cmap_user_cb
 			, ptr_evt
 			, LPU237_TOOLS_RESULT_ERROR
 			, ptr_m
+			, n_total_phase
 		);
 		m_map_msg_cnt[m_n_cur_item_index] = std::make_tuple(0, 0, 0); // initialize message counter
 
@@ -63,6 +65,7 @@ std::tuple<long, _mp::cwait::type_ptr, std::shared_ptr<std::mutex>> cmap_user_cb
 	, const _mp::type_v_buffer& v_dev_id
 	, type_lpu237_tools_callback_get_parameter p_fun
 	, void* p_para
+	, size_t n_total_phase /*= 0*/
 )
 {
 	long n_item_index(-1);
@@ -90,6 +93,7 @@ std::tuple<long, _mp::cwait::type_ptr, std::shared_ptr<std::mutex>> cmap_user_cb
 			, ptr_evt
 			, LPU237_TOOLS_RESULT_ERROR
 			, ptr_m
+			, n_total_phase
 		);
 		m_map_msg_cnt[m_n_cur_item_index] = std::make_tuple(0, 0, 0); // initialize message counter
 
@@ -107,6 +111,7 @@ std::tuple<long, _mp::cwait::type_ptr, std::shared_ptr<std::mutex>> cmap_user_cb
 	, const _mp::type_v_buffer& v_dev_id
 	, type_lpu237_tools_callback_set_parameter p_fun
 	, void* p_para
+	, size_t n_total_phase /*= 0*/
 )
 {
 	long n_item_index(-1);
@@ -134,6 +139,7 @@ std::tuple<long, _mp::cwait::type_ptr, std::shared_ptr<std::mutex>> cmap_user_cb
 			, ptr_evt
 			, LPU237_TOOLS_RESULT_ERROR
 			, ptr_m
+			, n_total_phase
 		);
 		m_map_msg_cnt[m_n_cur_item_index] = std::make_tuple(0, 0, 0); // initialize message counter
 
@@ -196,6 +202,31 @@ bool cmap_user_cb::change_result_index(long n_item_index, int n_new_result_index
 	return b_result;
 }
 
+bool cmap_user_cb::change_result_index(
+	long n_item_index
+	, int n_new_result_index
+	, size_t n_new_total_phase
+)
+{
+	bool b_result(false);
+
+	do {
+
+		std::lock_guard<std::mutex> lock(m_mutex);
+		auto it = m_map_cb.find(n_item_index);
+		if (it == m_map_cb.end()) {
+			continue; // not found
+		}
+		//change result index
+		std::get<0>(it->second) = n_new_result_index;
+
+		// change total phase
+		std::get<9>(it->second) = n_new_total_phase;
+		b_result = true;
+	} while (false);
+	return b_result;
+}
+
 bool cmap_user_cb::remove_callback(long n_item_index)
 {
 	std::lock_guard<std::mutex> lock(m_mutex);
@@ -253,6 +284,7 @@ std::tuple<bool, _mp::cwait::type_ptr, std::shared_ptr<std::mutex>> cmap_user_cb
 	, bool b_remove_after_get
 	, int& n_result_index
 	, _mp::type_v_buffer& v_dev_id
+	, size_t& n_total_phase
 	, type_lpu237_tools_callback& p_fun
 	, type_lpu237_tools_callback_get_parameter& p_fun_get
 	, type_lpu237_tools_callback_set_parameter& p_fun_set
@@ -278,6 +310,8 @@ std::tuple<bool, _mp::cwait::type_ptr, std::shared_ptr<std::mutex>> cmap_user_cb
 		p_para = std::get<5>(it->second);
 		ptr_evt = std::get<6>(it->second);
 		ptr_m = std::get<8>(it->second);
+
+		n_total_phase = std::get<9>(it->second);
 
 		if (b_remove_after_get) {
 			m_map_cb.erase(it); // 여기서 지워도 ptr_evt 은 shared_ptr 이므로 제거 되지 않는다.

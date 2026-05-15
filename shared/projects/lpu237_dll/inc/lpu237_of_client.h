@@ -34,6 +34,13 @@ public:
 
 	cprotocol_lpu237::type_function get_device_function() const;
 
+	cprotocol_lpu237::type_system_interface get_interface();
+
+	void set_interface(cprotocol_lpu237::type_system_interface inf);
+
+	uint32_t get_buzzer_frequency();
+	void set_buzzer_frequency(uint32_t n_frequency);
+
 	//cmd_x() : communicate with device. by device protocol.
 	bool cmd_get_system_information_with_name();
 	bool cmd_get_id();
@@ -41,6 +48,7 @@ public:
 	bool cmd_leave_config();
 	bool cmd_enter_opos();
 	bool cmd_leave_opos();
+	bool cmd_changed_interface_apply();
 	bool cmd_bypass(const _mp::type_v_buffer& v_tx, _mp::type_v_buffer& v_rx);
 
 	/**
@@ -79,6 +87,31 @@ public:
 	int cmd_async_waits_data(HWND h_wnd, UINT n_msg);
 
 	/**
+	* @brief 비동기 명령	실행 transaction 의 남은 phase 수를 반환한다.
+	* 
+	*	cmd_start_async_next_phase(), cmd_start_async_get_parameters(), cmd_start_async_set_parameters(),
+	*	cmd_start_async_get_parameters_except_combination(), cmd_start_async_set_parameters_except_combination() 로 시작된 transaction
+	* 
+	*/
+	size_t get_remainder_phase_number();
+
+	/**
+	* @brief cmd_start_async_next_phase(), cmd_start_async_get_parameters(), cmd_start_async_set_parameters(),
+	* 
+	* cmd_start_async_get_parameters_except_combination(), cmd_start_async_set_parameters_except_combination()
+	* 
+	* 로 시작된 비동기 데이터 수신의 결과를 처리한다.
+	* 
+	* @param n_result_index : cmd_start_async_next_phase(), cmd_start_async_get_parameters(), cmd_start_async_set_parameters(),
+	* 
+	* cmd_start_async_get_parameters_except_combination(), cmd_start_async_set_parameters_except_combination() 의 return 값.
+	* 
+	* @param v_result : 수신된 데이터 버퍼. if v_result.empty() 이면, return false.
+	* @return true : 처리 성공, false : 처리 실패
+	*/
+	bool process_async_result(const _mp::type_v_buffer& v_result);
+
+	/**
 	* @brief 시작된 비동기 transaction 의 각 phase 끝의 콜백에서 호출되서 다음 phase 시작한다.
 	*
 	* 각 phase 가 완료되면(성공 또는 실패), p_fun(p_para) 가 호출된다.
@@ -96,7 +129,7 @@ public:
 	* 
 	*	std::get<1> - result index - std::get<0> 가 true 일때, 유효한 result index, std::get<0> 가 false 일때는 -1
 	* 
-	*	std::get<2> - remainder phase number - std::get<0> 가 true 일때	유효한 remainder phase number, 현재 transaction 에서 남은 phase 수.
+	*	std::get<2> - remainder phase number - std::get<0> 가 true 일때, 현재 시작된 phase를 제외하고, transaction 에서 남은 phase 수.
 	* 
 	*	std::get<3> - true : transaction 완료, false : transaction 아직 진행 중. 
 	* 
@@ -114,9 +147,15 @@ public:
 	* 
 	* @param p_fun : 콜백함수 포인터. 콜백함수는 _mp::casync_parameter_result::type_callback 형식이어야 한다.
 	* @param p_para : 콜백함수에 전달할 사용자 데이터 포인터.
-	* @return first - true : transaction 시작 성공, result index - first 가 true 일때	유효한 result index, first 가 false 일때는 -1
+	* @return 
+	*	
+	*	get<0> - true : transaction 시작 성공
+	*	
+	*	get<1> - result index : first 가 true 일때	유효한 result index, first 가 false 일때는 -1
+	*	
+	*	get<2> - total phase number : first 가 true 일때	유효한 total phase number, 현재 transaction 의 전체 phase 수.
 	*/
-	std::pair<bool, int> cmd_start_async_get_parameters(
+	std::tuple<bool, int, size_t> cmd_start_async_get_parameters(
 		_mp::casync_parameter_result::type_callback p_fun
 		, void* p_para
 	);
@@ -128,9 +167,15 @@ public:
 	*
 	* @param p_fun : 콜백함수 포인터. 콜백함수는 _mp::casync_parameter_result::type_callback 형식이어야 한다.
 	* @param p_para : 콜백함수에 전달할 사용자 데이터 포인터.
-	* @return first - true : transaction 시작 성공, result index - first 가 true 일때	유효한 result index, first 가 false 일때는 -1
+	* @return
+	*
+	*	get<0> - true : transaction 시작 성공
+	*
+	*	get<1> - result index : first 가 true 일때	유효한 result index, first 가 false 일때는 -1
+	*
+	*	get<2> - total phase number : first 가 true 일때	유효한 total phase number, 현재 transaction 의 전체 phase 수.
 	*/
-	std::pair<bool, int> cmd_start_async_set_parameters(
+	std::tuple<bool, int, size_t> cmd_start_async_set_parameters(
 		_mp::casync_parameter_result::type_callback p_fun
 		, void* p_para
 	);
@@ -144,9 +189,15 @@ public:
 	*
 	* @param p_fun : 콜백함수 포인터. 콜백함수는 _mp::casync_parameter_result::type_callback 형식이어야 한다.
 	* @param p_para : 콜백함수에 전달할 사용자 데이터 포인터.
-	* @return first - true : transaction 시작 성공, result index - first 가 true 일때	유효한 result index, first 가 false 일때는 -1
+	* @return
+	*
+	*	get<0> - true : transaction 시작 성공
+	*
+	*	get<1> - result index : first 가 true 일때	유효한 result index, first 가 false 일때는 -1
+	*
+	*	get<2> - total phase number : first 가 true 일때	유효한 total phase number, 현재 transaction 의 전체 phase 수.
 	*/
-	std::pair<bool, int> cmd_start_async_get_parameters_except_combination(
+	std::tuple<bool, int, size_t> cmd_start_async_get_parameters_except_combination(
 		_mp::casync_parameter_result::type_callback p_fun
 		, void* p_para
 	);
@@ -159,9 +210,15 @@ public:
 	*
 	* @param p_fun : 콜백함수 포인터. 콜백함수는 _mp::casync_parameter_result::type_callback 형식이어야 한다.
 	* @param p_para : 콜백함수에 전달할 사용자 데이터 포인터.
-	* @return first - true : transaction 시작 성공, result index - first 가 true 일때	유효한 result index, first 가 false 일때는 -1
+	* @return
+	*
+	*	get<0> - true : transaction 시작 성공
+	*
+	*	get<1> - result index : first 가 true 일때	유효한 result index, first 가 false 일때는 -1
+	*
+	*	get<2> - total phase number : first 가 true 일때	유효한 total phase number, 현재 transaction 의 전체 phase 수.
 	*/
-	std::pair<bool, int> cmd_start_async_set_parameters_except_combination(
+	std::tuple<bool, int, size_t> cmd_start_async_set_parameters_except_combination(
 		_mp::casync_parameter_result::type_callback p_fun
 		, void* p_para
 	);

@@ -62,8 +62,7 @@ static cmap_user_cb g_map_user_cb; //global user callback map
 /////////////////////////////////////////////////////////////////////////
 // local function prototype
 /////////////////////////////////////////////////////////////////////////
-static void _CALLTYPE_ _cb_get_parameter(void*);
-static void _CALLTYPE_ _cb_set_parameter(void*);
+static void _CALLTYPE_ _cb_get_set_parameter(void*);
 
 /////////////////////////////////////////////////////////////////////////
 // local function body
@@ -88,7 +87,7 @@ std::filesystem::path _get_module_directory()
 	return std::filesystem::path(""); // error
 }
 
-void _CALLTYPE_ _cb_get_parameter(void*p_usr)
+void _CALLTYPE_ _cb_get_set_parameter(void*p_usr)
 {
 	static std::mutex mutex_for_cb_get_param;
 	std::lock_guard<std::mutex> lock(mutex_for_cb_get_param);
@@ -101,10 +100,14 @@ void _CALLTYPE_ _cb_get_parameter(void*p_usr)
 	_mp::casync_parameter_result::type_ptr_ct_async_parameter_result ptr_result;
 
 	_mp::cwait::type_ptr ptr_evt_complete;
+	bool b_complete_transaction(true); // success or error or cancel 등으로 transaction 이 complete 된 경우, true. 아직 transaction 이 진행중인 경우, false.
+	unsigned long n_cur_zero_based_phase_index(0);
+	unsigned long n_resulr_of_phase(LPU237_TOOLS_RESULT_ERROR);
 
 	do {
 		bool b_get(false);
 		_mp::type_v_buffer v_dev_id(0);
+		size_t n_total_phase(0);
 		type_lpu237_tools_callback p_fun(NULL);
 		type_lpu237_tools_callback_get_parameter p_fun_get(NULL);
 		type_lpu237_tools_callback_set_parameter p_fun_set(NULL);
@@ -124,6 +127,7 @@ void _CALLTYPE_ _cb_get_parameter(void*p_usr)
 			, false // 계속 콜백 가능성이	있기 때문에 콜백 정보를 얻은 후에도 콜백 정보를 유지한다. (예를 들어, 콜백이 여러번 호출되는 경우)
 			, n_result_index
 			, v_dev_id
+			, n_total_phase
 			, p_fun
 			, p_fun_get
 			, p_fun_set
@@ -134,44 +138,83 @@ void _CALLTYPE_ _cb_get_parameter(void*p_usr)
 			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : get_callback fail for item index %d.\n", __WFUNCTION__, n_item_index);
 			continue;
 		}
+		if (n_total_phase == 0) {
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : n_total_phase is zero.\n", __WFUNCTION__);
+			continue;
+		}
 
 		if (!ptr_manager_of_device_of_client) {
 			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : none manager_of_device_of_client.\n", __WFUNCTION__);
 			continue;
 		}
 		lpu237_of_client::type_ptr_lpu237_of_client& ptr_device = ptr_manager_of_device_of_client->get_device(v_dev_id);
-		if (ptr_device->is_null_device()) {
+		if (!ptr_device) {
 			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : not found device is\n", __WFUNCTION__);
 			continue;
 		}
 
+		n_device_index = ptr_device->get_device_index();
+
+		if (ptr_device->is_null_device()) {
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : found device is null.\n", __WFUNCTION__);
+			continue;
+		}
+
+		ptr_result = ptr_manager_of_device_of_client->get_async_parameter_result_for_manager_from_all_device(n_result_index);
+		if (!ptr_result) {
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : INVALID_HANDLE_VALUE : n_result_index = %d.\n", __WFUNCTION__, n_result_index);
+			continue;
+		}
+
+		_mp::type_v_buffer v_rx;
+		size_t n_remainder_phase_num = ptr_device->get_remainder_phase_number();
+
+		n_cur_zero_based_phase_index = n_total_phase - n_remainder_phase_num - 1;//make zero based index for current phase
+
+		if (ptr_result->get_result(v_rx)) {
+			if (ptr_device->process_async_result(v_rx)) {
+				n_resulr_of_phase = LPU237_TOOLS_RESULT_SUCCESS;
+			}
+		}
+
+		if (p_fun_get) {
+			//call back 실행
+			p_fun_get(p_para, n_resulr_of_phase, n_cur_zero_based_phase_index, (unsigned long)n_total_phase);
+		}
+
+		if (n_resulr_of_phase != LPU237_TOOLS_RESULT_SUCCESS) {
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : get_result() - error\n", __WFUNCTION__);
+			continue;
+		}
+
+		// 다음  phase  시동.
 		bool b_async_start(false);
-		int n_remainder_phase_num(0);
-		std::tie(b_async_start, n_result_index, n_remainder_phase_num) = ptr_device->cmd_start_async_next_phase(_cb_get_parameter, p_usr, n_result_index);
+		
+		
+		//현재 실행하려는 phase 가 마지막 이거나 transaction 의 모든 phase 가 완료된 경우, 0으로 설정된다.
+		//입력 n_result_index 는 cmd_start_async_next_phase() 에서 재활용되어서, return 에서도 동일한 값을 유지한다
+		std::tie(b_async_start, n_result_index, n_remainder_phase_num, b_complete_transaction) = ptr_device->cmd_start_async_next_phase(_cb_get_set_parameter, p_usr, n_result_index);
 		if(!b_async_start) {
 			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : cmd_start_async_next_phase() fail.\n", __WFUNCTION__);
 			continue;
 		}
 
-		if (n_remainder_phase_num == 0) {
-			continue;
+		if (!b_complete_transaction) {
+			continue; // 아직 transaction 이 완료되지 않은 경우, 다음 phase 의 callback 이 호출될 때 까지 기다린다.
 		}
 
-		// 여기는 남은 phase 가 있는 경우의 처리. 예를 들어, phase 가 3개인 transaction 의 1, 2 phase 가 완료되어서, 3 phase 가 시작된 경우.
+		// 여기는 남은 transaction 이 complete 된 경우.
+
+	} while (false);
+
+	if (b_complete_transaction) {
 		g_map_user_cb.remove_callback(n_item_index); // remove invalid callback
 		if (ptr_manager_of_device_of_client) {
 			ptr_manager_of_device_of_client->remove_async_result_for_manager(n_device_index, n_result_index);
 			ptr_result.reset(); // release result
 			ptr_manager_of_device_of_client.reset();
 		}
-
-	} while (false);
-
-}
-
-void _CALLTYPE_ _cb_set_parameter(void* p_usr)
-{
-	long n_item_index = (long)p_usr;
+	}
 
 }
 
@@ -654,6 +697,7 @@ unsigned long _CALLTYPE_ LPU237_tools_msr_start_get_setting(
 	unsigned long dw_result(ccb_client::const_dll_result_error);
 	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
 	long n_item_index(-1);
+	size_t n_total_phase_in_this_transaction(0);
 
 	do {
 		if (sId == NULL) {
@@ -690,14 +734,16 @@ unsigned long _CALLTYPE_ LPU237_tools_msr_start_get_setting(
 
 		bool b_result(false);
 		int n_result_index(_mp::casync_result_manager::const_invalied_result_index);
-		// _cb_get_parameter 가 change_result_index() 에 도달하기 전에 호출되어서 get_callback() 을 호츨하여,
+		// _cb_get_set_parameter 가 change_result_index() 에 도달하기 전에 호출되어서 get_callback() 을 호츨하여,
 		// 아직 설정되지 않은 n_result_index 값을 얻는 것을 방지 한다.
 		ptr_mutex->lock();
 
 		// 필요한 모든 parameter 얻기 transaction 를 비동기 방식으로 시작한다.
-		// 각 phase 완료 시점(에러 또는 성공)에 _cb_get_parameter callback 함수를 호출한다.
-		// n_item_index 는 _cb_get_parameter() 호출시 전달되는 user data로써, g_map_user_cb 에서 관련 callback 정보를 얻기 위한 key값으로 사용된다.
-		std::tie(b_result, n_result_index) = ptr_device->cmd_start_async_get_parameters(_cb_get_parameter, (void*)n_item_index);
+		// 각 phase 완료 시점(에러 또는 성공)에 _cb_get_set_parameter callback 함수를 호출한다.
+		// n_item_index 는 _cb_get_set_parameter() 호출시 전달되는 user data로써, g_map_user_cb 에서 관련 callback 정보를 얻기 위한 key값으로 사용된다.
+		std::tie(b_result, n_result_index, n_total_phase_in_this_transaction) = ptr_device->cmd_start_async_get_parameters(
+			_cb_get_set_parameter, (void*)n_item_index
+		);
 		if(!b_result){
 			ptr_mutex->unlock();
 			g_map_user_cb.remove_callback(n_item_index);
@@ -706,7 +752,7 @@ unsigned long _CALLTYPE_ LPU237_tools_msr_start_get_setting(
 		}
 		else {
 			_mp::clog::get_instance().log_fmt(L" : INF : %ls : created result index = %u.\n", __WFUNCTION__, n_result_index);
-			g_map_user_cb.change_result_index(n_item_index, n_result_index);// 얻어진 정상적인 result index로 item의 result index를 변경한다.
+			g_map_user_cb.change_result_index(n_item_index, n_result_index, n_total_phase_in_this_transaction);// 얻어진 정상적인 result index로 item의 result index를 변경한다.
 			ptr_mutex->unlock();
 		}
 
@@ -760,6 +806,7 @@ unsigned long _CALLTYPE_ LPU237_tools_msr_start_set_setting(
 	unsigned long dw_result(ccb_client::const_dll_result_error);
 	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
 	long n_item_index(-1);
+	size_t n_total_phase_in_this_transaction(0);
 
 	do {
 		if (sId == NULL) {
@@ -796,14 +843,14 @@ unsigned long _CALLTYPE_ LPU237_tools_msr_start_set_setting(
 
 		bool b_result(false);
 		int n_result_index(_mp::casync_result_manager::const_invalied_result_index);
-		// _cb_get_parameter 가 change_result_index() 에 도달하기 전에 호출되어서 get_callback() 을 호츨하여,
+		// _cb_get_set_parameter 가 change_result_index() 에 도달하기 전에 호출되어서 get_callback() 을 호츨하여,
 		// 아직 설정되지 않은 n_result_index 값을 얻는 것을 방지 한다.
 		ptr_mutex->lock();
 
 		// 필요한 모든 parameter 얻기 transaction 를 비동기 방식으로 시작한다.
-		// 각 phase 완료 시점(에러 또는 성공)에 _cb_get_parameter callback 함수를 호출한다.
-		// n_item_index 는 _cb_get_parameter() 호출시 전달되는 user data로써, g_map_user_cb 에서 관련 callback 정보를 얻기 위한 key값으로 사용된다.
-		std::tie(b_result, n_result_index) = ptr_device->cmd_async_set_parameters(_cb_set_parameter, (void*)n_item_index);
+		// 각 phase 완료 시점(에러 또는 성공)에 _cb_get_set_parameter callback 함수를 호출한다.
+		// n_item_index 는 _cb_get_set_parameter() 호출시 전달되는 user data로써, g_map_user_cb 에서 관련 callback 정보를 얻기 위한 key값으로 사용된다.
+		std::tie(b_result, n_result_index, n_total_phase_in_this_transaction) = ptr_device->cmd_start_async_set_parameters(_cb_get_set_parameter, (void*)n_item_index);
 		if (!b_result) {
 			ptr_mutex->unlock();
 			g_map_user_cb.remove_callback(n_item_index);
@@ -812,7 +859,7 @@ unsigned long _CALLTYPE_ LPU237_tools_msr_start_set_setting(
 		}
 		else {
 			_mp::clog::get_instance().log_fmt(L" : INF : %ls : created result index = %u.\n", __WFUNCTION__, n_result_index);
-			g_map_user_cb.change_result_index(n_item_index, n_result_index);// 얻어진 정상적인 result index로 item의 result index를 변경한다.
+			g_map_user_cb.change_result_index(n_item_index, n_result_index, n_total_phase_in_this_transaction);// 얻어진 정상적인 result index로 item의 result index를 변경한다.
 			ptr_mutex->unlock();
 		}
 
@@ -867,6 +914,7 @@ unsigned long _CALLTYPE_ LPU237_tools_msr_start_get_setting_except_combination(
 	unsigned long dw_result(ccb_client::const_dll_result_error);
 	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
 	long n_item_index(-1);
+	size_t n_total_phase_in_this_transaction(0);
 
 	do {
 		if (sId == NULL) {
@@ -903,14 +951,14 @@ unsigned long _CALLTYPE_ LPU237_tools_msr_start_get_setting_except_combination(
 
 		bool b_result(false);
 		int n_result_index(_mp::casync_result_manager::const_invalied_result_index);
-		// _cb_get_parameter 가 change_result_index() 에 도달하기 전에 호출되어서 get_callback() 을 호츨하여,
+		// _cb_get_set_parameter 가 change_result_index() 에 도달하기 전에 호출되어서 get_callback() 을 호츨하여,
 		// 아직 설정되지 않은 n_result_index 값을 얻는 것을 방지 한다.
 		ptr_mutex->lock();
 
 		// 필요한 모든 parameter 얻기 transaction 를 비동기 방식으로 시작한다.
-		// 각 phase 완료 시점(에러 또는 성공)에 _cb_get_parameter callback 함수를 호출한다.
-		// n_item_index 는 _cb_get_parameter() 호출시 전달되는 user data로써, g_map_user_cb 에서 관련 callback 정보를 얻기 위한 key값으로 사용된다.
-		std::tie(b_result, n_result_index) = ptr_device->cmd_async_get_parameters_except_combination(_cb_get_parameter, (void*)n_item_index);
+		// 각 phase 완료 시점(에러 또는 성공)에 _cb_get_set_parameter callback 함수를 호출한다.
+		// n_item_index 는 _cb_get_set_parameter() 호출시 전달되는 user data로써, g_map_user_cb 에서 관련 callback 정보를 얻기 위한 key값으로 사용된다.
+		std::tie(b_result, n_result_index, n_total_phase_in_this_transaction) = ptr_device->cmd_start_async_get_parameters_except_combination(_cb_get_set_parameter, (void*)n_item_index);
 		if (!b_result) {
 			ptr_mutex->unlock();
 			g_map_user_cb.remove_callback(n_item_index);
@@ -919,7 +967,7 @@ unsigned long _CALLTYPE_ LPU237_tools_msr_start_get_setting_except_combination(
 		}
 		else {
 			_mp::clog::get_instance().log_fmt(L" : INF : %ls : created result index = %u.\n", __WFUNCTION__, n_result_index);
-			g_map_user_cb.change_result_index(n_item_index, n_result_index);// 얻어진 정상적인 result index로 item의 result index를 변경한다.
+			g_map_user_cb.change_result_index(n_item_index, n_result_index, n_total_phase_in_this_transaction);// 얻어진 정상적인 result index로 item의 result index를 변경한다.
 			ptr_mutex->unlock();
 		}
 
@@ -974,6 +1022,7 @@ unsigned long _CALLTYPE_ LPU237_tools_msr_start_set_setting_except_combination(
 	unsigned long dw_result(ccb_client::const_dll_result_error);
 	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
 	long n_item_index(-1);
+	size_t n_total_phase_in_this_transaction(0);
 
 	do {
 		if (sId == NULL) {
@@ -1010,14 +1059,14 @@ unsigned long _CALLTYPE_ LPU237_tools_msr_start_set_setting_except_combination(
 
 		bool b_result(false);
 		int n_result_index(_mp::casync_result_manager::const_invalied_result_index);
-		// _cb_get_parameter 가 change_result_index() 에 도달하기 전에 호출되어서 get_callback() 을 호츨하여,
+		// _cb_get_set_parameter 가 change_result_index() 에 도달하기 전에 호출되어서 get_callback() 을 호츨하여,
 		// 아직 설정되지 않은 n_result_index 값을 얻는 것을 방지 한다.
 		ptr_mutex->lock();
 
 		// 필요한 모든 parameter 얻기 transaction 를 비동기 방식으로 시작한다.
-		// 각 phase 완료 시점(에러 또는 성공)에 _cb_get_parameter callback 함수를 호출한다.
-		// n_item_index 는 _cb_get_parameter() 호출시 전달되는 user data로써, g_map_user_cb 에서 관련 callback 정보를 얻기 위한 key값으로 사용된다.
-		std::tie(b_result, n_result_index) = ptr_device->cmd_async_set_parameters_except_combination(_cb_set_parameter, (void*)n_item_index);
+		// 각 phase 완료 시점(에러 또는 성공)에 _cb_get_set_parameter callback 함수를 호출한다.
+		// n_item_index 는 _cb_get_set_parameter() 호출시 전달되는 user data로써, g_map_user_cb 에서 관련 callback 정보를 얻기 위한 key값으로 사용된다.
+		std::tie(b_result, n_result_index, n_total_phase_in_this_transaction) = ptr_device->cmd_start_async_set_parameters_except_combination(_cb_get_set_parameter, (void*)n_item_index);
 		if (!b_result) {
 			ptr_mutex->unlock();
 			g_map_user_cb.remove_callback(n_item_index);
@@ -1026,7 +1075,7 @@ unsigned long _CALLTYPE_ LPU237_tools_msr_start_set_setting_except_combination(
 		}
 		else {
 			_mp::clog::get_instance().log_fmt(L" : INF : %ls : created result index = %u.\n", __WFUNCTION__, n_result_index);
-			g_map_user_cb.change_result_index(n_item_index, n_result_index);// 얻어진 정상적인 result index로 item의 result index를 변경한다.
+			g_map_user_cb.change_result_index(n_item_index, n_result_index, n_total_phase_in_this_transaction);// 얻어진 정상적인 result index로 item의 result index를 변경한다.
 			ptr_mutex->unlock();
 		}
 
@@ -1122,27 +1171,40 @@ unsigned long _CALLTYPE_ LPU237_tools_msr_recover_setting(HANDLE hDev)
 */
 unsigned long _CALLTYPE_ LPU237_tools_msr_get_name(HANDLE hDev, unsigned char* sName)
 {
-	DWORD dw_result(LPU237_TOOLS_RESULT_ERROR);
+	unsigned long dwResult(ccb_client::const_dll_result_error);
+	unsigned long n_device_index(PtrToUlong(hDev));
+	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
 
 	do {
-		_tg_sub_lpu237::CLinker::type_ptr& linker = PreCheck(_tstring(__WFUNCTION__), hDev);
-		if (linker == nullptr) {
+		_mp::clog::get_instance().log_fmt(L" : CAL : %ls : 0x%x\n", __WFUNCTION__, hDev);
+		if (!ptr_manager_of_device_of_client) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : none manager_of_device_of_client.\n", __WFUNCTION__);
 			continue;
 		}
 
-		device_elpusk::CDevHidLpu237Config::type_name name = linker->getName();
-		if (sName) {
-			for_each(begin(name), end(name), [&](BYTE c) {
-				*sName = c;
-				sName++;
-				});
+		lpu237_of_client::type_ptr_lpu237_of_client& ptr_device = ptr_manager_of_device_of_client->get_device(n_device_index);
+		if (ptr_device->is_null_device()) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : INVALID_HANDLE_VALUE\n", __WFUNCTION__);
+			continue;
 		}
+		//
+		if (sName == NULL) {
+			dwResult = cprotocol_lpu237::the_size_of_name;
+			continue;
+		}
+		_mp::type_v_buffer v_n = ptr_device->get_name();
+		//
+		std::for_each(std::begin(v_n), std::end(v_n), [&](unsigned char c) {
+			*sName = c;
+			sName++;
+			});
 
-		if (CLog::GetLog())	CLog::GetLog()->Log(true, CLog::LEV_NORMAL, _T(" : RET : %s : %d\n"), __WFUNCTION__, name.size());
-		dw_result = name.size();
+		dwResult = cprotocol_lpu237::the_size_of_name;
 	} while (0);
 
-	return dw_result;
+	_mp::clog::get_instance().log_fmt(L" : RET : %ls : %d\n", __WFUNCTION__, cprotocol_lpu237::the_size_of_name);
+
+	return dwResult;
 }
 
 
@@ -1161,42 +1223,52 @@ unsigned long _CALLTYPE_ LPU237_tools_msr_get_name(HANDLE hDev, unsigned char* s
 */
 unsigned long _CALLTYPE_ LPU237_tools_msr_get_active_and_valied_interface(HANDLE hDev, unsigned char* s_inteface)
 {
-	DWORD dw_result(LPU237_TOOLS_RESULT_ERROR);
+	unsigned long dwResult(ccb_client::const_dll_result_error);
+	unsigned long n_device_index(PtrToUlong(hDev));
+	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
 
 	do {
-		_tg_sub_lpu237::CLinker::type_ptr& linker = PreCheck(_tstring(__WFUNCTION__), hDev);
-		if (linker == nullptr) {
+		_mp::clog::get_instance().log_fmt(L" : CAL : %ls : 0x%x\n", __WFUNCTION__, hDev);
+		if (!ptr_manager_of_device_of_client) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : none manager_of_device_of_client.\n", __WFUNCTION__);
 			continue;
 		}
 
-		std::vector<unsigned char> v_inf(0);
-
+		lpu237_of_client::type_ptr_lpu237_of_client& ptr_device = ptr_manager_of_device_of_client->get_device(n_device_index);
+		if (ptr_device->is_null_device()) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : INVALID_HANDLE_VALUE\n", __WFUNCTION__);
+			continue;
+		}
+		//
+		_mp::type_v_buffer v_inf(0);
 		//1'st current active interface.
-		device_elpusk::CDevHidLpu237Config::type_interface inf = linker->get_config_parameters().getInterface();
-		v_inf.push_back((unsigned char)inf);
+		unsigned char c_inf = (unsigned char)ptr_device->get_interface();
+		v_inf.push_back(c_inf);
 
-		DWORD dw_system_type = linker->getSystemType();
+		cprotocol_lpu237::type_function dev_fun = ptr_device->get_device_function();
+		std::wstring s_name = ptr_device->get_name_by_wstring();
 
-		std::wstring s_name = linker->get_name_string();
 		if (s_name.compare(L"europa") == 0) {
-			v_inf.push_back((unsigned char)device_elpusk::CDevHidLpu237Config::inf_UsbVcom);
+			v_inf.push_back((unsigned char)cprotocol_lpu237::System_interface_usb_vcom);
 		}
 		else {
-			v_inf.push_back((unsigned char)device_elpusk::CDevHidLpu237Config::inf_UsbKB);
+			v_inf.push_back((unsigned char)cprotocol_lpu237::system_interface_usb_keyboard);
 		}
-		if (dw_system_type & device_elpusk::CDevHidLpu237Config::ft_ibutton) {
-			v_inf.push_back((unsigned char)device_elpusk::CDevHidLpu237Config::inf_Uart);
+		if (dev_fun == cprotocol_lpu237::fun_ibutton || dev_fun == cprotocol_lpu237::fun_msr_ibutton) {
+			v_inf.push_back((unsigned char)cprotocol_lpu237::system_interface_uart);
 		}
-		v_inf.push_back((unsigned char)device_elpusk::CDevHidLpu237Config::inf_UsbMsr);
+		if (dev_fun == cprotocol_lpu237::fun_msr || dev_fun == cprotocol_lpu237::fun_msr_ibutton) {
+			v_inf.push_back((unsigned char)cprotocol_lpu237::system_interface_usb_msr);
+		}
 		if (s_inteface) {
 			memcpy(s_inteface, &v_inf[0], v_inf.size());
 		}
-		if (CLog::GetLog())	CLog::GetLog()->Log(true, CLog::LEV_NORMAL, _T(" : RET : %s : %d\n"), __WFUNCTION__, v_inf.size());
-		dw_result = v_inf.size();
+
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : %u\n", __WFUNCTION__, v_inf.size());
+		dwResult = v_inf.size();
 	} while (0);
 
-	return dw_result;
-
+	return dwResult;
 }
 
 /*!
@@ -1213,21 +1285,30 @@ unsigned long _CALLTYPE_ LPU237_tools_msr_get_active_and_valied_interface(HANDLE
 */
 unsigned long _CALLTYPE_ LPU237_tools_msr_set_interface(HANDLE hDev, unsigned char c_inteface)
 {
-	DWORD dw_result(LPU237_TOOLS_RESULT_ERROR);
+	unsigned long dwResult(ccb_client::const_dll_result_error);
+	unsigned long n_device_index(PtrToUlong(hDev));
+	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
 
 	do {
-		_tg_sub_lpu237::CLinker::type_ptr& linker = PreCheck(_tstring(__WFUNCTION__), hDev);
-		if (linker == nullptr) {
+		_mp::clog::get_instance().log_fmt(L" : CAL : %ls : 0x%x\n", __WFUNCTION__, hDev);
+		if (!ptr_manager_of_device_of_client) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : none manager_of_device_of_client.\n", __WFUNCTION__);
 			continue;
 		}
 
-		linker->get_config_parameters().setInterface((device_elpusk::CDevHidLpu237Config::type_interface)c_inteface);
-		if (CLog::GetLog())	CLog::GetLog()->Log(true, CLog::LEV_NORMAL, _T(" : RET : %s.\n"), __WFUNCTION__);
-		dw_result = LPU237_TOOLS_RESULT_SUCCESS;
+		lpu237_of_client::type_ptr_lpu237_of_client& ptr_device = ptr_manager_of_device_of_client->get_device(n_device_index);
+		if (ptr_device->is_null_device()) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : INVALID_HANDLE_VALUE\n", __WFUNCTION__);
+			continue;
+		}
+		//
+		ptr_device->set_interface((cprotocol_lpu237::type_system_interface)c_inteface);
+
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : %u\n", __WFUNCTION__, c_inteface);
+		dwResult = ccb_client::const_dll_result_success;
 	} while (0);
 
-	return dw_result;
-
+	return dwResult;
 }
 
 /*!
@@ -1244,27 +1325,42 @@ unsigned long _CALLTYPE_ LPU237_tools_msr_set_interface(HANDLE hDev, unsigned ch
 */
 unsigned long _CALLTYPE_ LPU237_tools_msr_set_interface_to_device_and_apply(HANDLE hDev, unsigned char* pc_inteface)
 {
-	DWORD dw_result(LPU237_TOOLS_RESULT_ERROR);
+	unsigned long dwResult(ccb_client::const_dll_result_error);
+	unsigned long n_device_index(PtrToUlong(hDev));
+	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
 
 	do {
-		_tg_sub_lpu237::CLinker::type_ptr& linker = PreCheck(_tstring(__WFUNCTION__), hDev);
-		if (linker == nullptr) {
+		_mp::clog::get_instance().log_fmt(L" : CAL : %ls : 0x%x\n", __WFUNCTION__, hDev);
+		if (!ptr_manager_of_device_of_client) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : none manager_of_device_of_client.\n", __WFUNCTION__);
+			continue;
+		}
+
+		lpu237_of_client::type_ptr_lpu237_of_client& ptr_device = ptr_manager_of_device_of_client->get_device(n_device_index);
+		if (ptr_device->is_null_device()) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : INVALID_HANDLE_VALUE\n", __WFUNCTION__);
 			continue;
 		}
 		if (pc_inteface == NULL) {
 			continue;
 		}
-		device_elpusk::CDevHidLpu237Config::type_pair_result_interface pair_result_interface = linker->set_interface_to_server((device_elpusk::CDevHidLpu237Config::type_interface)*pc_inteface);
-		if (!pair_result_interface.first) {
+
+		unsigned char c_cur_inf = (unsigned char)ptr_device->get_interface();
+
+		ptr_device->set_interface((cprotocol_lpu237::type_system_interface)*pc_inteface);
+		*pc_inteface = c_cur_inf;
+
+
+		if (!ptr_device->cmd_changed_interface_apply()) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : fail cmd_changed_interface_apply\n", __WFUNCTION__);
 			continue;
 		}
 
-		*pc_inteface = (BYTE)pair_result_interface.second;
-		if (CLog::GetLog())	CLog::GetLog()->Log(true, CLog::LEV_NORMAL, _T(" : RET : %s.\n"), __WFUNCTION__);
-		dw_result = LPU237_TOOLS_RESULT_SUCCESS;
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : success\n", __WFUNCTION__);
+		dwResult = ccb_client::const_dll_result_success;
 	} while (0);
 
-	return dw_result;
+	return dwResult;
 }
 
 /*!
@@ -1282,30 +1378,42 @@ unsigned long _CALLTYPE_ LPU237_tools_msr_set_interface_to_device_and_apply(HAND
 */
 unsigned long _CALLTYPE_ LPU237_tools_msr_get_buzzer(HANDLE hDev, unsigned char* pc_on)
 {
-	DWORD dw_result(LPU237_TOOLS_RESULT_ERROR);
+	unsigned long dwResult(ccb_client::const_dll_result_error);
+	unsigned long n_device_index(PtrToUlong(hDev));
+	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
 
 	do {
-		_tg_sub_lpu237::CLinker::type_ptr& linker = PreCheck(_tstring(__WFUNCTION__), hDev);
-		if (linker == nullptr) {
+		_mp::clog::get_instance().log_fmt(L" : CAL : %ls : 0x%x\n", __WFUNCTION__, hDev);
+		if (!ptr_manager_of_device_of_client) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : none manager_of_device_of_client.\n", __WFUNCTION__);
 			continue;
 		}
-		if (!pc_on)
+
+		lpu237_of_client::type_ptr_lpu237_of_client& ptr_device = ptr_manager_of_device_of_client->get_device(n_device_index);
+		if (ptr_device->is_null_device()) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : INVALID_HANDLE_VALUE\n", __WFUNCTION__);
 			continue;
+		}
+		//
+		if (pc_on == NULL) {
+			continue;
+		}
 
-		int n_buzzer = linker->get_config_parameters().getBuzzerFrequency();
+		uint32_t n_frequency = ptr_device->get_buzzer_frequency();
 
-		if (n_buzzer > 1000) {
+		if(n_frequency > cprotocol_lpu237::the_frequency_of_off_buzzer) {
 			*pc_on = 1;
 		}
 		else {
 			*pc_on = 0;
 		}
 
-		if (CLog::GetLog())	CLog::GetLog()->Log(true, CLog::LEV_NORMAL, _T(" : RET : %s : %d\n"), __WFUNCTION__, n_buzzer);
-		dw_result = LPU237_TOOLS_RESULT_SUCCESS;
+		dwResult = ccb_client::const_dll_result_success;
 	} while (0);
 
-	return dw_result;
+	_mp::clog::get_instance().log_fmt(L" : RET : %ls : %d\n", __WFUNCTION__, cprotocol_lpu237::the_size_of_name);
+
+	return dwResult;
 }
 
 

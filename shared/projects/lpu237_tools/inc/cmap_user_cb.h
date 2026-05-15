@@ -35,6 +35,7 @@ public:
 	* @param v_dev_id - device ID, the size of vector can be 0
 	* @param p_fun - callback function
 	* @param p_para - user parameter of callback function
+	* @param n_total_phase - total phase of transaction. 대부분 이 함수 실행시에 몰라서 0으로 설정.
 	* @return get<0> - item index of callback function, or -1 if error.
 	*
 	*	get<1> - for sync prrocessing, complete event(success or error)
@@ -46,18 +47,21 @@ public:
 		, const _mp::type_v_buffer& v_dev_id
 		, type_lpu237_tools_callback p_fun
 		, void* p_para
+		, size_t n_total_phase = 0
 	);
 	std::tuple<long, _mp::cwait::type_ptr, std::shared_ptr<std::mutex>> add_callback(
 		int n_result_index
 		, const _mp::type_v_buffer& v_dev_id
 		, type_lpu237_tools_callback_get_parameter p_fun
 		, void* p_para
+		, size_t n_total_phase = 0
 	);
 	std::tuple<long, _mp::cwait::type_ptr, std::shared_ptr<std::mutex>> add_callback(
 		int n_result_index
 		, const _mp::type_v_buffer& v_dev_id
 		, type_lpu237_tools_callback_set_parameter p_fun
 		, void* p_para
+		, size_t n_total_phase = 0
 	);
 
 	/**
@@ -89,6 +93,18 @@ public:
 		, int n_new_result_index
 	);
 
+	/**
+	* @brief change result index of callback function
+	* @param n_item_index - item index of callback function
+	* @param n_new_result_index - new result index of callback function
+	* @param n_new_total_phase - new total phase of transaction. 대부분 aync 시작 후, return 값으로 알아서 이때 설정.
+	*/
+	bool change_result_index(
+		long n_item_index
+		, int n_new_result_index
+		, size_t n_new_total_phase
+	);
+
 	bool remove_callback(long n_item_index);
 
 	/**
@@ -104,6 +120,7 @@ public:
 		, bool b_remove_after_get
 		, int& n_result_index
 		, _mp::type_v_buffer& v_dev_id
+		, size_t& n_total_phase
 		, type_lpu237_tools_callback& p_fun
 		, type_lpu237_tools_callback_get_parameter& p_fun_get
 		, type_lpu237_tools_callback_set_parameter& p_fun_set
@@ -167,6 +184,7 @@ private:
 	// 6 - for sync, complete event
 	// 7 - for sync, processing result
 	// 8 - add_callback() 후, result indx 가 업데이트 전에, 다른 쓰레드에서 get_callback() 이 불려져서, 잘못된 result index 얻는 갓을 방지 하기 위한 동기화 object
+	// 9 - total phase number in this transaction.
 	typedef std::tuple<
 		int
 		, _mp::type_v_buffer
@@ -177,6 +195,7 @@ private:
 		, _mp::cwait::type_ptr
 		, unsigned long
 		, std::shared_ptr<std::mutex>
+		, size_t
 	> _type_tuple_item;
 
 	// key - item index

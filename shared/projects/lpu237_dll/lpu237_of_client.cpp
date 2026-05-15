@@ -65,6 +65,31 @@ cprotocol_lpu237::type_function lpu237_of_client::get_device_function() const
     return m_device_function;
 }
 
+cprotocol_lpu237::type_system_interface lpu237_of_client::get_interface()
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+	return m_protocol.get_interface();
+}
+
+void lpu237_of_client::set_interface(cprotocol_lpu237::type_system_interface inf)
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+	m_protocol.set_interface(inf);
+}
+
+uint32_t lpu237_of_client::get_buzzer_frequency()
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    return m_protocol.get_buzzer_frequency();
+}
+
+void lpu237_of_client::set_buzzer_frequency(uint32_t n_frequency)
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_protocol.set_buzzer_frequency(n_frequency);
+}
+
+
 bool lpu237_of_client::cmd_enter_config()
 {
     std::lock_guard<std::mutex> lock(m_mutex);
@@ -87,6 +112,92 @@ bool lpu237_of_client::cmd_leave_opos()
 {
     std::lock_guard<std::mutex> lock(m_mutex);
     return _cmd_get( cprotocol_lpu237::cmd_leave_opos);
+}
+
+bool lpu237_of_client::cmd_changed_interface_apply()
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+
+    bool b_result(false);
+    int n_result_index(-1);
+
+    do {
+        if (is_null_device()) {
+            _mp::clog::get_instance().log_fmt_in_debug_mode(L" : DEB : %ls : error : is_null_device().\n", __WFUNCTION__);
+            continue;
+        }
+
+        if (!_mp::casync_result_manager::get_instance(get_class_name()).empty_queue(m_n_device_index)) {
+            //cancel operation.
+            if (!_reset()) {
+                _mp::clog::get_instance().log_fmt_in_debug_mode(L" : DEB : %ls : error : _reset().\n", __WFUNCTION__);
+                continue;
+            }
+        }
+
+        m_protocol.clear_transaction();
+
+        b_result = m_protocol.generate_set_interface();//enter config, set interface, apply and leave config.
+        if (!b_result) {
+            _mp::clog::get_instance().log_fmt_in_debug_mode(L" : DEB : %ls : error : generate_x().\n", __WFUNCTION__);
+            continue;
+        }
+
+        size_t n_remainder_transaction(0);
+        do {
+            b_result = false;
+            //
+            _mp::type_v_buffer v_tx(0);
+            _mp::type_v_buffer v_rx(0);
+
+            n_remainder_transaction = m_protocol.get_tx_transaction(v_tx);
+            if (v_tx.size() == 0) {
+                _mp::clog::get_instance().log_fmt_in_debug_mode(L" : DEB : %ls : error : v_tx is empty().\n", __WFUNCTION__);
+                continue;
+            }
+            //
+            n_result_index = _create_async_result_for_transaction(nullptr, nullptr, NULL, 0);
+            if (n_result_index < 0) {
+                _mp::clog::get_instance().log_fmt_in_debug_mode(L" : DEB : %ls : error : _create_async_result_for_transaction().\n", __WFUNCTION__);
+                continue;
+            }
+            if (!capi_client::get_instance().transmit(m_n_client_index, m_n_device_index, 0, 0, v_tx)) {
+                _mp::clog::get_instance().log_fmt_in_debug_mode(L" : DEB : %ls : error : transmit().\n", __WFUNCTION__);
+                continue;
+            }
+            _mp::clog::get_instance().log_fmt_in_debug_mode(L" : DEB : %ls : n_result_index = %d.\n", __WFUNCTION__, n_result_index);
+            _mp::clog::get_instance().log_data_in_debug_mode(v_tx, L"v_tx = ", L"\n");
+            //
+            _mp::casync_parameter_result::type_ptr_ct_async_parameter_result& ptr_async_parameter_result = _mp::casync_result_manager::get_instance(get_class_name()).get_async_parameter_result(m_n_device_index, n_result_index);
+            if (!ptr_async_parameter_result->waits(lpu237_of_client::_const_default_mmsec_timeout_of_response)) {
+                _mp::clog::get_instance().log_fmt_in_debug_mode(L" : DEB : %ls : error : waits().\n", __WFUNCTION__);
+                continue;
+            }
+            if (!ptr_async_parameter_result->get_result(v_rx)) {
+                _mp::clog::get_instance().log_fmt_in_debug_mode(L" : DEB : %ls : error : get_result().\n", __WFUNCTION__);
+                continue;
+            }
+            if (!m_protocol.set_rx_transaction(v_rx)) {
+                _mp::clog::get_instance().log_fmt_in_debug_mode(L" : DEB : %ls : error : set_rx_transaction().\n", __WFUNCTION__);
+                _mp::clog::get_instance().log_data_in_debug_mode(v_rx, L"v_rx = ", L"\n");
+                continue;
+            }
+            if (!m_protocol.set_from_rx()) {
+                _mp::clog::get_instance().log_fmt_in_debug_mode(L" : DEB : %ls : error : set_from_rx().\n", __WFUNCTION__);
+                continue;
+            }
+            //
+            _mp::casync_result_manager::get_instance(get_class_name()).remove_async_result(m_n_device_index, n_result_index);
+            n_result_index = -1;
+            b_result = true;
+        } while (n_remainder_transaction > 0 && b_result);
+
+    } while (false);
+
+    m_protocol.clear_transaction();
+    _mp::casync_result_manager::get_instance(get_class_name()).remove_async_result(m_n_device_index, n_result_index);
+
+    return b_result;
 }
 
 bool lpu237_of_client::cmd_ibutton_enable()
@@ -117,6 +228,32 @@ int lpu237_of_client::cmd_async_waits_data(HWND h_wnd, UINT n_msg)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
     return _cmd_async_waits_rx(nullptr, nullptr, h_wnd, n_msg);
+}
+
+size_t lpu237_of_client::get_remainder_phase_number()
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    return m_protocol.size_tx_transaction();
+}
+
+bool lpu237_of_client::process_async_result(const _mp::type_v_buffer& v_result)
+{
+    bool b_result(false);
+
+    do {
+        std::lock_guard<std::mutex> lock(m_mutex);
+
+        if (!m_protocol.set_rx_transaction(v_result)) {
+            continue;
+        }
+        if (!m_protocol.set_from_rx()) {
+            continue;
+        }
+
+		b_result = true;
+    }while(false);
+
+	return b_result;
 }
 
 bool lpu237_of_client::cmd_bypass(const _mp::type_v_buffer& v_tx, _mp::type_v_buffer& v_rx)
@@ -470,14 +607,29 @@ std::tuple<bool, int, size_t,bool> lpu237_of_client::cmd_start_async_next_phase(
         n_remainder_transaction = m_protocol.get_tx_transaction(v_out_packet);
 
         if (n_remainder_transaction >0) {
+			// 현재 시작하려는 phase 가 transaction 의 마지막 phase 가 아닐 때, transaction 이 아직 완료되지 않았다고 판단한다.
             b_complete_transaction = false;
         }
-        //
-        if (!capi_client::get_instance().transmit(m_n_client_index, m_n_device_index, 0, 0, v_out_packet)) {
-            continue; //transmit failed.
-        }
 
-        b_remove_async_result_for_transaction = false;
+		// n_remainder_transaction == 0 일 때,
+        // 현재 시작하려는 phase 가 transaction 의 마지막 phase 또는 
+        // transaction 의 모든 phase 가 완료된 경우.
+        // 
+        if (!v_out_packet.empty()) {
+            //현재 시작하려는 phase 가 transaction 의 마지막 phase
+            b_complete_transaction = false;
+
+            if (!capi_client::get_instance().transmit(m_n_client_index, m_n_device_index, 0, 0, v_out_packet)) {
+                continue; //transmit failed.
+            }
+
+            b_remove_async_result_for_transaction = false;
+        }
+        else {
+            //transaction 의 모든 phase 가 완료된 경우.
+
+        }
+        //
         b_result = true;
     } while (false);
 
@@ -488,7 +640,7 @@ std::tuple<bool, int, size_t,bool> lpu237_of_client::cmd_start_async_next_phase(
     return std::make_tuple(b_result, n_result_index, n_remainder_transaction, b_complete_transaction);
 }
 
-std::pair<bool, int> lpu237_of_client::cmd_start_async_get_parameters(
+std::tuple<bool, int, size_t> lpu237_of_client::cmd_start_async_get_parameters(
     _mp::casync_parameter_result::type_callback p_fun
     , void* p_para
 )
@@ -497,6 +649,7 @@ std::pair<bool, int> lpu237_of_client::cmd_start_async_get_parameters(
     unsigned long n_device_index(const_invalied_device_index);
     int n_result_index(_mp::casync_result_manager::const_invalied_result_index);
     bool b_remove_async_result_for_transaction(false);
+	size_t n_total_phase_in_this_transaction(0);
 
     do {
         std::lock_guard<std::mutex> lock(m_mutex);
@@ -517,6 +670,9 @@ std::pair<bool, int> lpu237_of_client::cmd_start_async_get_parameters(
 
         if (!m_protocol.generate_get_parameters())
             continue;
+
+        n_total_phase_in_this_transaction = m_protocol.size_tx_transaction();
+
         _mp::type_v_buffer v_out_packet(0);
         size_t n_remainder_transaction = m_protocol.get_tx_transaction(v_out_packet);
         if (n_remainder_transaction == 0) {
@@ -540,10 +696,10 @@ std::pair<bool, int> lpu237_of_client::cmd_start_async_get_parameters(
         remove_async_result_for_transaction(n_result_index);
         n_result_index = _mp::casync_result_manager::const_invalied_result_index;
     }
-    return std::make_pair(b_result, n_result_index);
+    return std::make_tuple(b_result, n_result_index, n_total_phase_in_this_transaction);
 }
 
-std::pair<bool, int> lpu237_of_client::cmd_start_async_set_parameters(
+std::tuple<bool, int, size_t> lpu237_of_client::cmd_start_async_set_parameters(
     _mp::casync_parameter_result::type_callback p_fun
     , void* p_para
 )
@@ -552,6 +708,7 @@ std::pair<bool, int> lpu237_of_client::cmd_start_async_set_parameters(
     unsigned long n_device_index(const_invalied_device_index);
     int n_result_index(_mp::casync_result_manager::const_invalied_result_index);
     bool b_remove_async_result_for_transaction(false);
+    size_t n_total_phase_in_this_transaction(0);
 
     do {
         std::lock_guard<std::mutex> lock(m_mutex);
@@ -572,6 +729,9 @@ std::pair<bool, int> lpu237_of_client::cmd_start_async_set_parameters(
 
         if (!m_protocol.generate_set_parameters())
             continue;
+        
+        n_total_phase_in_this_transaction = m_protocol.size_tx_transaction();
+
         _mp::type_v_buffer v_out_packet(0);
         size_t n_remainder_transaction = m_protocol.get_tx_transaction(v_out_packet);
         if (n_remainder_transaction == 0) {
@@ -595,10 +755,10 @@ std::pair<bool, int> lpu237_of_client::cmd_start_async_set_parameters(
         remove_async_result_for_transaction(n_result_index);
         n_result_index = _mp::casync_result_manager::const_invalied_result_index;
     }
-    return std::make_pair(b_result, n_result_index);
+    return std::make_tuple(b_result, n_result_index, n_total_phase_in_this_transaction);
 }
 
-std::pair<bool, int> lpu237_of_client::cmd_start_async_get_parameters_except_combination(
+std::tuple<bool, int, size_t> lpu237_of_client::cmd_start_async_get_parameters_except_combination(
     _mp::casync_parameter_result::type_callback p_fun
     , void* p_para
 )
@@ -607,6 +767,7 @@ std::pair<bool, int> lpu237_of_client::cmd_start_async_get_parameters_except_com
     unsigned long n_device_index(const_invalied_device_index);
     int n_result_index(_mp::casync_result_manager::const_invalied_result_index);
     bool b_remove_async_result_for_transaction(false);
+    size_t n_total_phase_in_this_transaction(0);
 
     do {
         std::lock_guard<std::mutex> lock(m_mutex);
@@ -627,6 +788,9 @@ std::pair<bool, int> lpu237_of_client::cmd_start_async_get_parameters_except_com
 
         if (!m_protocol.generate_get_parameters())
             continue;
+        
+        n_total_phase_in_this_transaction = m_protocol.size_tx_transaction();
+
         _mp::type_v_buffer v_out_packet(0);
         size_t n_remainder_transaction = m_protocol.get_tx_transaction(v_out_packet);
         if (n_remainder_transaction == 0) {
@@ -650,10 +814,10 @@ std::pair<bool, int> lpu237_of_client::cmd_start_async_get_parameters_except_com
         remove_async_result_for_transaction(n_result_index);
         n_result_index = _mp::casync_result_manager::const_invalied_result_index;
     }
-    return std::make_pair(b_result, n_result_index);
+    return std::make_tuple(b_result, n_result_index, n_total_phase_in_this_transaction);
 }
 
-std::pair<bool, int> lpu237_of_client::cmd_start_async_set_parameters_except_combination(
+std::tuple<bool, int, size_t> lpu237_of_client::cmd_start_async_set_parameters_except_combination(
     _mp::casync_parameter_result::type_callback p_fun
     , void* p_para
 )
@@ -662,6 +826,7 @@ std::pair<bool, int> lpu237_of_client::cmd_start_async_set_parameters_except_com
     unsigned long n_device_index(const_invalied_device_index);
     int n_result_index(_mp::casync_result_manager::const_invalied_result_index);
     bool b_remove_async_result_for_transaction(false);
+    size_t n_total_phase_in_this_transaction(0);
 
     do {
         std::lock_guard<std::mutex> lock(m_mutex);
@@ -682,6 +847,9 @@ std::pair<bool, int> lpu237_of_client::cmd_start_async_set_parameters_except_com
 
         if (!m_protocol.generate_set_parameters())
             continue;
+
+        n_total_phase_in_this_transaction = m_protocol.size_tx_transaction();
+
         _mp::type_v_buffer v_out_packet(0);
         size_t n_remainder_transaction = m_protocol.get_tx_transaction(v_out_packet);
         if (n_remainder_transaction == 0) {
@@ -705,7 +873,7 @@ std::pair<bool, int> lpu237_of_client::cmd_start_async_set_parameters_except_com
         remove_async_result_for_transaction(n_result_index);
         n_result_index = _mp::casync_result_manager::const_invalied_result_index;
     }
-    return std::make_pair(b_result, n_result_index);
+    return std::make_tuple(b_result, n_result_index, n_total_phase_in_this_transaction);
 }
 
 bool lpu237_of_client::_cmd_get( cprotocol_lpu237::type_cmd c_cmd)
@@ -748,6 +916,9 @@ bool lpu237_of_client::_cmd_get( cprotocol_lpu237::type_cmd c_cmd)
 			break;
         case cprotocol_lpu237::cmd_stop_ibutton:
 			b_result = m_protocol.generate_stop_ibutton();
+			break;
+		case cprotocol_lpu237::cmd_apply:
+            b_result = m_protocol.generate_apply_config_mode();
 			break;
         default:
             break;
