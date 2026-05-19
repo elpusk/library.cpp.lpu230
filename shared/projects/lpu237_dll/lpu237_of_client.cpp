@@ -89,6 +89,304 @@ void lpu237_of_client::set_buzzer_frequency(uint32_t n_frequency)
     m_protocol.set_buzzer_frequency(n_frequency);
 }
 
+cprotocol_lpu237::type_keyboard_language_index lpu237_of_client::get_language()
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    return m_protocol.get_language();
+}
+
+void lpu237_of_client::set_language(cprotocol_lpu237::type_keyboard_language_index language)
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_protocol.set_language(language);
+}
+
+bool lpu237_of_client::get_enable_track(int n_track)
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    if (n_track < (int)cprotocol_lpu237::iso1_track) {
+        return false;
+    }
+    if (n_track > (int)cprotocol_lpu237::iso3_track) {
+        return false;
+    }
+
+	return m_protocol.get_enable_iso(
+        (cprotocol_lpu237::type_msr_track_Numer)n_track
+    );
+}
+
+void lpu237_of_client::set_enable_track(int n_track, bool b_enable)
+{
+    do {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        if (n_track < (int)cprotocol_lpu237::iso1_track) {
+			continue;
+        }
+        if (n_track > (int)cprotocol_lpu237::iso3_track) {
+            continue;
+        }
+
+        m_protocol.set_enable_iso((cprotocol_lpu237::type_msr_track_Numer)n_track, b_enable);
+    } while (false);
+}
+
+_mp::type_v_buffer lpu237_of_client::get_msr_private_tag(
+    int n_track
+    ,bool b_prefix
+)
+{
+    _mp::type_v_buffer v;
+    do {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        if (n_track < (int)cprotocol_lpu237::iso1_track) {
+            continue;
+        }
+        if (n_track > (int)cprotocol_lpu237::iso3_track) {
+            continue;
+        }
+
+        if(b_prefix)
+		    v = m_protocol.get_private_prefix((cprotocol_lpu237::type_msr_track_Numer)n_track, 0);
+        else
+            v = m_protocol.get_private_postfix((cprotocol_lpu237::type_msr_track_Numer)n_track, 0);
+        //
+    } while (false);
+    return v;
+}
+
+void lpu237_of_client::set_msr_private_tag(
+    int n_track
+    , bool b_prefix
+    , const _mp::type_v_buffer& v_tag
+)
+{
+    do {
+        std::lock_guard<std::mutex> lock(m_mutex);
+
+        if (n_track < (int)cprotocol_lpu237::iso1_track) {
+            continue;
+        }
+        if (n_track > (int)cprotocol_lpu237::iso3_track) {
+            continue;
+        }
+
+        if (b_prefix)
+			m_protocol.set_private_prefix((cprotocol_lpu237::type_msr_track_Numer)n_track, 0, v_tag);
+        else
+            m_protocol.set_private_postfix((cprotocol_lpu237::type_msr_track_Numer)n_track, 0, v_tag);
+
+    } while (false);
+}
+
+cprotocol_lpu237::type_ibutton_mode lpu237_of_client::get_ibutton_mode()
+{
+    cprotocol_lpu237::type_ibutton_mode m(cprotocol_lpu237::ibutton_zeros);
+    do {
+        std::lock_guard<std::mutex> lock(m_mutex);
+
+        if (m_protocol.get_enable_zeros_ibutton()) {
+            m = cprotocol_lpu237::ibutton_zeros;
+			continue;
+        }
+        if (m_protocol.get_enable_f12_ibutton()) {
+            m = cprotocol_lpu237::ibutton_f12;
+            continue;
+        }
+        if (m_protocol.get_enable_zeros_7times_ibutton()) {
+            m = cprotocol_lpu237::ibutton_zeros7;
+            continue;
+        }
+        if (m_protocol.get_enable_addmit_code_stick_ibutton()) {
+            m = cprotocol_lpu237::ibutton_addmit;
+            continue;
+        }
+        m = cprotocol_lpu237::ibutton_none;
+	} while (false);
+    return m;
+}
+
+void lpu237_of_client::set_ibutton_mode(cprotocol_lpu237::type_ibutton_mode mode)
+{
+    do {
+        std::lock_guard<std::mutex> lock(m_mutex);
+
+        switch (mode) {
+        case cprotocol_lpu237::ibutton_zeros:
+			m_protocol.set_enable_zeros_ibutton(true);
+            break;
+        case cprotocol_lpu237::ibutton_f12:
+            m_protocol.set_enable_f12_ibutton(true);
+			break;
+        case cprotocol_lpu237::ibutton_zeros7:
+            m_protocol.set_enable_zeros_7times_ibutton(true);
+			break;
+        case cprotocol_lpu237::ibutton_addmit:
+            m_protocol.set_enable_addmit_Code_stick_ibutton(true);
+			break;
+        case cprotocol_lpu237::ibutton_none:
+            m_protocol.set_enable_zeros_ibutton(false);
+            m_protocol.set_enable_f12_ibutton(false);
+            m_protocol.set_enable_zeros_7times_ibutton(false);
+			m_protocol.set_enable_addmit_Code_stick_ibutton(false);
+        default:
+            continue;
+        }// end switch
+
+    } while (false);
+}
+
+_mp::type_v_buffer lpu237_of_client::get_ibutton_tag(bool b_remove, bool b_prefix)
+{
+    _mp::type_v_buffer v;
+
+    do {
+        std::lock_guard<std::mutex> lock(m_mutex);
+
+        if (b_remove) {
+            if (b_prefix)
+                v = m_protocol.get_prefix_ibutton_remove();
+            else
+                v = m_protocol.get_postfix_ibutton_remove();
+        }
+        else {
+            if (b_prefix)
+                v = m_protocol.get_prefix_ibutton();
+            else
+                v = m_protocol.get_postfix_ibutton();
+        }
+    } while (false);
+	return v;
+
+}
+
+void lpu237_of_client::set_ibutton_tag(bool b_remove, bool b_prefix, const _mp::type_v_buffer& v_tag)
+{
+    do {
+        std::lock_guard<std::mutex> lock(m_mutex);
+
+        if (b_remove) {
+            if (b_prefix)
+                m_protocol.set_prefix_ibutton_remove(v_tag);
+            else
+                m_protocol.set_postfix_ibutton_remove(v_tag);
+        }
+        else {
+            if (b_prefix)
+                m_protocol.set_prefix_ibutton(v_tag);
+            else
+                m_protocol.set_postfix_ibutton(v_tag);
+        }
+    } while (false);
+
+}
+
+_mp::type_v_buffer lpu237_of_client::get_ibutton_remove_indicate_tag()
+{
+	_mp::type_v_buffer v;
+
+    do {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        v = m_protocol.get_ibutton_remove();
+    } while (false);
+    return v;
+}
+
+void lpu237_of_client::set_ibutton_remove_indicate_tag(const _mp::type_v_buffer& v_tag)
+{
+    do {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        m_protocol.set_ibutton_remove(v_tag);
+    } while (false);
+}
+
+void lpu237_of_client::set_default()
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+	m_protocol.set_global_pre_postfix_send_condition(true);
+	m_protocol.set_interface(cprotocol_lpu237::system_interface_usb_keyboard);
+	m_protocol.set_language(cprotocol_lpu237::language_map_index_english);
+	m_protocol.set_buzzer_frequency(cprotocol_lpu237::the_frequency_of_on_buzzer);
+
+    CDevHidLpu237Config::type_tag v_tag_enter_only{ 0xff,0x0d };
+    CDevHidLpu237Config::type_tag v_tag_empty(0);
+
+    unsigned char s_max_size[] = { 76,37 + 1,37 };
+    unsigned char s_bit_size[] = { 7,5,5 };
+    unsigned char s_data_mask[] = { 0xfe,0xf8,0xf8 };
+    bool b_use_parity[] = { true,true,true };
+    unsigned char s_parity_type[] = { 1,1,1 };
+    unsigned char s_stxl[] = { 0x8a,0x58,0x58 };
+    unsigned char s_etxl[] = { 0x3e,0xf8,0xf8 };
+    bool b_use_error_correct[] = { true,true,true };
+    unsigned char s_emc_type[] = { 0,0,0 };
+    unsigned char s_add_value[] = { 0x20,0x30,0x30 };
+
+    CDevHidLpu237Config::type_tag v_tag_pre_msr[] = {
+        { 0x02,0x22 },
+        { 0x00,0x33 },
+        { 0x00,0x33 }
+    };
+    CDevHidLpu237Config::type_tag v_tag_post_msr[] = {
+        { 0x02,0x38,0xff,0x0d },
+        { 0x02,0x38,0xff,0x0d },
+        { 0x02,0x38,0xff,0x0d }
+    };
+
+    for (int i = 0; i < 3; i++) {
+        setTrackStatus((CDevHidLpu237Config::type_msr_track_numer)i);
+        setPrivatePrefix((CDevHidLpu237Config::type_msr_track_numer)i, v_tag_pre_msr[i]);
+        setPrivatePostfix((CDevHidLpu237Config::type_msr_track_numer)i, v_tag_post_msr[i]);
+
+        set_combination((CDevHidLpu237Config::type_msr_track_numer)i, 1);
+        set_max_size((CDevHidLpu237Config::type_msr_track_numer)i, 0, s_max_size[i]);
+        set_bit_size((CDevHidLpu237Config::type_msr_track_numer)i, 0, s_bit_size[i]);
+        set_data_mask((CDevHidLpu237Config::type_msr_track_numer)i, 0, s_data_mask[i]);
+        set_use_parity((CDevHidLpu237Config::type_msr_track_numer)i, 0, b_use_parity[i]);
+        set_parity_type((CDevHidLpu237Config::type_msr_track_numer)i, 0, s_parity_type[i]);
+        set_stxl((CDevHidLpu237Config::type_msr_track_numer)i, 0, s_stxl[i]);
+        set_etxl((CDevHidLpu237Config::type_msr_track_numer)i, 0, s_etxl[i]);
+        set_use_error_correct((CDevHidLpu237Config::type_msr_track_numer)i, 0, b_use_error_correct[i]);
+        set_ecm_type((CDevHidLpu237Config::type_msr_track_numer)i, 0, s_emc_type[i]);
+        set_add_value((CDevHidLpu237Config::type_msr_track_numer)i, 0, s_add_value[i]);
+    }//end for
+
+    set_direction(CDevHidLpu237Config::md_bidirectional);
+
+    setGlobalPrefix(v_tag_empty);
+    setGlobalPostfix(v_tag_empty);
+
+    setPrefix_iButton(v_tag_empty);
+    setPostfix_iButton(v_tag_enter_only);
+
+    set_ibutton_remove(v_tag_empty);
+    set_prefix_ibutton_remove(v_tag_empty);
+    set_postfix_ibutton_remove(v_tag_enter_only);
+
+    setPrefix_Uart(v_tag_empty);
+    setPostfix_Uart(v_tag_empty);
+
+
+    unsigned char s_blanks[const_size_blank] = { 0, };
+    get_blanks(s_blanks);
+    s_blanks[0] = 0;
+    s_blanks[1] = s_blanks[1] & 0xf0;//0~3 bit reset
+    s_blanks[2] = s_blanks[2] & 0xf0;//0~3 bit reset
+    set_blanks(s_blanks);
+
+    unsigned long n_order[const_the_number_of_tracks] = { 0,1,2 };
+    set_order(n_order);
+    /////////////////
+    
+    
+}
+
+void lpu237_of_client::set_default_with_inf_is_vcom()
+{
+    set_default();
+    set_interface(cprotocol_lpu237::System_interface_usb_vcom);
+}
+
 
 bool lpu237_of_client::cmd_enter_config()
 {

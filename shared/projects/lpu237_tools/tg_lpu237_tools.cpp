@@ -1396,9 +1396,26 @@ unsigned long _CALLTYPE_ LPU237_tools_msr_get_buzzer(HANDLE hDev, unsigned char*
 		}
 		//
 		if (pc_on == NULL) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : pc_on == null\n", __WFUNCTION__);
 			continue;
 		}
 
+		// NDM 이나 direct 버전은 device 에서 받은 값을 10으로 나누어서 저장해서 사용했고,
+		// device 송신 전에 저장값에 10을 곱해서 device 에게 송신하는 방식을 사용했지만
+		// cf2 에서는 device 에서 받은 값을 그대로 저장해서 사용하고, device 송신 전에 저장값을 그대로 송신하는 방식으로 변경했다.
+		// 따라서 cprotocol_lpu237::the_frequency_of_off_buzzer, cprotocol_lpu237::the_frequency_of_on_buzzer 값이 기존 버전보다 10배 증가했다.
+		// buzzer off 시, callisto 와 ganymede 는  frequency-cnt을 항상 5000 을 사용했음.
+		// buzzer off 시, MH1902T 를 사용하는 모델은  frequency-cnt을 항상 50 을 사용했음.
+		// 2016.11.17 callisto(v3.15), ganymede(v5.7) 부터 buzzer on 시, fw 에서 frequency-cnt 값을 25000 에서 26000 으로 변경했고,
+		// fw 에서 frequency-cnt 에 25000(2.8KHz) 을 설정하려고 하면, 자동적으로 26000 으로 설정되도록 했음.
+		// 따라서 26000 이 변경된 기본 값이지만, 25000 을 사용해도, flash 에 저장되는 parameter 는 25000 이지만, frequency-cnt 는 26000(3KHz) 으로 설정되어
+		// 동작은 이상 없음.
+		// MH1902T 를 사용하는 모델은  buzzer on 시, frequency-cnt을 항상 45000 을 사용했음.
+		// MH1902T fw 는 frequency-cnt 설정시, flash 에 설정값이 25000 이나 26000 이면, 45000 으로 설정해서 사용하게 되어 있어서
+		// on 시 26000 으로 frequency-cnt 값을 설정해더라도 문제 없고,
+		// off 시 5000 으로 frequency-cnt 값을 설정하려고 하면 자동적으로 50 으로 설정되도록 했음.
+		// 결론적으로 cf2 에서는 buzzer off 시, 는 5000 을 사용하고,
+		// buzzer on 시, 는 26000 을 사용하면 모델에 상관없이 정상적으로 동작함.
 		uint32_t n_frequency = ptr_device->get_buzzer_frequency();
 
 		if(n_frequency > cprotocol_lpu237::the_frequency_of_off_buzzer) {
@@ -1409,16 +1426,12 @@ unsigned long _CALLTYPE_ LPU237_tools_msr_get_buzzer(HANDLE hDev, unsigned char*
 		}
 
 		dwResult = ccb_client::const_dll_result_success;
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : %d\n", __WFUNCTION__, cprotocol_lpu237::the_size_of_name);
 	} while (0);
-
-	_mp::clog::get_instance().log_fmt(L" : RET : %ls : %d\n", __WFUNCTION__, cprotocol_lpu237::the_size_of_name);
 
 	return dwResult;
 }
 
-
-#define	_CONST_INTERVAL_OFF_FREQUENCY  500
-#define	_CONST_INTERVAL_ON_FREQUENCY	2600
 
 /*!
 * function
@@ -1434,24 +1447,51 @@ unsigned long _CALLTYPE_ LPU237_tools_msr_get_buzzer(HANDLE hDev, unsigned char*
 */
 unsigned long _CALLTYPE_ LPU237_tools_msr_set_buzzer(HANDLE hDev, unsigned char c_on)
 {
-	DWORD dw_result(LPU237_TOOLS_RESULT_ERROR);
+	unsigned long dwResult(ccb_client::const_dll_result_error);
+	unsigned long n_device_index(PtrToUlong(hDev));
+	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
 
 	do {
-		_tg_sub_lpu237::CLinker::type_ptr& linker = PreCheck(_tstring(__WFUNCTION__), hDev);
-		if (linker == nullptr) {
+		_mp::clog::get_instance().log_fmt(L" : CAL : %ls : 0x%x\n", __WFUNCTION__, hDev);
+		if (!ptr_manager_of_device_of_client) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : none manager_of_device_of_client.\n", __WFUNCTION__);
 			continue;
 		}
 
-		if (c_on)
-			linker->get_config_parameters().setBuzzerFrequency(_CONST_INTERVAL_ON_FREQUENCY);
-		else
-			linker->get_config_parameters().setBuzzerFrequency(_CONST_INTERVAL_OFF_FREQUENCY);
-		//
-		if (CLog::GetLog())	CLog::GetLog()->Log(true, CLog::LEV_NORMAL, _T(" : RET : %s.\n"), __WFUNCTION__);
-		dw_result = LPU237_TOOLS_RESULT_SUCCESS;
+		lpu237_of_client::type_ptr_lpu237_of_client& ptr_device = ptr_manager_of_device_of_client->get_device(n_device_index);
+		if (ptr_device->is_null_device()) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : INVALID_HANDLE_VALUE\n", __WFUNCTION__);
+			continue;
+		}
+
+		uint32_t n_frequency = cprotocol_lpu237::the_frequency_of_off_buzzer;
+		if (c_on) {
+			n_frequency = cprotocol_lpu237::the_frequency_of_on_buzzer;
+		}
+
+		// NDM 이나 direct 버전은 device 에서 받은 값을 10으로 나누어서 저장해서 사용했고,
+		// device 송신 전에 저장값에 10을 곱해서 device 에게 송신하는 방식을 사용했지만
+		// cf2 에서는 device 에서 받은 값을 그대로 저장해서 사용하고, device 송신 전에 저장값을 그대로 송신하는 방식으로 변경했다.
+		// 따라서 cprotocol_lpu237::the_frequency_of_off_buzzer, cprotocol_lpu237::the_frequency_of_on_buzzer 값이 기존 버전보다 10배 증가했다.
+		// buzzer off 시, callisto 와 ganymede 는  frequency-cnt을 항상 5000 을 사용했음.
+		// buzzer off 시, MH1902T 를 사용하는 모델은  frequency-cnt을 항상 50 을 사용했음.
+		// 2016.11.17 callisto(v3.15), ganymede(v5.7) 부터 buzzer on 시, fw 에서 frequency-cnt 값을 25000 에서 26000 으로 변경했고,
+		// fw 에서 frequency-cnt 에 25000(2.8KHz) 을 설정하려고 하면, 자동적으로 26000 으로 설정되도록 했음.
+		// 따라서 26000 이 변경된 기본 값이지만, 25000 을 사용해도, flash 에 저장되는 parameter 는 25000 이지만, frequency-cnt 는 26000(3KHz) 으로 설정되어
+		// 동작은 이상 없음.
+		// MH1902T 를 사용하는 모델은  buzzer on 시, frequency-cnt을 항상 45000 을 사용했음.
+		// MH1902T fw 는 frequency-cnt 설정시, flash 에 설정값이 25000 이나 26000 이면, 45000 으로 설정해서 사용하게 되어 있어서
+		// on 시 26000 으로 frequency-cnt 값을 설정해더라도 문제 없고,
+		// off 시 5000 으로 frequency-cnt 값을 설정하려고 하면 자동적으로 50 으로 설정되도록 했음.
+		// 결론적으로 cf2 에서는 buzzer off 시, 는 5000 을 사용하고,
+		// buzzer on 시, 는 26000 을 사용하면 모델에 상관없이 정상적으로 동작함.
+		ptr_device->set_buzzer_frequency(n_frequency);
+
+		dwResult = ccb_client::const_dll_result_success;
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : set-freq : %u\n", __WFUNCTION__, n_frequency);
 	} while (0);
 
-	return dw_result;
+	return dwResult;
 }
 
 /*!
@@ -1469,25 +1509,36 @@ unsigned long _CALLTYPE_ LPU237_tools_msr_set_buzzer(HANDLE hDev, unsigned char 
 */
 unsigned long _CALLTYPE_ LPU237_tools_msr_get_language(HANDLE hDev, unsigned char* pc_lang)
 {
-	DWORD dw_result(LPU237_TOOLS_RESULT_ERROR);
+	unsigned long dwResult(ccb_client::const_dll_result_error);
+	unsigned long n_device_index(PtrToUlong(hDev));
+	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
 
 	do {
-		_tg_sub_lpu237::CLinker::type_ptr& linker = PreCheck(_tstring(__WFUNCTION__), hDev);
-		if (linker == nullptr) {
+		_mp::clog::get_instance().log_fmt(L" : CAL : %ls : 0x%x\n", __WFUNCTION__, hDev);
+		if (!ptr_manager_of_device_of_client) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : none manager_of_device_of_client.\n", __WFUNCTION__);
 			continue;
 		}
-		if (!pc_lang)
-			continue;
 
-		int n_lang = linker->get_config_parameters().getLanguage();
+		lpu237_of_client::type_ptr_lpu237_of_client& ptr_device = ptr_manager_of_device_of_client->get_device(n_device_index);
+		if (ptr_device->is_null_device()) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : INVALID_HANDLE_VALUE\n", __WFUNCTION__);
+			continue;
+		}
+		//
+		if (pc_lang == NULL) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : pc_lang == null\n", __WFUNCTION__);
+			continue;
+		}
+
+		cprotocol_lpu237::type_keyboard_language_index n_lang = ptr_device->get_language();
 		*pc_lang = (unsigned char)n_lang;
 
-
-		if (CLog::GetLog())	CLog::GetLog()->Log(true, CLog::LEV_NORMAL, _T(" : RET : %s : %d\n"), __WFUNCTION__, n_lang);
-		dw_result = LPU237_TOOLS_RESULT_SUCCESS;
+		dwResult = ccb_client::const_dll_result_success;
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : %u\n", __WFUNCTION__, (unsigned char)n_lang);
 	} while (0);
 
-	return dw_result;
+	return dwResult;
 }
 
 /*!
@@ -1504,21 +1555,34 @@ unsigned long _CALLTYPE_ LPU237_tools_msr_get_language(HANDLE hDev, unsigned cha
 */
 unsigned long _CALLTYPE_ LPU237_tools_msr_set_language(HANDLE hDev, unsigned char c_lang)
 {
-	DWORD dw_result(LPU237_TOOLS_RESULT_ERROR);
+	unsigned long dwResult(ccb_client::const_dll_result_error);
+	unsigned long n_device_index(PtrToUlong(hDev));
+	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
 
 	do {
-		_tg_sub_lpu237::CLinker::type_ptr& linker = PreCheck(_tstring(__WFUNCTION__), hDev);
-		if (linker == nullptr) {
+		_mp::clog::get_instance().log_fmt(L" : CAL : %ls : 0x%x\n", __WFUNCTION__, hDev);
+		if (!ptr_manager_of_device_of_client) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : none manager_of_device_of_client.\n", __WFUNCTION__);
 			continue;
 		}
 
-		linker->get_config_parameters().setLanguage((device_elpusk::CDevHidLpu237Config::type_language_map_Index)c_lang);
+		lpu237_of_client::type_ptr_lpu237_of_client& ptr_device = ptr_manager_of_device_of_client->get_device(n_device_index);
+		if (ptr_device->is_null_device()) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : INVALID_HANDLE_VALUE\n", __WFUNCTION__);
+			continue;
+		}
+		if (c_lang > (unsigned char)cprotocol_lpu237::language_map_index_turkey) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : undefined language index : %u\n", __WFUNCTION__, c_lang);
+			continue;
+		}
 
-		if (CLog::GetLog())	CLog::GetLog()->Log(true, CLog::LEV_NORMAL, _T(" : RET : %s .\n"), __WFUNCTION__);
-		dw_result = LPU237_TOOLS_RESULT_SUCCESS;
+		ptr_device->set_language((cprotocol_lpu237::type_keyboard_language_index)c_lang);
+
+		dwResult = ccb_client::const_dll_result_success;
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : language index : %u\n", __WFUNCTION__, c_lang);
 	} while (0);
 
-	return dw_result;
+	return dwResult;
 }
 
 /*!
@@ -1538,29 +1602,38 @@ unsigned long _CALLTYPE_ LPU237_tools_msr_set_language(HANDLE hDev, unsigned cha
 */
 unsigned long _CALLTYPE_ LPU237_tools_msr_get_track_status(HANDLE hDev, unsigned char* s_status_3_byte)
 {
-	DWORD dw_result(LPU237_TOOLS_RESULT_ERROR);
+	unsigned long dwResult(ccb_client::const_dll_result_error);
+	unsigned long n_device_index(PtrToUlong(hDev));
+	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
 
 	do {
-		_tg_sub_lpu237::CLinker::type_ptr& linker = PreCheck(_tstring(__WFUNCTION__), hDev);
-		if (linker == nullptr) {
+		_mp::clog::get_instance().log_fmt(L" : CAL : %ls : 0x%x\n", __WFUNCTION__, hDev);
+		if (!ptr_manager_of_device_of_client) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : none manager_of_device_of_client.\n", __WFUNCTION__);
 			continue;
 		}
-		if (!s_status_3_byte)
+
+		lpu237_of_client::type_ptr_lpu237_of_client& ptr_device = ptr_manager_of_device_of_client->get_device(n_device_index);
+		if (ptr_device->is_null_device()) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : INVALID_HANDLE_VALUE\n", __WFUNCTION__);
 			continue;
+		}
+		//
+		if (s_status_3_byte == NULL) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : s_status_3_byte == null\n", __WFUNCTION__);
+			continue;
+		}
 
-		for (int i = 0; i < 3; i++) {
-			if (linker->get_config_parameters().getTrackStatus((device_elpusk::CDevHidLpu237Config::type_msr_track_numer)i))
-				s_status_3_byte[i] = 1;
-			else
-				s_status_3_byte[i] = 0;
-
+		for( int i = 0; i < 3; i++) {
+			s_status_3_byte[i] = ptr_device->get_enable_track(i);
 		}//end for
 
-		if (CLog::GetLog())	CLog::GetLog()->Log(true, CLog::LEV_NORMAL, _T(" : RET : %s : %u,%u,%u\n"), __WFUNCTION__, s_status_3_byte[0], s_status_3_byte[1], s_status_3_byte[2]);
-		dw_result = LPU237_TOOLS_RESULT_SUCCESS;
+
+		dwResult = ccb_client::const_dll_result_success;
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : success\n", __WFUNCTION__);
 	} while (0);
 
-	return dw_result;
+	return dwResult;
 }
 
 /*!
@@ -1579,28 +1652,41 @@ unsigned long _CALLTYPE_ LPU237_tools_msr_get_track_status(HANDLE hDev, unsigned
 */
 unsigned long _CALLTYPE_ LPU237_tools_msr_set_track_status(HANDLE hDev, const unsigned char* s_status_3_byte)
 {
-	DWORD dw_result(LPU237_TOOLS_RESULT_ERROR);
+	unsigned long dwResult(ccb_client::const_dll_result_error);
+	unsigned long n_device_index(PtrToUlong(hDev));
+	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
 
 	do {
-		_tg_sub_lpu237::CLinker::type_ptr& linker = PreCheck(_tstring(__WFUNCTION__), hDev);
-		if (linker == nullptr) {
+		_mp::clog::get_instance().log_fmt(L" : CAL : %ls : 0x%x\n", __WFUNCTION__, hDev);
+		if (!ptr_manager_of_device_of_client) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : none manager_of_device_of_client.\n", __WFUNCTION__);
 			continue;
 		}
-		if (!s_status_3_byte)
-			continue;
 
-		for (int i = 0; i < 3; i++) {
-			if (s_status_3_byte[i])
-				linker->get_config_parameters().setTrackStatus((device_elpusk::CDevHidLpu237Config::type_msr_track_numer)i, true);
-			else
-				linker->get_config_parameters().setTrackStatus((device_elpusk::CDevHidLpu237Config::type_msr_track_numer)i, false);
+		lpu237_of_client::type_ptr_lpu237_of_client& ptr_device = ptr_manager_of_device_of_client->get_device(n_device_index);
+		if (ptr_device->is_null_device()) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : INVALID_HANDLE_VALUE\n", __WFUNCTION__);
+			continue;
+		}
+		if (s_status_3_byte == NULL) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : s_status_3_byte == null\n", __WFUNCTION__);
+			continue;
+		}
+
+		for( int i = 0; i < 3; i++) {
+			if (s_status_3_byte[i]) {
+				ptr_device->set_enable_track(i,true );
+			}
+			else {
+				ptr_device->set_enable_track(i, false);
+			}
 		}//end for
 
-		if (CLog::GetLog())	CLog::GetLog()->Log(true, CLog::LEV_NORMAL, _T(" : RET : %s : %u,%u,%u\n"), __WFUNCTION__, s_status_3_byte[0], s_status_3_byte[1], s_status_3_byte[2]);
-		dw_result = LPU237_TOOLS_RESULT_SUCCESS;
+		dwResult = ccb_client::const_dll_result_success;
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : success : %u\n", __WFUNCTION__);
 	} while (0);
 
-	return dw_result;
+	return dwResult;
 }
 
 
@@ -1619,32 +1705,48 @@ unsigned long _CALLTYPE_ LPU237_tools_msr_set_track_status(HANDLE hDev, const un
 * 	if error, return LPU237_TOOLS_RESULT_ERROR
 *	else the size of s_tag (unit byte)
 */
-unsigned long _CALLTYPE_ LPU237_tools_msr_get_private_tag(HANDLE hDev, unsigned long dw_track_zero_base, unsigned char b_prefix, unsigned char* s_tag)
+unsigned long _CALLTYPE_ LPU237_tools_msr_get_private_tag(
+	HANDLE hDev
+	, unsigned long dw_track_zero_base
+	, unsigned char b_prefix
+	, unsigned char* s_tag
+)
 {
-	DWORD dw_result(LPU237_TOOLS_RESULT_ERROR);
+	unsigned long dwResult(ccb_client::const_dll_result_error);
+	unsigned long n_device_index(PtrToUlong(hDev));
+	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
 
 	do {
-		_tg_sub_lpu237::CLinker::type_ptr& linker = PreCheck(_tstring(__WFUNCTION__), hDev);
-		if (linker == nullptr) {
+		_mp::clog::get_instance().log_fmt(L" : CAL : %ls : 0x%x\n", __WFUNCTION__, hDev);
+		if (!ptr_manager_of_device_of_client) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : none manager_of_device_of_client.\n", __WFUNCTION__);
 			continue;
 		}
-		if (dw_track_zero_base > 2)
+
+		lpu237_of_client::type_ptr_lpu237_of_client& ptr_device = ptr_manager_of_device_of_client->get_device(n_device_index);
+		if (ptr_device->is_null_device()) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : INVALID_HANDLE_VALUE\n", __WFUNCTION__);
 			continue;
-
-		device_elpusk::CDevHidLpu237Config::type_tag v_tag;
-		if (b_prefix)
-			v_tag = linker->get_config_parameters().get_private_prefix((device_elpusk::CDevHidLpu237Config::type_msr_track_numer)dw_track_zero_base, 0);
-		else
-			v_tag = linker->get_config_parameters().get_private_postfix((device_elpusk::CDevHidLpu237Config::type_msr_track_numer)dw_track_zero_base, 0);
-
-		if (s_tag) {
-			memcpy(s_tag, &v_tag[0], v_tag.size());
 		}
-		if (CLog::GetLog())	CLog::GetLog()->Log(true, CLog::LEV_NORMAL, _T(" : RET : %s : %d\n"), __WFUNCTION__, v_tag.size());
-		dw_result = v_tag.size();
+		//
+		bool b_prefix_bool = false;
+		if(b_prefix) {
+			b_prefix_bool = true;
+		}
+		_mp::type_v_buffer v;
+		v = ptr_device->get_msr_private_tag(dw_track_zero_base, b_prefix_bool);
+		dwResult = v.size();
+
+		if(s_tag == NULL) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : s_tag == null : %u\n", __WFUNCTION__, dwResult);
+			continue;
+		}
+
+		std::copy(std::begin(v), std::end(v), s_tag);
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : %u\n", __WFUNCTION__, dwResult);
 	} while (0);
 
-	return dw_result;
+	return dwResult;
 }
 
 /*!
@@ -1670,32 +1772,37 @@ unsigned long _CALLTYPE_ LPU237_tools_msr_set_private_tag(
 	, unsigned long dw_tag
 )
 {
-	DWORD dw_result(LPU237_TOOLS_RESULT_ERROR);
+	unsigned long dwResult(ccb_client::const_dll_result_error);
+	unsigned long n_device_index(PtrToUlong(hDev));
+	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
 
 	do {
-		_tg_sub_lpu237::CLinker::type_ptr& linker = PreCheck(_tstring(__WFUNCTION__), hDev);
-		if (linker == nullptr) {
+		_mp::clog::get_instance().log_fmt(L" : CAL : %ls : 0x%x\n", __WFUNCTION__, hDev);
+		if (!ptr_manager_of_device_of_client) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : none manager_of_device_of_client.\n", __WFUNCTION__);
 			continue;
 		}
-		if (dw_track_zero_base > 2)
-			continue;
 
-		device_elpusk::CDevHidLpu237Config::type_tag v_tag;
-		if (s_tag && dw_tag > 0) {
-			v_tag.resize(dw_tag, 0);
-			std::copy(&s_tag[0], &s_tag[dw_tag], std::begin(v_tag));
+		lpu237_of_client::type_ptr_lpu237_of_client& ptr_device = ptr_manager_of_device_of_client->get_device(n_device_index);
+		if (ptr_device->is_null_device()) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : INVALID_HANDLE_VALUE\n", __WFUNCTION__);
+			continue;
+		}
+		//
+		bool b_prefix_bool = false;
+		if (b_prefix) {
+			b_prefix_bool = true;
+		}
+		_mp::type_v_buffer v;
+		if (s_tag && dw_tag > 0 && (dw_tag%2 == 0)) {
+			std::copy(s_tag, s_tag + dw_tag, std::back_inserter(v));
 		}
 
-		if (b_prefix)
-			linker->get_config_parameters().set_private_prefix((device_elpusk::CDevHidLpu237Config::type_msr_track_numer)dw_track_zero_base, 0, v_tag);
-		else
-			linker->get_config_parameters().set_private_postfix((device_elpusk::CDevHidLpu237Config::type_msr_track_numer)dw_track_zero_base, 0, v_tag);
-
-		if (CLog::GetLog())	CLog::GetLog()->Log(true, CLog::LEV_NORMAL, _T(" : RET : %s : %d\n"), __WFUNCTION__, v_tag.size());
-		dw_result = v_tag.size();
+		ptr_device->set_msr_private_tag(dw_track_zero_base, b_prefix_bool,v);
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : %u\n", __WFUNCTION__, dwResult);
 	} while (0);
 
-	return dw_result;
+	return dwResult;
 }
 
 
@@ -1719,41 +1826,55 @@ unsigned long _CALLTYPE_ LPU237_tools_msr_set_private_tag(
 
 unsigned long _CALLTYPE_ LPU237_tools_msr_get_ibutton_mode(HANDLE hDev, unsigned char* pc_mode)
 {
-	DWORD dw_result(LPU237_TOOLS_RESULT_ERROR);
+	unsigned long dwResult(ccb_client::const_dll_result_error);
+	unsigned long n_device_index(PtrToUlong(hDev));
+	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
 
 	do {
-		_tg_sub_lpu237::CLinker::type_ptr& linker = PreCheck(_tstring(__WFUNCTION__), hDev);
-		if (linker == nullptr) {
+		_mp::clog::get_instance().log_fmt(L" : CAL : %ls : 0x%x\n", __WFUNCTION__, hDev);
+		if (!ptr_manager_of_device_of_client) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : none manager_of_device_of_client.\n", __WFUNCTION__);
 			continue;
 		}
-		if (!pc_mode)
+
+		lpu237_of_client::type_ptr_lpu237_of_client& ptr_device = ptr_manager_of_device_of_client->get_device(n_device_index);
+		if (ptr_device->is_null_device()) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : INVALID_HANDLE_VALUE\n", __WFUNCTION__);
 			continue;
+		}
+		//
+		if (pc_mode == NULL) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : pc_mode == null\n", __WFUNCTION__);
+			continue;
+		}
 
-		std::vector<unsigned char>v_blank(device_elpusk::CDevHidLpu237Config::const_size_blank, 0);
-		linker->get_config_parameters().get_blanks(&v_blank[0]);
-
-		if (IS_IBUTTON_ENABLE_F12(v_blank)) {
-			*pc_mode = LPU237_TOOLS_IBUTTON_MODE_F12;
-		}
-		else if (IS_IBUTTON_ENABLE_ZERO7(v_blank)) {
-			*pc_mode = LPU237_TOOLS_IBUTTON_MODE_ZEROS7;
-		}
-		else if (IS_IBUTTON_ENABLE_ADDIMATT_STYLE(v_blank)) {
-			*pc_mode = LPU237_TOOLS_IBUTTON_MODE_ADDMIT;
-		}
-		else if (IS_IBUTTON_DISABLE_ZEROS(v_blank)) {
+		cprotocol_lpu237::type_ibutton_mode m = ptr_device->get_ibutton_mode();
+		switch (m) {
+		case cprotocol_lpu237::ibutton_none:
 			*pc_mode = LPU237_TOOLS_IBUTTON_MODE_NONE;
-		}
-		else {
+			break;
+		case cprotocol_lpu237::ibutton_zeros:
 			*pc_mode = LPU237_TOOLS_IBUTTON_MODE_ZEROS;
-		}
+			break;
+		case cprotocol_lpu237::ibutton_f12:
+			*pc_mode = LPU237_TOOLS_IBUTTON_MODE_F12;
+			break;
+		case cprotocol_lpu237::ibutton_zeros7:
+			*pc_mode = LPU237_TOOLS_IBUTTON_MODE_ZEROS7;
+			break;
+		case cprotocol_lpu237::ibutton_addmit:
+			*pc_mode = LPU237_TOOLS_IBUTTON_MODE_ADDMIT;
+			break;
+		default:
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : undefined mode : %u\n", __WFUNCTION__, (unsigned char)m);
+			continue;
+		}//end switch
 
-
-		if (CLog::GetLog())	CLog::GetLog()->Log(true, CLog::LEV_NORMAL, _T(" : RET : %s : %d\n"), __WFUNCTION__, *pc_mode);
-		dw_result = LPU237_TOOLS_RESULT_SUCCESS;
+		dwResult = ccb_client::const_dll_result_success;
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : %u\n", __WFUNCTION__, (unsigned char)m);
 	} while (0);
 
-	return dw_result;
+	return dwResult;
 }
 
 #define	_SET_IBUTTON_ENABLE_F12(cBlnk)		(cBlnk[2]=(cBlnk[2]&0xF0)|(0x02|0x01))
@@ -1776,46 +1897,48 @@ unsigned long _CALLTYPE_ LPU237_tools_msr_get_ibutton_mode(HANDLE hDev, unsigned
 
 unsigned long _CALLTYPE_ LPU237_tools_msr_set_ibutton_mode(HANDLE hDev, unsigned char c_mode)
 {
-	DWORD dw_result(LPU237_TOOLS_RESULT_ERROR);
+	unsigned long dwResult(ccb_client::const_dll_result_error);
+	unsigned long n_device_index(PtrToUlong(hDev));
+	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
 
 	do {
-		_tg_sub_lpu237::CLinker::type_ptr& linker = PreCheck(_tstring(__WFUNCTION__), hDev);
-		if (linker == nullptr) {
+		_mp::clog::get_instance().log_fmt(L" : CAL : %ls : 0x%x\n", __WFUNCTION__, hDev);
+		if (!ptr_manager_of_device_of_client) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : none manager_of_device_of_client.\n", __WFUNCTION__);
 			continue;
 		}
 
-
-		std::vector<unsigned char>v_blank(device_elpusk::CDevHidLpu237Config::const_size_blank, 0);
-		linker->get_config_parameters().get_blanks(&v_blank[0]);
-
-		switch (c_mode)
-		{
-		case LPU237_TOOLS_IBUTTON_MODE_F12:
-			_SET_IBUTTON_ENABLE_F12(v_blank);
-			break;
-		case LPU237_TOOLS_IBUTTON_MODE_ZEROS7:
-			_SET_IBUTTON_ENABLE_ZERO7(v_blank);
-			break;
-		case LPU237_TOOLS_IBUTTON_MODE_ADDMIT:
-			_SET_IBUTTON_ENABLE_ADDIMATT_STYLE(v_blank);
-			break;
-		case LPU237_TOOLS_IBUTTON_MODE_ZEROS:
-			_SET_IBUTTON_ENABLE_ZEROS(v_blank);
-			break;
-		case LPU237_TOOLS_IBUTTON_MODE_NONE:
-			_SET_IBUTTON_ENABLE_NONE(v_blank);
-			break;
-		default:
+		lpu237_of_client::type_ptr_lpu237_of_client& ptr_device = ptr_manager_of_device_of_client->get_device(n_device_index);
+		if (ptr_device->is_null_device()) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : INVALID_HANDLE_VALUE\n", __WFUNCTION__);
 			continue;
+		}
+		switch(c_mode) {
+				case LPU237_TOOLS_IBUTTON_MODE_NONE:
+					ptr_device->set_ibutton_mode(cprotocol_lpu237::ibutton_none);
+					break;
+				case LPU237_TOOLS_IBUTTON_MODE_ZEROS:
+					ptr_device->set_ibutton_mode(cprotocol_lpu237::ibutton_zeros);
+					break;
+				case LPU237_TOOLS_IBUTTON_MODE_F12:
+					ptr_device->set_ibutton_mode(cprotocol_lpu237::ibutton_f12);
+					break;
+				case LPU237_TOOLS_IBUTTON_MODE_ZEROS7:
+					ptr_device->set_ibutton_mode(cprotocol_lpu237::ibutton_zeros7);
+					break;
+				case LPU237_TOOLS_IBUTTON_MODE_ADDMIT:
+					ptr_device->set_ibutton_mode(cprotocol_lpu237::ibutton_addmit);
+					break;
+				default:
+					_mp::clog::get_instance().log_fmt(L" : RET : %ls : undefined mode : %u\n", __WFUNCTION__, c_mode);
+					continue;
 		}//end switch
 
-		linker->get_config_parameters().set_blanks(&v_blank[0]);
-
-		if (CLog::GetLog())	CLog::GetLog()->Log(true, CLog::LEV_NORMAL, _T(" : RET : %s : %d\n"), __WFUNCTION__, c_mode);
-		dw_result = LPU237_TOOLS_RESULT_SUCCESS;
+		dwResult = ccb_client::const_dll_result_success;
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : ibutton mode : %u\n", __WFUNCTION__, c_mode);
 	} while (0);
 
-	return dw_result;
+	return dwResult;
 }
 
 /*!
@@ -1835,42 +1958,45 @@ unsigned long _CALLTYPE_ LPU237_tools_msr_set_ibutton_mode(HANDLE hDev, unsigned
 */
 unsigned long _CALLTYPE_ LPU237_tools_msr_get_ibutton_tag(HANDLE hDev, unsigned char b_remove, unsigned char b_prefix, unsigned char* s_tag)
 {
-	DWORD dw_result(LPU237_TOOLS_RESULT_ERROR);
+	unsigned long dwResult(ccb_client::const_dll_result_error);
+	unsigned long n_device_index(PtrToUlong(hDev));
+	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
 
 	do {
-		_tg_sub_lpu237::CLinker::type_ptr& linker = PreCheck(_tstring(__WFUNCTION__), hDev);
-		if (linker == nullptr) {
+		_mp::clog::get_instance().log_fmt(L" : CAL : %ls : 0x%x\n", __WFUNCTION__, hDev);
+		if (!ptr_manager_of_device_of_client) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : none manager_of_device_of_client.\n", __WFUNCTION__);
 			continue;
 		}
 
-		device_elpusk::CDevHidLpu237Config::type_tag v_tag;
-
+		lpu237_of_client::type_ptr_lpu237_of_client& ptr_device = ptr_manager_of_device_of_client->get_device(n_device_index);
+		if (ptr_device->is_null_device()) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : INVALID_HANDLE_VALUE\n", __WFUNCTION__);
+			continue;
+		}
+		//
+		bool b_remove_bool = false;
 		if (b_remove) {
-			if (!linker->get_config_parameters().is_structure_version_greater_then_equal_four())
-				continue;//not support
+			b_remove_bool = true;
 		}
-
+		bool b_prefix_bool = false;
 		if (b_prefix) {
-			if (b_remove)
-				v_tag = linker->get_config_parameters().get_prefix_ibutton_remove();
-			else
-				v_tag = linker->get_config_parameters().getPrefix_iButton();
-		}
-		else {
-			if (b_remove)
-				v_tag = linker->get_config_parameters().get_postfix_ibutton_remove();
-			else
-				v_tag = linker->get_config_parameters().getPostfix_iButton();
+			b_prefix_bool = true;
 		}
 
-		if (s_tag) {
-			memcpy(s_tag, &v_tag[0], v_tag.size());
+		_mp::type_v_buffer v = ptr_device->get_ibutton_tag(b_remove_bool, b_prefix_bool);
+		dwResult = v.size();
+
+		if(s_tag == NULL) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : s_tag == null : %u\n", __WFUNCTION__, v.size());
+			continue;
 		}
-		if (CLog::GetLog())	CLog::GetLog()->Log(true, CLog::LEV_NORMAL, _T(" : RET : %s : %d\n"), __WFUNCTION__, v_tag.size());
-		dw_result = v_tag.size();
+
+		std::copy(v.begin(), v.end(), s_tag);
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : %u\n", __WFUNCTION__, (unsigned char)v.size());
 	} while (0);
 
-	return dw_result;
+	return dwResult;
 }
 
 
@@ -1891,43 +2017,44 @@ unsigned long _CALLTYPE_ LPU237_tools_msr_get_ibutton_tag(HANDLE hDev, unsigned 
 */
 unsigned long _CALLTYPE_ LPU237_tools_msr_set_ibutton_tag(HANDLE hDev, unsigned char b_remove, unsigned char b_prefix, const unsigned char* s_tag, unsigned long dw_tag)
 {
-	DWORD dw_result(LPU237_TOOLS_RESULT_ERROR);
+	unsigned long dwResult(ccb_client::const_dll_result_error);
+	unsigned long n_device_index(PtrToUlong(hDev));
+	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
 
 	do {
-		_tg_sub_lpu237::CLinker::type_ptr& linker = PreCheck(_tstring(__WFUNCTION__), hDev);
-		if (linker == nullptr) {
+		_mp::clog::get_instance().log_fmt(L" : CAL : %ls : 0x%x\n", __WFUNCTION__, hDev);
+		if (!ptr_manager_of_device_of_client) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : none manager_of_device_of_client.\n", __WFUNCTION__);
 			continue;
 		}
 
-		device_elpusk::CDevHidLpu237Config::type_tag v_tag;
-		if (s_tag && dw_tag > 0) {
-			v_tag.resize(dw_tag, 0);
-			std::copy(&s_tag[0], &s_tag[dw_tag], std::begin(v_tag));
+		lpu237_of_client::type_ptr_lpu237_of_client& ptr_device = ptr_manager_of_device_of_client->get_device(n_device_index);
+		if (ptr_device->is_null_device()) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : INVALID_HANDLE_VALUE\n", __WFUNCTION__);
+			continue;
 		}
-
+		//
+		bool b_remove_bool = false;
 		if (b_remove) {
-			if (!linker->get_config_parameters().is_structure_version_greater_then_equal_four())
-				continue;//not support
+			b_remove_bool = true;
 		}
-
+		bool b_prefix_bool = false;
 		if (b_prefix) {
-			if (b_remove)
-				linker->get_config_parameters().set_prefix_ibutton_remove(v_tag);
-			else
-				linker->get_config_parameters().setPrefix_iButton(v_tag);
-		}
-		else {
-			if (b_remove)
-				linker->get_config_parameters().set_postfix_ibutton_remove(v_tag);
-			else
-				linker->get_config_parameters().setPostfix_iButton(v_tag);
+			b_prefix_bool = true;
 		}
 
-		if (CLog::GetLog())	CLog::GetLog()->Log(true, CLog::LEV_NORMAL, _T(" : RET : %s : %d\n"), __WFUNCTION__, v_tag.size());
-		dw_result = LPU237_TOOLS_RESULT_SUCCESS;
+		_mp::type_v_buffer v;
+		if (s_tag && dw_tag > 0 && (dw_tag % 2 == 0)) {
+			std::copy(s_tag, s_tag + dw_tag, std::back_inserter(v));
+		}
+
+		ptr_device->set_ibutton_tag(b_remove_bool, b_prefix_bool,v);
+		dwResult = ccb_client::const_dll_result_success;
+
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : success\n", __WFUNCTION__);
 	} while (0);
 
-	return dw_result;
+	return dwResult;
 }
 
 /*!
@@ -1945,29 +2072,36 @@ unsigned long _CALLTYPE_ LPU237_tools_msr_set_ibutton_tag(HANDLE hDev, unsigned 
 */
 unsigned long _CALLTYPE_ LPU237_tools_msr_get_ibutton_remove_indication_tag(HANDLE hDev, unsigned char* s_tag)
 {
-	DWORD dw_result(LPU237_TOOLS_RESULT_ERROR);
+	unsigned long dwResult(ccb_client::const_dll_result_error);
+	unsigned long n_device_index(PtrToUlong(hDev));
+	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
 
 	do {
-		_tg_sub_lpu237::CLinker::type_ptr& linker = PreCheck(_tstring(__WFUNCTION__), hDev);
-		if (linker == nullptr) {
+		_mp::clog::get_instance().log_fmt(L" : CAL : %ls : 0x%x\n", __WFUNCTION__, hDev);
+		if (!ptr_manager_of_device_of_client) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : none manager_of_device_of_client.\n", __WFUNCTION__);
 			continue;
 		}
 
-		device_elpusk::CDevHidLpu237Config::type_tag v_tag;
-
-		if (!linker->get_config_parameters().is_structure_version_greater_then_equal_four())
-			continue;//not support
-
-		v_tag = linker->get_config_parameters().get_ibutton_remove();
-
-		if (s_tag) {
-			memcpy(s_tag, &v_tag[0], v_tag.size());
+		lpu237_of_client::type_ptr_lpu237_of_client& ptr_device = ptr_manager_of_device_of_client->get_device(n_device_index);
+		if (ptr_device->is_null_device()) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : INVALID_HANDLE_VALUE\n", __WFUNCTION__);
+			continue;
 		}
-		if (CLog::GetLog())	CLog::GetLog()->Log(true, CLog::LEV_NORMAL, _T(" : RET : %s : %d\n"), __WFUNCTION__, v_tag.size());
-		dw_result = v_tag.size();
+		//
+		_mp::type_v_buffer v = ptr_device->get_ibutton_remove_indicate_tag();
+		dwResult = v.size();
+
+		if (s_tag == NULL) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : s_tag == null : %u\n", __WFUNCTION__, v.size());
+			continue;
+		}
+
+		std::copy(v.begin(), v.end(), s_tag);
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : %u\n", __WFUNCTION__, (unsigned char)v.size());
 	} while (0);
 
-	return dw_result;
+	return dwResult;
 }
 
 /*!
@@ -1985,30 +2119,35 @@ unsigned long _CALLTYPE_ LPU237_tools_msr_get_ibutton_remove_indication_tag(HAND
 */
 unsigned long _CALLTYPE_ LPU237_tools_msr_set_ibutton_remove_indication_tag(HANDLE hDev, const unsigned char* s_tag, unsigned long dw_tag)
 {
-	DWORD dw_result(LPU237_TOOLS_RESULT_ERROR);
+	unsigned long dwResult(ccb_client::const_dll_result_error);
+	unsigned long n_device_index(PtrToUlong(hDev));
+	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
 
 	do {
-		_tg_sub_lpu237::CLinker::type_ptr& linker = PreCheck(_tstring(__WFUNCTION__), hDev);
-		if (linker == nullptr) {
+		_mp::clog::get_instance().log_fmt(L" : CAL : %ls : 0x%x\n", __WFUNCTION__, hDev);
+		if (!ptr_manager_of_device_of_client) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : none manager_of_device_of_client.\n", __WFUNCTION__);
 			continue;
 		}
 
-		if (!s_tag)
+		lpu237_of_client::type_ptr_lpu237_of_client& ptr_device = ptr_manager_of_device_of_client->get_device(n_device_index);
+		if (ptr_device->is_null_device()) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : INVALID_HANDLE_VALUE\n", __WFUNCTION__);
 			continue;
-		if (dw_tag == 0)
-			continue;
+		}
+		//
+		_mp::type_v_buffer v;
+		if (s_tag && dw_tag > 0 && (dw_tag % 2 == 0)) {
+			std::copy(s_tag, s_tag + dw_tag, std::back_inserter(v));
+		}
 
-		device_elpusk::CDevHidLpu237Config::type_tag v_tag(&s_tag[0], &s_tag[dw_tag]);
+		ptr_device->set_ibutton_remove_indicate_tag(v);
+		dwResult = ccb_client::const_dll_result_success;
 
-		if (!linker->get_config_parameters().is_structure_version_greater_then_equal_four())
-			continue;//not support
-
-		linker->get_config_parameters().set_ibutton_remove(v_tag);
-		if (CLog::GetLog())	CLog::GetLog()->Log(true, CLog::LEV_NORMAL, _T(" : RET : %s : %d\n"), __WFUNCTION__, v_tag.size());
-		dw_result = LPU237_TOOLS_RESULT_SUCCESS;
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : success\n", __WFUNCTION__);
 	} while (0);
 
-	return dw_result;
+	return dwResult;
 }
 
 /*!

@@ -35,11 +35,41 @@ public:
 	cprotocol_lpu237::type_function get_device_function() const;
 
 	cprotocol_lpu237::type_system_interface get_interface();
-
 	void set_interface(cprotocol_lpu237::type_system_interface inf);
 
 	uint32_t get_buzzer_frequency();
 	void set_buzzer_frequency(uint32_t n_frequency);
+
+	cprotocol_lpu237::type_keyboard_language_index get_language();
+	void set_language(cprotocol_lpu237::type_keyboard_language_index language);
+
+	bool get_enable_track(int n_track);
+	void set_enable_track(int n_track, bool b_enable);
+
+	_mp::type_v_buffer get_msr_private_tag(
+		int n_track
+		,bool b_prefix
+	);
+	void set_msr_private_tag(
+		int n_track
+		, bool b_prefix
+		, const _mp::type_v_buffer& v_tag
+	);
+
+	cprotocol_lpu237::type_ibutton_mode get_ibutton_mode();
+	void set_ibutton_mode(cprotocol_lpu237::type_ibutton_mode mode);
+
+	_mp::type_v_buffer get_ibutton_tag(bool b_remove, bool b_prefix);
+	void set_ibutton_tag(bool b_remove, bool b_prefix, const _mp::type_v_buffer& v_tag);
+
+	_mp::type_v_buffer get_ibutton_remove_indicate_tag();
+	void set_ibutton_remove_indicate_tag(const _mp::type_v_buffer& v_tag);
+
+	/**
+	* @brief system parameter 를 기본값으로 설정.
+	*/
+	void set_default();
+	void set_default_with_inf_is_vcom();
 
 	//cmd_x() : communicate with device. by device protocol.
 	bool cmd_get_system_information_with_name();
