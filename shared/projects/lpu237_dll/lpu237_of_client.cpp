@@ -300,6 +300,57 @@ void lpu237_of_client::set_ibutton_remove_indicate_tag(const _mp::type_v_buffer&
     } while (false);
 }
 
+std::pair<int, int> lpu237_of_client::get_ibutton_range()
+{
+    int n_start(-1), n_stop(-1);
+    do {
+        std::lock_guard<std::mutex> lock(m_mutex);
+
+        n_start = m_protocol.get_ibutton_start_code_zero_base_index();
+        n_stop = m_protocol.get_ibutton_stop_code_zero_base_index();
+
+        if (n_start == 0 && n_stop == 0) {
+            n_stop = 15; // (0,0) -> 은 실제 (0,15) 를 의미한다.
+        }
+        else if (n_start == 0 && n_stop == 15) {
+            n_stop = 0; // (0,15) -> 은 실제 (0,0) 를 의미한다.
+        }
+
+    } while (false);
+    return std::make_pair(n_start, n_stop);
+}
+
+void lpu237_of_client::set_ibutton_range(int n_zero_base_offset_start, int n_zero_base_offset_stop)
+{
+    do {
+        std::lock_guard<std::mutex> lock(m_mutex);
+
+        int n_start(n_zero_base_offset_start),n_stop(n_zero_base_offset_stop);
+
+        if (n_start < 0) {
+            n_start = (int)m_protocol.get_ibutton_start_code_zero_base_index();
+        }
+        if (n_stop < 0) {
+            n_stop = (int)m_protocol.get_ibutton_stop_code_zero_base_index();
+        }
+
+        if (n_start == 0 && n_stop == 0) {
+            n_stop = 15; // (0,0) -> 은 실제 (0,15) 를 의미한다.
+        }
+        else if (n_start == 0 && n_stop == 15) {
+            n_stop = 0; // (0,15) -> 은 실제 (0,0) 를 의미한다.
+        }
+
+        if (n_zero_base_offset_start >= 0) {
+            m_protocol.set_ibutton_start_code_zero_base_index(n_start);
+        }
+        if (n_zero_base_offset_stop >= 0) {
+            m_protocol.set_ibutton_stop_code_zero_base_index(n_stop);
+        }
+
+    } while (false);
+}
+
 void lpu237_of_client::set_default()
 {
     std::lock_guard<std::mutex> lock(m_mutex);
@@ -308,8 +359,8 @@ void lpu237_of_client::set_default()
 	m_protocol.set_language(cprotocol_lpu237::language_map_index_english);
 	m_protocol.set_buzzer_frequency(cprotocol_lpu237::the_frequency_of_on_buzzer);
 
-    CDevHidLpu237Config::type_tag v_tag_enter_only{ 0xff,0x0d };
-    CDevHidLpu237Config::type_tag v_tag_empty(0);
+    _mp::type_v_buffer v_tag_enter_only{ 0xff,0x0d };
+    _mp::type_v_buffer v_tag_empty(0);
 
     unsigned char s_max_size[] = { 76,37 + 1,37 };
     unsigned char s_bit_size[] = { 7,5,5 };
@@ -322,63 +373,61 @@ void lpu237_of_client::set_default()
     unsigned char s_emc_type[] = { 0,0,0 };
     unsigned char s_add_value[] = { 0x20,0x30,0x30 };
 
-    CDevHidLpu237Config::type_tag v_tag_pre_msr[] = {
+    _mp::type_v_buffer v_tag_pre_msr[] = {
         { 0x02,0x22 },
         { 0x00,0x33 },
         { 0x00,0x33 }
     };
-    CDevHidLpu237Config::type_tag v_tag_post_msr[] = {
+    _mp::type_v_buffer v_tag_post_msr[] = {
         { 0x02,0x38,0xff,0x0d },
         { 0x02,0x38,0xff,0x0d },
         { 0x02,0x38,0xff,0x0d }
     };
 
     for (int i = 0; i < 3; i++) {
-        setTrackStatus((CDevHidLpu237Config::type_msr_track_numer)i);
-        setPrivatePrefix((CDevHidLpu237Config::type_msr_track_numer)i, v_tag_pre_msr[i]);
-        setPrivatePostfix((CDevHidLpu237Config::type_msr_track_numer)i, v_tag_post_msr[i]);
+        m_protocol.set_enable_iso((cprotocol_lpu237::type_msr_track_Numer)i, true);
+		m_protocol.set_private_prefix((cprotocol_lpu237::type_msr_track_Numer)i, 0, v_tag_pre_msr[i]);
+		m_protocol.set_private_postfix((cprotocol_lpu237::type_msr_track_Numer)i, 0, v_tag_post_msr[i]);
 
-        set_combination((CDevHidLpu237Config::type_msr_track_numer)i, 1);
-        set_max_size((CDevHidLpu237Config::type_msr_track_numer)i, 0, s_max_size[i]);
-        set_bit_size((CDevHidLpu237Config::type_msr_track_numer)i, 0, s_bit_size[i]);
-        set_data_mask((CDevHidLpu237Config::type_msr_track_numer)i, 0, s_data_mask[i]);
-        set_use_parity((CDevHidLpu237Config::type_msr_track_numer)i, 0, b_use_parity[i]);
-        set_parity_type((CDevHidLpu237Config::type_msr_track_numer)i, 0, s_parity_type[i]);
-        set_stxl((CDevHidLpu237Config::type_msr_track_numer)i, 0, s_stxl[i]);
-        set_etxl((CDevHidLpu237Config::type_msr_track_numer)i, 0, s_etxl[i]);
-        set_use_error_correct((CDevHidLpu237Config::type_msr_track_numer)i, 0, b_use_error_correct[i]);
-        set_ecm_type((CDevHidLpu237Config::type_msr_track_numer)i, 0, s_emc_type[i]);
-        set_add_value((CDevHidLpu237Config::type_msr_track_numer)i, 0, s_add_value[i]);
+		m_protocol.set_combination((cprotocol_lpu237::type_msr_track_Numer)i, 1);
+		m_protocol.set_msr_max_size((cprotocol_lpu237::type_msr_track_Numer)i, 0, s_max_size[i]);
+		m_protocol.set_msr_bit_size((cprotocol_lpu237::type_msr_track_Numer)i, 0, s_bit_size[i]);
+		m_protocol.set_msr_data_mask((cprotocol_lpu237::type_msr_track_Numer)i, 0, s_data_mask[i]);
+		m_protocol.set_msr_use_parity((cprotocol_lpu237::type_msr_track_Numer)i, 0, b_use_parity[i]);
+		m_protocol.set_msr_parity_type((cprotocol_lpu237::type_msr_track_Numer)i, 0, s_parity_type[i]);
+		m_protocol.set_msr_stxl((cprotocol_lpu237::type_msr_track_Numer)i, 0, s_stxl[i]);
+		m_protocol.set_msr_etxl((cprotocol_lpu237::type_msr_track_Numer)i, 0, s_etxl[i]);
+		m_protocol.set_msr_use_error_correct((cprotocol_lpu237::type_msr_track_Numer)i, 0, b_use_error_correct[i]);
+		m_protocol.set_msr_ecm_type((cprotocol_lpu237::type_msr_track_Numer)i, 0, s_emc_type[i]);
+		m_protocol.set_msr_add_value((cprotocol_lpu237::type_msr_track_Numer)i, 0, s_add_value[i]);
     }//end for
 
-    set_direction(CDevHidLpu237Config::md_bidirectional);
+    m_protocol.set_direction(cprotocol_lpu237::dir_bidectional);
 
-    setGlobalPrefix(v_tag_empty);
-    setGlobalPostfix(v_tag_empty);
+    m_protocol.set_global_prefix(v_tag_empty);
+	m_protocol.set_global_postfix(v_tag_empty);
 
-    setPrefix_iButton(v_tag_empty);
-    setPostfix_iButton(v_tag_enter_only);
+	m_protocol.set_prefix_ibutton(v_tag_empty);
+	m_protocol.set_postfix_ibutton(v_tag_empty);
 
-    set_ibutton_remove(v_tag_empty);
-    set_prefix_ibutton_remove(v_tag_empty);
-    set_postfix_ibutton_remove(v_tag_enter_only);
+	m_protocol.set_ibutton_remove(v_tag_empty);
+	m_protocol.set_prefix_ibutton_remove(v_tag_empty);
+    m_protocol.set_postfix_ibutton_remove(v_tag_enter_only);
 
-    setPrefix_Uart(v_tag_empty);
-    setPostfix_Uart(v_tag_empty);
+	m_protocol.set_prefix_uart(v_tag_empty);
+	m_protocol.set_postfix_uart(v_tag_empty);
 
+    m_protocol.set_order_of_track(cprotocol_lpu237::iso1_track, cprotocol_lpu237::iso2_track, cprotocol_lpu237::iso3_track);
 
-    unsigned char s_blanks[const_size_blank] = { 0, };
-    get_blanks(s_blanks);
-    s_blanks[0] = 0;
-    s_blanks[1] = s_blanks[1] & 0xf0;//0~3 bit reset
-    s_blanks[2] = s_blanks[2] & 0xf0;//0~3 bit reset
-    set_blanks(s_blanks);
-
-    unsigned long n_order[const_the_number_of_tracks] = { 0,1,2 };
-    set_order(n_order);
-    /////////////////
-    
-    
+    // blanks arrary setting
+    m_protocol.set_enable_zeros_ibutton(true);
+    m_protocol.set_indicate_success_if_any_trace_ok(false);
+    m_protocol.set_ignore_1track_if_12_is_equal(false);
+    m_protocol.set_ignore_3track_if_12_is_equal(false);
+    m_protocol.set_ignore_colron(false);
+	m_protocol.set_mmd1100_reset_interval(0);
+	m_protocol.set_ibutton_start_code_zero_base_index(0);// default : (0,0) 이어야 fw 에서 (0,15) 로 인식함.
+    m_protocol.set_ibutton_stop_code_zero_base_index(0);
 }
 
 void lpu237_of_client::set_default_with_inf_is_vcom()

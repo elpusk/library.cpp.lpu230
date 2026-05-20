@@ -66,6 +66,23 @@ public:
 	void set_ibutton_remove_indicate_tag(const _mp::type_v_buffer& v_tag);
 
 	/**
+	* @brief ibutton key 의 전송 범위를 얻는다.
+	* @return if first or second is negative, error
+	*
+	*	first - 전송 시작 zero-base offset(0~15)
+	* 
+	*	second - 전송 종료 zero-base offset(0~15)
+	*/
+	std::pair<int, int> get_ibutton_range();
+
+	/**
+	* @brief ibutton key 전송 범위 설정,
+	* @param n_zero_base_offset_start - 전송 시작 zero-base offset(0~15). 음수면 그 update 하지 말 것.
+	* @param n_zero_base_offset_stop - 전송 종료 zero-base offset(0~15). 음수면 그 update 하지 말 것.
+	*/
+	void set_ibutton_range(int n_zero_base_offset_start, int n_zero_base_offset_stop);
+
+	/**
 	* @brief system parameter 를 기본값으로 설정.
 	*/
 	void set_default();
