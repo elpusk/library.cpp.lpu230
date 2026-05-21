@@ -197,6 +197,9 @@
     <ClCompile Include="..\shared\common\src\capi_client.cpp">
       <Filter>common</Filter>
     </ClCompile>
+    <ClCompile Include="..\shared\projects\lpu237_dll\lpu237_of_client.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="wi_lpu237_tools.rc">

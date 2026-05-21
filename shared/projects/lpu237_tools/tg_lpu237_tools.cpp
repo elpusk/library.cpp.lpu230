@@ -29,6 +29,10 @@
 #include <cdll_ini.h>
 #include <cmap_user_cb.h>
 
+#ifdef _WIN32
+#include <atltrace.h>
+#endif //_WIN32
+
 #define	LPU237_VID		0x134b
 #define	LPU237_PID		0x0206
 #define	LPU237_INF		1
@@ -103,6 +107,7 @@ void _CALLTYPE_ _cb_get_set_parameter(void*p_usr)
 	bool b_complete_transaction(true); // success or error or cancel 등으로 transaction 이 complete 된 경우, true. 아직 transaction 이 진행중인 경우, false.
 	unsigned long n_cur_zero_based_phase_index(0);
 	unsigned long n_resulr_of_phase(LPU237_TOOLS_RESULT_ERROR);
+	bool b_must_be_canceled(false);
 
 	do {
 		bool b_get(false);
@@ -138,6 +143,13 @@ void _CALLTYPE_ _cb_get_set_parameter(void*p_usr)
 			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : get_callback fail for item index %d.\n", __WFUNCTION__, n_item_index);
 			continue;
 		}
+
+		// cancel 요청이 있으면 여기서 시도함.
+		if (g_map_user_cb.is_cancel_requested()) {
+			// cancel 요청 있어
+			b_must_be_canceled = true;
+		}
+
 		if (n_total_phase == 0) {
 			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : n_total_phase is zero.\n", __WFUNCTION__);
 			continue;
@@ -177,12 +189,29 @@ void _CALLTYPE_ _cb_get_set_parameter(void*p_usr)
 			}
 		}
 
+		if (b_must_be_canceled) {
+			n_resulr_of_phase = LPU237_TOOLS_RESULT_CANCEL;
+		}
+
+		if (p_fun) {
+			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : undefined cb is called : n_result_index = %d.\n", __WFUNCTION__, n_result_index);
+			p_fun(p_para, n_resulr_of_phase, LPU237_TOOLS_WPARAM_ERROR);
+			continue;
+		}
 		if (p_fun_get) {
 			//call back 실행
 			p_fun_get(p_para, n_resulr_of_phase, n_cur_zero_based_phase_index, (unsigned long)n_total_phase);
 		}
+		else if (p_fun_set) {
+			//call back 실행, the last parameter is RFU
+			p_fun_set(p_para, n_resulr_of_phase, n_cur_zero_based_phase_index, (unsigned long)n_total_phase,0);
+		}
 
-		if (n_resulr_of_phase != LPU237_TOOLS_RESULT_SUCCESS) {
+		if (n_resulr_of_phase == LPU237_TOOLS_RESULT_CANCEL) {
+			_mp::clog::get_instance().log_fmt(L" : CANCEL : %ls : user by cancel\n", __WFUNCTION__);
+			continue;
+		}
+		else if (n_resulr_of_phase != LPU237_TOOLS_RESULT_SUCCESS) {
 			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : get_result() - error\n", __WFUNCTION__);
 			continue;
 		}
@@ -216,6 +245,9 @@ void _CALLTYPE_ _cb_get_set_parameter(void*p_usr)
 		}
 	}
 
+	if (b_must_be_canceled) {
+		g_map_user_cb.cancel_done();// 요청된 cancel 을 했다고 알림.
+	}
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -723,10 +755,9 @@ unsigned long _CALLTYPE_ LPU237_tools_msr_start_get_setting(
 			continue;
 		}
 				
-		_mp::type_v_buffer v_dev_id;
 		std::shared_ptr<std::mutex> ptr_mutex;
 
-		std::tie(n_item_index,std::ignore, ptr_mutex) = g_map_user_cb.add_callback(-1, v_dev_id, cb, pUser);
+		std::tie(n_item_index,std::ignore, ptr_mutex) = g_map_user_cb.add_callback(-1, v_id, cb, pUser);
 		if (n_item_index < 0) {
 			_mp::clog::get_instance().log_fmt(L" : RET : %ls : [critical error]add_callback error.\n", __WFUNCTION__);
 			continue;
@@ -832,10 +863,9 @@ unsigned long _CALLTYPE_ LPU237_tools_msr_start_set_setting(
 			continue;
 		}
 
-		_mp::type_v_buffer v_dev_id;
 		std::shared_ptr<std::mutex> ptr_mutex;
 
-		std::tie(n_item_index, std::ignore, ptr_mutex) = g_map_user_cb.add_callback(-1, v_dev_id, cb, pUser);
+		std::tie(n_item_index, std::ignore, ptr_mutex) = g_map_user_cb.add_callback(-1, v_id, cb, pUser);
 		if (n_item_index < 0) {
 			_mp::clog::get_instance().log_fmt(L" : RET : %ls : [critical error]add_callback error.\n", __WFUNCTION__);
 			continue;
@@ -940,10 +970,9 @@ unsigned long _CALLTYPE_ LPU237_tools_msr_start_get_setting_except_combination(
 			continue;
 		}
 
-		_mp::type_v_buffer v_dev_id;
 		std::shared_ptr<std::mutex> ptr_mutex;
 
-		std::tie(n_item_index, std::ignore, ptr_mutex) = g_map_user_cb.add_callback(-1, v_dev_id, cb, pUser);
+		std::tie(n_item_index, std::ignore, ptr_mutex) = g_map_user_cb.add_callback(-1, v_id, cb, pUser);
 		if (n_item_index < 0) {
 			_mp::clog::get_instance().log_fmt(L" : RET : %ls : [critical error]add_callback error.\n", __WFUNCTION__);
 			continue;
@@ -1048,10 +1077,9 @@ unsigned long _CALLTYPE_ LPU237_tools_msr_start_set_setting_except_combination(
 			continue;
 		}
 
-		_mp::type_v_buffer v_dev_id;
 		std::shared_ptr<std::mutex> ptr_mutex;
 
-		std::tie(n_item_index, std::ignore, ptr_mutex) = g_map_user_cb.add_callback(-1, v_dev_id, cb, pUser);
+		std::tie(n_item_index, std::ignore, ptr_mutex) = g_map_user_cb.add_callback(-1, v_id, cb, pUser);
 		if (n_item_index < 0) {
 			_mp::clog::get_instance().log_fmt(L" : RET : %ls : [critical error]add_callback error.\n", __WFUNCTION__);
 			continue;
@@ -2307,7 +2335,23 @@ unsigned long _CALLTYPE_ LPU237_tools_msr_get_version_minor(const unsigned char*
 
 /*!
 * function
-*	stop operation of LPU237_tools_msr_update_x.
+*	기존 api 에서 exported 되나, 설명서(lpu230_api_tools_UM_KOR_V5.0.pdf) 에서는 이 함수에 대한 설명이 없다.
+* 
+*	기존 코드 설명상 "stop operation of LPU237_tools_msr_update_x." 라고 되어 있으나 tg_lpu230_tools.dll 에는
+* 
+*	LPU237_tools_msr_update_x 라는 함수는 없다. 또한 이 dll 을 사용하는 예시 프로그램 tp_lpu237.exe(vs2019 용으로 제작, https://github.com/elpusk/example.lpu237 )
+* 
+*	에서도 이 함수는 사용하지 않고 있으며, wrapper class 에서 만, wrapper 하고 있음.
+* 
+*	따라서 함수는 있어야 하지만 기능은 수정되어야 한다. 왜냐하면, 기존 코드 주석에서 언급한 LPU237_tools_msr_update_x 함수가 아예
+* 
+*	존재하지 않기 때문이다.
+* 
+*	따라서 새롭게 주어진 기능은 ...
+* 
+*	_cb_get_set_parameter() 이 호출 중 일때, 성공이어서 다음 phase 를 실행할수 있어도, 그 것을 중지 시키고 cancel 을 return 하는 것으로 
+*
+*	기능을 정의 한다.
 *
 * parameters
 *
@@ -2319,35 +2363,22 @@ unsigned long _CALLTYPE_ LPU237_tools_msr_get_version_minor(const unsigned char*
 unsigned long _CALLTYPE_ LPU237_tools_msr_cancel()
 {
 	unsigned long dwResult(ccb_client::const_dll_result_error);
-	unsigned long n_device_index(PtrToUlong(hDev));
-	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
 
 	do {
-		_mp::clog::get_instance().log_fmt(L" : CAL : %ls : 0x%x\n", __WFUNCTION__, hDev);
-		if (!ptr_manager_of_device_of_client) {
-			_mp::clog::get_instance().log_fmt(L" : RET : %ls : none manager_of_device_of_client.\n", __WFUNCTION__);
+		_mp::clog::get_instance().log_fmt(L" : CAL : %ls : 0x%x\n", __WFUNCTION__);
+		_mp::cwait::type_ptr ptr_wait = g_map_user_cb.start_cancel();
+		if (!ptr_wait) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : start cancel failure\n", __WFUNCTION__);
 			continue;
 		}
 
-		lpu237_of_client::type_ptr_lpu237_of_client& ptr_device = ptr_manager_of_device_of_client->get_device(n_device_index);
-		if (ptr_device->is_null_device()) {
-			_mp::clog::get_instance().log_fmt(L" : RET : %ls : INVALID_HANDLE_VALUE\n", __WFUNCTION__);
+		int n_mm_time_out(1000); // unit mm sec time-out
+		if (ptr_wait->wait_for_one_at_time() == _mp::cwait::const_event_timeout) {
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : timeout : %d mmsec\n", __WFUNCTION__, n_mm_time_out);
 			continue;
 		}
-
-		unsigned char c_cur_inf = (unsigned char)ptr_device->get_interface();
-
-		ptr_device->set_interface((cprotocol_lpu237::type_system_interface)*pc_inteface);
-		*pc_inteface = c_cur_inf;
-
-
-		if (!ptr_device->cmd_changed_interface_apply()) {
-			_mp::clog::get_instance().log_fmt(L" : RET : %ls : fail cmd_changed_interface_apply\n", __WFUNCTION__);
-			continue;
-		}
-
-		_mp::clog::get_instance().log_fmt(L" : RET : %ls : success\n", __WFUNCTION__);
 		dwResult = ccb_client::const_dll_result_success;
+		_mp::clog::get_instance().log_fmt(L" : RET : %ls : success\n", __WFUNCTION__);
 	} while (0);
 
 	return dwResult;

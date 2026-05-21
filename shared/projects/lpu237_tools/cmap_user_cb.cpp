@@ -11,7 +11,6 @@ cmap_user_cb::cmap_user_cb() :
 cmap_user_cb::~cmap_user_cb()
 {
 	m_map_cb.clear();
-	m_map_msg_cnt.clear();
 }
 
 std::tuple<long, _mp::cwait::type_ptr, std::shared_ptr<std::mutex>> cmap_user_cb::add_callback(
@@ -49,7 +48,6 @@ std::tuple<long, _mp::cwait::type_ptr, std::shared_ptr<std::mutex>> cmap_user_cb
 			, ptr_m
 			, n_total_phase
 		);
-		m_map_msg_cnt[m_n_cur_item_index] = std::make_tuple(0, 0, 0); // initialize message counter
 
 		n_item_index = m_n_cur_item_index;
 		++m_n_cur_item_index;
@@ -95,7 +93,6 @@ std::tuple<long, _mp::cwait::type_ptr, std::shared_ptr<std::mutex>> cmap_user_cb
 			, ptr_m
 			, n_total_phase
 		);
-		m_map_msg_cnt[m_n_cur_item_index] = std::make_tuple(0, 0, 0); // initialize message counter
 
 		n_item_index = m_n_cur_item_index;
 		++m_n_cur_item_index;
@@ -141,7 +138,6 @@ std::tuple<long, _mp::cwait::type_ptr, std::shared_ptr<std::mutex>> cmap_user_cb
 			, ptr_m
 			, n_total_phase
 		);
-		m_map_msg_cnt[m_n_cur_item_index] = std::make_tuple(0, 0, 0); // initialize message counter
 
 		n_item_index = m_n_cur_item_index;
 		++m_n_cur_item_index;
@@ -233,32 +229,6 @@ bool cmap_user_cb::remove_callback(long n_item_index)
 	return _remove_callback(n_item_index);
 }
 
-unsigned long cmap_user_cb::get_sync_result(long n_item_index)
-{
-	unsigned long n_result(LPU237_TOOLS_RESULT_ERROR);
-	do {
-		std::lock_guard<std::mutex> lock(m_mutex);
-		auto it = m_map_cb.find(n_item_index);
-		if (it == m_map_cb.end()) {
-			continue; // not found
-		}
-		n_result = std::get<7>(it->second);
-	} while (false);
-	return n_result;
-}
-
-void cmap_user_cb::set_sync_result(long n_item_index, unsigned long dw_result)
-{
-	do {
-		std::lock_guard<std::mutex> lock(m_mutex);
-		auto it = m_map_cb.find(n_item_index);
-		if (it == m_map_cb.end()) {
-			continue; // not found
-		}
-		std::get<7>(it->second) = dw_result;
-	} while (false);
-}
-
 bool cmap_user_cb::_remove_callback(long n_item_index)
 {
 	bool b_reslt(false);
@@ -269,10 +239,6 @@ bool cmap_user_cb::_remove_callback(long n_item_index)
 			continue;
 		}
 		m_map_cb.erase(it);
-		auto it_cnt = m_map_msg_cnt.find(n_item_index);
-		if (it_cnt != m_map_msg_cnt.end()) {
-			m_map_msg_cnt.erase(it_cnt);
-		}
 		b_reslt = true;
 	} while (false);
 	return b_reslt;
@@ -321,35 +287,37 @@ std::tuple<bool, _mp::cwait::type_ptr, std::shared_ptr<std::mutex>> cmap_user_cb
 	return std::make_tuple(b_reslt, ptr_evt, ptr_m);
 }
 
-void cmap_user_cb::set_msg_counter(long n_item_index, int n_sector_erase_cnt, int n_sector_write_cnt, int n_complete_cnt)
+_mp::cwait::type_ptr cmap_user_cb::start_cancel()
 {
 	std::lock_guard<std::mutex> lock(m_mutex);
-	auto it = m_map_msg_cnt.find(n_item_index);
-	if (it != m_map_msg_cnt.end()) {
-		std::get<0>(it->second) = n_sector_erase_cnt;
-		std::get<1>(it->second) = n_sector_write_cnt;
-		std::get<2>(it->second) = n_complete_cnt;
+
+	if (!m_ptr_wait_cancel) {
+		m_ptr_wait_cancel = std::make_shared<_mp::cwait>();
+		m_ptr_wait_cancel->generate_new_event(); // event 는 한개만 사용 할 것이어서, 이벤트 인덱스 번호 저장 불요.
 	}
+	return m_ptr_wait_cancel;
 }
 
-cmap_user_cb::type_tuple_msg_counter cmap_user_cb::get_msg_counter(long n_item_index)
+bool cmap_user_cb::is_cancel_requested()
 {
-	cmap_user_cb::type_tuple_msg_counter cnt(-1, -1, -1);
+	bool b_cancel_is_requested_but_not_yet_canceled(false);
 	std::lock_guard<std::mutex> lock(m_mutex);
-	auto it = m_map_msg_cnt.find(n_item_index);
-	if (it != m_map_msg_cnt.end()) {
-		cnt = it->second;
+	if (m_ptr_wait_cancel) {
+		b_cancel_is_requested_but_not_yet_canceled = true;
 	}
-	return cnt;
+	return b_cancel_is_requested_but_not_yet_canceled;
 }
 
-void cmap_user_cb::inc_msg_counter(long n_item_index, int n_sector_erase_inc, int n_sector_write_inc, int n_complete_inc)
+bool cmap_user_cb::cancel_done()
 {
+	bool b_cancel(false);
+
 	std::lock_guard<std::mutex> lock(m_mutex);
-	auto it = m_map_msg_cnt.find(n_item_index);
-	if (it != m_map_msg_cnt.end()) {
-		std::get<0>(it->second) += n_sector_erase_inc;
-		std::get<1>(it->second) += n_sector_write_inc;
-		std::get<2>(it->second) += n_complete_inc;
+	if (m_ptr_wait_cancel) {
+		m_ptr_wait_cancel->set();
+		m_ptr_wait_cancel.reset(); // 이기서 shared_ptr release 해도, cancel 를 기다리는 shared_ptr 이 메모리 유지 하므로 OK.
+		b_cancel = true;
 	}
+
+	return b_cancel;
 }

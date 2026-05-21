@@ -127,48 +127,38 @@ public:
 		, void*& p_para
 	);
 
-	void set_msg_counter(
-		long n_item_index
-		, int n_sector_erase_cnt
-		, int n_sector_write_cnt
-		, int n_complete_cnt
-	);
+	/**
+	* @brief 비동기 방식으로 실행 중인, transaction 을 중지 시킨다.
+	* 
+	*	callback이 호출 되면, callback 함수에서는 이 함수에 의해 생성된 ptr wait 객체가 있는지 확인하고
+	* 
+	*	ptr wait 가 있으면, 현재 실행한 phase 가 성공이고, 다음 phase 가 남아 있어도, 
+	*
+	*	cancel 하고,  ptr wait 을 set 해주어서, 이 함수로 호출하고, cancel 이 되기를 기다리는 쓰레드의 기다림을 종료 시켜야 한다.
+	* 
+	* @param _mp::cwait::type_ptr 가 empty 이면 에러, 그렇지 않으면, 이 returuned ptr 을 가지고, cancel 완료 될때 까지 기다림.
+	*/
+	_mp::cwait::type_ptr start_cancel();
 
 	/**
-	* @brief get message counter.
-	* @param n_item_index - item index of callback function
-	* @return tuple of (LPU237_FW_WPARAM_SECTOR_ERASE wparam counter, LPU237_FW_WPARAM_SECTOR_WRITE wparam counter, LPU237_FW_WPARAM_COMPLETE wparam counter)
+	* @brief start_cancel() 가 실행 되고 아직 cancel_done() 이 호출된 적이 없는가 검사
+	* @return 
+	* 
+	*	true - start_cancel() 가 실행되고, cancel_done() 이 호출된 적 없음.
+	* 
+	*	false - start_cancel() 실행된적이 없거나, 실행되고, cancel_done() 이 호출이 호출됨.
 	*/
-	cmap_user_cb::type_tuple_msg_counter get_msg_counter(long n_item_index);
+	bool is_cancel_requested();
 
 	/**
-	* @brief increase message counter by given increment values.
-	* @param n_item_index - item index of callback function
-	* @param n_sector_erase_inc - increment value for LPU237_FW_WPARAM_SECTOR_ERASE wparam counter canbe a negative value.
-	* @param n_sector_write_inc - increment value for LPU237_FW_WPARAM_SECTOR_WRITE wparam counter canbe a negative value.
-	* @param n_complete_inc - increment value for LPU237_FW_WPARAM_COMPLETE wparam counter canbe a negative value.
+	* @brief start_cancel() 에 의해 시작된 cancel 를 callback 에서 이 함수를 불러 
+	* 
+	*	wait event set 해서 기다림 종료 함.
+	* 
+	* @return true - success cancel, false - no need cancel(not requested cancelation).
 	*/
-	void inc_msg_counter(
-		long n_item_index
-		, int n_sector_erase_inc
-		, int n_sector_write_inc
-		, int n_complete_inc
-	);
+	bool cancel_done();
 
-
-	/**
-	* @brief get a sync processing result.
-	* @param n_item_index - item index of callback function
-	* @return LPU237_FW_RESULT_SUCCESS, LPU237_FW_RESULT_ERROR, LPU237_FW_RESULT_CANCEL, LPU237_FW_RESULT_TIMEOUT or LPU237_FW_RESULT_NO_MSR
-	*/
-	unsigned long get_sync_result(long n_item_index);
-
-	/**
-	* @brief set a sync processing result.
-	* @param n_item_index - item index of callback function
-	* @param dw_result - LPU237_FW_RESULT_SUCCESS, LPU237_FW_RESULT_ERROR, LPU237_FW_RESULT_CANCEL, LPU237_FW_RESULT_TIMEOUT or LPU237_FW_RESULT_NO_MSR
-	*/
-	void set_sync_result(long n_item_index, unsigned long dw_result);
 
 private:
 	bool _remove_callback(long n_item_index);
@@ -201,14 +191,12 @@ private:
 	// key - item index
 	typedef std::map<long, cmap_user_cb::_type_tuple_item  > _type_map_cb;
 
-	// key - item index
-	typedef std::map<long, cmap_user_cb::type_tuple_msg_counter  > _type_map_msg_cnt;
-
 private:
 	std::mutex m_mutex;
 	cmap_user_cb::_type_map_cb m_map_cb;
-	cmap_user_cb::_type_map_msg_cnt m_map_msg_cnt;
 	long m_n_cur_item_index;
+
+	_mp::cwait::type_ptr m_ptr_wait_cancel;
 
 private:
 	cmap_user_cb(const cmap_user_cb&) = delete;
