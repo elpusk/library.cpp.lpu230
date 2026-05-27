@@ -1021,7 +1021,14 @@ bool capi_client::read_sync(std::vector<unsigned char>&v_rx, unsigned long n_cli
 
 	return b_result;
 }
-bool capi_client::transmit(unsigned long n_client_index, unsigned long n_device_index, unsigned char c_in_id, unsigned char c_out_id, const std::vector<unsigned char>& v_data)
+bool capi_client::transmit(
+	unsigned long n_client_index
+	, unsigned long n_device_index
+	, unsigned char c_in_id
+	, unsigned char c_out_id
+	, const std::vector<unsigned char>& v_data
+	, const std::wstring& s_option /*=std::wstring()*/
+)
 {
 	unsigned long n_result(_mp::cclient::RESULT_ERROR);
 	do {
@@ -1036,7 +1043,8 @@ bool capi_client::transmit(unsigned long n_client_index, unsigned long n_device_
 			.set_action(_mp::cio_packet::act_dev_transmit)
 			.set_in_id(c_in_id)
 			.set_out_id(c_out_id)
-			.set_data(v_data);
+			.set_data(v_data)
+			.set_option(s_option);
 
 		_mp::type_v_buffer v_tx;
 		packet.get_packet_by_json_format(v_tx);

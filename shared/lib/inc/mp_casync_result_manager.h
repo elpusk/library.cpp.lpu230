@@ -88,7 +88,14 @@ namespace _mp
 		}
 
 		// return result index
-		int create_async_result(unsigned long n_device_index, casync_parameter_result::type_callback p_fun, void* p_para, HWND h_wnd, UINT n_msg)
+		int create_async_result(
+			unsigned long n_device_index
+			, casync_parameter_result::type_callback p_fun
+			, void* p_para
+			, HWND h_wnd
+			, UINT n_msg
+			, const std::wstring& s_option = std::wstring()
+		)
 		{
 			int n_result_index(casync_result_manager::const_invalied_result_index);
 
@@ -124,7 +131,7 @@ namespace _mp
 				}
 
 				(*it_map->second.second)[n_result_index] =
-					std::make_shared<casync_parameter_result>(p_fun, p_para, h_wnd, n_msg);
+					std::make_shared<casync_parameter_result>(p_fun, p_para, h_wnd, n_msg, s_option);
 
 			} while (false);
 			return n_result_index;
@@ -287,6 +294,70 @@ namespace _mp
 				n_result_index = it_map->second.first->front();
 				if (b_remove)
 					it_map->second.first->pop_front();
+				//
+			} while (false);
+			return n_result_index;
+		}
+
+		/**
+		* @brief n_device_index 에 해당하는 result index 큐에서 result index 하나를 얻는다.(FIFO)
+		* 
+		*	큐에서 얻은 result index 는 큐에서 제거여부는 q item 의 option string 값에 따른다.
+		*
+		*	q item 의 option string 값이 L"reuse" 라면 큐에서 제거하지 않는다. 같은 값을 result index 값으로 하나의 transaction 에서
+		*	
+		*	모든 phase 의 결과를 얻기 위해.  
+		*
+		* @param n_device_index - 특정 device 를 나타내는 index
+		* @return result index. 큐에서 얻은 result index 가 없는 경우, const_invalied_result_index 를 반환한다.
+		*
+		*	이 result index 값을 가지고 get_async_parameter_result() 함수를 호출하여 비동기 처리 결과를 얻을 수 있다.
+		*/
+		int pop_result_index_with_option(unsigned long n_device_index)
+		{
+			int n_result_index(casync_result_manager::const_invalied_result_index);
+
+			do {
+				std::lock_guard<std::mutex> lock(m_mutex_for_result_manager);
+				_type_map_device_index_pair::iterator it_map = m_map_device_index_pair.find(n_device_index);
+				if (it_map == std::end(m_map_device_index_pair)) {
+					continue;
+				}
+				if (!it_map->second.first) {
+					continue;
+				}
+				if (it_map->second.first->empty()) {
+					continue;
+				}
+
+				n_result_index = it_map->second.first->front();
+				//
+				bool b_remove = true;
+
+				do {
+					casync_result_manager::_type_ptr_map_result_index_ptr_ct_async_parameter_result it_map_pair = it_map->second.second;
+
+					if (!it_map_pair) {
+						continue;
+					}
+					auto it_pair = it_map_pair->find(n_result_index);
+					if (it_pair == it_map_pair->end()) {
+						continue;
+					}
+					if (!it_pair->second) {
+						continue;
+					}
+					std::wstring s_option = it_pair->second->get_option();
+					if (s_option.compare(L"reuse") != 0) {
+						continue;
+					}
+
+					b_remove = false; //재사용을 위해 남겨 둔다.
+				} while (false);
+
+				if (b_remove) {
+					it_map->second.first->pop_front();
+				}
 				//
 			} while (false);
 			return n_result_index;

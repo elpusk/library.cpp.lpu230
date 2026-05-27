@@ -209,7 +209,13 @@ public:
 	* @param s_key : the key parameter for bootloader operation. 만약 이 값이 "file" 이면, s_value 안의 ":" 가 "::" 로 변환되지 않는다. 그 이외의 키값에서는 ":" 가 "::" 로 변환된다.
 	* @param s_value : the value parameter for bootloader operation.
 	*/
-	bool bootloader_operation(unsigned long n_client_index, unsigned long n_device_index, const std::wstring& s_run_type, const std::wstring & s_key, const std::wstring& s_value);
+	bool bootloader_operation(
+		unsigned long n_client_index
+		, unsigned long n_device_index
+		, const std::wstring& s_run_type
+		, const std::wstring & s_key
+		, const std::wstring& s_value
+	);
 
 	bool bootloader_operation_sync(
 		unsigned long n_client_index
@@ -228,7 +234,24 @@ public:
 	bool write_sync(unsigned long n_client_index, unsigned long n_device_index, unsigned char c_out_id, const std::vector<unsigned char>& v_tx);
 	bool read(unsigned long n_client_index, unsigned long n_device_index, unsigned char c_in_id);
 	bool read_sync(std::vector<unsigned char>& v_rx, unsigned long n_client_index, unsigned long n_device_index, unsigned char c_in_id);
-	bool transmit(unsigned long n_client_index, unsigned long n_device_index, unsigned char c_in_id, unsigned char c_out_id, const std::vector<unsigned char>& v_data);
+
+	/**
+	* @brief 비동기 송신/수신 pair 를 시작.
+	* @param n_client_index : client index
+	* @param n_device_index : device index
+	* @param c_in_id : in report id
+	* @param c_out_id : out report id
+	* @param v_data : 송신할 데이터
+	* @param s_option : "reuse" 이면, 수신시 전달된 result index 재사용을 위해, get 할때 제거하지 않는다.
+	*/
+	bool transmit(
+		unsigned long n_client_index
+		, unsigned long n_device_index
+		, unsigned char c_in_id
+		, unsigned char c_out_id
+		, const std::vector<unsigned char>& v_data
+		, const std::wstring& s_option =std::wstring()
+	);
 	bool transmit_sync(std::vector<unsigned char>& v_rx, unsigned long n_client_index, unsigned long n_device_index, unsigned char c_in_id, unsigned char c_out_id, const std::vector<unsigned char>& v_tx);
 	bool cancel(unsigned long n_client_index, unsigned long n_device_index);
 	bool cancel_sync(unsigned long n_client_index, unsigned long n_device_index);

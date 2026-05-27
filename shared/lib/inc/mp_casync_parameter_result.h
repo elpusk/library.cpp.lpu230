@@ -51,6 +51,16 @@ namespace _mp
 			m_n_evt_kill = m_event_kill_and_wait.generate_new_event();
 			m_n_evt_wait = m_event_kill_and_wait.generate_new_event();
 		}
+		casync_parameter_result(
+			casync_parameter_result::type_callback p_fun
+			, void* p_para
+			, HWND h_wnd
+			, UINT n_msg
+			, const std::wstring& s_option
+		) : casync_parameter_result(p_fun, p_para, h_wnd, n_msg)
+		{
+			m_s_option = s_option;
+		}
 
 		virtual ~casync_parameter_result()
 		{
@@ -178,6 +188,11 @@ namespace _mp
 			return m_b_success;
 		}
 
+		std::wstring get_option() const
+		{
+			return m_s_option;
+		}
+
 		void notify()
 		{
 			do {
@@ -247,6 +262,7 @@ namespace _mp
 		HWND m_h_wnd;
 		UINT m_n_msg;
 		std::shared_ptr<std::thread> m_ptr_thread_for_cb;
+		std::wstring m_s_option;
 
 		//results
 		unsigned long m_n_result_code;

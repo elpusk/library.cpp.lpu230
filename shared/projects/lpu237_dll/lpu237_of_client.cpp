@@ -997,6 +997,7 @@ std::tuple<bool, int, size_t> lpu237_of_client::cmd_start_async_get_parameters(
     int n_result_index(_mp::casync_result_manager::const_invalied_result_index);
     bool b_remove_async_result_for_transaction(false);
 	size_t n_total_phase_in_this_transaction(0);
+    std::wstring s_option_reuse;
 
     do {
         std::lock_guard<std::mutex> lock(m_mutex);
@@ -1022,6 +1023,9 @@ std::tuple<bool, int, size_t> lpu237_of_client::cmd_start_async_get_parameters(
 
         _mp::type_v_buffer v_out_packet(0);
         size_t n_remainder_transaction = m_protocol.get_tx_transaction(v_out_packet);
+        if (n_remainder_transaction > 0) {
+            s_option_reuse = L"reuse";
+        }
         if (n_remainder_transaction == 0) {
 			continue;//error.
         }
@@ -1029,10 +1033,10 @@ std::tuple<bool, int, size_t> lpu237_of_client::cmd_start_async_get_parameters(
 			continue;//error.
         }
         //
-        n_result_index = _create_async_result_for_transaction(p_fun, p_para, 0, 0);
+        n_result_index = _create_async_result_for_transaction(p_fun, p_para, 0, 0, L"reuse");
         if (n_result_index < 0)
             continue;
-        if (!capi_client::get_instance().transmit(m_n_client_index, m_n_device_index, 0, 0, v_out_packet)) {
+        if (!capi_client::get_instance().transmit(m_n_client_index, m_n_device_index, 0, 0, v_out_packet, s_option_reuse)) {
             b_remove_async_result_for_transaction = true;
 			continue; //transmit failed.
         }
@@ -1056,6 +1060,7 @@ std::tuple<bool, int, size_t> lpu237_of_client::cmd_start_async_set_parameters(
     int n_result_index(_mp::casync_result_manager::const_invalied_result_index);
     bool b_remove_async_result_for_transaction(false);
     size_t n_total_phase_in_this_transaction(0);
+    std::wstring s_option_reuse;
 
     do {
         std::lock_guard<std::mutex> lock(m_mutex);
@@ -1081,6 +1086,9 @@ std::tuple<bool, int, size_t> lpu237_of_client::cmd_start_async_set_parameters(
 
         _mp::type_v_buffer v_out_packet(0);
         size_t n_remainder_transaction = m_protocol.get_tx_transaction(v_out_packet);
+        if (n_remainder_transaction > 0) {
+            s_option_reuse = L"reuse";
+        }
         if (n_remainder_transaction == 0) {
             continue;//error.
         }
@@ -1088,10 +1096,10 @@ std::tuple<bool, int, size_t> lpu237_of_client::cmd_start_async_set_parameters(
             continue;//error.
         }
         //
-        n_result_index = _create_async_result_for_transaction(p_fun, p_para, 0, 0);
+        n_result_index = _create_async_result_for_transaction(p_fun, p_para, 0, 0, L"reuse");
         if (n_result_index < 0)
             continue;
-        if (!capi_client::get_instance().transmit(m_n_client_index, m_n_device_index, 0, 0, v_out_packet)) {
+        if (!capi_client::get_instance().transmit(m_n_client_index, m_n_device_index, 0, 0, v_out_packet, s_option_reuse)) {
             b_remove_async_result_for_transaction = true;
             continue; //transmit failed.
         }
@@ -1115,6 +1123,7 @@ std::tuple<bool, int, size_t> lpu237_of_client::cmd_start_async_get_parameters_e
     int n_result_index(_mp::casync_result_manager::const_invalied_result_index);
     bool b_remove_async_result_for_transaction(false);
     size_t n_total_phase_in_this_transaction(0);
+    std::wstring s_option_reuse;
 
     do {
         std::lock_guard<std::mutex> lock(m_mutex);
@@ -1140,6 +1149,9 @@ std::tuple<bool, int, size_t> lpu237_of_client::cmd_start_async_get_parameters_e
 
         _mp::type_v_buffer v_out_packet(0);
         size_t n_remainder_transaction = m_protocol.get_tx_transaction(v_out_packet);
+        if (n_remainder_transaction > 0) {
+            s_option_reuse = L"reuse";
+        }
         if (n_remainder_transaction == 0) {
             continue;//error.
         }
@@ -1147,10 +1159,10 @@ std::tuple<bool, int, size_t> lpu237_of_client::cmd_start_async_get_parameters_e
             continue;//error.
         }
         //
-        n_result_index = _create_async_result_for_transaction(p_fun, p_para, 0, 0);
+        n_result_index = _create_async_result_for_transaction(p_fun, p_para, 0, 0, L"reuse");
         if (n_result_index < 0)
             continue;
-        if (!capi_client::get_instance().transmit(m_n_client_index, m_n_device_index, 0, 0, v_out_packet)) {
+        if (!capi_client::get_instance().transmit(m_n_client_index, m_n_device_index, 0, 0, v_out_packet, s_option_reuse)) {
             b_remove_async_result_for_transaction = true;
             continue; //transmit failed.
         }
@@ -1174,6 +1186,7 @@ std::tuple<bool, int, size_t> lpu237_of_client::cmd_start_async_set_parameters_e
     int n_result_index(_mp::casync_result_manager::const_invalied_result_index);
     bool b_remove_async_result_for_transaction(false);
     size_t n_total_phase_in_this_transaction(0);
+    std::wstring s_option_reuse;
 
     do {
         std::lock_guard<std::mutex> lock(m_mutex);
@@ -1199,6 +1212,9 @@ std::tuple<bool, int, size_t> lpu237_of_client::cmd_start_async_set_parameters_e
 
         _mp::type_v_buffer v_out_packet(0);
         size_t n_remainder_transaction = m_protocol.get_tx_transaction(v_out_packet);
+        if (n_remainder_transaction > 0) {
+            s_option_reuse = L"reuse";
+        }
         if (n_remainder_transaction == 0) {
             continue;//error.
         }
@@ -1206,10 +1222,10 @@ std::tuple<bool, int, size_t> lpu237_of_client::cmd_start_async_set_parameters_e
             continue;//error.
         }
         //
-        n_result_index = _create_async_result_for_transaction(p_fun, p_para, 0, 0);
+        n_result_index = _create_async_result_for_transaction(p_fun, p_para, 0, 0, L"reuse");
         if (n_result_index < 0)
             continue;
-        if (!capi_client::get_instance().transmit(m_n_client_index, m_n_device_index, 0, 0, v_out_packet)) {
+        if (!capi_client::get_instance().transmit(m_n_client_index, m_n_device_index, 0, 0, v_out_packet, s_option_reuse)) {
             b_remove_async_result_for_transaction = true;
             continue; //transmit failed.
         }

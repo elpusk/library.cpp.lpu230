@@ -380,6 +380,7 @@ public:
 
 			m_type_data_field = src.m_type_data_field;
 			m_b_must_be_recover = src.m_b_must_be_recover;
+			m_s_option = src.m_s_option;
 		}
 		return *this;
 	}
@@ -430,6 +431,12 @@ public:
 	{
 		return m_type_data_field;
 	}
+
+	std::wstring get_option() const
+	{
+		return m_s_option;
+	}
+
 	bool is_request()
 	{
 		type_packect *p_packet = (type_packect *)&m_v_packet[0];
@@ -937,6 +944,11 @@ public:
 		return *this;
 	}
 
+	cio_packet& set_option(const std::wstring& s_option)
+	{
+		m_s_option = s_option;
+		return *this;
+	}
 	/**
 	* @brief 이 packet 의 데이터 필드의 시작에 "success" 문자열이 있는지 체크한다.
 	*/
@@ -1623,6 +1635,7 @@ private:
 protected:
 	cio_packet::type_data_field m_type_data_field;
 	bool m_b_must_be_recover; //this packet must be recoverd after processing high priority requst.
+	std::wstring m_s_option; //option string. this value will be sent to server. and used to be controlled operation
 	
 };
 

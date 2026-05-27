@@ -39,16 +39,6 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 
 void _process_attach(HINSTANCE hInstance)
 {
-#ifdef	_YSS_ENABLE_STDOUT_FOR_DEBUG_
-
-    ::AllocConsole();
-
-    FILE* fp;
-    freopen_s(&fp, "CONOUT$", "w", stdout);
-    std::cout << ">> Start console << \n";
-
-#endif		//_YSS_ENABLE_STDOUT_FOR_DEBUG_
-
     std::wstring s_log_root_folder_except_backslash = _mp::ccoffee_path::get_path_of_coffee_logs_root_folder_except_backslash();
     std::string s_pipe_name_of_trace(_mp::_coffee::CONST_S_COFFEE_MGMT_TRACE_PIPE_NAME);
 
@@ -72,9 +62,4 @@ void _process_detach()
 {
     //manager_of_device_of_client<lpu237_of_client>::get_instance(true);
     //capi_client::get_instance().unload();
-
-#ifdef	_YSS_ENABLE_STDOUT_FOR_DEBUG_
-    ::FreeConsole();
-#endif		//_YSS_ENABLE_STDOUT_FOR_DEBUG_
-
 }

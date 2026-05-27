@@ -10,6 +10,10 @@
 #include <mp_casync_result_manager.h>
 #include <capi_client.h>
 
+#ifdef _WIN32
+#include <atltrace.h>
+#endif //_WIN32
+
 
 /**
  * class i_device_of_client.
@@ -245,11 +249,17 @@ public:
 
 	bool remove_async_result_for_transaction(int n_result_index_for_transaction)
 	{
+#ifdef _WIN32
+		ATLTRACE(L"dev_index(%u) : remove_async_result_for_transaction(%d)", m_n_device_index, n_result_index_for_transaction);
+#endif
 		return _mp::casync_result_manager::get_instance(get_class_name()).remove_async_result(m_n_device_index, n_result_index_for_transaction);
 	}
 
 	bool remove_async_result_for_transaction()
 	{
+#ifdef _WIN32
+		ATLTRACE(L"dev_index(%u) : remove_async_result_for_transaction", m_n_device_index);
+#endif
 		return _mp::casync_result_manager::get_instance(get_class_name()).remove_async_result(m_n_device_index);
 	}
 
@@ -351,13 +361,20 @@ protected:
 	}
 
 	// return result index
-	int _create_async_result_for_transaction(_mp::casync_parameter_result::type_callback p_fun, void* p_para, HWND h_wnd, UINT n_msg)
+	int _create_async_result_for_transaction(
+		_mp::casync_parameter_result::type_callback p_fun
+		, void* p_para
+		, HWND h_wnd
+		, UINT n_msg
+		, const std::wstring & s_option = std::wstring()
+	)
 	{
 		std::wstring s_name(get_class_name());
 		return _mp::casync_result_manager::get_instance(s_name).create_async_result(
 			m_n_device_index
 			, p_fun, p_para
 			, h_wnd, n_msg
+			, s_option
 		);
 
 	}
