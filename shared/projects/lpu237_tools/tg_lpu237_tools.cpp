@@ -63,6 +63,42 @@ static std::filesystem::path _get_module_directory();
 /////////////////////////////////////////////////////////////////////////
 static cmap_user_cb g_map_user_cb; //global user callback map
 
+class _shutdown_cleaner {
+
+public:
+	_shutdown_cleaner() : m_b_clean(false)
+	{}
+	~_shutdown_cleaner()
+	{
+		if (!m_b_clean) {
+			// 명시적 클린이 없으면 자동 클린 시도.
+			//LPU237_tools_off() 의 코드 일부 실행
+			manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
+
+			do {
+				if (!ptr_manager_of_device_of_client) {
+					continue;
+				}
+				if (!ptr_manager_of_device_of_client->disconnect()) {
+					continue;
+				}
+			} while (false);
+
+			manager_of_device_of_client<lpu237_of_client>::get_instance(true);//remove manager
+		}
+	}
+
+	void set_clean()
+	{
+		m_b_clean = true;
+	}
+
+private:
+	bool m_b_clean;
+};
+
+static std::shared_ptr<_shutdown_cleaner> _ptr_sc;
+
 /////////////////////////////////////////////////////////////////////////
 // local function prototype
 /////////////////////////////////////////////////////////////////////////
@@ -306,6 +342,10 @@ unsigned long _CALLTYPE_ LPU237_tools_on()
 			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : manager_of_device_of_client<lpu237_of_client>::get_instance().connect().\n", __WFUNCTION__);
 			continue;
 		}
+
+		if (!_ptr_sc) {
+			_ptr_sc = std::make_shared<_shutdown_cleaner>();
+		}
 		dwResult = ccb_client::const_dll_result_success;
 	} while (false);
 
@@ -330,6 +370,9 @@ unsigned long _CALLTYPE_ LPU237_tools_off()
 	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
 
 	do {
+		if (_ptr_sc) {
+			_ptr_sc->set_clean(); // 명시적으로 LPU237_tools_off() 가 호출되면. _ptr_sc 소멸자에서 아무 것도 안함.
+		}
 		if (!ptr_manager_of_device_of_client) {
 			_mp::clog::get_instance().log_fmt(L" : RET : %ls : none manager_of_device_of_client.\n", __WFUNCTION__);
 			continue;

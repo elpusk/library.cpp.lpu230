@@ -60,6 +60,4 @@ void _process_attach(HINSTANCE hInstance)
 
 void _process_detach()
 {
-    //manager_of_device_of_client<lpu237_of_client>::get_instance(true);
-    //capi_client::get_instance().unload();
 }
