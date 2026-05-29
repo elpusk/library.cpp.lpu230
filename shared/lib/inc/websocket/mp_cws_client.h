@@ -792,6 +792,7 @@ namespace _mp
 			m_ptr_ioc(std::make_shared<boost::asio::io_context>())
 			,m_ssl_ctx(boost::asio::ssl::context(boost::asio::ssl::context::tlsv13))
 			,m_s_domain(s_domain), m_w_port(w_port), m_run(false), m_b_ssl(false)
+			, m_b_dont_release_client(false)
 		{
 			m_ptr_session = std::make_shared<cws_client::csession>
 			(
@@ -822,6 +823,7 @@ namespace _mp
 			m_ptr_ioc(std::make_shared<boost::asio::io_context>()),
 			m_ssl_ctx(boost::asio::ssl::context(boost::asio::ssl::context::tlsv13))
 			,m_s_domain(s_domain), m_w_port(w_port), m_run(false), m_b_ssl(true)
+			, m_b_dont_release_client(false)
 		{
 			do {
 				m_ptr_session = std::make_shared<cws_client::csession>
@@ -864,6 +866,11 @@ namespace _mp
 		{
 			m_callback = cb;
 			return *this;
+		}
+
+		void enable_dont_release_client_in_destructor(bool b_enable = true)
+		{
+			m_b_dont_release_client = b_enable;
 		}
 
 		bool start()
@@ -910,7 +917,13 @@ namespace _mp
 				while (m_ptr_session->is_open()) {
 					std::this_thread::sleep_for(std::chrono::milliseconds(20));
 				}
-				m_ptr_ioc->stop();
+
+				if (!m_b_dont_release_client) {
+					m_ptr_ioc->stop(); // 이것이 원래 코드
+				}
+				else {
+					m_ptr_ioc->stop();
+				}
 			} while (false);
 			return *this;
 		}
@@ -1022,6 +1035,8 @@ namespace _mp
 		cws_client::ccallback m_callback;
 		bool m_b_ssl;
 		boost::asio::ssl::context m_ssl_ctx;
+
+		bool m_b_dont_release_client;
 
 	private://don't call these methods.
 		cws_client();

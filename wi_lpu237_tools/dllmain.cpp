@@ -60,4 +60,6 @@ void _process_attach(HINSTANCE hInstance)
 
 void _process_detach()
 {
+    static int n_debug = 0;
+    ++n_debug;
 }

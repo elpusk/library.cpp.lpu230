@@ -51,6 +51,15 @@ namespace _mp {
 		~cclient();
 		cclient(unsigned long n_client_index);
 
+		void enable_dont_release_client_in_destructor(bool b_enable = true)
+		{
+			m_b_dont_release_client = b_enable;
+
+			if (m_ptr_client) {
+				m_ptr_client->enable_dont_release_client_in_destructor(b_enable);
+			}
+		}
+
 		cclient::type_status get_status() const
 		{
 			cclient::type_status st((cclient::type_status)m_status.load());
@@ -276,6 +285,8 @@ namespace _mp {
 		long long m_ll_msec_timeout_ws_client_wait_for_idle_in_ws;
 		long long m_ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_wss;
 		long long m_ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_ws;
+
+		bool m_b_dont_release_client;
 
 	private:
 		//don't call these methods

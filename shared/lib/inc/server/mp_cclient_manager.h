@@ -23,11 +23,29 @@ namespace _mp {
 		}
 		~cclient_manager()
 		{
-			std::for_each(std::begin(m_map_index_uptr_cclient), std::end(m_map_index_uptr_cclient), [=](_type_map_index_uptr_cclient::value_type& pair_item) {
-				if (pair_item.second) {
-					pair_item.second.reset();
-				}
+			std::for_each(
+				std::begin(m_map_index_uptr_cclient)
+				, std::end(m_map_index_uptr_cclient)
+				, [=](_type_map_index_uptr_cclient::value_type& pair_item) {
+					if (pair_item.second) {
+						if (!m_b_dont_release_client) {
+							pair_item.second.reset();
+						}
+						else {
+							pair_item.second->enable_dont_release_client_in_destructor(true);
+						}
+					}
 				});
+		}
+
+		std::wstring get_name()
+		{
+			return L"cclient_manager";
+		}
+
+		void enable_dont_release_client_in_destructor(bool b_enable = true)
+		{
+			m_b_dont_release_client = b_enable;
 		}
 
 		cclient_manager& set_timeout_ws_client_wait_for_ssl_handshake_complete(long long ll_msec_timeout)
@@ -127,6 +145,7 @@ namespace _mp {
 			, m_ll_msec_timeout_ws_client_wait_for_idle_in_ws(CONST_DEFAULT_WS_CLIENT_WAIIT_TIMEOUT_FOR_IDLE_IN_WS_MSEC)
 			, m_ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_wss(CONST_DEFAULT_WS_CLIENT_WAIIT_TIMEOUT_FOR_ASYNC_CONNECT_COMPLETE_IN_WSS_MSEC)
 			, m_ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_ws(CONST_DEFAULT_WS_CLIENT_WAIIT_TIMEOUT_FOR_ASYNC_CONNECT_COMPLETE_IN_WS_MSEC)
+			, m_b_dont_release_client(false)
 		{
 		}
 
@@ -144,6 +163,8 @@ namespace _mp {
 		long long m_ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_wss;
 		long long m_ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_ws;
 
+		//
+		bool m_b_dont_release_client;
 
 	private:
 		//don't call these methods
