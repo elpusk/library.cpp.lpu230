@@ -854,7 +854,10 @@ namespace _mp
 				_unload_root_certificate(m_ssl_ctx);
 			//
 			m_ptr_session.reset();//import code. if remove this code, occur access voliation.
-			m_ptr_ioc.reset();
+
+			if (!m_b_dont_release_client) {
+				m_ptr_ioc.reset();//이것이 원래 코드
+			}
 		}
 
 		bool is_ini()
@@ -922,7 +925,9 @@ namespace _mp
 					m_ptr_ioc->stop(); // 이것이 원래 코드
 				}
 				else {
+					// 프로그램 종료 목적에서만 사용 가능.
 					m_ptr_ioc->stop();
+					std::quick_exit(0);  // 소멸자 기다릴 필요 없이 바로 종료
 				}
 			} while (false);
 			return *this;

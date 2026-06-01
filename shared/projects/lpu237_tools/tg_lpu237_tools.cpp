@@ -57,7 +57,6 @@ public:
 	{
 		if (!m_b_clean) {
 			// 명시적 클린이 없으면 자동 클린 시도.
-			//LPU237_tools_off() 의 코드 일부 실행
 			m_cmgmt.enable_dont_release_client_in_destructor(true);
 		}
 	}
