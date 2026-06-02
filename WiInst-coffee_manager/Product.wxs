@@ -455,6 +455,11 @@
         <File Id="file_OposLpu230.dll_x86" Name="OposLpu230.dll" Source="!(wix.DIR_SRC_DLL_x86)OposLpu230.dll" KeyPath="yes" Checksum="yes" />
         <Condition>INSTALL_OPOS = "1"</Condition>
       </Component>
+
+      <Component Id="co_OposLpu230Lock.dll_x86" Guid = "841A1460-A93E-4E52-ABB9-C371EA047A7F">
+        <File Id="file_OposLpu230Lock.dll_x86" Name="OposLpu230Lock.dll" Source="!(wix.DIR_SRC_DLL_x86)OposLpu230Lock.dll" KeyPath="yes" Checksum="yes" />
+        <Condition>INSTALL_OPOS = "1"</Condition>
+      </Component>
     </ComponentGroup>
   </Fragment>
 
