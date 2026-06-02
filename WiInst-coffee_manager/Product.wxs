@@ -90,6 +90,23 @@
 *                               : lpu23x-ibutton-mcp : 1.0 -> 1.1 : tool description 동적으로 json파일로 부터 읽을 수 있도록 수정. 기본값도 수정.
 *                               : lpu23x-msr-mcp : 1.0 -> 1.1 : tool description 동적으로 json파일로 부터 읽을 수 있도록 수정. 기본값도 수정.
 *
+* 2026.06.02 - package v 2.14.0 : coffee manager 2nd project(v2.14)
+*                               : EB201B8C-2F00-4989-A5C6-6F1D90873F25
+*                               : PKG : 2.13 -> 2.14
+*                               : coffee_sevice : 2.2 -> 2.3  : rebuilded with the changed library.
+*                               : dev_lib : 1.3 -> 1.4 : rebuilded with the changed library.
+*                               : lpu230_update : 2.9 -> 2.10 : rebuilded with the changed library.
+*                               : tg_lpu237_dll : 6.3 -> 6.4 : rebuilded with the changed library.
+*                               : tg_lpu237_fw : 6.3 -> 6.4 : rebuilded with the changed library.
+*                               : tg_lpu237_ibutton : 6.3 -> 6.4 : rebuilded with the changed library.
+*                               : tg_lpu237_tools : 6.4 : the first release, windows only
+*                               : tg_rom : 1.4 -> 1.5 :  : rebuilded with the changed library.
+*                               : elpusk-hid-d : 2.12 -> 2.13 : rebuilded with the changed library.
+*                               : lpu23x-ibutton-mcp : 1.1 : 변경무
+*                               : lpu23x-msr-mcp : 1.1 : 변경무
+*                               : OposLpu230.dll : 2.0 : the first release, windows x86 only
+*                               : OposLpu230Lock.dll : 2.0 : the first release, windows x86 only
+*
 -->
 
 <!-- 기본적으로 %ProgramFiles%\Pre_DirName_ProductName\Pre_DirName_Manufacturer 형식으로 설치됨.-->
@@ -106,8 +123,8 @@
 <?define Pre_ProductName = "coffee_manager_2nd"?>
 
 <!-- Pre_ProductVersion 값이 변경되면, Pre_ProductCode 는 새로 생성해야함.-->
-<?define Pre_ProductVersion = "2.13.0"?>
-<?define Pre_ProductCode = "36134181-8B24-448C-9392-1CFC6FAE436F"?>
+<?define Pre_ProductVersion = "2.14.0"?>
+<?define Pre_ProductCode = "EB201B8C-2F00-4989-A5C6-6F1D90873F25"?>
 
 <!-- 같은 프로그래은 버전이 달라져도 Pre_ProductUpgradeCode 는 항상 동일해야 함.-->
 <?define Pre_ProductUpgradeCode = "B9BF3037-BD17-4F00-BA59-C5CE301723D6"?>

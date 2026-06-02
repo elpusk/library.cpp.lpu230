@@ -1,6 +1,6 @@
 #pragma once
 
-#include "resource.h"       // ¡÷ ±‚»£¿‘¥œ¥Ÿ.
+#include "resource.h"       // Ï£º Í∏∞Ìò∏ÏûÖÎãàÎã§.
 
 #include "cmdset.h"
 #include "Sync.h"
@@ -38,7 +38,8 @@
 //#define	LPU230_SO_VERSION	1008018		// change Hid library 
 //#define	LPU230_SO_VERSION	1008019		// fix device detecting code missing.
 //#define	LPU230_SO_VERSION	1008022		// support ng_devmanager.
-#define	LPU230_SO_VERSION	1008023		// support lpu238
+//#define	LPU230_SO_VERSION	1008023		// support lpu238
+#define	LPU230_SO_VERSION	2000000		// using cf2
 
 using namespace ATL;
 using namespace SYNC;
@@ -552,7 +553,7 @@ private:
 	BOOL m_lCapJISTwo;
 	// If TRUE, the device is able to transmit the start and end sentinels. 
 	BOOL m_lCapTransmitSentinels;
-	// If FALSE, the Track1Data, Track2Data, Track3Data and Track4Data properties contain the original encoded bit sequence, known as °∞raw format°±.
+	// If FALSE, the Track1Data, Track2Data, Track3Data and Track4Data properties contain the original encoded bit sequence, known as ‚Äúraw format‚Äù.
 	BOOL m_bDecodeData;
 	// An error is reported by an ErrorEvent when a card is swiped, and one or more of the tracks specified by the TracksToRead property contains data with errors.
 	long m_lErrorReportingType;

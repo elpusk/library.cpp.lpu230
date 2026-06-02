@@ -1,6 +1,6 @@
 #pragma once
 
-#include "resource.h"       // ÁÖ ±âÈ£ÀÔ´Ï´Ù.
+#include "resource.h"       // ì£¼ ê¸°í˜¸ìž…ë‹ˆë‹¤.
 
 #include "Sync.h"
 #include "FireEvent.h"
@@ -26,7 +26,8 @@ using namespace SYNC;
 
 //#define	LPU230LOCK_SO_VERSION		1000000//1008019		// initial version
 #define	LPU230LOCK_SO_VERSION_1_14_1		1014001//1.14.1		// initial version
-#define	LPU230LOCK_SO_VERSION		1014002//1.14.2		// support lpu238
+//#define	LPU230LOCK_SO_VERSION		1014002//1.14.2		// support lpu238
+#define	LPU230LOCK_SO_VERSION		2000000//2.0.0		// using cf2
 
 class CSoLock
 {
