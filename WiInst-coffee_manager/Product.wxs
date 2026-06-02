@@ -176,8 +176,6 @@
     <Property Id="ApplicationFolderName" Value="$(var.Pre_DirName_Manufacturer)\$(var.Pre_DirName_developer_id)\$(var.Pre_DirName_ProductName)" />
     <Property Id="WixAppFolder" Value="WixPerMachineFolder" />
 
-    <Property Id="INSTALL_OPOS" Value="" />
-
     <!-- stop self reinstall -->
     <Upgrade Id="$(var.Pre_ProductUpgradeCode)">
       <UpgradeVersion Minimum="$(var.Pre_ProductVersion)" OnlyDetect="yes" Property="NEWERVERSIONDETECTED"/>
@@ -286,14 +284,25 @@
       <Custom Action="CA_InstallCert" After="CA_CommitInstall" >NOT Installed</Custom>
       <Custom Action="CA_InstallSvr" After="CA_InstallCert" >NOT Installed</Custom>
       <Custom Action="CA_StartSvr" After="CA_InstallSvr" >NOT Installed</Custom>
+      <?if $(var.Pre_PlatformPath) = "x86" ?>
+      <Custom Action="CA_RegMsrSo" After="CA_StartSvr" >NOT Installed</Custom>
+      <Custom Action="CA_RegKeylockSo" After="CA_RegMsrSo" >NOT Installed</Custom>
+      <?endif ?>
 
       <Custom Action="CA_Rollback" After="InstallInitialize" >NOT Installed</Custom>
 
       <Custom Action="CA_BeforeUninstall" After="InstallInitialize" >Installed</Custom>
       <Custom Action="CA_StopSvr" After="CA_BeforeUninstall" >Installed</Custom>
       <Custom Action="CA_UninstallSvr" After="CA_StopSvr" >Installed</Custom>
+      <?if $(var.Pre_PlatformPath) = "x86" ?>
+      <Custom Action="CA_UnregMsrSo" After="CA_UninstallSvr" >Installed</Custom>
+      <Custom Action="CA_UnregKeylockSo" After="CA_UnregMsrSo" >Installed</Custom>
+      <Custom Action="CA_RemoveCert" After="CA_UnregKeylockSo" >Installed</Custom>
+      <Custom Action="CA_RemoveAll" After="CA_RemoveCert" >Installed</Custom>
+      <?else ?>
       <Custom Action="CA_RemoveCert" After="CA_UninstallSvr" >Installed</Custom>
       <Custom Action="CA_RemoveAll" After="CA_RemoveCert" >Installed</Custom>
+      <?endif ?>
 
       <!-- InstallValidate InstallInitialize InstallFiles -->
     </InstallExecuteSequence>
@@ -618,9 +627,19 @@
 
     <CustomAction Id="CA_StartSvr" Directory="BIN_FOLDER" ExeCommand="[BIN_FOLDER]coffee_service.exe -r" Return="check" Impersonate="no" Execute="deferred" />
 
+    <?if $(var.Pre_PlatformPath) = "x86" ?>
+    <CustomAction Id="CA_RegMsrSo"   Directory="DLL_x86_FOLDER" ExeCommand='[SystemFolder]regsvr32.exe /s "[DLL_x86_FOLDER]OposLpu230.dll"' Return="check" Impersonate="no" Execute="deferred"/>
+    <CustomAction Id="CA_RegKeylockSo" Directory="DLL_x86_FOLDER" ExeCommand='[SystemFolder]regsvr32.exe /s "[DLL_x86_FOLDER]OposLpu230Lock.dll"' Return="check" Impersonate="no" Execute="deferred"/>
+    <?endif ?>
+
     <CustomAction Id="CA_StopSvr" Directory="BIN_FOLDER" ExeCommand="[BIN_FOLDER]coffee_service.exe -k" Return="check" Impersonate="no" Execute="deferred" />
 
     <CustomAction Id="CA_UninstallSvr" Directory="BIN_FOLDER" ExeCommand="[BIN_FOLDER]coffee_service.exe -u" Return="check" Impersonate="no" Execute="deferred" />
+
+    <?if $(var.Pre_PlatformPath) = "x86" ?>
+    <CustomAction Id="CA_UnregMsrSo" Directory="DLL_x86_FOLDER" ExeCommand='[SystemFolder]regsvr32.exe /s /u "[DLL_x86_FOLDER]OposLpu230.dll"' Return="check" Impersonate="no" Execute="deferred"/>
+    <CustomAction Id="CA_UnregKeylockSo" Directory="DLL_x86_FOLDER" ExeCommand='[SystemFolder]regsvr32.exe /s /u "[DLL_x86_FOLDER]OposLpu230Lock.dll"' Return="check" Impersonate="no" Execute="deferred"/>
+    <?endif ?>
 
     <CustomAction Id="CA_RemoveCert" Directory="BIN_FOLDER" ExeCommand="[BIN_FOLDER]elpusk-hid-d.exe /removecert"  Return="ignore" Impersonate="no" Execute="deferred"/>
 

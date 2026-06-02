@@ -46,11 +46,11 @@
                  />
         <Control Id="Description"
                  Type="Text" X="20" Y="60" Width="330" Height="60" NoPrefix="yes"
-                 Text="The OPOS LPU23x Service Object (OposLpu230.dll) enables OPOS-compliant POS applications to communicate with LPU23x devices.&#13;&#10;&#13;&#10;This component is supported on x86 (32-bit) only. If you do not use OPOS-compliant applications, you may skip this installation."
+                 Text="The OPOS LPU23x Service Object (OposLpu230.dll and OposLpu230Lock.dll) enables OPOS-compliant POS applications to communicate with LPU23x devices.&#13;&#10;&#13;&#10;This component is supported on x86 (32-bit) only. If you do not use OPOS-compliant applications, you may skip this installation."
                  />
         <Control Id="OposAcceptedCheckBox"
                  Type="CheckBox" X="20" Y="207" Width="330" Height="18" CheckBoxValue="1" Property="INSTALL_OPOS"
-                 Text="I agree to install the OPOS LPU23x Service Object (OposLpu230.dll)."
+                 Text="I agree to install the OPOS LPU23x Service Object (OposLpu230.dll and OposLpu230Lock.dll)."
                  />
         <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="!(loc.WixUIBack)" />
         <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="!(loc.WixUINext)">
