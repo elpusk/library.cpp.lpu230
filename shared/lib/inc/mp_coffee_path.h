@@ -171,7 +171,7 @@ namespace _mp{
 			//win release
 			s = _mp::cfile::get_path_ProgramData() + std::wstring(L"\\elpusk\\00000006\\coffee_manager\\tg_lpu237_tools");
 #else
-			s = std::wstring(_mp::_coffee::CONST_S_COFFEE_LPU237_FW_DLL_INI_DIR_EXCEPT_BACKSLASH);
+			s = std::wstring(_mp::_coffee::CONST_S_COFFEE_LPU237_TOOLS_DLL_INI_DIR_EXCEPT_BACKSLASH);
 #endif
 			std::filesystem::path p(s);
 

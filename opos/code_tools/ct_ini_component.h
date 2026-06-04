@@ -148,50 +148,10 @@ namespace _ns_tools
                     continue;
                 }
 
-                s_path = _ns_tools::ct_file::get_default_initial_file_abs_path_without_backslash_and_file_name(L"Elpusk", 6, m_s_cur_dll_file_name);
+                s_path = _ns_tools::ct_file::get_default_initial_file_abs_path_without_backslash_and_file_name(L"elpusk", 6, L"coffee_manager",m_s_cur_dll_file_name);
                 s_path += L"\\";	s_path += m_s_cur_dll_file_name;	s_path += L".ini";
                 if (_ns_tools::ct_file::is_exist_file(s_path)) {
                     s_abs_ini = s_path;
-                    continue;
-                }
-
-                s_path = _ns_tools::ct_file::get_default_initial_file_abs_path_without_backslash_and_file_name(L"Easyset", 0, m_s_cur_dll_file_name);
-                s_path += L"\\";	s_path += m_s_cur_dll_file_name;	s_path += L".ini";
-                if (_ns_tools::ct_file::is_exist_file(s_path)) {
-                    s_abs_ini = s_path;
-                    continue;
-                }
-
-                if (m_s_old_ini_file_name_and_ext.empty())
-                    continue;
-                //
-                TCHAR sPersonalFolder[MAX_PATH];
-                TCHAR sIniPath[MAX_PATH];
-                std::wstring s_ini_path;
-
-                if (FAILED(
-                    ::SHGetFolderPath(NULL,
-                        CSIDL_PERSONAL | CSIDL_FLAG_CREATE,
-                        NULL,
-                        SHGFP_TYPE_CURRENT,
-                        sPersonalFolder
-                    )))
-                    continue;
-                //
-                ::_tcscpy(sIniPath, sPersonalFolder);
-                s_ini_path = sIniPath;
-                s_ini_path += L"\\Elpusk\\lpu230\\";
-                s_ini_path += m_s_old_ini_file_name_and_ext;
-                if (_ns_tools::ct_file::is_exist_file(s_ini_path)) {
-                    s_abs_ini = s_ini_path;
-                    continue;
-                }
-                //
-                s_ini_path = sIniPath;
-                s_ini_path += L"\\Easyset\\lpu230\\";
-                s_ini_path += m_s_old_ini_file_name_and_ext;
-                if (_ns_tools::ct_file::is_exist_file(s_ini_path)) {
-                    s_abs_ini = s_ini_path;
                     continue;
                 }
 

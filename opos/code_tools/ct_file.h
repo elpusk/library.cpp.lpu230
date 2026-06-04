@@ -334,6 +334,61 @@ namespace _ns_tools
 			} while (false);
 			return s_ini_file_path;
 		}
+
+		static std::wstring get_default_initial_file_abs_path_without_backslash_and_file_name(
+			const std::wstring& s_company,
+			size_t n_employee_id,
+			const std::wstring& s_manager_name,
+			const std::wstring& s_modual_name
+		)
+		{
+			std::wstring s_ini_file_path;
+
+			do {
+				if (s_company.empty())
+					continue;
+				std::wstring s_file_path;
+				if (s_modual_name.empty()) {
+					_ns_tools::type_v_ws_buffer s_path(_MAX_PATH + 1, 0);
+					if (!::GetModuleFileName(NULL, &s_path[0], (unsigned long)(s_path.size() - 1)))
+						continue;
+					//
+					s_file_path = (WCHAR*)&s_path[0];
+				}
+				else
+					s_file_path = s_modual_name;
+				std::wstring s_out_drive;
+				std::wstring s_out_dir;
+				std::wstring s_out_file_name;
+				std::wstring s_out_ext;
+
+				if (!ct_file::split_path(s_file_path, s_out_drive, s_out_dir, s_out_file_name, s_out_ext))
+					continue;
+
+				s_ini_file_path = ct_file::get_path_ProgramData();
+
+				std::wstring s_id_path;
+				if (s_manager_name.empty()) {
+					if (n_employee_id == -1) {
+						ct_string::format_c_style(s_id_path, L"\\%s\\%s", s_company.c_str(), s_out_file_name.c_str());
+					}
+					else {
+						ct_string::format(s_id_path, L"\\%s\\%08d\\%s", s_company.c_str(), n_employee_id, s_out_file_name.c_str());
+					}
+				}
+				else {
+					if (n_employee_id == -1) {
+						ct_string::format_c_style(s_id_path, L"\\%s\\%s\\%s", s_company.c_str(), s_manager_name.c_str(), s_out_file_name.c_str());
+					}
+					else {
+						ct_string::format(s_id_path, L"\\%s\\%08d\\%s\\%s", s_company.c_str(), n_employee_id, s_manager_name.c_str(), s_out_file_name.c_str());
+					}
+				}
+				s_ini_file_path += s_id_path;
+			} while (false);
+			return s_ini_file_path;
+		}
+
 		// default log abs path is
 		//AppData/Local/elpusk/employee id/exe file name/log
 		static std::wstring get_default_log_folder_path(const std::wstring& s_company, size_t n_employee_id, const std::wstring& s_modual_name, bool b_if_not_exist_create_folder )
