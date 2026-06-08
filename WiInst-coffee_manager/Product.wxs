@@ -255,6 +255,7 @@
       <?if $(var.Pre_PlatformPath) != "x64" ?>
         <ComponentGroupRef Id="CG_DLL_OPOS_x86" />
         <ComponentGroupRef Id="CG_OPOS_INI_x86" />
+        <ComponentGroupRef Id="CG_OPOS_LOCK_INI_x86" />
       <?endif ?>
       
       <!-- program data -->
@@ -385,6 +386,7 @@
 
               <Directory Id="CAD_MCP_JSON_FOLDER" Name="mcp"/>
               <Directory Id="CAD_OPOS_FOLDER" Name="OposLpu230"/>
+              <Directory Id="CAD_OPOS_LOCK_FOLDER" Name="OposLpu230Lock"/>
 
             </Directory>
           </Directory>
@@ -481,6 +483,15 @@
     <ComponentGroup Id="CG_OPOS_INI_x86" Directory="CAD_OPOS_FOLDER">
       <Component Id="co_OposLpu230.ini" Guid = "8B1C7B37-6604-4BB1-A9E9-8BCE555A85EF">
         <File Id="file_OposLpu230.ini" Name="OposLpu230.ini" Source="!(wix.DIR_SRC_OPOS_INI)OposLpu230.ini" KeyPath="yes" Checksum="no" />
+        <Condition>INSTALL_OPOS = "1"</Condition>
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+
+  <Fragment>
+    <ComponentGroup Id="CG_OPOS_LOCK_INI_x86" Directory="CAD_OPOS_LOCK_FOLDER">
+      <Component Id="co_OposLpu230Lock.ini" Guid = "C75AA9C5-22CF-4978-9766-715E1EE1B2D7">
+        <File Id="file_OposLpu230Lock.ini" Name="OposLpu230Lock.ini" Source="!(wix.DIR_SRC_OPOS_INI)OposLpu230Lock.ini" KeyPath="yes" Checksum="no" />
         <Condition>INSTALL_OPOS = "1"</Condition>
       </Component>
     </ComponentGroup>
