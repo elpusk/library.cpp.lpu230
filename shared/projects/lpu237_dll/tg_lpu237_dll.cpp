@@ -30,7 +30,45 @@
 #define	LPU237_PID		0x0206
 #define	LPU237_INF		1
 
-#ifndef _WIN32
+class _shutdown_cleaner {
+
+public:
+	_shutdown_cleaner() :
+		m_b_clean(false)
+		, m_cmgmt(_mp::cclient_manager::get_instance())
+	{
+	}
+	~_shutdown_cleaner()
+	{
+		if (!m_b_clean) {
+			// 명시적 클린이 없으면 자동 클린 시도.
+			m_cmgmt.enable_dont_release_client_in_destructor(true);
+		}
+	}
+
+	void set_clean(bool b_clean = true)
+	{
+		m_b_clean = b_clean;
+	}
+
+private:
+	bool m_b_clean;
+	_mp::cclient_manager& m_cmgmt;
+};
+
+static std::shared_ptr<_shutdown_cleaner> _g_ptr_shutdown_clean;
+
+#ifdef _WIN32
+int __cdecl _DllExitHandler();
+
+
+int __cdecl _DllExitHandler()
+{
+	_g_ptr_shutdown_clean.reset();
+	return 0;
+}
+
+#else
 //linux only
 static void _so_init(void) __attribute__((constructor));
 static void _so_fini(void) __attribute__((destructor));
@@ -808,6 +846,19 @@ unsigned long _CALLTYPE_ LPU237_dll_on()
 			_mp::clog::get_instance().log_fmt(L" : ERR : %ls : manager_of_device_of_client<lpu237_of_client>::get_instance().connect().\n", __WFUNCTION__);
 			continue;
 		}
+#ifdef _WIN32
+		//_DllExitHandler 을 마지막으로 등록해서,
+		// 이 dll 의 _execute_onexit_table() 가 실행될때  가장 먼저 호출되도록 한다.(LIFO 에 handler 가 저장, 호출됨) 
+		// 디버거로 호출 확인됨.
+		if (!_g_ptr_shutdown_clean) {
+			_g_ptr_shutdown_clean = std::make_shared<_shutdown_cleaner>();
+			_onexit(_DllExitHandler);
+		}
+
+		// LPU237_tools_off() 가 명시적으로 호출되지 않으면
+		// 자동 clean 동작을 하도록 설정 한다.
+		_g_ptr_shutdown_clean->set_clean(false);
+#endif
 		dwResult = LPU237_DLL_RESULT_SUCCESS;
 	} while (false);
 
@@ -822,6 +873,12 @@ unsigned long _CALLTYPE_ LPU237_dll_off()
 	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
 
 	do {
+#ifdef _WIN32
+		if (_g_ptr_shutdown_clean) {
+			// LPU237_tools_off() 가 명시적으로 호출면,  자동 clean 동작을 억제
+			_g_ptr_shutdown_clean->set_clean();
+		}
+#endif
 		if (!ptr_manager_of_device_of_client) {
 			_mp::clog::get_instance().log_fmt(L" : RET : %ls : none manager_of_device_of_client.\n", __WFUNCTION__);
 			continue;

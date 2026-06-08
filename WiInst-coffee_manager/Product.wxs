@@ -96,16 +96,16 @@
 *                               : coffee_sevice : 2.2 -> 2.3  : rebuilded with the changed library.
 *                               : dev_lib : 1.3 -> 1.4 : rebuilded with the changed library.
 *                               : lpu230_update : 2.9 -> 2.10 : rebuilded with the changed library.
-*                               : tg_lpu237_dll : 6.3 -> 6.4 : rebuilded with the changed library.
-*                               : tg_lpu237_fw : 6.3 -> 6.4 : rebuilded with the changed library.
-*                               : tg_lpu237_ibutton : 6.3 -> 6.4 : rebuilded with the changed library.
+*                               : tg_lpu237_dll : 6.3 -> 6.4 : add auto release resource functionality in win11.
+*                               : tg_lpu237_fw : 6.3 -> 6.4 : add auto release resource functionality in win11.
+*                               : tg_lpu237_ibutton : 6.3 -> 6.4 : add auto release resource functionality in win11.
 *                               : tg_lpu237_tools : 6.4 : the first release, windows only
 *                               : tg_rom : 1.4 -> 1.5 :  : rebuilded with the changed library.
 *                               : elpusk-hid-d : 2.12 -> 2.13 : rebuilded with the changed library.
 *                               : lpu23x-ibutton-mcp : 1.1 : 변경무
 *                               : lpu23x-msr-mcp : 1.1 : 변경무
-*                               : OposLpu230.dll : 2.0 : the first release, windows x86 only
-*                               : OposLpu230Lock.dll : 2.0 : the first release, windows x86 only
+*                               : OposLpu230.dll : 1.8.30 : the first release, windows x86 only
+*                               : OposLpu230Lock.dll : 1.14.30 : the first release, windows x86 only
 *
 -->
 

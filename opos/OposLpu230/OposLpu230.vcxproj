@@ -315,7 +315,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\common\etc\OposLpu230.ini" />
-    <None Include="ClassDiagram1.cd" />
     <None Include="OposLpu230.def" />
     <None Include="OposLpu230.rgs" />
     <None Include="ReadMe.txt" />

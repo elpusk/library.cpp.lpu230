@@ -113,9 +113,6 @@ public:
 		if( m_pFireEvent ){
 			delete( m_pFireEvent );
 		}
-
-		CLpu237Dll::get_instance().LPU237_dll_off();
-		
 	}
 
 	HANDLE get_device_handle()

@@ -74,10 +74,10 @@ static std::shared_ptr<_shutdown_cleaner> _g_ptr_shutdown_clean;
 
 
 #ifdef _WIN32
-int __cdecl DllExitHandler();
+int __cdecl _DllExitHandler();
 
 
-int __cdecl DllExitHandler()
+int __cdecl _DllExitHandler()
 {
 	_g_ptr_shutdown_clean.reset();
 	return 0;
@@ -347,12 +347,12 @@ unsigned long _CALLTYPE_ LPU237_tools_on()
 			continue;
 		}
 #ifdef _WIN32
-		//DllExitHandler 을 마지막으로 등록해서,
+		//_DllExitHandler 을 마지막으로 등록해서,
 		// 이 dll 의 _execute_onexit_table() 가 실행될때  가장 먼저 호출되도록 한다.(LIFO 에 handler 가 저장, 호출됨) 
 		// 디버거로 호출 확인됨.
 		if (!_g_ptr_shutdown_clean) {
 			_g_ptr_shutdown_clean = std::make_shared<_shutdown_cleaner>();
-			_onexit(DllExitHandler);
+			_onexit(_DllExitHandler);
 		}
 
 		// LPU237_tools_off() 가 명시적으로 호출되지 않으면

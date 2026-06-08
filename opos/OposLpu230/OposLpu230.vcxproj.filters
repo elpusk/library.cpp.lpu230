@@ -158,7 +158,6 @@
     <None Include="SoLpu230.rgs">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="ClassDiagram1.cd" />
     <None Include="..\common\etc\OposLpu230.ini" />
   </ItemGroup>
   <ItemGroup>
