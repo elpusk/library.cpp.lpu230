@@ -254,6 +254,7 @@
       <?endif ?>
       <?if $(var.Pre_PlatformPath) != "x64" ?>
         <ComponentGroupRef Id="CG_DLL_OPOS_x86" />
+        <ComponentGroupRef Id="CG_OPOS_INI_x86" />
       <?endif ?>
       
       <!-- program data -->
@@ -340,6 +341,9 @@
     <WixVariable Id="DIR_SRC_IBUTTON_MCP_JSON"     Overridable="yes" Value="$(var.SolutionDir)mcp\servers\ibutton-mcp\"  />
     <WixVariable Id="DIR_SRC_MSR_MCP_JSON"         Overridable="yes" Value="$(var.SolutionDir)mcp\servers\msr-mcp\"  />
 
+    <!-- For OPOS ini -->
+    <WixVariable Id="DIR_SRC_OPOS_INI"             Overridable="yes" Value="$(var.SolutionDir)opos\common\etc\"  />
+
   </Product>
   <!-- the end fo Product element -->
   <!-- ========================== -->
@@ -380,6 +384,7 @@
               </Directory>
 
               <Directory Id="CAD_MCP_JSON_FOLDER" Name="mcp"/>
+              <Directory Id="CAD_OPOS_FOLDER" Name="OposLpu230"/>
 
             </Directory>
           </Directory>
@@ -467,6 +472,15 @@
 
       <Component Id="co_OposLpu230Lock.dll_x86" Guid = "841A1460-A93E-4E52-ABB9-C371EA047A7F">
         <File Id="file_OposLpu230Lock.dll_x86" Name="OposLpu230Lock.dll" Source="!(wix.DIR_SRC_DLL_x86)OposLpu230Lock.dll" KeyPath="yes" Checksum="yes" />
+        <Condition>INSTALL_OPOS = "1"</Condition>
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+
+  <Fragment>
+    <ComponentGroup Id="CG_OPOS_INI_x86" Directory="CAD_OPOS_FOLDER">
+      <Component Id="co_OposLpu230.ini" Guid = "8B1C7B37-6604-4BB1-A9E9-8BCE555A85EF">
+        <File Id="file_OposLpu230.ini" Name="OposLpu230.ini" Source="!(wix.DIR_SRC_OPOS_INI)OposLpu230.ini" KeyPath="yes" Checksum="no" />
         <Condition>INSTALL_OPOS = "1"</Condition>
       </Component>
     </ComponentGroup>
