@@ -51,7 +51,6 @@ public:
 		m_b_clean(false)
 		, m_cmgmt(_mp::cclient_manager::get_instance())
 	{
-		m_ptr_manager_of_device_of_client = manager_of_device_of_client<lpu237_of_client>::get_instance();
 	}
 	~_shutdown_cleaner()
 	{
@@ -69,7 +68,6 @@ public:
 private:
 	bool m_b_clean;
 	_mp::cclient_manager& m_cmgmt;
-	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client m_ptr_manager_of_device_of_client;
 };
 
 static std::shared_ptr<_shutdown_cleaner> _g_ptr_shutdown_clean;
@@ -385,10 +383,12 @@ unsigned long _CALLTYPE_ LPU237_tools_off()
 	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
 
 	do {
+#ifdef _WIN32
 		if (_g_ptr_shutdown_clean) {
 			// LPU237_tools_off() 가 명시적으로 호출면,  자동 clean 동작을 억제
 			_g_ptr_shutdown_clean->set_clean();
 		}
+#endif
 		if (!ptr_manager_of_device_of_client) {
 			_mp::clog::get_instance().log_fmt(L" : RET : %ls : none manager_of_device_of_client.\n", __WFUNCTION__);
 			continue;

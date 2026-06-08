@@ -27,7 +27,7 @@ using namespace SYNC;
 //#define	LPU230LOCK_SO_VERSION		1000000//1008019		// initial version
 #define	LPU230LOCK_SO_VERSION_1_14_1		1014001//1.14.1		// initial version
 //#define	LPU230LOCK_SO_VERSION		1014002//1.14.2		// support lpu238
-#define	LPU230LOCK_SO_VERSION		2000000//2.0.0		// using cf2
+#define	LPU230LOCK_SO_VERSION		1014030//1.14.30		// using cf2
 
 class CSoLock
 {

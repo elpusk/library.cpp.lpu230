@@ -39,7 +39,7 @@
 //#define	LPU230_SO_VERSION	1008019		// fix device detecting code missing.
 //#define	LPU230_SO_VERSION	1008022		// support ng_devmanager.
 //#define	LPU230_SO_VERSION	1008023		// support lpu238
-#define	LPU230_SO_VERSION	2000000		// using cf2
+#define	LPU230_SO_VERSION	1008030		// using cf2 1.8.30
 
 using namespace ATL;
 using namespace SYNC;
@@ -113,6 +113,8 @@ public:
 		if( m_pFireEvent ){
 			delete( m_pFireEvent );
 		}
+
+		CLpu237Dll::get_instance().LPU237_dll_off();
 		
 	}
 
