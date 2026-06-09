@@ -136,7 +136,7 @@ extern "C" {
 
 	/*!
 	* function
-	*	change to lpu237 reader to ready for reading a magnetic card.
+	*	change to lpu237 reader to ready for reading a i-button.
 	*
 	* parameters
 	*	hDev : [in] device handle( return value of LPU237Lock_open() )
@@ -150,7 +150,7 @@ extern "C" {
 
 	/*!
 	* function
-	*	change to lpu237 reader to ignore reading a magnetic card.
+	*	change to lpu237 reader to ignore reading a i-button.
 	*
 	* parameters
 	*	hDev : [in] device handle( return value of LPU237Lock_open() )
@@ -204,9 +204,9 @@ extern "C" {
 	*							return value of LPU237Lock_wait_key_with_callback().
 	*
 	* return
-	*  	LPU237LOCK_DLL_RESULT_ERROR : error in a magnetic card reading operation.
+	*  	LPU237LOCK_DLL_RESULT_ERROR : error in a i-button reading operation.
 	*					may be error between your PC and lpu237 reader.
-	*	LPU237LOCK_DLL_RESULT_CANCEL : A magnetic card reading operation is canceled by
+	*	LPU237LOCK_DLL_RESULT_CANCEL : A i-button reading operation is canceled by
 	*					LPU237Lock_cancel_wait_swipe(), LPU237Lock_wait_key_with_callback() .
 	*	the number of i-button data : succession of a i-button reading operation.
 	*
@@ -227,6 +227,43 @@ extern "C" {
 	*	else the size of ID.[unit byte]
 	*/
 	unsigned long _CALLTYPE_ LPU237Lock_get_id(HANDLE hDev, unsigned char* sId);
+
+
+	/*!
+	* function
+	*	get last error code of LPU237Lock_get_data().
+	*	from v6.4
+	* 
+	* parameters
+	*	dwRFU : [in] reserved for future use.
+	* 
+	* return 
+	*	error code of last LPU237Lock_get_data() operation.
+	*	0 - last LPU237Lock_get_data() operation is success.
+	*	1 - invalid item index
+	*	2 - none device client
+	*	3 - none device client result object
+	*	4 - get_result() of device client result is failed with none response data field
+	* 	5 - get_result() of device client result is failed with "cancel" string
+	* 	6 - get_result() of device client result is failed with "error" string
+	*	7 - get_result() of device client result is success with less then 3+8 bytes data
+	*	8 - get_result() of device client result is success but result code is 0xFFFFFFFE(ccb_client::const_dll_result_cancel )
+	*	9 - get_result() of device client result is success but result code is 0xFFFFFFFF(ccb_client::const_dll_result_error )
+	* 
+	*/
+#define	LPU237LOCK_DLL_GET_DATA_LAST_ERROR_SUCCESS							0
+#define	LPU237LOCK_DLL_GET_DATA_LAST_ERROR_INVALID_ITEM_INDEX				1
+#define	LPU237LOCK_DLL_GET_DATA_LAST_ERROR_NONE_DEVICE_CLIENT				2
+#define	LPU237LOCK_DLL_GET_DATA_LAST_ERROR_NONE_DEVICE_CLIENT_RESULT_OBJECT	3
+#define	LPU237LOCK_DLL_GET_DATA_LAST_ERROR_FAILED_NONE_RESPONSE_DATA	4
+#define	LPU237LOCK_DLL_GET_DATA_LAST_ERROR_FAILED_CANCEL_STRING		5
+#define	LPU237LOCK_DLL_GET_DATA_LAST_ERROR_FAILED_ERROR_STRING		6
+#define	LPU237LOCK_DLL_GET_DATA_LAST_ERROR_FAILED_ANY_STRING		7
+#define	LPU237LOCK_DLL_GET_DATA_LAST_ERROR_SUCCESS_LESS_THAN_3_PLUS_8	8
+#define	LPU237LOCK_DLL_GET_DATA_LAST_ERROR_SUCCESS_CANCEL_CODE		9
+#define	LPU237LOCK_DLL_GET_DATA_LAST_ERROR_SUCCESS_ERROR_CODE		10
+
+	unsigned long _CALLTYPE_ LPU237Lock_get_data_last_error(unsigned long dwRFU);
 
 
 #ifndef _WIN32

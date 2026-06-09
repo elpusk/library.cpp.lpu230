@@ -16,3 +16,4 @@ EXPORTS
 	LPU237Lock_dll_on
 	LPU237Lock_dll_off
 	LPU237Lock_get_id
+	LPU237Lock_get_data_last_error

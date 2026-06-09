@@ -67,13 +67,11 @@ public:
 			do{
 				if( CDll::get_instance( CGlobalVar::GetInstance()->get_ibutton_dll_path() ).is_load_ok() )
 					continue;
-				if( CDll::get_instance( CGlobalVar::GetInstance()->get_ibutton_btc_dll_path() ).is_load_ok() )
-					continue;
-
+				//
 				b_load_ok = false;
 			}while(0);
 
-			m_b_is_dll_ok = b_load_ok = CDll::get_instance().is_support_new_funtions();
+			m_b_is_dll_ok = b_load_ok = CDll::get_instance().is_load_ok();
 
 			CDll::get_instance().dll_on();
 		}
@@ -171,7 +169,7 @@ public:
 				type_dev_list & vDevList =  GetDeviceList();
 
 				if( vDevList.empty() ){
-					SOTrace( true, CLog::LEV_LOW, _T("[ERROR] Msr_Open : NO DEVICE.\n") );
+					SOTrace( true, CLog::LEV_LOW, _T("[ERROR] Lock_Open : NO DEVICE.\n") );
 					continue;
 				}
 

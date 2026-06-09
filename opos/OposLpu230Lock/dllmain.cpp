@@ -1,4 +1,4 @@
-// dllmain.cpp : DllMainÀÌ ±¸ÇöµÈ °ÍÀÔ´Ï´Ù.
+// dllmain.cpp : DllMainì´ êµ¬í˜„ëœ ê²ƒìž…ë‹ˆë‹¤.
 
 #include "stdafx.h"
 #include "resource.h"
@@ -21,7 +21,7 @@ static void ProcessDetach();
 static void IniVariables( HINSTANCE hInstance );
 
 
-// DLL ÁøÀÔÁ¡ÀÔ´Ï´Ù.
+// DLL ì§„ìž…ì ìž…ë‹ˆë‹¤.
 extern "C" BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
 	switch( dwReason ){
@@ -139,11 +139,10 @@ static void IniVariables( HINSTANCE hInstance )
 		pVariables->getIniFile().setFile(s_ini);
 	}
 
-	//
+	// tg_lpu237_ibutton.dll ì€ OposLpu230Lock.dll ê³¼ ê°™ì€ í´ë”ì— ìžˆì–´ì•¼ í•œë‹¤.
 	TCHAR sDir_dll[_MAX_DIR];
 	TCHAR sDll_Path_buffer[_MAX_PATH];
 	_tcscpy( sDir_dll, sDir );
-	_tcscat( sDir_dll, _T("components\\x86") );
 	::_tmakepath( sDll_Path_buffer,sDrv, sDir_dll, _T("tg_lpu237_ibutton"), _T("dll") );
 	pVariables->set_ibutton_dll_path( _tstring(sDll_Path_buffer) );
 

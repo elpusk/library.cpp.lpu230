@@ -9,10 +9,6 @@ using namespace std;
 class CDll
 {
 public:
-	typedef void (CALLBACK *CallBackKeyIn)(BYTE * pBuffer, BYTE length);
-	typedef	BOOL (WINAPI *typeXHidDev_LoadDriver)( CallBackKeyIn );
-	typedef	void (WINAPI *typeXHidDev_UnloadDriver)();
-	
 	// new exported member.
 	typedef	void (WINAPI *type_key_callback)(void*);
 
@@ -28,6 +24,7 @@ public:
 	typedef	DWORD (WINAPI *typeLPU237Lock_dll_on)();
 	typedef	DWORD (WINAPI *typeLPU237Lock_dll_off)();
 	typedef	DWORD (WINAPI *typeLPU237Lock_get_id)( HANDLE hDev, BYTE *sId );
+	typedef	DWORD(WINAPI* typeLPU237Lock_get_data_last_error)(unsigned long);
 
 	enum{
 		dll_result_success = 0,
@@ -49,8 +46,6 @@ public:
 
 	~CDll(void)
 	{
-		XHidDev_UnloadDriver();
-
 		if( m_hMode ){
 			FreeLibrary( m_hMode );
 			m_hMode = 0;
@@ -70,17 +65,6 @@ public:
 			if( m_hMode == NULL )
 				continue;
 
-			m_XHidDev_LoadDriver = reinterpret_cast<typeXHidDev_LoadDriver>( ::GetProcAddress( m_hMode, "_XHidDev_LoadDriver@4" ) );
-			m_XHidDev_UnloadDriver = reinterpret_cast<typeXHidDev_UnloadDriver>( ::GetProcAddress( m_hMode, "_XHidDev_UnloadDriver@0" ) );
-
-			if( m_XHidDev_LoadDriver == NULL  || m_XHidDev_UnloadDriver == NULL ){
-				::FreeLibrary( m_hMode );
-				m_hMode = NULL;
-				continue;
-			}
-
-			m_bLoadOk = true;
-			b_result = true;
 			//
 			// load new exported functions.
 			m_get_list =						reinterpret_cast<typeLPU237Lock_get_list>( ::GetProcAddress( m_hMode, "LPU237Lock_get_list" ) );
@@ -94,6 +78,7 @@ public:
 			m_dll_on =						reinterpret_cast<typeLPU237Lock_dll_on>( ::GetProcAddress( m_hMode, "LPU237Lock_dll_on" ) );
 			m_dll_off =						reinterpret_cast<typeLPU237Lock_dll_off>( ::GetProcAddress( m_hMode, "LPU237Lock_dll_off" ) );
 			m_get_id =						reinterpret_cast<typeLPU237Lock_get_id>( ::GetProcAddress( m_hMode, "LPU237Lock_get_id" ) );
+			m_get_data_last_error = reinterpret_cast<typeLPU237Lock_get_data_last_error>(::GetProcAddress(m_hMode, "LPU237Lock_get_data_last_error"));
 
 			if( m_get_list == NULL )
 				continue;
@@ -117,38 +102,20 @@ public:
 				continue;
 			if( m_get_id == NULL )
 				continue;
-
-			m_bIsNowSupportFuns = true;
+			if(m_get_data_last_error == NULL )
+				continue;
+			//
+			m_bLoadOk = true;
+			b_result = true;
 		}while(0);
 
 		return b_result;
-	}
-
-	BOOL XHidDev_LoadDriver( CallBackKeyIn cb )
-	{
-		if( m_XHidDev_LoadDriver ){
-			return m_XHidDev_LoadDriver( cb );
-		}
-		else
-			return FALSE;
-	}
-
-	void XHidDev_UnloadDriver()
-	{
-		if( m_XHidDev_UnloadDriver )
-			m_XHidDev_UnloadDriver();
 	}
 
 	bool is_load_ok()
 	{
 		return m_bLoadOk;
 	}
-
-	bool is_support_new_funtions()
-	{
-		return m_bIsNowSupportFuns;
-	}
-
 	//
 	DWORD get_list( LPTSTR sMultiPaths )
 	{
@@ -216,6 +183,11 @@ public:
 		else	return dll_result_error;
 	}
 
+	DWORD get_data_last_error(unsigned long dwRFU)
+	{
+		if (m_get_data_last_error) return m_get_data_last_error(dwRFU);
+		else return dll_result_error;
+	}
 private:
 	CDll(void) 	  
 	{
@@ -230,10 +202,7 @@ private:
 
 	void ini()
 	{
-		m_bIsNowSupportFuns = false;
 		m_bLoadOk = false;
-		m_XHidDev_LoadDriver = NULL;
-		m_XHidDev_UnloadDriver = NULL;
 		m_hMode = NULL;
 		//
 		m_get_list = NULL;
@@ -247,15 +216,13 @@ private:
 		m_dll_on = NULL;
 		m_dll_off = NULL;
 		m_get_id = NULL;
+		m_get_data_last_error = NULL;
 	}
 private:
 	HMODULE m_hMode;
 	_tstring m_sFullPathName;
-	typeXHidDev_LoadDriver m_XHidDev_LoadDriver;
-	typeXHidDev_UnloadDriver m_XHidDev_UnloadDriver;
 	
 	bool m_bLoadOk;
-	bool m_bIsNowSupportFuns;
 
 	// new exported member.
 	typeLPU237Lock_get_list					m_get_list;
@@ -269,7 +236,7 @@ private:
 	typeLPU237Lock_dll_on						m_dll_on;
 	typeLPU237Lock_dll_off						m_dll_off;
 	typeLPU237Lock_get_id						m_get_id;
-
+	typeLPU237Lock_get_data_last_error 	m_get_data_last_error;
 private:
 	//don't call these methods
 	CDll( const CDll & );

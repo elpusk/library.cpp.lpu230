@@ -93,6 +93,7 @@ void _so_fini(void)
 /////////////////////////////////////////////////////////////////////////
 static std::atomic_bool g_b_enable_ibutton_notify(false);
 static cmap_user_cb g_map_user_cb; //global user callback map
+static std::atomic_ulong g_get_data_last_error = LPU237LOCK_DLL_GET_DATA_LAST_ERROR_SUCCESS;
 
 /////////////////////////////////////////////////////////////////////////
 // local class
@@ -633,17 +634,21 @@ unsigned long _CALLTYPE_ LPU237Lock_get_data(unsigned long dwBufferIndex, unsign
 		}
 
 		if (!g_map_user_cb.get_callback(n_item_index, true, n_result_index, hDev, p_fun, p_para)) {
+			g_get_data_last_error = LPU237LOCK_DLL_GET_DATA_LAST_ERROR_INVALID_ITEM_INDEX;
 			_mp::clog::get_instance().log_fmt(L" : RET : %ls : invalid item index .\n", __WFUNCTION__);
 			continue;
 		}
 
 		if (!ptr_manager_of_device_of_client) {
+			g_get_data_last_error = LPU237LOCK_DLL_GET_DATA_LAST_ERROR_NONE_DEVICE_CLIENT;
 			_mp::clog::get_instance().log_fmt(L" : RET : %ls : none manager_of_device_of_client.\n", __WFUNCTION__);
 			continue;
 		}
 
 		_mp::casync_parameter_result::type_ptr_ct_async_parameter_result& ptr_result = ptr_manager_of_device_of_client->get_async_parameter_result_for_manager_from_all_device(n_result_index);
 		if (!ptr_result) {
+			// reading ready  에서  그냥 close 하면 여기.
+			g_get_data_last_error = LPU237LOCK_DLL_GET_DATA_LAST_ERROR_NONE_DEVICE_CLIENT_RESULT_OBJECT;
 			_mp::clog::get_instance().log_fmt(L" : RET : %ls : INVALID_HANDLE_VALUE\n", __WFUNCTION__);
 			continue;
 		}
@@ -654,13 +659,32 @@ unsigned long _CALLTYPE_ LPU237Lock_get_data(unsigned long dwBufferIndex, unsign
 		if (!ptr_result->get_result(v_out_rx)) {
 			ptr_manager_of_device_of_client->remove_async_result_for_manager(n_result_index);
 			dw_client_result = ccb_client::const_dll_result_error;
-			_mp::clog::get_instance().log_fmt(L" : RET : %ls : error\n", __WFUNCTION__);
+
+			if(v_out_rx.size() == 0) {
+				// size 0이면 그냥 error
+				g_get_data_last_error = LPU237LOCK_DLL_GET_DATA_LAST_ERROR_FAILED_NONE_RESPONSE_DATA;
+				_mp::clog::get_instance().log_fmt(L" : RET : %ls : error : LPU237LOCK_DLL_GET_DATA_LAST_ERROR_FAILED_NONE_RESPONSE_DATA\n", __WFUNCTION__);
+			}
+			else if (v_out_rx.size() >= 6 && memcmp(v_out_rx.data(), "cancel", 6) == 0){
+				// 앞 6바이트가 "cancel"
+				g_get_data_last_error = LPU237LOCK_DLL_GET_DATA_LAST_ERROR_FAILED_CANCEL_STRING;
+				_mp::clog::get_instance().log_fmt(L" : RET : %ls : error : LPU237LOCK_DLL_GET_DATA_LAST_ERROR_FAILED_CANCEL_STRING\n", __WFUNCTION__);
+			}
+			else if (v_out_rx.size() >= 5 && memcmp(v_out_rx.data(), "error", 5) == 0) {
+				g_get_data_last_error = LPU237LOCK_DLL_GET_DATA_LAST_ERROR_FAILED_ERROR_STRING;
+				_mp::clog::get_instance().log_fmt(L" : RET : %ls : error : LPU237LOCK_DLL_GET_DATA_LAST_ERROR_FAILED_ERROR_STRING\n", __WFUNCTION__);
+			}
+			else {
+				g_get_data_last_error = LPU237LOCK_DLL_GET_DATA_LAST_ERROR_FAILED_ANY_STRING;
+				_mp::clog::get_instance().log_fmt(L" : RET : %ls : error : LPU237LOCK_DLL_GET_DATA_LAST_ERROR_FAILED_ANY_STRING\n", __WFUNCTION__);
+			}
 			continue;
 		}
 		
 		if (v_out_rx.size() < 3 + n_ibutton_key) {
 			ptr_manager_of_device_of_client->remove_async_result_for_manager(n_result_index);
 			dw_client_result = ccb_client::const_dll_result_error;
+			g_get_data_last_error = LPU237LOCK_DLL_GET_DATA_LAST_ERROR_SUCCESS_LESS_THAN_3_PLUS_8;
 			_mp::clog::get_instance().log_fmt(L" : RET : %ls : error(size = %u)\n", __WFUNCTION__, v_out_rx.size());
 			continue;
 		}
@@ -670,9 +694,11 @@ unsigned long _CALLTYPE_ LPU237Lock_get_data(unsigned long dwBufferIndex, unsign
 
 		switch (dw_client_result) {
 		case ccb_client::const_dll_result_cancel:
+			g_get_data_last_error = LPU237LOCK_DLL_GET_DATA_LAST_ERROR_SUCCESS_CANCEL_CODE;
 			_mp::clog::get_instance().log_fmt(L" : RET : %ls : canceled\n", __WFUNCTION__);
 			continue;
 		case ccb_client::const_dll_result_error:
+			g_get_data_last_error = LPU237LOCK_DLL_GET_DATA_LAST_ERROR_SUCCESS_ERROR_CODE;
 			_mp::clog::get_instance().log_fmt(L" : RET : %ls : error\n", __WFUNCTION__);
 			continue;
 		default:
@@ -684,6 +710,7 @@ unsigned long _CALLTYPE_ LPU237Lock_get_data(unsigned long dwBufferIndex, unsign
 				map_cash[dwBufferIndex] = _mp::type_v_buffer(v_out_rx.begin() + 3, v_out_rx.begin() + 3 + n_ibutton_key);
 			}
 			dw_client_result = n_ibutton_key;
+			g_get_data_last_error = LPU237LOCK_DLL_GET_DATA_LAST_ERROR_SUCCESS;
 			_mp::clog::get_instance().log_fmt(L" : RET : %ls : %u\n", __WFUNCTION__, dw_client_result);
 			continue;
 		}//end switch
@@ -821,5 +848,13 @@ unsigned long _CALLTYPE_ LPU237Lock_get_id(HANDLE hDev, unsigned char* sId)
 
 	_mp::clog::get_instance().log_fmt(L" : RET : %ls : %d\n", __WFUNCTION__, cprotocol_lpu237::the_size_of_uid);
 
+	return dwResult;
+}
+
+unsigned long _CALLTYPE_ LPU237Lock_get_data_last_error(unsigned long dwRFU)
+{
+	unsigned long dwResult(g_get_data_last_error);
+	_mp::clog::get_instance().log_fmt(L" : CAL : %ls\n", __WFUNCTION__);
+	_mp::clog::get_instance().log_fmt(L" : RET : %ls : %u\n", __WFUNCTION__, dwResult);
 	return dwResult;
 }
