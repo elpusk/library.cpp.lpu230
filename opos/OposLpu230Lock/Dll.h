@@ -31,6 +31,20 @@ public:
 		dll_result_error = 0xFFFFFFFF
 	};
 
+	enum : unsigned long {
+		dll_get_data_error_success = 0,
+		dll_get_data_error_invalid_item_index = 1,
+		dll_get_data_error_none_device_client = 2,
+		dll_get_data_error_none_device_client_result_object = 3,
+		dll_get_data_error_get_result_failed_none_response_data_field = 4,
+		dll_get_data_error_get_result_failed_cancel_string = 5,
+		dll_get_data_error_get_result_failed_error_string = 6,
+		dll_get_data_error_get_result_failed_any_string = 7,
+		dll_get_data_error_get_result_success_with_less_then_3_plus_8_bytes_data = 8,
+		dll_get_data_error_get_result_success_but_result_code_is_cancel = 9,
+		dll_get_data_error_get_result_success_but_result_code_is_error = 10
+	};
+
 public:
 	static CDll & get_instance( const _tstring & s_dll_file_name = _tstring(_T("")) )
 	{

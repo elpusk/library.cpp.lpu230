@@ -330,6 +330,43 @@ public:
 
 				DWORD dw_result = CDll::get_instance().get_data( dw_index, &value[0] );
 				if( dw_result == CDll::dll_result_error ){
+					DWORD n_error_code = CDll::get_instance().get_data_last_error(dw_index);//dw_index 는 지금 더미로 사용됨.
+
+					switch (n_error_code) {
+					case CDll::dll_get_data_error_success:
+					case CDll::dll_get_data_error_invalid_item_index :
+					case CDll::dll_get_data_error_none_device_client :
+					case CDll::dll_get_data_error_none_device_client_result_object :
+					case CDll::dll_get_data_error_get_result_failed_none_response_data_field :
+					case CDll::dll_get_data_error_get_result_failed_error_string :
+					case CDll::dll_get_data_error_get_result_failed_any_string :
+					case CDll::dll_get_data_error_get_result_success_with_less_then_3_plus_8_bytes_data :
+					case CDll::dll_get_data_error_get_result_success_but_result_code_is_cancel :
+					case CDll::dll_get_data_error_get_result_success_but_result_code_is_error :
+						obj.SOTrace(true, CLog::LEV_LOW, _T("[ERROR] get_data_last_error = %u\n"), n_error_code);
+						continue;
+					case CDll::dll_get_data_error_get_result_failed_cancel_string:
+						obj.SOTrace( true, CLog::LEV_LOW, _T("[ERROR] dll_get_data_error_get_result_failed_cancel_string = %u\n"), n_error_code );
+						// 다른 프로세스에 close 에 의해 취소 된것으로 간주하여, 단순하게 다시 시도함.
+						obj.m_set_locker.Lock(100);
+
+						dw_result = CDll::get_instance().wait_key_with_callback(obj.m_h_dev, CSoLock::CShare::key_callback_readdone, NULL);
+						if (dw_result != CDll::dll_result_error) {
+							obj.m_dw_result_buffer_index = dw_result;
+							obj.SOTrace(true, CLog::LEV_NORMAL, _T("[INFO]wait_key_with_callback = %d\n"), dw_result);
+						}
+						else {
+							obj.m_dw_result_buffer_index = -1;
+						}
+
+						obj.m_set_locker.Unlock();
+						continue;
+
+					default:
+						obj.SOTrace( true, CLog::LEV_LOW, _T("[ERROR] get_data_last_error(default) = %u\n"), n_error_code );
+						continue;
+					}
+
 					continue;
 				}
 

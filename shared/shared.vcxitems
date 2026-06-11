@@ -111,6 +111,7 @@
     <None Include="$(MSBuildThisFileDirectory)..\gemini.md" />
     <None Include="$(MSBuildThisFileDirectory)..\info.md" />
     <None Include="$(MSBuildThisFileDirectory)..\README.md" />
+    <None Include="$(MSBuildThisFileDirectory)..\test.md" />
   </ItemGroup>
   <ItemGroup>
     <Xml Include="$(MSBuildThisFileDirectory)projects\ElpuskHidDaemon\device.xml" />

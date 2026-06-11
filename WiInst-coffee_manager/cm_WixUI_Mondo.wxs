@@ -97,12 +97,20 @@
       <Publish Dialog="LicenseAgreementDlg" Control="Next" Event="NewDialog" Value="CertAgreementDlg" Order="2">LicenseAccepted = "1"</Publish>
 
       <Publish Dialog="CertAgreementDlg" Control="Back" Event="NewDialog" Value="LicenseAgreementDlg">1</Publish>
-      <Publish Dialog="CertAgreementDlg" Control="Next" Event="NewDialog" Value="OposAgreementDlg" Order="2">CertAccepted = "1"</Publish>
+      <?if $(var.Pre_PlatformPath) = "x64" ?>
+        <Publish Dialog="CertAgreementDlg" Control="Next" Event="NewDialog" Value="VerifyReadyDlg" Order="2">CertAccepted = "1"</Publish>
+      <?else ?>
+        <Publish Dialog="CertAgreementDlg" Control="Next" Event="NewDialog" Value="OposAgreementDlg" Order="2">CertAccepted = "1"</Publish>
+      <?endif ?>
 
       <Publish Dialog="OposAgreementDlg" Control="Back" Event="NewDialog" Value="CertAgreementDlg">1</Publish>
       <Publish Dialog="OposAgreementDlg" Control="Next" Event="NewDialog" Value="VerifyReadyDlg" Order="2">1</Publish>
 
-      <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="OposAgreementDlg" Order="1">WixUI_InstallMode = "InstallTypical"</Publish>
+      <?if $(var.Pre_PlatformPath) = "x64" ?>
+        <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="CertAgreementDlg" Order="1">WixUI_InstallMode = "InstallTypical"</Publish>
+      <?else ?>
+        <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="OposAgreementDlg" Order="1">WixUI_InstallMode = "InstallTypical"</Publish>
+      <?endif ?>
       <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="CustomizeDlg" Order="2">WixUI_InstallMode = "Change"</Publish>
       <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="MaintenanceTypeDlg" Order="3">WixUI_InstallMode = "Repair" OR WixUI_InstallMode = "Remove"</Publish>
       <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg" Order="4">WixUI_InstallMode = "Update"</Publish>

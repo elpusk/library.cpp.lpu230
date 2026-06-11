@@ -1,5 +1,5 @@
 # Software components information
-package release 2.13
+package release 2.14
 
 ## LiMgmtLpu230
 - for Debian 12.(x64)
@@ -77,6 +77,13 @@ package release 2.13
 - for native client application, dynamic linked library.
 - supports lpu237 firmware update functionality.
 
+## wi_lpu237_tools
+- from package release 2.14
+- for windows 11.(x86)
+- executable file name : tg_lpu237_tools.dll
+- for native client application, dynamic linked library.
+- supports lpu237 basic setting functionality.
+
 ## tp_li_lpu237
 - for Debian 12.(x64)
 - executable file name : tp_li_lpu237.out
@@ -130,6 +137,22 @@ package release 2.13
 - executable file name : libdev_lib.so
 - for native client application, shared object.
 - for elpusk-hid-d and lpu230_update(lpu230_update.out), service hid device io.
+
+## OPOS Service Object
+
+### OposLpu230
+- from package release 2.14
+- for windows 11.(x86)
+- executable file name : OposLpu230.dll
+- for OPOS CCO, COM object.
+- OPOS Msr Service Object of lpu237.
+
+### OposLpu230Lock
+- from package release 2.14
+- for windows 11.(x86)
+- executable file name : OposLpu230Lock.dll
+- for OPOS CCO, COM object.
+- OPOS Keylock Service Object of lpu237.
 
 ## MCP
 

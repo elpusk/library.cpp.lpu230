@@ -127,7 +127,8 @@ static void __stdcall _cb_key(void*p_user);
 void __stdcall _cb_key(void* p_user)
 {
 	do {
-		long n_item_index = (long)p_user;
+		//_wait_key_with_callback() 에서 _cb_key() 호출 시, n_item_index(LPU237Lock_get_data() 의 dwBufferIndex )
+		long n_item_index = (long)p_user; 
 		int n_result_index(-1);
 		HANDLE h_dev(INVALID_HANDLE_VALUE);
 
@@ -148,6 +149,34 @@ void __stdcall _cb_key(void* p_user)
 				continue;
 			}
 
+			manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
+			if (ptr_manager_of_device_of_client) {
+				_mp::casync_parameter_result::type_ptr_ct_async_parameter_result& ptr_result = ptr_manager_of_device_of_client->get_async_parameter_result_for_manager_from_all_device(n_result_index);
+				if (ptr_result) {
+					_mp::type_v_buffer v_out_rx(0);
+					if (!ptr_result->get_result(v_out_rx)) {
+						if (v_out_rx.size() >= 6 && memcmp(v_out_rx.data(), "cancel", 6) == 0) {
+							// 앞 6바이트가 "cancel"
+							// 다른 프로세스가 ready 상태에서 close 하는 등의 이유로, 대기 중인 i-button 읽기 작업이 취소된 경우.
+							// 알리지 않고, 다시 대기 작업을 시작한다. 
+							std::thread retry_job(
+								_job_retry_start_key
+								, n_item_index
+								, h_dev
+								, n_result_index
+								, p_fun
+								, p_para
+							);
+
+							retry_job.detach(); // detach thread, so that it can run independently.
+
+							// If the user callback is not enabled, we have to next chance automatically.
+							_mp::clog::get_instance().log_fmt(L" : INF : %ls : user callback is retrying, the current reading is canceled by another process close.\n", __WFUNCTION__, n_item_index);
+							continue;
+						}
+					}
+				}
+			}
 			p_fun(p_para); // callback user function
 			continue;
 		}
@@ -306,20 +335,44 @@ HANDLE _CALLTYPE_ LPU237Lock_open(const wchar_t* sDevPath)
 
 	do {
 		_mp::clog::get_instance().log_fmt(L" : CAL : %ls.\n", __WFUNCTION__);
-		_mp::clog::get_instance().log_fmt(L" : INF : %ls : %ls\n", __WFUNCTION__, sDevPath);
+		if (sDevPath) {
+			_mp::clog::get_instance().log_fmt(L" : INF : %ls : %ls\n", __WFUNCTION__, sDevPath);
+		}
+		else {
+			_mp::clog::get_instance().log_fmt(L" : INF : %ls : the given path null\n", __WFUNCTION__);
+			_mp::clog::get_instance().log_fmt(L" : RET : %ls : error\n", __WFUNCTION__);
+			continue;
+		}
+
+		std::wstring s_dev_path(sDevPath);
+
+		// v6.4 부터
+		// cf2 에서는 s_dev_path 가 "&ibutton" 로 끝나야 i-buttob 의 virtual device 를 open 하도록 설계되어 있어서
+		// "&ibutton" 가 없어도 open 되는 구형 application 들과 호환성을 위해서 s_dev_path 가 "&ibutton" 로 끝나지 않으면	"&ibutton" 를 붙여서 open 하도록 한다.
+		const std::wstring suffix = L"&ibutton";
+
+		if (s_dev_path.length() < suffix.length() ){
+			s_dev_path += suffix;
+			_mp::clog::get_instance().log_fmt(L" : INF : %ls : changed path : %ls\n", __WFUNCTION__, s_dev_path.c_str());
+		}
+		else if( s_dev_path.compare(s_dev_path.length() - suffix.length(),suffix.length(),	suffix) != 0){
+			s_dev_path += suffix;
+			_mp::clog::get_instance().log_fmt(L" : INF : %ls : changed path : %ls\n", __WFUNCTION__, s_dev_path.c_str());
+		}
+		//
 
 		if (!ptr_manager_of_device_of_client) {
 			_mp::clog::get_instance().log_fmt(L" : RET : %ls : none manager_of_device_of_client.\n", __WFUNCTION__);
 			continue;
 		}
 
-		if (!ptr_manager_of_device_of_client->get_device(std::wstring(sDevPath))->is_null_device()) {
+		if (!ptr_manager_of_device_of_client->get_device(s_dev_path)->is_null_device()) {
 			//alreay open.
 			_mp::clog::get_instance().log_fmt(L" : RET : %ls : already open\n", __WFUNCTION__);
 			continue;
 		}
 
-		n_device_index = ptr_manager_of_device_of_client->create_device(std::wstring(sDevPath),true);
+		n_device_index = ptr_manager_of_device_of_client->create_device(s_dev_path,true);
 		if (n_device_index == i_device_of_client::const_invalied_device_index) {
 			_mp::clog::get_instance().log_fmt(L" : RET : %ls : error : create_device.\n", __WFUNCTION__);
 			continue;
