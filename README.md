@@ -1,6 +1,7 @@
 # library.cpp.lpu230
 
-lpu23x device c++ library & MCP Server by Rust
+- lpu23x device c++ libraries
+- MCP Server by Rust
 
 ## env
 
@@ -14,31 +15,31 @@ lpu23x device c++ library & MCP Server by Rust
 + deb package directory : /home/tester/build_deb/
 + FTXUI 6.1.9 lib - path : /home/tester/FTXUI/
 
-## the current version(pkg v2.13)
+## the current version(pkg v2.14)
 
-+ coffee_sevice : 2.2
++ coffee_sevice : 2.3
   + rebuilded with the changed library.
   + Windows only service program for running elpusk-hid-d.exe
 
-+ elpusk-hid-d : v2.12
++ elpusk-hid-d : v2.13
   + In removeall option, change "Elpusk" -> "elpusk" (Windows only)
 
-+ tg_lpu237_dll : v6.3
++ tg_lpu237_dll : v6.4
   + add virtual lpu238 class
 
-+ tg_lpu237_ibutton : v6.3
++ tg_lpu237_ibutton : v6.4
   + add virtual lpu238 class
 
-+ tg_lpu237_fw : v6.3
++ tg_lpu237_fw : v6.4
   + add virtual lpu238 class
 
-+ dev_lib : v1.3
++ dev_lib : v1.4
   + add virtual lpu238 class
 
-+ lpu230_update : v2.9
++ lpu230_update : v2.10
   + add virtual lpu238 class
 
-+ tg_rom : v1.4
++ tg_rom : v1.5
   + rebuilded with the changed library.
 
 + tg_rom_build : v1.4
@@ -49,6 +50,17 @@ lpu23x device c++ library & MCP Server by Rust
 
 + lpu23x-ibutton-mcp : v1.1
   + the first release.
+
++ OposLpu230 : v1.8.30
+  + the first release.(porting from NDM version)
+
++ OposLpu230Lock : v1.14.30
+  + the first release.(porting from NDM version)
+  + Windows x86 only
+
++ OposLpu230Lock : v1.14.30
+  + the first release.(porting from NDM version)
+  + Windows x86 only
 
 ## build on windows11
 
@@ -108,6 +120,12 @@ lpu23x device c++ library & MCP Server by Rust
     + cmake .. -G "Visual Studio 17 2022" -A Win32
     + load & build the created solution on vs2022
 
++ OPOS
+  + use version 1.14.001, static lib
+  + build
+    + download and install from [OPOS CCO](http://www.monroecs.com/files/OPOS_CCOs_1.14.001.msi)
+
+if boost lib building error, 
 ```
 msvc.jam file : 
         else
