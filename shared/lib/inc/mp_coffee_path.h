@@ -180,6 +180,25 @@ namespace _mp{
 		}
 
 		/**
+		* @brief get ini file absolute path of tg_lpu237_jni.dll or libtg_lpu237_jni.so
+		* @return absolute path of tg_lpu237_jni.ini.
+		*/
+		static std::wstring get_path_of_coffee_lpu237_jni_ini_file()
+		{
+			std::wstring s;
+#if defined(_WIN32) && !defined(_DEBUG)
+			//win release
+			s = _mp::cfile::get_path_ProgramData() + std::wstring(L"\\elpusk\\00000006\\coffee_manager\\tg_lpu237_jni");
+#else
+			s = std::wstring(_mp::_coffee::CONST_S_COFFEE_LPU237_TOOLS_DLL_INI_DIR_EXCEPT_BACKSLASH);
+#endif
+			std::filesystem::path p(s);
+
+			p /= std::wstring(L"tg_lpu237_jni.ini");
+			return p.wstring();
+		}
+
+		/**
 		* @brief get root absolute path of log file without deliminator
 		* @return 
 		* 

@@ -1,12 +1,33 @@
 // tg_lpu237_jni.cpp : DLL 응용 프로그램을 위해 내보낸 함수를 정의합니다.
 //
 
-#include "tg_lpu237_jni.h"
-#include "Lpu237Dll.h"
+#include <limits.h>
+
+#include <tg_lpu237_jni.h>
+#include <Lpu237Dll.h>
 #include <vector>
-#include "JavaInfo.h"
+#include <JavaInfo.h>
 
 using namespace std;
+
+#ifndef _WIN32
+//linux only
+static void _so_init(void) __attribute__((constructor));
+static void _so_fini(void) __attribute__((destructor));
+//when calls dlopen().
+void _so_init(void)
+{
+	//printf("Shared library loaded\n");
+	// NOT executed
+}
+
+//when calls dlclose().
+void _so_fini(void)
+{
+	//printf("Shared library unloaded\n");
+	// NOT executed
+}
+#endif // _WIN32
 
 /**
 * local data type
@@ -20,11 +41,11 @@ typedef	struct{
 /**
 * local function prototype
 */
-static void WINAPI _call_java_callback(void *);
+static void _CALLTYPE_ _call_java_callback(void *);
 
 static HANDLE _get_dev_handle( HANDLE h_dev = NULL );
 static type_java_data *_get_java_data( bool b_reset, JNIEnv *env = NULL, jobject obj = NULL );
-static DWORD _get_buffer_index( DWORD dw_new_index = -1 );
+static unsigned long _get_buffer_index( unsigned long dw_new_index = -1 );
 static jvalue JNU_CallMethodByName( 	JNIEnv *env, jboolean *hasException, jobject obj, const char *name, const char *descriptor, ...);
 /**
 * local function body
@@ -96,18 +117,18 @@ jvalue JNU_CallMethodByName( 	JNIEnv *env, jboolean *hasException, jobject obj, 
 #define	_JBYTE_ARRAY_ID_ISO2_BUF		2
 #define	_JBYTE_ARRAY_ID_ISO3_BUF		3
 
-void WINAPI _call_java_callback(void *p_data)
+void _CALLTYPE_ _call_java_callback(void *p_data)
 {
 	do{
-		DWORD dw_index = _get_buffer_index();
+		unsigned long dw_index = _get_buffer_index();
 		if( dw_index == -1 )
 			continue;
 		//
-		DWORD dw_result = LPU237_DLL_RESULT_ERROR;
+		unsigned long dw_result = LPU237_DLL_RESULT_ERROR;
 		jbyte iso[3][120] = {0,};
 		jbyte c_iso_len[3] = { 0, };
 
-		for( DWORD i=0; i<3; i++ ){
+		for( unsigned long i=0; i<3; i++ ){
 			dw_result = CLpu237Dll::get_instance()->LPU237_get_data( dw_index, i+1,(unsigned char*)iso[i] );
 			if( dw_result == LPU237_DLL_RESULT_ERROR )
 				break;
@@ -199,9 +220,9 @@ type_java_data *_get_java_data( bool b_reset, JNIEnv *env /*= NULL*/, jobject ob
 	return &java_data;
 }
 
-DWORD _get_buffer_index( DWORD dw_new_index /*= -1*/ )
+unsigned long _get_buffer_index( unsigned long dw_new_index /*= -1*/ )
 {
-	static DWORD dw_index = -1;
+	static unsigned long dw_index = -1;
 
 	if( dw_new_index != -1 )
 		dw_index = dw_new_index;
@@ -274,7 +295,7 @@ JNIEXPORT void JNICALL Java_kr_co_elpusk_javapos_msr_Lpu237MSRService_lpu237_1en
 		if( h_dev == NULL || h_dev == INVALID_HANDLE_VALUE )
 			continue;
 
-		DWORD dw_result = LPU237_DLL_RESULT_SUCCESS;
+		unsigned long dw_result = LPU237_DLL_RESULT_SUCCESS;
 	
 		if( b_enable ){
 			dw_result = CLpu237Dll::get_instance()->LPU237_enable( h_dev );
@@ -305,7 +326,7 @@ JNIEXPORT void JNICALL Java_kr_co_elpusk_javapos_msr_Lpu237MSRService_lpu237_1wa
 		if( h_dev == NULL || h_dev == INVALID_HANDLE_VALUE )
 			continue;
 
-		DWORD dw_result = LPU237_DLL_RESULT_SUCCESS;
+		unsigned long dw_result = LPU237_DLL_RESULT_SUCCESS;
 	
 		//_get_java_data( false,env, obj ); //save java data.
 		dw_result = CLpu237Dll::get_instance()->LPU237_wait_swipe_with_callback( h_dev, _call_java_callback, NULL );
@@ -327,9 +348,13 @@ JNIEXPORT jboolean JNICALL Java_kr_co_elpusk_javapos_msr_Lpu237MSRService_lpu237
 	jboolean b_jresult = JNI_FALSE;
 
 	do{
-		TCHAR s_path[_MAX_PATH] = {0,};
+#ifdef _WIN32		
+		wchar_t s_path[_MAX_PATH] = { 0, };
+#else
+		wchar_t s_path[PATH_MAX] = {0,};
+#endif
 
-		DWORD dw_result = CLpu237Dll::get_instance()->LPU237_get_list( (LPTSTR)s_path );
+		unsigned long dw_result = CLpu237Dll::get_instance()->LPU237_get_list( (wchar_t*)s_path );
 		if( dw_result == LPU237_DLL_RESULT_ERROR )
 			continue;
 		//
@@ -361,7 +386,7 @@ JNIEXPORT jboolean JNICALL Java_kr_co_elpusk_javapos_msr_Lpu237MSRService_lpu237
 		
 		//_get_java_data(true);
 
-		DWORD dw_result = CLpu237Dll::get_instance()->LPU237_close( h_dev );
+		unsigned long dw_result = CLpu237Dll::get_instance()->LPU237_close( h_dev );
 		if( dw_result == LPU237_DLL_RESULT_ERROR )
 			continue;
 

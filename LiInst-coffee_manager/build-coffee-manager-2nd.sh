@@ -6,7 +6,7 @@ set -e # Exit immediately if a command exits with a non-zero status.
 
 # 패키지 정보 설정
 PACKAGE_NAME="coffee-manager-2nd"
-VERSION="2.14"
+VERSION="2.15"
 ARCH="amd64" # 또는 'arm64', 'i386' 등 실제 아키텍처에 맞게 수정
 DEB_PACKAGE_NAME="${PACKAGE_NAME}_${VERSION}_${ARCH}.deb"
 
@@ -19,11 +19,11 @@ gCA_CERT_ALIAS="ca-coffee_server"
 SRC_BASE_DIR="/home/tester/projects"
 
 # 라이브러리 버전 정보
-LIBDEV_LIB_VERSION="1.3.0"
-LIBTG_LPU237_DLL_VERSION="6.3.0"
-LIBTG_LPU237_IBUTTON_VERSION="6.3.0"
-LIBTG_LPU237_FW_VERSION="6.3.0"
-LIBTG_ROM_VERSION="1.4.0"
+LIBDEV_LIB_VERSION="1.4.0"
+LIBTG_LPU237_DLL_VERSION="6.4.0"
+LIBTG_LPU237_IBUTTON_VERSION="6.4.0"
+LIBTG_LPU237_FW_VERSION="6.4.0"
+LIBTG_ROM_VERSION="1.5.0"
 
 # 원본 파일 전체 경로
 ORIGIN_ELPUSK_HID_D="${SRC_BASE_DIR}/LiElpuskHidDaemon/bin/x64/Release/elpusk-hid-d"
@@ -97,7 +97,7 @@ Version: ${VERSION}
 Architecture: ${ARCH}
 Pre-Depends: libnss3-tools
 Maintainer: Elpusk<elpusk@naver.com>
-Description: Coffee Manager 2nd Daemon 2.14 & Updater 2.10 & MCP Server 1.1
+Description: Coffee Manager 2nd Daemon 2.15 & Updater 2.10 & MCP Server 1.1
  Provides the necessary daemon, libraries and fw-updater, for the coffee manager 2nd system.
 EOF
 
@@ -411,5 +411,6 @@ echo "==================================================="
 echo "설치 명령어: sudo dpkg -i ${DEB_PACKAGE_NAME}"
 echo "제거 명령어: sudo dpkg -r ${PACKAGE_NAME}"
 echo "완전 제거 명령어: sudo dpkg -P ${PACKAGE_NAME}"
+echo "so 파일의 심볼릭 링크는 VC 의 Remove Post build Event 설정 변경 필요"
 # echo ""
 # echo "스크립트 상단의 '설정 변수' 섹션에서 경로와 버전이 올바른지 확인하세요."

@@ -1,0 +1,63 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="..\shared\projects\lpu237_jni\Lpu237Dll.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\projects\lpu237_jni\tg_lpu237_jni.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="inc">
+      <UniqueIdentifier>{39c08477-1c65-4cc5-8e41-9ea9e524b59e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{b6b6e90d-0cd2-4216-8158-98c43cef5719}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib">
+      <UniqueIdentifier>{f35eb99d-e913-485d-b5b3-931fb3a83054}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lpu237_dll_inc">
+      <UniqueIdentifier>{b8aed76d-a7d4-492b-bee7-348c1f1ab9c9}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\shared\projects\lpu237_jni\inc\JavaInfo.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\projects\lpu237_jni\inc\kr_co_elpusk_javapos_msr_Lpu237MSRService.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\projects\lpu237_jni\inc\Lpu237Dll.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\projects\lpu237_jni\inc\tg_lpu237_jni.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_os_type.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\projects\lpu237_dll\inc\tg_lpu237_dll.h">
+      <Filter>lpu237_dll_inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cfile.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_coffee.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_coffee_path.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cstring.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_type.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="li_lpu237_jni.ld" />
+  </ItemGroup>
+</Project>

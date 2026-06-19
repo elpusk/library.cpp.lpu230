@@ -16,6 +16,9 @@
     <Filter Include="lpu237_dll_inc">
       <UniqueIdentifier>{cb754a25-a2b4-4dc3-8039-7234412129c5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="lib">
+      <UniqueIdentifier>{c8d16d04-81cb-4631-8517-ff49c5898adb}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -41,6 +44,24 @@
     </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_os_type.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_coffee.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_coffee_path.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cfile.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cstring.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_type.h">
+      <Filter>lib</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

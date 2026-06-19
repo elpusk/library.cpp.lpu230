@@ -175,6 +175,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\shared\lib\inc\mp_cfile.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_coffee.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_coffee_path.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_cstring.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_os_type.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_type.h" />
     <ClInclude Include="..\shared\projects\lpu237_dll\inc\tg_lpu237_dll.h" />
     <ClInclude Include="..\shared\projects\lpu237_jni\inc\JavaInfo.h" />
     <ClInclude Include="..\shared\projects\lpu237_jni\inc\kr_co_elpusk_javapos_msr_Lpu237MSRService.h" />
