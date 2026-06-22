@@ -19,6 +19,9 @@
     <Filter Include="lib">
       <UniqueIdentifier>{c8d16d04-81cb-4631-8517-ff49c5898adb}</UniqueIdentifier>
     </Filter>
+    <Filter Include="common">
+      <UniqueIdentifier>{398f9e6c-cea0-4edf-aea4-8b8ba85e3665}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -63,6 +66,21 @@
     <ClInclude Include="..\shared\lib\inc\mp_type.h">
       <Filter>lib</Filter>
     </ClInclude>
+    <ClInclude Include="..\shared\common\inc\cdll_ini.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_clog.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_coperation.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cconvert.h">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\lib\inc\mp_cnamed_pipe_.h">
+      <Filter>lib</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -76,6 +94,9 @@
     </ClCompile>
     <ClCompile Include="..\shared\projects\lpu237_jni\tg_lpu237_jni.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\lib\inc\mp_cnamed_pipe_.cpp">
+      <Filter>lib</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

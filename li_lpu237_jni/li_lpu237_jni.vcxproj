@@ -131,13 +131,19 @@
     <LibraryPath>/usr/local/lib;/opt/jdk-17.0.19+10/lib;/opt/jdk-17.0.19+10/lib/server</LibraryPath>
   </PropertyGroup>
   <ItemGroup>
+    <ClCompile Include="..\shared\lib\inc\mp_cnamed_pipe_.cpp" />
     <ClCompile Include="..\shared\projects\lpu237_jni\Lpu237Dll.cpp" />
     <ClCompile Include="..\shared\projects\lpu237_jni\tg_lpu237_jni.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\shared\common\inc\cdll_ini.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_cconvert.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cfile.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_clog.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_cnamed_pipe_.h" />
     <ClInclude Include="..\shared\lib\inc\mp_coffee.h" />
     <ClInclude Include="..\shared\lib\inc\mp_coffee_path.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_coperation.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cstring.h" />
     <ClInclude Include="..\shared\lib\inc\mp_os_type.h" />
     <ClInclude Include="..\shared\lib\inc\mp_type.h" />
@@ -161,7 +167,7 @@
     <Link>
       <AdditionalLibraryDirectories>/usr/local/lib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>$(StlAdditionalDependencies);%(Link.AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_lpu237_jni/li_lpu237_jni/li_lpu237_jni.ld,-soname,libtg_lpu237_jni.so.2 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-ldl -Wl,--version-script=/home/tester/projects/li_lpu237_jni/li_lpu237_jni/li_lpu237_jni.ld,-soname,libtg_lpu237_jni.so.2 %(AdditionalOptions)</AdditionalOptions>
       <LibraryDependencies>jvm</LibraryDependencies>
     </Link>
     <RemotePostBuildEvent>
@@ -184,7 +190,7 @@
     <Link>
       <AdditionalLibraryDirectories>/usr/local/lib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>$(StlAdditionalDependencies);%(Link.AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_lpu237_jni/li_lpu237_jni/li_lpu237_jni.ld,-soname,libtg_lpu237_jni.so.2 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-ldl -Wl,--version-script=/home/tester/projects/li_lpu237_jni/li_lpu237_jni/li_lpu237_jni.ld,-soname,libtg_lpu237_jni.so.2 %(AdditionalOptions)</AdditionalOptions>
       <LibraryDependencies>jvm</LibraryDependencies>
     </Link>
     <RemotePostBuildEvent>
@@ -206,7 +212,7 @@
     <Link>
       <AdditionalLibraryDirectories>/usr/local/lib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>$(StlAdditionalDependencies);%(Link.AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_lpu237_jni/li_lpu237_jni/li_lpu237_jni.ld,-soname,libtg_lpu237_jni.so.2 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-ldl -Wl,--version-script=/home/tester/projects/li_lpu237_jni/li_lpu237_jni/li_lpu237_jni.ld,-soname,libtg_lpu237_jni.so.2 %(AdditionalOptions)</AdditionalOptions>
       <LibraryDependencies>jvm</LibraryDependencies>
     </Link>
     <RemotePostBuildEvent>
@@ -229,7 +235,7 @@
     <Link>
       <AdditionalLibraryDirectories>/usr/local/lib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>$(StlAdditionalDependencies);%(Link.AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_lpu237_jni/li_lpu237_jni/li_lpu237_jni.ld,-soname,libtg_lpu237_jni.so.2 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-ldl -Wl,--version-script=/home/tester/projects/li_lpu237_jni/li_lpu237_jni/li_lpu237_jni.ld,-soname,libtg_lpu237_jni.so.2 %(AdditionalOptions)</AdditionalOptions>
       <LibraryDependencies>jvm</LibraryDependencies>
     </Link>
     <RemotePostBuildEvent>
@@ -250,7 +256,7 @@
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>/usr/local/lib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_lpu237_jni/li_lpu237_jni/li_lpu237_jni.ld,-soname,libtg_lpu237_jni.so.2 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-ldl -Wl,--version-script=/home/tester/projects/li_lpu237_jni/li_lpu237_jni/li_lpu237_jni.ld,-soname,libtg_lpu237_jni.so.2 %(AdditionalOptions)</AdditionalOptions>
       <AdditionalDependencies>$(StlAdditionalDependencies);%(Link.AdditionalDependencies)</AdditionalDependencies>
       <LibraryDependencies>jvm</LibraryDependencies>
     </Link>
@@ -273,7 +279,7 @@
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>/usr/local/lib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_lpu237_jni/li_lpu237_jni/li_lpu237_jni.ld,-soname,libtg_lpu237_jni.so.2 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-ldl -Wl,--version-script=/home/tester/projects/li_lpu237_jni/li_lpu237_jni/li_lpu237_jni.ld,-soname,libtg_lpu237_jni.so.2 %(AdditionalOptions)</AdditionalOptions>
       <AdditionalDependencies>$(StlAdditionalDependencies);%(Link.AdditionalDependencies)</AdditionalDependencies>
       <LibraryDependencies>jvm</LibraryDependencies>
     </Link>
@@ -296,7 +302,7 @@
     <Link>
       <AdditionalLibraryDirectories>/usr/local/lib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>$(StlAdditionalDependencies);%(Link.AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_lpu237_jni/li_lpu237_jni/li_lpu237_jni.ld,-soname,libtg_lpu237_jni.so.2 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-ldl -Wl,--version-script=/home/tester/projects/li_lpu237_jni/li_lpu237_jni/li_lpu237_jni.ld,-soname,libtg_lpu237_jni.so.2 %(AdditionalOptions)</AdditionalOptions>
       <LibraryDependencies>jvm</LibraryDependencies>
     </Link>
     <RemotePostBuildEvent>
@@ -319,7 +325,7 @@
     <Link>
       <AdditionalLibraryDirectories>/usr/local/lib;%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>$(StlAdditionalDependencies);%(Link.AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalOptions>-Wl,--version-script=/home/tester/projects/li_lpu237_jni/li_lpu237_jni/li_lpu237_jni.ld,-soname,libtg_lpu237_jni.so.2 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-ldl -Wl,--version-script=/home/tester/projects/li_lpu237_jni/li_lpu237_jni/li_lpu237_jni.ld,-soname,libtg_lpu237_jni.so.2 %(AdditionalOptions)</AdditionalOptions>
       <LibraryDependencies>jvm</LibraryDependencies>
     </Link>
     <RemotePostBuildEvent>

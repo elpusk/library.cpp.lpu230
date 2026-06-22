@@ -23,6 +23,7 @@
 #include <unistd.h>
 #include <linux/limits.h>
 #include <libgen.h> // For dirname and basename
+#include <dlfcn.h>
 #endif
 
 #include <mp_type.h>
@@ -690,6 +691,64 @@ namespace _mp{
 			return path;
 		}
 
+		/*
+		* @brief Function to get the absolute path of the current executable.
+		* @return A std::string containing the absolute path of the current executable.
+		* @return without backslash file name & file extension.
+		*/
+		static std::string get_cur_exe_or_dll_abs_path_except_backslah_file_name_extension()
+		{
+			std::string path;
+
+#ifdef _WIN32
+			// Windows
+			std::vector<char> path_buffer(MAX_PATH);
+
+			HMODULE hExeOrDll = cfile::_get_current_module_handle();
+			DWORD length = GetModuleFileNameA(hExeOrDll, path_buffer.data(), static_cast<DWORD>(path_buffer.size()));
+			if (length > 0) {
+				std::string p;
+				p.assign(path_buffer.data(), length);
+				std::filesystem::path exePath(p);
+				path = exePath.parent_path().string();
+			}
+#else
+			Dl_info info;
+			// 현재 함수의 주소(&get_cur_exe_or_dll_abs_path_except_backslah_file_name_extension)를 넘겨 정보를 조회합니다.
+			if (dladdr(reinterpret_cast<void*>(&_mp::cfile::get_cur_exe_or_dll_abs_path_except_backslah_file_name_extension), &info) == 0) {
+				return path; // 실패 시 빈 문자열 반환
+			}
+
+
+			// 1. /proc/self/exe를 통해 실제 실행 파일의 경로를 구합니다.
+			std::vector<char> buffer(PATH_MAX);
+			ssize_t len = readlink("/proc/self/exe", buffer.data(), buffer.size() - 1);
+			if (len == -1) {
+				return path; // 실패 시 빈 문자열 반환
+			}
+			buffer[len] = '\0';
+
+			std::filesystem::path exePath(buffer.data());
+			std::filesystem::path currentModulePath(info.dli_fname);
+
+			// 2. dladdr이 찾아낸 모듈 경로와 실행 파일의 실제 경로를 비교합니다.
+			// dladdr은 실행 파일 내부일 경우 실행 파일 경로를 반환합니다.
+			if (std::filesystem::equivalent(exePath, std::filesystem::absolute(currentModulePath))) {
+				// 일반 실행파일
+				path = exePath.parent_path().string();
+			}
+			else {
+				// so 파일
+				// info.dli_fname에 .so 파일의 절대 혹은 상대 경로가 담깁니다.
+				std::filesystem::path p(info.dli_fname);
+
+				// 절대 경로로 확실하게 변환 후 부모 디렉토리를 가져옵니다.
+				path = std::filesystem::absolute(p).parent_path().string();
+			}
+#endif
+			return path;
+		}
+
 #ifdef _WIN32
 		/**
 		* The returned path does not include a trailing backslash.
@@ -739,6 +798,21 @@ namespace _mp{
 			else {
 				return std::filesystem::path(homedir);
 			}
+		}
+#endif
+
+
+#ifdef _WIN32
+		// 현재 실행 중인 모듈(DLL or exe)의 핸들을 가져오는 헬퍼 함수
+		static HMODULE _get_current_module_handle() {
+			HMODULE hModule = NULL;
+			// 현재 함수(GetCurrentModuleHandle)의 메모리 주소를 이용해 모듈 핸들을 조회합니다.
+			GetModuleHandleExA(
+				GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+				reinterpret_cast<LPCSTR>(&_mp::cfile::_get_current_module_handle),
+				&hModule
+			);
+			return hModule;
 		}
 #endif
 

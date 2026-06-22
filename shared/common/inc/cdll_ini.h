@@ -1,11 +1,58 @@
 #pragma once
 
+/** 
+* example of ini file content: tg_lpu237_example.ini
+* [subcomponent_path] 는 3.0 부터 지원, 3.0 이전 버전은 2.0
+* tg_lpu237_example.dll(libtg_lpu237_example.so) 의 ini 파일은 tg_lpu237_example.ini
+* 
+
+[common]
+name = "tg_lpu237_example"
+version = "3.0"
+description = "lpu237 firmware update functionality dynamic library"
+date = "06262025"
+
+[log]
+enable = 1
+;Delete logs older than "days" days at startup
+days = 3
+
+;loglevel = 3 - Deprecated from version 6.0 or later.
+;logtimestemp = 1 - Deprecated from version 6.0 or later.
+;logtimetick = 1 - Deprecated from version 6.0 or later.
+
+; IO control
+[control]
+; 0 - default(if the coffee manager v2.0 or later  is running, use it, else use directIO),  1 - use directIO. 2 - use coffee manager v2.0 or later
+io = 0
+
+; websocket
+[websocket]
+msec_timeout_ws_client_wait_for_connect_api = 200000
+msec_timeout_ws_client_wait_for_async_connect_complete_in_wss = 5000
+msec_timeout_ws_client_wait_for_ssl_handshake_complete = 6000
+msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_wss = 5000
+msec_timeout_ws_client_wait_for_idle_in_wss = -1 ; infinite timeout
+
+msec_timeout_ws_client_wait_for_websocket_handshake_complete_in_ws = 30000
+msec_timeout_ws_client_wait_for_idle_in_ws = -1 ; infinite timeout
+msec_timeout_ws_client_wait_for_async_connect_complete_in_ws = 500
+
+; subcomponent_path 의 key,value pair 은 자유롭게 추가 가능.
+; key,value pair 은 tg_lpu237_example.dll(libtg_lpu237_example.so) 가 사용하는 dll(so) 로
+; 만약 tvl.dll(libtvl.so)를 사용하면, tvl="c:/sub" 또는 tvl="/use/var" 와 같이 key는 tvl, value는 dll(so) 이름으로 추가
+; value 는 절대경로로 끝에 / 나 \ 를 붙이지 않는 형태로 작성하는 것을 권장.
+[subcomponent_path]
+tvl = "c:/sub"
+
+*/
 #include <string>
 #include <fstream>
 #include <iostream>
 #include <regex>
 #include <sstream>
 #include <ctime>
+#include <map>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/ini_parser.hpp>
 
@@ -169,6 +216,15 @@ public:
 				else {
 					m_ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_ws = CONST_DEFAULT_WS_CLIENT_WAIIT_TIMEOUT_FOR_ASYNC_CONNECT_COMPLETE_IN_WS_MSEC; //default
 				}
+
+				// subcomponent_path section
+				for (const auto& kv : pt.get_child("subcomponent_path")) {
+					std::string s_key = kv.first;
+					std::string s_value = kv.second.get_value<std::string>();
+					if (!s_key.empty() && !s_value.empty()) {
+						m_map_subcomponent_path[s_key] = s_value;
+					}
+				}//end for
             }
             catch (const boost::property_tree::ini_parser_error& e) {
                 //std::cerr << "INI parsing: " << e.what() << std::endl;
@@ -454,6 +510,21 @@ public:
 		return m_b_exist_msec_timeout_ws_client_wait_for_async_connect_complete_in_ws;
 	}
 
+	std::wstring get_subcomponent_path(const std::wstring& ws_key) const
+	{
+		std::wstring ws_value;
+		std::string s_value;
+		std::string s_key = _mp::cstring::get_mcsc_from_unicode(ws_key);
+
+		auto it = m_map_subcomponent_path.find(s_key);
+		if (it != m_map_subcomponent_path.end()) {
+			s_value = it->second;
+			ws_value = _mp::cstring::get_unicode_from_mcsc(s_value);
+		}
+
+		return ws_value;
+	}
+
 private:
 	cdll_ini()
 	{
@@ -550,6 +621,9 @@ private:
 
 	long long m_ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_ws;
 	bool m_b_exist_msec_timeout_ws_client_wait_for_async_connect_complete_in_ws;
+
+	//subcomponent_path section
+	std::map<std::string, std::string> m_map_subcomponent_path;
 
 private:
 	//don't call these methods.'

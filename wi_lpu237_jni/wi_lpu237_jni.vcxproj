@@ -73,26 +73,26 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <TargetName>tg_lpu237_jni</TargetName>
     <ExecutablePath>C:\local\OpenJDK17U-jdk\x86\jdk-17.0.17+10\bin;$(VC_ExecutablePath_x86);$(CommonExecutablePath)</ExecutablePath>
-    <IncludePath>C:\local\OpenJDK17U-jdk\x86\jdk-17.0.17+10\include;C:\local\OpenJDK17U-jdk\x86\jdk-17.0.17+10\include\win32;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
-    <LibraryPath>C:\local\OpenJDK17U-jdk\x86\jdk-17.0.17+10\lib;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86)</LibraryPath>
+    <IncludePath>C:\local\boost_1_80_0;$(SolutionDir)shared/common/inc;C:\local\OpenJDK17U-jdk\x86\jdk-17.0.17+10\include;C:\local\OpenJDK17U-jdk\x86\jdk-17.0.17+10\include\win32;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <LibraryPath>C:\local\boost_1_80_0\stage\lib;C:\local\OpenJDK17U-jdk\x86\jdk-17.0.17+10\lib;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <TargetName>tg_lpu237_jni</TargetName>
     <ExecutablePath>C:\local\OpenJDK17U-jdk\x86\jdk-17.0.17+10\bin;$(VC_ExecutablePath_x86);$(CommonExecutablePath)</ExecutablePath>
-    <IncludePath>C:\local\OpenJDK17U-jdk\x86\jdk-17.0.17+10\include;C:\local\OpenJDK17U-jdk\x86\jdk-17.0.17+10\include\win32;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
-    <LibraryPath>C:\local\OpenJDK17U-jdk\x86\jdk-17.0.17+10\lib;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86)</LibraryPath>
+    <IncludePath>C:\local\boost_1_80_0;$(SolutionDir)shared/common/inc;C:\local\OpenJDK17U-jdk\x86\jdk-17.0.17+10\include;C:\local\OpenJDK17U-jdk\x86\jdk-17.0.17+10\include\win32;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <LibraryPath>C:\local\boost_1_80_0\stage\lib;C:\local\OpenJDK17U-jdk\x86\jdk-17.0.17+10\lib;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <TargetName>tg_lpu237_jni</TargetName>
     <ExecutablePath>C:\local\OpenJDK17U-jdk\x64\jdk-17.0.19+10\bin;$(VC_ExecutablePath_x64);$(CommonExecutablePath)</ExecutablePath>
-    <IncludePath>C:\local\OpenJDK17U-jdk\x64\jdk-17.0.19+10\include;C:\local\OpenJDK17U-jdk\x64\jdk-17.0.19+10\include\win32;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
-    <LibraryPath>C:\local\OpenJDK17U-jdk\x64\jdk-17.0.19+10\lib;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
+    <IncludePath>C:\local\boost_1_80_0;$(SolutionDir)shared/common/inc;C:\local\OpenJDK17U-jdk\x64\jdk-17.0.19+10\include;C:\local\OpenJDK17U-jdk\x64\jdk-17.0.19+10\include\win32;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <LibraryPath>C:\local\boost_1_80_0\stage\lib;C:\local\OpenJDK17U-jdk\x64\jdk-17.0.19+10\lib;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <TargetName>tg_lpu237_jni</TargetName>
     <ExecutablePath>C:\local\OpenJDK17U-jdk\x64\jdk-17.0.19+10\bin;$(VC_ExecutablePath_x64);$(CommonExecutablePath)</ExecutablePath>
-    <IncludePath>C:\local\OpenJDK17U-jdk\x64\jdk-17.0.19+10\include;C:\local\OpenJDK17U-jdk\x64\jdk-17.0.19+10\include\win32;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
-    <LibraryPath>C:\local\OpenJDK17U-jdk\x64\jdk-17.0.19+10\lib;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
+    <IncludePath>C:\local\boost_1_80_0;$(SolutionDir)shared/common/inc;C:\local\OpenJDK17U-jdk\x64\jdk-17.0.19+10\include;C:\local\OpenJDK17U-jdk\x64\jdk-17.0.19+10\include\win32;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <LibraryPath>C:\local\boost_1_80_0\stage\lib;C:\local\OpenJDK17U-jdk\x64\jdk-17.0.19+10\lib;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -175,9 +175,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\shared\common\inc\cdll_ini.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_cconvert.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cfile.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_clog.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_cnamed_pipe_.h" />
     <ClInclude Include="..\shared\lib\inc\mp_coffee.h" />
     <ClInclude Include="..\shared\lib\inc\mp_coffee_path.h" />
+    <ClInclude Include="..\shared\lib\inc\mp_coperation.h" />
     <ClInclude Include="..\shared\lib\inc\mp_cstring.h" />
     <ClInclude Include="..\shared\lib\inc\mp_os_type.h" />
     <ClInclude Include="..\shared\lib\inc\mp_type.h" />
@@ -191,6 +196,7 @@
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\shared\lib\inc\mp_cnamed_pipe_.cpp" />
     <ClCompile Include="..\shared\projects\lpu237_jni\Lpu237Dll.cpp" />
     <ClCompile Include="..\shared\projects\lpu237_jni\tg_lpu237_jni.cpp" />
     <ClCompile Include="dllmain.cpp" />
