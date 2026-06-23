@@ -355,6 +355,12 @@ public:
 			else {
 				ss << L"[:] msec Timeout WS Client Wait For Async Connect Complete In WSS(default): " << m_ll_msec_timeout_ws_client_wait_for_async_connect_complete_in_wss << L"\n";
 			}
+			if (!m_map_subcomponent_path.empty()) {
+				ss << L"[:] Subcomponent Path: " << L"\n";
+				for (const auto& kv : m_map_subcomponent_path) {
+					ss << L"    " << _mp::cstring::get_unicode_from_mcsc(kv.first) << L" = " << _mp::cstring::get_unicode_from_mcsc(kv.second) << L"\n";
+				}
+			}
 		} while (false);
 		return ss.str();
 	}

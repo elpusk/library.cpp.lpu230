@@ -210,6 +210,9 @@
   <ItemGroup>
     <ResourceCompile Include="wi_lpu237_jni.rc" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\shared\projects\lpu237_jni\tg_lpu237_jni.ini" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

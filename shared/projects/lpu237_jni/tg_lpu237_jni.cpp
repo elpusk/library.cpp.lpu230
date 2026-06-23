@@ -264,44 +264,54 @@ JNIEXPORT jboolean JNICALL Java_kr_co_elpusk_javapos_msr_Lpu237MSRService_lpu237
 		std::wstring s_log_root_folder_except_backslash = _mp::ccoffee_path::get_path_of_coffee_logs_root_folder_except_backslash();
 		std::string s_pipe_name_of_trace(_mp::_coffee::CONST_S_COFFEE_MGMT_TRACE_PIPE_NAME);
 		
-		cdll_ini& cini(cdll_ini::get_instance());
-		bool b_ini = cini.load_definition_file(_mp::ccoffee_path::get_path_of_coffee_lpu237_jni_ini_file());
+		std::filesystem::path cur_abs_path = _mp::cfile::get_cur_exe_or_dll_abs_path_except_backslah_file_name_extension();
 
+		cdll_ini& cini(cdll_ini::get_instance());
+		std::wstring s_ini_file = _mp::ccoffee_path::get_path_of_coffee_lpu237_jni_ini_file();
+		bool b_ini = cini.load_definition_file(s_ini_file);
+		if (!b_ini) {
+			// 현재 directory 에서 tg_lpu237_jni.ini 파일을 다시 찾는다.
+			s_ini_file = (cur_abs_path / "tg_lpu237_jni.ini").wstring();
+			b_ini = cini.load_definition_file(s_ini_file);
+		}
+
+		bool b_log_enable = false;
+		unsigned long long ll_log_days_to_keep = 3;
+		if (b_ini) {
+			b_log_enable = cini.get_log_enable();
+			ll_log_days_to_keep = cini.get_log_days_to_keep();
+		}
 		//setup tracing system
 		_mp::clog& log(_mp::clog::get_instance());
 		log.enable_trace(s_pipe_name_of_trace, false);  //disable trace. dll cannot be enabled trace.
 
 		//setup logging system
 		log.config(s_log_root_folder_except_backslash, 6, std::wstring(L"coffee_manager"), std::wstring(L"tg_lpu237_jni"), std::wstring(L"tg_lpu237_jni"));
-		log.remove_log_files_older_then_now_day(cini.get_log_days_to_keep());
-		log.enable(cini.get_log_enable());
+		log.remove_log_files_older_then_now_day(ll_log_days_to_keep);
+		log.enable(b_log_enable);
 
 		log.log_fmt(L"[I] START tg_lpu237_jni so or dll.\n");
-		log.log_fmt(L"%ls", cini.get_string().c_str());
-
-		CLpu237Dll* p_dll(nullptr);
-
 		if (b_ini) {
-			auto s_dll = cini.get_subcomponent_path(L"tg_lpu237_dll");
-			if (!s_dll.empty()) {
-				p_dll = CLpu237Dll::get_instance(s_dll.c_str());
-				if (p_dll) {
-					log.log_fmt(L"[I] LPU237 dll loaded successfully.(%ls)\n", s_dll.c_str());
-					continue;
-				}
-			}
+			log.log_fmt(L"ini : %ls", cini.get_string().c_str());
 		}
 
-		std::filesystem::path cur_abs_path = _mp::cfile::get_cur_exe_or_dll_abs_path_except_backslah_file_name_extension();
+		CLpu237Dll* p_dll(nullptr);
+		std::wstring s_dll_dir;
+		if (b_ini) {
+			s_dll_dir = cini.get_subcomponent_path(L"tg_lpu237_dll");
+		}
+		if(s_dll_dir.empty()) {
+			s_dll_dir = cur_abs_path.wstring();
+		}
 #ifdef _WIN32
-		std::filesystem::path dll_path = cur_abs_path / "tg_lpu237_dll.dll";
+		std::filesystem::path dll_path = std::filesystem::path(s_dll_dir) / "tg_lpu237_dll.dll";
 #else
-		std::filesystem::path dll_path = cur_abs_path / "libtg_lpu237_dll.so";
+		std::filesystem::path dll_path = std::filesystem::path(s_dll_dir) / "libtg_lpu237_dll.so";
 #endif
 
 		std::wstring s_dll_path(dll_path.wstring());
-		p_dll = CLpu237Dll::get_instance(s_dll_path.c_str());
-		if (!p_dll) {
+		p_dll = CLpu237Dll::get_instance();
+		if (!p_dll->Load(s_dll_path.c_str())) {
 			if (s_dll_path.empty()) {
 				log.log_fmt(L"[E] Failed to get LPU237 dll path.\n");
 			}
