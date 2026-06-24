@@ -111,20 +111,12 @@ bool CLpu237Dll::Load( const wchar_t* sDll )
 	m_hMode = _load_lib( sDll );
 
 	if (m_hMode == NULL) {
-		//default loading 시도.
-		std::filesystem::path dllPath = std::filesystem::current_path() / L"tg_lpu237_dll.dll";
-
-		m_hMode = _load_lib(L".\\tg_lpu237_dll.dll");
+		return false;
 	}
 
 	if( m_hMode ){
-#ifdef  UNICODE  
-		m_FunLPU237_get_list = reinterpret_cast<typeLPU237_get_list>(_load_symbol( m_hMode, "LPU237_get_list_w" ) );
-		m_FunLPU237_open = reinterpret_cast<typeLPU237_open>(_load_symbol( m_hMode, "LPU237_open_w" ) );
-#else
-		m_FunLPU237_get_list = reinterpret_cast<typeLPU237_get_list>( _load_symbol( m_hMode, "LPU237_get_list_a" ) );
-		m_FunLPU237_open = reinterpret_cast<typeLPU237_open>( _load_symbol( m_hMode, "LPU237_open_a" ) );
-#endif
+		m_FunLPU237_get_list = reinterpret_cast<typeLPU237_get_list>(_load_symbol( m_hMode, "LPU237_get_list" ) );
+		m_FunLPU237_open = reinterpret_cast<typeLPU237_open>(_load_symbol( m_hMode, "LPU237_open" ) );
 		m_FunLPU237_close = reinterpret_cast<typeLPU237_close>( _load_symbol( m_hMode, "LPU237_close" ) );
 
 		m_FunLPU237_enable = reinterpret_cast<typeLPU237_close>( _load_symbol( m_hMode, "LPU237_enable" ) );
@@ -162,11 +154,7 @@ bool CLpu237Dll::Load( const wchar_t* sDll )
 
 		m_FunLPU237_SCR_helper_result_is_success = reinterpret_cast<typeLPU237_SCR_helper_result_is_success>( _load_symbol( m_hMode, "LPU237_SCR_helper_result_is_success" ) );
 		m_FunLPU237_SCR_helper_SetParameters = reinterpret_cast<typeLPU237_SCR_helper_SetParameters>( _load_symbol( m_hMode, "LPU237_SCR_helper_SetParameters" ) );
-#ifdef  UNICODE  
 		m_FunLPU237_SCR_helper_GetATRParameterString = reinterpret_cast<typeLPU237_SCR_helper_GetATRParameterString>( _load_symbol( m_hMode, "LPU237_SCR_helper_GetATRParameterString_w" ) );
-#else
-		m_FunLPU237_SCR_helper_GetATRParameterString = reinterpret_cast<typeLPU237_SCR_helper_GetATRParameterString>( _load_symbol( m_hMode, "LPU237_SCR_helper_GetATRParameterString_a" ) );
-#endif//UNICODE
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
