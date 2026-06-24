@@ -74,22 +74,30 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <IgnoreImportLibrary>true</IgnoreImportLibrary>
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>c:\local\boost_1_80_0;$(SolutionDir)shared/lib/inc;$(SolutionDir)opos\code_tools;$(SolutionDir)opos\Include;$(SolutionDir)opos\common\inc\;$(IncludePath)</IncludePath>
+    <IncludePath>c:\local\boost_1_80_0;$(SolutionDir)shared/lib/inc;$(SolutionDir)opos\code_tools;$(SolutionDir)opos\Include;$(SolutionDir)opos\common\inc\;$(VC_IncludePath);$(WindowsSDK_IncludePath);$(IncludePath)</IncludePath>
+    <ExternalIncludePath>
+    </ExternalIncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IgnoreImportLibrary>true</IgnoreImportLibrary>
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>c:\local\boost_1_80_0;$(SolutionDir)shared/lib/inc;$(SolutionDir)opos\code_tools;$(SolutionDir)opos\Include;$(SolutionDir)opos\common\inc\;$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSdkDir)include</IncludePath>
+    <IncludePath>c:\local\boost_1_80_0;$(SolutionDir)shared/lib/inc;$(SolutionDir)opos\code_tools;$(SolutionDir)opos\Include;$(SolutionDir)opos\common\inc\;$(VC_IncludePath);$(WindowsSDK_IncludePath);$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSdkDir)include</IncludePath>
+    <ExternalIncludePath>
+    </ExternalIncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IgnoreImportLibrary>true</IgnoreImportLibrary>
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>c:\local\boost_1_80_0;$(SolutionDir)shared/lib/inc;$(SolutionDir)opos\code_tools;$(SolutionDir)opos\Include;$(SolutionDir)opos\common\inc\;$(IncludePath)</IncludePath>
+    <IncludePath>c:\local\boost_1_80_0;$(SolutionDir)shared/lib/inc;$(SolutionDir)opos\code_tools;$(SolutionDir)opos\Include;$(SolutionDir)opos\common\inc\;$(VC_IncludePath);$(WindowsSDK_IncludePath);$(IncludePath)</IncludePath>
+    <ExternalIncludePath>
+    </ExternalIncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IgnoreImportLibrary>true</IgnoreImportLibrary>
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>c:\local\boost_1_80_0;$(SolutionDir)shared/lib/inc;$(SolutionDir)opos\code_tools;$(SolutionDir)opos\Include;$(SolutionDir)opos\common\inc\;$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSdkDir)include</IncludePath>
+    <IncludePath>c:\local\boost_1_80_0;$(SolutionDir)shared/lib/inc;$(SolutionDir)opos\code_tools;$(SolutionDir)opos\Include;$(SolutionDir)opos\common\inc\;$(VC_IncludePath);$(WindowsSDK_IncludePath);$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSdkDir)include</IncludePath>
+    <ExternalIncludePath>
+    </ExternalIncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

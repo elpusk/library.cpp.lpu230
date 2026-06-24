@@ -488,7 +488,7 @@ int main(int argc, char** argv)
 void _print_help(const std::string& program_name)
 {
     std::cout <<
-        "Usage: v2.9\n"
+        "Usage: v2.11\n"
         "  " << program_name << " [OPTIONS]\n"
         "\n"
         "Options:\n"

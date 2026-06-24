@@ -39,7 +39,8 @@
 //#define	LPU230_SO_VERSION	1008019		// fix device detecting code missing.
 //#define	LPU230_SO_VERSION	1008022		// support ng_devmanager.
 //#define	LPU230_SO_VERSION	1008023		// support lpu238
-#define	LPU230_SO_VERSION	1008030		// using cf2 1.8.30
+//#define	LPU230_SO_VERSION	1008030		// using cf2 1.8.30
+#define	LPU230_SO_VERSION	1008031		// using cf2 1.8.31
 
 using namespace ATL;
 using namespace SYNC;
