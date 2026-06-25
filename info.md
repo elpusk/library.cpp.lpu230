@@ -1,5 +1,5 @@
 # Software components information
-package release 2.14
+package release 2.15
 
 ## LiMgmtLpu230
 - for Debian 12.(x64)
@@ -83,6 +83,20 @@ package release 2.14
 - executable file name : tg_lpu237_tools.dll
 - for native client application, dynamic linked library.
 - supports lpu237 basic setting functionality.
+
+## li_lpu237_jni
+- from package release 2.15
+- for Debian 12.(x64)
+- executable file name : libtg_lpu237_jni.so
+- for native client application, shared object.
+- the native library of Javapos Service Object.
+
+## wi_lpu237_jni
+- from package release 2.15
+- for windows 11.(x64, x86)
+- executable file name : tg_lpu237_jni.dll
+- for native client application, dynamic linked library.
+- the native library of Javapos Service Object.
 
 ## tp_li_lpu237
 - for Debian 12.(x64)

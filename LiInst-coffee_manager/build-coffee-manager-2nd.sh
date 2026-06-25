@@ -19,11 +19,12 @@ gCA_CERT_ALIAS="ca-coffee_server"
 SRC_BASE_DIR="/home/tester/projects"
 
 # 라이브러리 버전 정보
-LIBDEV_LIB_VERSION="1.4.0"
-LIBTG_LPU237_DLL_VERSION="6.4.0"
-LIBTG_LPU237_IBUTTON_VERSION="6.4.0"
-LIBTG_LPU237_FW_VERSION="6.4.0"
-LIBTG_ROM_VERSION="1.5.0"
+LIBDEV_LIB_VERSION="1.5.0"
+LIBTG_LPU237_DLL_VERSION="6.5.0"
+LIBTG_LPU237_IBUTTON_VERSION="6.5.0"
+LIBTG_LPU237_FW_VERSION="6.5.0"
+LIBTG_ROM_VERSION="1.6.0"
+LIBTG_LPU237_JNI_VERSION="2.0.0"
 
 # 원본 파일 전체 경로
 ORIGIN_ELPUSK_HID_D="${SRC_BASE_DIR}/LiElpuskHidDaemon/bin/x64/Release/elpusk-hid-d"
@@ -35,6 +36,7 @@ ORIGIN_LIBTG_LPU237_DLL_XYZ="${SRC_BASE_DIR}/li_lpu237_dll/bin/x64/Release/libtg
 ORIGIN_LIBTG_LPU237_IBUTTON_XYZ="${SRC_BASE_DIR}/li_lpu237_ibutton/bin/x64/Release/libtg_lpu237_ibutton.so.${LIBTG_LPU237_IBUTTON_VERSION}"
 ORIGIN_LIBTG_LPU237_FW_XYZ="${SRC_BASE_DIR}/li_lpu237_fw/bin/x64/Release/libtg_lpu237_fw.so.${LIBTG_LPU237_FW_VERSION}"
 ORIGIN_LIBTG_ROM_XYZ="${SRC_BASE_DIR}/li_rom/bin/x64/Release/libtg_rom.so.${LIBTG_ROM_VERSION}"
+ORIGIN_LIBTG_LPU237_JNI_XYZ="${SRC_BASE_DIR}/li_lpu237_jni/bin/x64/Release/libtg_lpu237_jni.so.${LIBTG_LPU237_JNI_VERSION}"
 
 ORIGIN_TG_LPU237_DLL_INI="${SRC_BASE_DIR}/li_lpu237_dll/shared/projects/lpu237_dll/tg_lpu237_dll.ini"
 ORIGIN_TG_LPU237_IBUTTON_INI="${SRC_BASE_DIR}/li_lpu237_ibutton/shared/projects/lpu237_ibutton/tg_lpu237_ibutton.ini"
@@ -85,6 +87,7 @@ cp "${ORIGIN_LPU23X_IBUTTON_MCP}" "${DEB_DIR}/usr/share/elpusk/program/00000006/
 cp "${ORIGIN_LPU23X_MSR_MCP}" "${DEB_DIR}/usr/share/elpusk/program/00000006/coffee_manager/mcp/"
 cp "${ORIGIN_LPU23X_IBUTTON_MCP_JSON}" "${DEB_DIR}/usr/share/elpusk/programdata/00000006/coffee_manager/mcp/"
 cp "${ORIGIN_LPU23X_MSR_MCP_JSON}" "${DEB_DIR}/usr/share/elpusk/programdata/00000006/coffee_manager/mcp/"
+cp "${ORIGIN_LIBTG_LPU237_JNI_XYZ}" "${DEB_DIR}/usr/share/elpusk/program/00000006/coffee_manager/so/"
 
 # dpkg 빌드 시에는 심볼릭 링크를 직접 생성하지 않습니다.
 # 대신, postinst 스크립트에서 생성하도록 처리합니다.
@@ -97,7 +100,7 @@ Version: ${VERSION}
 Architecture: ${ARCH}
 Pre-Depends: libnss3-tools
 Maintainer: Elpusk<elpusk@naver.com>
-Description: Coffee Manager 2nd Daemon 2.15 & Updater 2.10 & MCP Server 1.1
+Description: Coffee Manager 2nd Daemon 2.15 & Updater 2.11 & MCP Server 1.1
  Provides the necessary daemon, libraries and fw-updater, for the coffee manager 2nd system.
 EOF
 
@@ -194,6 +197,7 @@ create_symlinks "libtg_lpu237_dll" "${LIBTG_LPU237_DLL_VERSION}"
 create_symlinks "libtg_lpu237_ibutton" "${LIBTG_LPU237_IBUTTON_VERSION}"
 create_symlinks "libtg_lpu237_fw" "${LIBTG_LPU237_FW_VERSION}"
 create_symlinks "libtg_rom" "${LIBTG_ROM_VERSION}"
+create_symlinks "libtg_lpu237_jni" "${LIBTG_LPU237_JNI_VERSION}"
 
 
 # elpusk-hid-d /cert 실행

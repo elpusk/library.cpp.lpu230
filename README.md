@@ -15,52 +15,52 @@
 + deb package directory : /home/tester/build_deb/
 + FTXUI 6.1.9 lib - path : /home/tester/FTXUI/
 
-## the current version(pkg v2.14)
+## the current version(pkg v2.15)
 
-+ coffee_sevice : 2.3
++ coffee_sevice : 2.4
   + rebuilded with the changed library.
   + Windows only service program for running elpusk-hid-d.exe
 
-+ elpusk-hid-d : v2.13
-  + In removeall option, change "Elpusk" -> "elpusk" (Windows only)
++ elpusk-hid-d : v2.14
+  + rebuilded with the changed library.
 
-+ tg_lpu237_dll : v6.4
-  + add virtual lpu238 class
++ tg_lpu237_dll : v6.5
+  + rebuilded with the changed library.
 
-+ tg_lpu237_ibutton : v6.4
-  + add virtual lpu238 class
++ tg_lpu237_ibutton : v6.5
+  + rebuilded with the changed library.
 
-+ tg_lpu237_fw : v6.4
-  + add virtual lpu238 class
++ tg_lpu237_fw : v6.5
+  + rebuilded with the changed library.
 
-+ dev_lib : v1.4
-  + add virtual lpu238 class
++ dev_lib : v1.5
+  + rebuilded with the changed library.
 
-+ lpu230_update : v2.10
-  + add virtual lpu238 class
++ lpu230_update : v2.11
+  + rebuilded with the changed library.
 
-+ tg_rom : v1.5
++ tg_rom : v1.6
   + rebuilded with the changed library.
 
 + tg_rom_build : v1.4
-  + rebuilded with the changed library.
+  + NC.
 
 + lpu23x-msr-mcp : v1.1
-  + the first release.
+  + NC.
 
 + lpu23x-ibutton-mcp : v1.1
+  + NC.
+
++ OposLpu230 : v1.8.31
+  + rebuilded with the changed library.
+
++ OposLpu230Lock : v1.14.31
+  + rebuilded with the changed library.
+  + Windows x86 only
+
++ tg_lpu237_jni : v2.0
   + the first release.
-
-+ OposLpu230 : v1.8.30
-  + the first release.(porting from NDM version)
-
-+ OposLpu230Lock : v1.14.30
-  + the first release.(porting from NDM version)
-  + Windows x86 only
-
-+ OposLpu230Lock : v1.14.30
-  + the first release.(porting from NDM version)
-  + Windows x86 only
+  + For [Javapos Service Object](https://github.com/elpusk/so.jpos.lpu237), JNI.  
 
 ## build on windows11
 
@@ -389,6 +389,24 @@ sudo rm /var/lib/dpkg/info/coffee-manager*
   + log directory
     + root user : L"/var/log/elpusk/00000006/coffee_manager/tg_lpu237_fw"
     + normal user : L"~/.elpusk/log/00000006/coffee_manager/tg_lpu237_fw"
+
+### libtg_lpu237_jni.so file.(tg_lpu237_jni.dll on Windows)
+
+#### Common
+
+#### Windows x86 and x64
+
++ debug build
+  + log directory : L"C:\\ProgramData\\Elpusk\\00000006\\tg_lpu237_jni\\log"
++ release build
+  + log directory : L"C:\\ProgramData\\Elpusk\\00000006\\tg_lpu237_jni\\log"
+
+#### Linux build x64
+
++ release build
+  + log directory
+    + root user : L"/var/log/elpusk/00000006/coffee_manager/tg_lpu237_jni"
+    + normal user : L"~/.elpusk/log/00000006/coffee_manager/tg_lpu237_jni"
 
 ---------------------------------------------
 ---------------------------------------------

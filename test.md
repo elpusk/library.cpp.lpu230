@@ -11,6 +11,9 @@
 
 다음 각 프로그램을 단독 동작 시.
 
+- Java application
+  - [JavaPos test program](https://github.com/elpusk/so.jpos.lpu237) : OK (MSR only)
+
 - Webapp
   - [Webmapper](https://elpusk.github.io/library.js.coffee.2nd/app/webmapper/) : OK
   - [webmsr-read](https://elpusk.github.io/library.js.coffee.2nd/app/webmsr-read/) : OK

@@ -265,6 +265,7 @@ JNIEXPORT jboolean JNICALL Java_kr_co_elpusk_javapos_msr_Lpu237MSRService_lpu237
 		std::string s_pipe_name_of_trace(_mp::_coffee::CONST_S_COFFEE_MGMT_TRACE_PIPE_NAME);
 		
 		std::filesystem::path cur_abs_path = _mp::cfile::get_cur_exe_or_dll_abs_path_except_backslah_file_name_extension();
+		// cur_abs_path 에는 이 jni dll(so) 파일이 있는 절대 경로가 들어있다.
 
 		cdll_ini& cini(cdll_ini::get_instance());
 		std::wstring s_ini_file = _mp::ccoffee_path::get_path_of_coffee_lpu237_jni_ini_file();
@@ -275,7 +276,7 @@ JNIEXPORT jboolean JNICALL Java_kr_co_elpusk_javapos_msr_Lpu237MSRService_lpu237
 			b_ini = cini.load_definition_file(s_ini_file);
 		}
 
-		bool b_log_enable = false;
+		bool b_log_enable = true; // 기본값은 logging enable
 		unsigned long long ll_log_days_to_keep = 3;
 		if (b_ini) {
 			b_log_enable = cini.get_log_enable();
@@ -301,7 +302,7 @@ JNIEXPORT jboolean JNICALL Java_kr_co_elpusk_javapos_msr_Lpu237MSRService_lpu237
 			s_dll_dir = cini.get_subcomponent_path(L"tg_lpu237_dll");
 		}
 		if(s_dll_dir.empty()) {
-			s_dll_dir = cur_abs_path.wstring();
+			s_dll_dir = cur_abs_path.wstring(); // jni dll(so) 파일이 있는 절대 경로를 사용한다.
 		}
 #ifdef _WIN32
 		std::filesystem::path dll_path = std::filesystem::path(s_dll_dir) / "tg_lpu237_dll.dll";
