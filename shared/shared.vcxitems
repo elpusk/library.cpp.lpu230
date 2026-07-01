@@ -118,4 +118,7 @@
     <Xml Include="$(MSBuildThisFileDirectory)projects\ElpuskHidDaemon\elpusk-hid-d.xml" />
     <Xml Include="$(MSBuildThisFileDirectory)projects\lpu237_dll\tg_lpu237_dll.xml" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="$(MSBuildThisFileDirectory)..\doc\license_coffee_manager_2nd.txt" />
+  </ItemGroup>
 </Project>

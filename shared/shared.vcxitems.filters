@@ -366,4 +366,9 @@
       <Filter>projects\ElpuskHidDaemon</Filter>
     </Xml>
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="$(MSBuildThisFileDirectory)..\doc\license_coffee_manager_2nd.txt">
+      <Filter>doc</Filter>
+    </Text>
+  </ItemGroup>
 </Project>

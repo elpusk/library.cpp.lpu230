@@ -1,9 +1,9 @@
 # LPU23X F/W Update API  
 **User Manual**  
-**For V6.2**
+**For V6.x**
 
 **Elpusk Co., Ltd.**  
-**2026/04/14**
+**2026**
 
 ---
 
