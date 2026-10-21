@@ -125,6 +125,24 @@
 *                               : OposLpu230.dll : 1.8.30 -> 1.8.31 : rebuilded with the changed library.
 *                               : OposLpu230Lock.dll : 1.14.30 -> 1.14.31 : rebuilded with the changed library.
 *
+* 2026.10.19 - package v 2.16.0 : coffee manager 2nd project(v2.16)
+*                               : AD6925A2-0FC8-4445-A68D-83A59772B018
+*                               : PKG : 2.15 -> 2.16
+*                               : coffee_sevice : 2.4 -> 2.5  : rebuilded with the changed library.
+*                               : dev_lib : 1.5 -> 1.6 : rebuilded with the changed library.
+*                               : lpu230_update : 2.11 -> 2.12 : rebuilded with the changed library.
+*                               : tg_lpu237_dll : 6.5 -> 6.6 : rebuilded with the changed library.
+*                               : tg_lpu237_fw : 6.5 -> 6.6 : rebuilded with the changed library.
+*                               : tg_lpu237_ibutton : 6.5 -> 6.6 : rebuilded with the changed library.
+*                               : tg_lpu237_tools : 6.5  -> 6.6 : rebuilded with the changed library.
+*                               : tg_lpu237_jni : 2.0  : 변경무
+*                               : tg_rom : 1.5 -> 1.6 : 변경무
+*                               : elpusk-hid-d : 2.14 -> 2.15 : lpu238 지원.
+*                               : lpu23x-ibutton-mcp : 1.1 : 변경무
+*                               : lpu23x-msr-mcp : 1.1 : 변경무
+*                               : OposLpu230.dll : 1.8.30 -> 1.8.31 : 변경무.
+*                               : OposLpu230Lock.dll : 1.14.30 -> 1.14.31 : 변경무.
+*
 -->
 
 <!-- 기본적으로 %ProgramFiles%\Pre_DirName_ProductName\Pre_DirName_Manufacturer 형식으로 설치됨.-->
@@ -141,8 +159,8 @@
 <?define Pre_ProductName = "coffee_manager_2nd"?>
 
 <!-- Pre_ProductVersion 값이 변경되면, Pre_ProductCode 는 새로 생성해야함.-->
-<?define Pre_ProductVersion = "2.15.0"?>
-<?define Pre_ProductCode = "65AFBBB8-0C66-429F-A66E-6D0880B44815"?>
+<?define Pre_ProductVersion = "2.16.0"?>
+<?define Pre_ProductCode = "AD6925A2-0FC8-4445-A68D-83A59772B018"?>
 
 <!-- 같은 프로그래은 버전이 달라져도 Pre_ProductUpgradeCode 는 항상 동일해야 함.-->
 <?define Pre_ProductUpgradeCode = "B9BF3037-BD17-4F00-BA59-C5CE301723D6"?>
@@ -237,8 +255,8 @@
       <![CDATA[Installed OR (NOT NDM_ONLY_MAPPER)]]>
     </Condition>
 
-    <!-- only windows 10 or later -->
-    <Condition Message="This application is only supported on Windows 10 or higher.">
+    <!-- only windows 11 or later -->
+    <Condition Message="This application is only supported on Windows 11 or higher.">
       <![CDATA[Installed OR (VersionNT >= 603)]]>
     </Condition>
 

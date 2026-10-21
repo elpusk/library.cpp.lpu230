@@ -7530,7 +7530,8 @@ private:
 			p_data = (unsigned char*)(ckey_map::get_ascii_to_hid_key_map(n_mapping_table_index,FOR_CVT_MAX_ASCII_CODE / 2));
 			b_result = _generate_config_set(dw_offset, dw_size, p_data, __func__);
 			//
-			if (get_name_by_string().compare("europa") != 0) {
+			auto s_name = get_name_by_string();
+			if ( (s_name.compare("europa") != 0) && (s_name.compare("elara") !=0) ){
 				//PS2 map
 				dw_offset = address_system_ps2_key_map_offset;
 				dw_size = FOR_CVT_MAX_ASCII_CODE;

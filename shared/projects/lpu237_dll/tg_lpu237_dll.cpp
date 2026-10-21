@@ -196,7 +196,6 @@ unsigned char _last_bwi(unsigned char cBWI, bool bSet)
 unsigned long _CALLTYPE_ LPU237_get_list(wchar_t* ssDevPaths)
 {
 	_mp::clog::get_instance().log_fmt(L" : CAL : LPU237_get_list\n");
-	//const std::wstring s_filter(L"hid#vid_134b&pid_0206&mi_01");
 	_mp::type_list_wstring list_filter{ L"lpu200",L"msr" };
 	_mp::type_list_wstring list_dev_path;
 	unsigned long dw_dev(0);

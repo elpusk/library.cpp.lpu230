@@ -15,32 +15,32 @@
 + deb package directory : /home/tester/build_deb/
 + FTXUI 6.1.9 lib - path : /home/tester/FTXUI/
 
-## the current version(pkg v2.15)
+## the current version(pkg v2.16)
 
-+ coffee_sevice : 2.4
++ coffee_sevice : 2.5
   + rebuilded with the changed library.
   + Windows only service program for running elpusk-hid-d.exe
 
-+ elpusk-hid-d : v2.14
++ elpusk-hid-d : v2.15
+  + supports lpu238(europa,elara).
+
++ tg_lpu237_dll : v6.6
   + rebuilded with the changed library.
 
-+ tg_lpu237_dll : v6.5
++ tg_lpu237_ibutton : v6.6
   + rebuilded with the changed library.
 
-+ tg_lpu237_ibutton : v6.5
++ tg_lpu237_fw : v6.6
   + rebuilded with the changed library.
 
-+ tg_lpu237_fw : v6.5
++ dev_lib : v1.6
   + rebuilded with the changed library.
 
-+ dev_lib : v1.5
-  + rebuilded with the changed library.
-
-+ lpu230_update : v2.11
++ lpu230_update : v2.12
   + rebuilded with the changed library.
 
 + tg_rom : v1.6
-  + rebuilded with the changed library.
+  + NC.
 
 + tg_rom_build : v1.4
   + NC.
@@ -52,14 +52,15 @@
   + NC.
 
 + OposLpu230 : v1.8.31
-  + rebuilded with the changed library.
+  + NC.
+  + Windows x86 only
 
 + OposLpu230Lock : v1.14.31
-  + rebuilded with the changed library.
+  + NC.
   + Windows x86 only
 
 + tg_lpu237_jni : v2.0
-  + the first release.
+  + NC.
   + For [Javapos Service Object](https://github.com/elpusk/so.jpos.lpu237), JNI.  
 
 ## build on windows11

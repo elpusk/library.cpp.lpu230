@@ -1064,8 +1064,8 @@ void _CALLTYPE_ LPU237_fw_set_mode(unsigned long nMode)
 unsigned long _CALLTYPE_ LPU237_fw_get_list_w(wchar_t* ssDevPaths)
 {
 	_mp::clog::get_instance().log_fmt(L" : CAL : LPU237_fw_get_list_w\n");
-	const std::wstring s_filter(L"hid#vid_134b&pid_0206&mi_01");
-	//_mp::type_list_wstring list_filter{ L"lpu200" };
+	//const std::wstring s_filter(L"hid#vid_134b&pid_0206&mi_01");
+	const _mp::type_list_wstring list_filter{ L"hid#vid_134b&pid_0206&mi_01",L"hid#vid_134b&pid_0214&mi_00" };
 	_mp::type_list_wstring list_dev_path;
 	unsigned long dw_dev(0);
 	manager_of_device_of_client<lpu237_of_client>::type_ptr_manager_of_device_of_client ptr_manager_of_device_of_client(manager_of_device_of_client<lpu237_of_client>::get_instance());
@@ -1076,7 +1076,7 @@ unsigned long _CALLTYPE_ LPU237_fw_get_list_w(wchar_t* ssDevPaths)
 			continue;
 		}
 
-		list_dev_path = ptr_manager_of_device_of_client->get_device_list(s_filter);
+		list_dev_path = ptr_manager_of_device_of_client->get_device_list(list_filter);
 
 		// 받은 리스트에서 특정 suffix로 끝나는 항목을 제거한다. (예를 들어, msr, ibutton, scr0 등으로 끝나는 항목을 제거한다.)
 		std::vector<std::wstring> v_suffix{ L"&msr",L"&ibutton",L"&scr0" };

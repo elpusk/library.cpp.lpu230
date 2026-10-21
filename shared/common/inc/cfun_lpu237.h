@@ -769,11 +769,20 @@ public:
                 continue;
             }
             //
+            s_n = L"elara";
+            v = cfun_lpu237::type_version(1, 0, 0, 0);
+            if (m_s_name.compare(s_n) == 0 && m_version >= v) {
+                continue;
+            }
+            //
             b_support = false;
         }while(false);
         return b_support;
     }
 
+    /**
+	* @brief msr data is only stx etx lrc.(none data field) is error.
+    */
     bool is_support_msr_stx_etx_lrc_only_is_error() const
     {
         bool b_support(true);
@@ -802,6 +811,12 @@ public:
             s_n = L"europa";
             v = cfun_lpu237::type_version(1,3,0,0);
             if(m_s_name.compare(s_n) == 0 && m_version >= v){
+                continue;
+            }
+            //
+            s_n = L"elara";
+            v = cfun_lpu237::type_version(1, 0, 0, 0);
+            if (m_s_name.compare(s_n) == 0 && m_version >= v) {
                 continue;
             }
             //
@@ -1217,6 +1232,12 @@ public:
             s_n = L"europa";
             v = cfun_lpu237::type_version(1,2,0,0);
             if(m_s_name.compare(s_n) == 0 && m_version >= v){
+                continue;
+            }
+            //
+            s_n = L"elara";
+            v = cfun_lpu237::type_version(1, 0, 0, 0);
+            if (m_s_name.compare(s_n) == 0 && m_version >= v) {
                 continue;
             }
             //

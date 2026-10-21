@@ -253,6 +253,8 @@ namespace _mp{
             else if (w_pid == _elpusk::_lpu238::const_usb_pid && n_interface == _elpusk::_lpu238::const_usb_inf_hid) {
                 m_n_size_in_report = _elpusk::_lpu238::const_size_report_in_except_id;
                 m_n_size_out_report = _elpusk::_lpu238::const_size_report_out_except_id;
+                //
+                m_b_support_shared = _vhid_info::is_support_shared_open(m_s_extra_path);
             }
             else if (w_pid == _elpusk::const_usb_pid_hidbl) {
                 m_n_size_in_report = _elpusk::const_size_hidbl_report_in_except_id;
