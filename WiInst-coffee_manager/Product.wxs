@@ -143,6 +143,11 @@
 *                               : OposLpu230.dll : 1.8.30 -> 1.8.31 : 변경무.
 *                               : OposLpu230Lock.dll : 1.14.30 -> 1.14.31 : 변경무.
 *
+* 2026.11.18 - package v 2.17.0 : 수정 중. coffee manager 2nd project(v2.17)
+*                               : 67A138E2-30A8-451B-B900-057E0E32514F
+*                               : OposLpu230.dll : 1.8.31 -> 1.8.32 : OPOS physical & logical device name 변경 지원
+*                               : OposLpu230Lock.dll : 1.14.31 -> 1.14.32 : OPOS physical & logical device name 변경 지원
+*
 -->
 
 <!-- 기본적으로 %ProgramFiles%\Pre_DirName_ProductName\Pre_DirName_Manufacturer 형식으로 설치됨.-->
