@@ -145,6 +145,8 @@
 *
 * 2026.11.18 - package v 2.17.0 : 수정 중. coffee manager 2nd project(v2.17)
 *                               : 67A138E2-30A8-451B-B900-057E0E32514F
+*                               : PKG : 2.16 -> 2.17
+*                               : elpusk-hid-d : 2.15 -> 2.16 : elpusk-hid-d.exe /removeall /noui 형태의 option 지원을 위한 업데이트.
 *                               : OposLpu230.dll : 1.8.31 -> 1.8.32 : OPOS physical & logical device name 변경 지원
 *                               : OposLpu230Lock.dll : 1.14.31 -> 1.14.32 : OPOS physical & logical device name 변경 지원
 *
@@ -164,8 +166,8 @@
 <?define Pre_ProductName = "coffee_manager_2nd"?>
 
 <!-- Pre_ProductVersion 값이 변경되면, Pre_ProductCode 는 새로 생성해야함.-->
-<?define Pre_ProductVersion = "2.16.0"?>
-<?define Pre_ProductCode = "AD6925A2-0FC8-4445-A68D-83A59772B018"?>
+<?define Pre_ProductVersion = "2.17.0"?>
+<?define Pre_ProductCode = "67A138E2-30A8-451B-B900-057E0E32514F"?>
 
 <!-- 같은 프로그래은 버전이 달라져도 Pre_ProductUpgradeCode 는 항상 동일해야 함.-->
 <?define Pre_ProductUpgradeCode = "B9BF3037-BD17-4F00-BA59-C5CE301723D6"?>
@@ -328,24 +330,32 @@
       <Custom Action="CA_InstallSvr" After="CA_InstallCert" >NOT Installed</Custom>
       <Custom Action="CA_StartSvr" After="CA_InstallSvr" >NOT Installed</Custom>
       <?if $(var.Pre_PlatformPath) = "x86" ?>
-      <Custom Action="CA_RegMsrSo" After="CA_StartSvr" >NOT Installed</Custom>
-      <Custom Action="CA_RegKeylockSo" After="CA_RegMsrSo" >NOT Installed</Custom>
+        <Custom Action="CA_RegMsrSo" After="CA_StartSvr" >NOT Installed</Custom>
+        <Custom Action="CA_RegKeylockSo" After="CA_RegMsrSo" >NOT Installed</Custom>
       <?endif ?>
 
-      <Custom Action="CA_Rollback" After="InstallInitialize" >NOT Installed</Custom>
+      <Custom Action="CA_BeforeUninstall" After="InstallInitialize" >REMOVE="ALL"</Custom>
 
-      <Custom Action="CA_BeforeUninstall" After="InstallInitialize" >Installed</Custom>
-      <Custom Action="CA_StopSvr" After="CA_BeforeUninstall" >Installed</Custom>
-      <Custom Action="CA_UninstallSvr" After="CA_StopSvr" >Installed</Custom>
+      <Custom Action="CA_StopSvr" After="CA_BeforeUninstall" >REMOVE="ALL"</Custom>
+      <Custom Action="CA_UninstallSvr" After="CA_StopSvr" >REMOVE="ALL"</Custom>
+      
       <?if $(var.Pre_PlatformPath) = "x86" ?>
-      <Custom Action="CA_UnregMsrSo" After="CA_UninstallSvr" >Installed</Custom>
-      <Custom Action="CA_UnregKeylockSo" After="CA_UnregMsrSo" >Installed</Custom>
-      <Custom Action="CA_RemoveCert" After="CA_UnregKeylockSo" >Installed</Custom>
-      <Custom Action="CA_RemoveAll" After="CA_RemoveCert" >Installed</Custom>
+        <Custom Action="CA_UnregMsrSo" After="CA_UninstallSvr" >REMOVE="ALL"</Custom>
+        <Custom Action="CA_UnregKeylockSo" After="CA_UnregMsrSo" >REMOVE="ALL"</Custom>
+        <Custom Action="CA_RemoveCert" After="CA_UnregKeylockSo" >REMOVE="ALL"</Custom>
+
+        <!-- msiexec 에 option 으로 /quiet, /qn, /qn- 또는 /qn+ UILevel 값은 2 이면 -->
+        <Custom Action="CA_RemoveAll" After="CA_RemoveCert" ><![CDATA[REMOVE="ALL" AND (UILevel >= 3)]]></Custom>
+        <Custom Action="CA_RemoveAllNoUI" After="CA_RemoveAll" ><![CDATA[REMOVE="ALL" AND (UILevel < 3)]]></Custom>
+
       <?else ?>
-      <Custom Action="CA_RemoveCert" After="CA_UninstallSvr" >Installed</Custom>
-      <Custom Action="CA_RemoveAll" After="CA_RemoveCert" >Installed</Custom>
+        <!-- msiexec 에 option 으로 /quiet, /qn, /qn- 또는 /qn+ UILevel 값은 2 이면 -->
+        <Custom Action="CA_RemoveAll" After="CA_RemoveCert" ><![CDATA[REMOVE="ALL" AND (UILevel >= 3)]]></Custom>
       <?endif ?>
+
+      <!-- Repair -->
+      <Custom Action="CA_StopSvr_Repair" Before="InstallFiles">Installed AND REINSTALL AND NOT REMOVE</Custom>
+      <Custom Action="CA_StartSvr_Repair" After="InstallFiles">Installed AND REINSTALL AND NOT REMOVE</Custom>
 
       <!-- InstallValidate InstallInitialize InstallFiles -->
     </InstallExecuteSequence>
@@ -475,6 +485,13 @@
         <File Id="file_lpu230_update.exe" Name="lpu230_update.exe" Source="!(wix.DIR_SRC_BIN)lpu230_update.exe" KeyPath="yes" Checksum="yes" />
       </Component>
 
+      <?if $(var.Pre_PlatformPath) = "x86" ?>
+        <Component Id="co_lpu230_opos.exe" Guid = "E28C963B-EFF2-4CA8-ADE4-14DBF4BA538E">
+          <File Id="file_lpu230_opos.exe" Name="lpu230_opos.exe" Source="!(wix.DIR_SRC_BIN)lpu230_opos.exe" KeyPath="yes" Checksum="yes" />
+          <Condition>INSTALL_OPOS = "1"</Condition>
+        </Component>
+      <?endif ?>
+      
     </ComponentGroup>
   </Fragment>
 
@@ -707,18 +724,21 @@
     <CustomAction Id="CA_RegKeylockSo" Directory="DLL_x86_FOLDER" ExeCommand='[SystemFolder]regsvr32.exe /s "[DLL_x86_FOLDER]OposLpu230Lock.dll"' Return="check" Impersonate="no" Execute="deferred"/>
     <?endif ?>
 
-    <CustomAction Id="CA_StopSvr" Directory="BIN_FOLDER" ExeCommand="[BIN_FOLDER]coffee_service.exe -k" Return="check" Impersonate="no" Execute="deferred" />
+    <CustomAction Id="CA_StopSvr" Directory="BIN_FOLDER" ExeCommand="[BIN_FOLDER]coffee_service.exe -k" Return="ignore" Impersonate="no" Execute="deferred" />
+    <CustomAction Id="CA_UninstallSvr" Directory="BIN_FOLDER" ExeCommand="[BIN_FOLDER]coffee_service.exe -u" Return="ignore" Impersonate="no" Execute="deferred" />
 
-    <CustomAction Id="CA_UninstallSvr" Directory="BIN_FOLDER" ExeCommand="[BIN_FOLDER]coffee_service.exe -u" Return="check" Impersonate="no" Execute="deferred" />
+    <CustomAction Id="CA_StopSvr_Repair" Directory="BIN_FOLDER" ExeCommand="[BIN_FOLDER]coffee_service.exe -k" Return="ignore" Impersonate="no" Execute="deferred" />
+    <CustomAction Id="CA_StartSvr_Repair" Directory="BIN_FOLDER" ExeCommand="[BIN_FOLDER]coffee_service.exe -u" Return="ignore" Impersonate="no" Execute="deferred" />
 
     <?if $(var.Pre_PlatformPath) = "x86" ?>
-    <CustomAction Id="CA_UnregMsrSo" Directory="DLL_x86_FOLDER" ExeCommand='[SystemFolder]regsvr32.exe /s /u "[DLL_x86_FOLDER]OposLpu230.dll"' Return="check" Impersonate="no" Execute="deferred"/>
-    <CustomAction Id="CA_UnregKeylockSo" Directory="DLL_x86_FOLDER" ExeCommand='[SystemFolder]regsvr32.exe /s /u "[DLL_x86_FOLDER]OposLpu230Lock.dll"' Return="check" Impersonate="no" Execute="deferred"/>
+      <CustomAction Id="CA_UnregMsrSo" Directory="DLL_x86_FOLDER" ExeCommand='[SystemFolder]regsvr32.exe /s /u "[DLL_x86_FOLDER]OposLpu230.dll"' Return="ignore" Impersonate="no" Execute="deferred"/>
+      <CustomAction Id="CA_UnregKeylockSo" Directory="DLL_x86_FOLDER" ExeCommand='[SystemFolder]regsvr32.exe /s /u "[DLL_x86_FOLDER]OposLpu230Lock.dll"' Return="ignore" Impersonate="no" Execute="deferred"/>
     <?endif ?>
 
     <CustomAction Id="CA_RemoveCert" Directory="BIN_FOLDER" ExeCommand="[BIN_FOLDER]elpusk-hid-d.exe /removecert"  Return="ignore" Impersonate="no" Execute="deferred"/>
 
     <CustomAction Id="CA_RemoveAll" Directory="BIN_FOLDER" ExeCommand="[BIN_FOLDER]elpusk-hid-d.exe /removeall"  Return="ignore" Impersonate="no" Execute="deferred"/>
+    <CustomAction Id="CA_RemoveAllNoUI" Directory="BIN_FOLDER" ExeCommand="[BIN_FOLDER]elpusk-hid-d.exe /removeall /noui"  Return="ignore" Impersonate="no" Execute="deferred"/>
   </Fragment>
 
 </Wix>
