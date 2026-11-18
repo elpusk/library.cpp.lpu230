@@ -32,6 +32,9 @@
       <UniqueIdentifier>{f98ea5b4-6025-4dda-8cac-471eec71261e}</UniqueIdentifier>
       <SourceControlFiles>False</SourceControlFiles>
     </Filter>
+    <Filter Include="opos">
+      <UniqueIdentifier>{2bcd2f1a-49fb-4598-97c9-528c0190e501}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -64,9 +67,6 @@
     <ClCompile Include="OposLpu230Lock.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="RegControl.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="FireEvent.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -84,6 +84,9 @@
     </ClCompile>
     <ClCompile Include="..\common\src\TTR_etc.cpp">
       <Filter>common\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\RegControl.cpp">
+      <Filter>opos</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -123,9 +126,6 @@
     <ClInclude Include="IniFile.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="RegControl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="FireEvent.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -140,6 +140,12 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\job\code_tools\ct_ini_component.h">
       <Filter>job</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\inc\el_opos\el_opos.h">
+      <Filter>opos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\inc\RegControl.h">
+      <Filter>opos</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

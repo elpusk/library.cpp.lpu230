@@ -1,4 +1,4 @@
-// OposLpu230.cpp : DLL ³»º¸³»±âÀÇ ±¸ÇöÀÔ´Ï´Ù.
+// OposLpu230.cpp : DLL ë‚´ë³´ë‚´ê¸°ì˜ êµ¬í˜„ì…ë‹ˆë‹¤.
 
 
 #include "stdafx.h"
@@ -8,8 +8,12 @@
 #include "RegControl.h"
 #include "SoLock.h"
 #include "Dll.h"
+#include "el_opos/el_opos.h"
 
-// DLLÀÌ OLE¿¡ ÀÇÇØ ¾ğ·ÎµåµÉ ¼ö ÀÖ´ÂÁö °áÁ¤ÇÏ´Â µ¥ »ç¿ëµË´Ï´Ù.
+#define WIDE_HELPER(x) L##x
+#define TO_WIDE(x) WIDE_HELPER(x)
+
+// DLLì´ OLEì— ì˜í•´ ì–¸ë¡œë“œë  ìˆ˜ ìˆëŠ”ì§€ ê²°ì •í•˜ëŠ” ë° ì‚¬ìš©ë©ë‹ˆë‹¤.
 STDAPI DllCanUnloadNow(void)
 {
 	CLog::GetLog()->Log( true, CLog::LEV_HIGH, _T("[DETAIL] CALLED : DllCanUnloadNow.\n")  );
@@ -39,7 +43,7 @@ STDAPI DllCanUnloadNow(void)
 	return hResult;
 }
 
-// Å¬·¡½º ÆÑÅÍ¸®¸¦ ¹İÈ¯ÇÏ¿© ¿äÃ»µÈ Çü½ÄÀÇ °³Ã¼¸¦ ¸¸µì´Ï´Ù.
+// í´ë˜ìŠ¤ íŒ©í„°ë¦¬ë¥¼ ë°˜í™˜í•˜ì—¬ ìš”ì²­ëœ í˜•ì‹ì˜ ê°œì²´ë¥¼ ë§Œë“­ë‹ˆë‹¤.
 STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv)
 {
 	CLog::GetLog()->Log( true, CLog::LEV_HIGH, _T("[DETAIL] CALLED : DllGetClassObject.\n")  );
@@ -51,12 +55,20 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv)
 	return hResult;
 }
 
-// DllRegisterServer - ½Ã½ºÅÛ ·¹Áö½ºÆ®¸®¿¡ Ç×¸ñÀ» Ãß°¡ÇÕ´Ï´Ù.
+// DllRegisterServer - ì‹œìŠ¤í…œ ë ˆì§€ìŠ¤íŠ¸ë¦¬ì— í•­ëª©ì„ ì¶”ê°€í•©ë‹ˆë‹¤.
 STDAPI DllRegisterServer(void)
 {
 	
-	// °³Ã¼, Çü½Ä ¶óÀÌºê·¯¸® ¹× Çü½Ä ¶óÀÌºê·¯¸®¿¡ µé¾î ÀÖ´Â ¸ğµç ÀÎÅÍÆäÀÌ½º¸¦ µî·ÏÇÕ´Ï´Ù.
-	CRegControl::Register();
+	// default device name ìœ¼ë¡œ ê°œì²´, í˜•ì‹ ë¼ì´ë¸ŒëŸ¬ë¦¬ ë° í˜•ì‹ ë¼ì´ë¸ŒëŸ¬ë¦¬ì— ë“¤ì–´ ìˆëŠ” ëª¨ë“  ì¸í„°í˜ì´ìŠ¤ë¥¼ ë“±ë¡í•©ë‹ˆë‹¤.
+	CRegControl::Register(
+		TO_WIDE(EL_OPOS_PROVIDER)
+		, TO_WIDE(EL_CLASS_ROOT_KEY_KEYLOCK)
+		, TO_WIDE(EL_DEVICE_NAME_DEFAULT_KEYLOCK)
+		, TO_WIDE(EL_CLASS_KEY_KEYLOCK)
+		, TO_WIDE(OPOS_CLASSKEY_LOCK)
+		, TO_WIDE(EL_APPUID_KEY)
+		, TO_WIDE(EL_APPUID_SO_KEYLOCK)
+	);
 
 	HRESULT hr = _AtlModule.DllRegisterServer();
 
@@ -64,10 +76,24 @@ STDAPI DllRegisterServer(void)
 	return hr;
 }
 
-// DllUnregisterServer - ½Ã½ºÅÛ ·¹Áö½ºÆ®¸®¿¡¼­ Ç×¸ñÀ» Á¦°ÅÇÕ´Ï´Ù.
+// DllUnregisterServer - ì‹œìŠ¤í…œ ë ˆì§€ìŠ¤íŠ¸ë¦¬ì—ì„œ í•­ëª©ì„ ì œê±°í•©ë‹ˆë‹¤.
 STDAPI DllUnregisterServer(void)
 {
-	CRegControl::UnRegister();
+	std::list<std::wstring> list_physical_device_name = CRegControl::GetOposPhysicalDeviceName(
+		std::wstring(TO_WIDE(OPOS_CLASSKEY_LOCK))
+		, std::wstring(TO_WIDE(EL_APPUID_KEY))
+		, std::wstring(TO_WIDE(EL_APPUID_SO_KEYLOCK))
+	);
+
+	if (!list_physical_device_name.empty()) {
+		CRegControl::UnRegister(
+			list_physical_device_name
+			, std::wstring(TO_WIDE(OPOS_CLASSKEY_LOCK))
+		);
+	}
+	else {
+		ATLTRACE(_T(" @DllUnregisterServer() = None DeviceName.\n"));
+	}
 
 	HRESULT hr = _AtlModule.DllUnregisterServer();
 
@@ -75,7 +101,7 @@ STDAPI DllUnregisterServer(void)
 	return hr;
 }
 
-// DllInstall - Ç×¸ñÀ» »ç¿ëÀÚº° ¹× ÄÄÇ»ÅÍº°·Î ½Ã½ºÅÛ ·¹Áö½ºÆ®¸®¿¡ Ãß°¡ÇÏ°Å³ª ½Ã½ºÅÛ ·¹Áö½ºÆ®¸®¿¡¼­ Á¦°ÅÇÕ´Ï´Ù.
+// DllInstall - í•­ëª©ì„ ì‚¬ìš©ìë³„ ë° ì»´í“¨í„°ë³„ë¡œ ì‹œìŠ¤í…œ ë ˆì§€ìŠ¤íŠ¸ë¦¬ì— ì¶”ê°€í•˜ê±°ë‚˜ ì‹œìŠ¤í…œ ë ˆì§€ìŠ¤íŠ¸ë¦¬ì—ì„œ ì œê±°í•©ë‹ˆë‹¤.
 STDAPI DllInstall(BOOL bInstall, LPCWSTR pszCmdLine)
 {
 	HRESULT hr = E_FAIL;

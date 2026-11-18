@@ -10,6 +10,7 @@
 #include "EL_Support.h"
 #include "GlobalVar.h"
 #include "SysVer.h"
+#include "RegControl.h"
 
 #include <Dbt.h>
 
@@ -17,70 +18,118 @@
 
 using namespace std;
 
+#define WIDE_HELPER(x) L##x
+#define TO_WIDE(x) WIDE_HELPER(x)
 
-HRESULT CSoMsr::OpenService(BSTR DeviceClass, BSTR DeviceName, IDispatch* pDispatch, long* pRC)
+CSoMsr* CSoMsr::GetInstance(bool bFree /*= false*/)
 {
-	Deb_Printf( _T("++ OpenService.\n")  );
-	SOTrace( true, CLog::LEV_NORMAL, _T("++ OpenService(%s,%s).\n"),DeviceClass,DeviceName );
+	static CSoMsr* pSoMsr = NULL;
 
-	if( pRC == NULL || pDispatch == NULL ){
-		m_lResultCode = OPOS_E_ILLEGAL;
+	if (bFree) {
+
+		if (pSoMsr)
+			delete pSoMsr;
+
+		pSoMsr = NULL;
 	}
-	else{
-		CString sClass( DeviceClass );
+	else {
+		if (pSoMsr == NULL) {
+			std::list<std::wstring> list_physical_device_name = CRegControl::GetOposPhysicalDeviceName(
+				std::wstring(TO_WIDE(OPOS_CLASSKEY_MSR))
+				, std::wstring(TO_WIDE(EL_APPUID_KEY))
+				, std::wstring(TO_WIDE(EL_APPUID_SO_MSR))
+			);
 
-		if( sClass != _T(OPOS_CLASSKEY_MSR) ){
-			m_lResultCode = *pRC = OPOS_E_ILLEGAL;
-		}
-		else{
-
-			CString sDev( DeviceName );
-
-			if( sDev != _T("Lpu230MSR") ){
-				m_lOpenResultCode = m_lResultCode = *pRC = OPOS_E_NOEXIST;
-			}
-			else{
-				// save CCO dispatch for callback event
-				m_pFireEvent->setDispatch( pDispatch );
-
-				m_lOpenResultCode = m_lResultCode = *pRC = OPOS_SUCCESS;
-				m_sDeviceName = sDev;
-
-				// Initialize the current state 
-				m_lState = OPOS_S_IDLE;
-
-				m_bAutoDisable = FALSE;
-				m_lBinaryConversion = OPOS_BC_NONE;
-				m_lCapPowerReporting = OPOS_PR_NONE;
-				m_lDataCount = 0;
-
-				m_pFireEvent->setDataEventEnable( false );
-				m_bDeviceEnabled = FALSE;
-
-				m_pFireEvent->setFreezeEvents(false);
-				m_lPowerNotify = OPOS_PN_DISABLED;
-				m_lPowerState = 	OPOS_PS_UNKNOWN;
-				m_lResultCodeExtended = 0;
-				m_bCapISO = TRUE;
-				m_bCapJISOne = FALSE;
-				m_lCapJISTwo = FALSE;
-				m_lCapTransmitSentinels = TRUE;
-				m_bDecodeData = TRUE;
-				m_lErrorReportingType = MSR_ERT_CARD;
-				m_bParseDecodeData = TRUE;
-				m_lTracksToRead = MSR_TR_1_2_3;
-				m_bTransmitSentinels = FALSE;	//remarked for getting real value. <>
-	
-				//Open MSR device here
-				if( !Msr_Open() ){
-					m_lOpenResultCode = m_lResultCode = *pRC = OPOS_E_NOSERVICE;
+			if (list_physical_device_name.size() == 1) {
+				// 생성자에서의 혼란을 막기 위해 이름은 하나만 지원
+				if (!list_physical_device_name.begin()->empty()) {
+					pSoMsr = new CSoMsr(*list_physical_device_name.begin());
 				}
 			}
 		}
 	}
 
-	Deb_Printf( _T("-- OpenService.\n")  );
-	SOTrace( true, CLog::LEV_HIGH, _T("-- OpenService.(RC = 0x%x)\n"), *pRC );
+	return pSoMsr;
+}
+
+
+HRESULT CSoMsr::OpenService(BSTR DeviceClass, BSTR DeviceName, IDispatch* pDispatch, long* pRC)
+{
+	Deb_Printf(_T("++ OpenService.\n"));
+	SOTrace(true, CLog::LEV_NORMAL, _T("++ OpenService(%s,%s).\n"), DeviceClass, DeviceName);
+
+	if (pRC == NULL || pDispatch == NULL) {
+		m_lResultCode = OPOS_E_ILLEGAL;
+	}
+	else {
+		CString sClass(DeviceClass);
+
+		if (sClass != _T(OPOS_CLASSKEY_MSR)) {
+			m_lResultCode = *pRC = OPOS_E_ILLEGAL;
+		}
+		else {
+
+			CString sDev(DeviceName);
+
+			std::list<std::wstring> list_physical_device_name = CRegControl::GetOposPhysicalDeviceName(
+				std::wstring(TO_WIDE(OPOS_CLASSKEY_MSR))
+				, std::wstring(TO_WIDE(EL_APPUID_KEY))
+				, std::wstring(TO_WIDE(EL_APPUID_SO_MSR))
+			);
+
+			if (list_physical_device_name.size() != 1) {
+				// 생성자에서의 혼란을 막기 위해 이름은 하나만 지원
+				m_lOpenResultCode = m_lResultCode = *pRC = OPOS_E_NOEXIST;
+			}
+			else {
+				//CCO 에서 logical device name 은 자동으로 physical device 으로 변경해서 SO open 을 호출 하므로
+				// list_physical_device_name 의 요소 device name 만을 다룬다.
+				if (sDev.Compare(list_physical_device_name.begin()->c_str()) != 0) {
+					m_lOpenResultCode = m_lResultCode = *pRC = OPOS_E_NOEXIST;
+				}
+				else {
+					// save CCO dispatch for callback event
+					m_pFireEvent->setDispatch(pDispatch);
+
+					m_lOpenResultCode = m_lResultCode = *pRC = OPOS_SUCCESS;
+					m_sOpenedDeviceName = sDev;
+
+					// Initialize the current state 
+					m_lState = OPOS_S_IDLE;
+
+					m_bAutoDisable = FALSE;
+					m_lBinaryConversion = OPOS_BC_NONE;
+					m_lCapPowerReporting = OPOS_PR_NONE;
+					m_lDataCount = 0;
+
+					m_pFireEvent->setDataEventEnable(false);
+					m_bDeviceEnabled = FALSE;
+
+					m_pFireEvent->setFreezeEvents(false);
+					m_lPowerNotify = OPOS_PN_DISABLED;
+					m_lPowerState = OPOS_PS_UNKNOWN;
+					m_lResultCodeExtended = 0;
+					m_bCapISO = TRUE;
+					m_bCapJISOne = FALSE;
+					m_lCapJISTwo = FALSE;
+					m_lCapTransmitSentinels = TRUE;
+					m_bDecodeData = TRUE;
+					m_lErrorReportingType = MSR_ERT_CARD;
+					m_bParseDecodeData = TRUE;
+					m_lTracksToRead = MSR_TR_1_2_3;
+					m_bTransmitSentinels = FALSE;	//remarked for getting real value. <>
+
+					//Open MSR device here
+					if (!Msr_Open()) {
+						m_lOpenResultCode = m_lResultCode = *pRC = OPOS_E_NOSERVICE;
+					}
+				}
+			}
+		}
+	}
+
+	Deb_Printf(_T("-- OpenService.\n"));
+	SOTrace(true, CLog::LEV_HIGH, _T("-- OpenService.(RC = 0x%x)\n"), *pRC);
 
 	return S_OK;
 }

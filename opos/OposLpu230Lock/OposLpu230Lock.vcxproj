@@ -239,6 +239,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\common\src\EL_Support.cpp" />
+    <ClCompile Include="..\common\src\RegControl.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\common\src\TTR_Dev.cpp" />
     <ClCompile Include="..\common\src\TTR_DevHid.cpp" />
     <ClCompile Include="..\common\src\TTR_etc.cpp" />
@@ -277,7 +283,6 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="RegControl.cpp" />
     <ClCompile Include="SoLock.cpp" />
     <ClCompile Include="SoLpu230Lock.cpp" />
     <ClCompile Include="stdafx.cpp">
@@ -289,6 +294,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\job\code_tools\ct_ini_component.h" />
+    <ClInclude Include="..\common\inc\el_opos\el_opos.h" />
+    <ClInclude Include="..\common\inc\RegControl.h" />
     <ClInclude Include="..\common\inc\Sync.h" />
     <ClInclude Include="DetectWnd.h" />
     <ClInclude Include="DevUart.h" />
@@ -299,7 +306,6 @@
     <ClInclude Include="IniFile.h" />
     <ClInclude Include="Log.h" />
     <ClInclude Include="OposLpu230Lock_i.h" />
-    <ClInclude Include="RegControl.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="SoLock.h" />
     <ClInclude Include="SoLpu230Lock.h" />

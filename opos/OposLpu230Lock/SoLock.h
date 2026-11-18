@@ -23,12 +23,14 @@ using namespace SYNC;
 #include "sg_warpobject.h"
 #include "Dll.h"
 #include "GlobalVar.h"
+#include "el_opos/el_opos.h"
 
 //#define	LPU230LOCK_SO_VERSION		1000000//1008019		// initial version
 #define	LPU230LOCK_SO_VERSION_1_14_1		1014001//1.14.1		// initial version
 //#define	LPU230LOCK_SO_VERSION		1014002//1.14.2		// support lpu238
 //#define	LPU230LOCK_SO_VERSION		1014030//1.14.30		// using cf2
-#define	LPU230LOCK_SO_VERSION		1014031//1.14.31		// using cf2
+//#define	LPU230LOCK_SO_VERSION		1014031//1.14.31		// using cf2
+#define	LPU230LOCK_SO_VERSION		1014032//1.14.32		// using cf2
 
 class CSoLock
 {
@@ -607,38 +609,7 @@ public:
 
 
 public:
-	CSoLock(void) :
-		m_lOpenResultCode(OPOS_E_NOHARDWARE)
-		, m_lResultCode(OPOS_E_CLOSED)
-		, m_lBinaryConversion(OPOS_BC_NONE)
-		, m_lCapPowerReporting(OPOS_PR_NONE)
-		, m_bDeviceEnabled(FALSE)
-		, m_lPowerNotify(OPOS_PN_DISABLED)
-		, m_lPowerState(	OPOS_PS_UNKNOWN)
-		, m_lResultCodeExtended(0)
-		, m_lServiceObjectVersion(LPU230LOCK_SO_VERSION)
-		, m_lState(OPOS_S_CLOSED)
-		, m_DevName(_T("Lpu230Lock"))
-		, m_DeviceDescription(_T("Elpusk electronic keylock"))
-		, m_CheckHealthText(_T("[Error]"))
-		, m_SODescription(_T("OPOS service object for Lpu230Lock electronic keylock."))
-		, m_pFireEvent(NULL)
-		,m_lCapKeylockType(LOCK_KT_ELECTRONIC)
-		,m_lKeyPosition(LOCK_KP_ELECTRONIC)
-		,m_lPositionCount(0)
-	{
-		ATLTRACE( _T(" $ CSoLock()::CSoLock().\n") );
-		bool b_dll_ok = CSoLock::CShare::get_instance().is_dll_ok();
-
-		ATLASSERT(b_dll_ok);
-
-		if (CGlobalVar::GetInstance()->is_generate_exception_in_set_binary_conversion()) {
-			m_lBinaryConversion = OPOS_BC_NIBBLE;//
-			m_lServiceObjectVersion = LPU230LOCK_SO_VERSION_1_14_1;//old version setting
-		}
-
-		m_pFireEvent = new CFireEvent();
-	}
+	CSoLock(void);
 
 	~CSoLock(void)
 	{

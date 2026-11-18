@@ -12,7 +12,7 @@
 
 #include <OposMsr.hi>
 #include <OposMsr.h>
-#include "el_opos/el_msr_opos.h"
+#include "el_opos/el_opos.h"
 
 #include <Deque>
 #include <memory>
@@ -21,6 +21,7 @@
 #include <map>
 #include "Log.h"
 #include "GlobalVar.h"
+#include "RegControl.h"
 
 //#define	LPU230_SO_VERSION	1008004		//support UART mode. 1.8.4
 //#define	LPU230_SO_VERSION	1008006		//support UART mode. 1.8.6
@@ -40,7 +41,8 @@
 //#define	LPU230_SO_VERSION	1008022		// support ng_devmanager.
 //#define	LPU230_SO_VERSION	1008023		// support lpu238
 //#define	LPU230_SO_VERSION	1008030		// using cf2 1.8.30
-#define	LPU230_SO_VERSION	1008031		// using cf2 1.8.31
+//#define	LPU230_SO_VERSION	1008031		// using cf2 1.8.31
+#define	LPU230_SO_VERSION	1008032		// using cf2 1.8.32
 
 using namespace ATL;
 using namespace SYNC;
@@ -78,25 +80,7 @@ public:
 	};
 
 public:
-	static CSoMsr *GetInstance( bool bFree = false )
-	{
-		static CSoMsr *pSoMsr = NULL;
-
-		if( bFree ){
-
-			if( pSoMsr )
-				delete pSoMsr;
-
-			pSoMsr = NULL;
-		}
-		else{
-			if( pSoMsr == NULL )
-				pSoMsr = new CSoMsr();
-		}
-		
-		return pSoMsr;
-	}
-
+	static CSoMsr* GetInstance(bool bFree = false);
 	
 	~CSoMsr()
 	{
@@ -121,10 +105,16 @@ public:
 		return m_hDev;
 	}
 private:
+	CSoMsr(); //don't call default constructor
+private:
 	CSoMsr( const CSoMsr & );
 
-	CSoMsr()
-		: m_bDeviceChanged(true)
+	CSoMsr(const std::wstring& sDevName)
+		: 
+		m_PrivatePostTag{ {0,}, }
+		, m_PrivatePreTag{ {0,}, }
+		, m_Resp{0,}
+		, m_bDeviceChanged(true)
 		, m_bDeviceIsUart(false)
 		, m_lOpenResultCode(OPOS_E_NOHARDWARE)
 		, m_lResultCode(OPOS_E_CLOSED)
@@ -148,11 +138,11 @@ private:
 		, m_bParseDecodeData(FALSE)
 		, m_lTracksToRead(MSR_TR_1_2_3)
 		, m_bTransmitSentinels(FALSE)
-		, m_DevName(_T("Lpu230MSR"))
+		, m_DevName(sDevName.c_str())
 		, m_DeviceDescription(_T("Elpusk Magnetic card reader"))
 		, m_CheckHealthText(_T("[Error]"))
 		, m_SODescription(_T("OPOS service object for Lpu230 Magnetic card reader."))
-		, m_sDeviceName(_T(""))
+		, m_sOpenedDeviceName(_T(""))
 		, m_vTrackData(CONST_MAX_TRACK)
 		, m_sAccountNumber(_T(""))
 		, m_bIsATrackError(false)
@@ -173,6 +163,10 @@ private:
 		, m_vTrackEncryptedData(CONST_MAX_TRACK)
 	{
 		ATLTRACE( _T(" $ CSoMsr()::CSoMsr().\n") );
+
+		if (sDevName.empty()) {
+			ATLTRACE(_T(" $ CSoMsr()::CSoMsr() : None device name.\n"));
+		}
 
 		m_pLog = CLog::GetLog();
 		ATLASSERT(m_pLog!=NULL);
@@ -595,7 +589,7 @@ private:
 	CMutex m_ClaimMutex;
 
 	//device name
-	CString m_sDeviceName;
+	CString m_sOpenedDeviceName;
 
 	//Queue
 	CWorkQueue *m_pDeviceQ;

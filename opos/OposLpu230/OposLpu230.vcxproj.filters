@@ -17,6 +17,9 @@
       <UniqueIdentifier>{4ace917f-6215-4f69-a6c7-b141e3be5293}</UniqueIdentifier>
       <SourceControlFiles>False</SourceControlFiles>
     </Filter>
+    <Filter Include="opos">
+      <UniqueIdentifier>{39b28a7a-9852-4c44-be9f-5b5b6754b3ab}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -38,9 +41,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="FireEvent.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="RegControl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Log.cpp">
@@ -72,6 +72,9 @@
     </ClCompile>
     <ClCompile Include="..\common\src\TTR_DevHid.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\RegControl.cpp">
+      <Filter>opos</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -111,9 +114,6 @@
     <ClInclude Include="Sync.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="RegControl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Log.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -140,6 +140,12 @@
     </ClInclude>
     <ClInclude Include="DevUart.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\inc\el_opos\el_opos.h">
+      <Filter>opos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\inc\RegControl.h">
+      <Filter>opos</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

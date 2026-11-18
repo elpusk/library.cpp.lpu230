@@ -6,38 +6,98 @@
 #include "DetectWnd.h"
 #include "EL_Support.h"
 #include "GlobalVar.h"
+#include "RegControl.h"
 
 #pragma comment( lib, "setupapi.lib" )
 
 using namespace std;
 
+#define WIDE_HELPER(x) L##x
+#define TO_WIDE(x) WIDE_HELPER(x)
+
+CSoLock::CSoLock(void) :
+	m_lOpenResultCode(OPOS_E_NOHARDWARE)
+	, m_lResultCode(OPOS_E_CLOSED)
+	, m_lBinaryConversion(OPOS_BC_NONE)
+	, m_lCapPowerReporting(OPOS_PR_NONE)
+	, m_bDeviceEnabled(FALSE)
+	, m_lPowerNotify(OPOS_PN_DISABLED)
+	, m_lPowerState(OPOS_PS_UNKNOWN)
+	, m_lResultCodeExtended(0)
+	, m_lServiceObjectVersion(LPU230LOCK_SO_VERSION)
+	, m_lState(OPOS_S_CLOSED)
+	, m_DeviceDescription(_T("Elpusk electronic keylock"))
+	, m_CheckHealthText(_T("[Error]"))
+	, m_SODescription(_T("OPOS service object for Lpu230Lock electronic keylock."))
+	, m_pFireEvent(NULL)
+	, m_lCapKeylockType(LOCK_KT_ELECTRONIC)
+	, m_lKeyPosition(LOCK_KP_ELECTRONIC)
+	, m_lPositionCount(0)
+{
+	ATLTRACE(_T(" $ CSoLock()::CSoLock().\n"));
+	bool b_dll_ok = CSoLock::CShare::get_instance().is_dll_ok();
+
+	ATLASSERT(b_dll_ok);
+
+	std::list<std::wstring> list_physical_device_name = CRegControl::GetOposPhysicalDeviceName(
+		std::wstring(TO_WIDE(OPOS_CLASSKEY_LOCK))
+		, std::wstring(TO_WIDE(EL_APPUID_KEY))
+		, std::wstring(TO_WIDE(EL_APPUID_SO_KEYLOCK))
+	);
+
+	ATLASSERT(list_physical_device_name.size() == 1);
+	ATLASSERT(!list_physical_device_name.begin()->empty());
+
+	m_DevName = list_physical_device_name.begin()->c_str(); //save pyhsical name
+
+	if (CGlobalVar::GetInstance()->is_generate_exception_in_set_binary_conversion()) {
+		m_lBinaryConversion = OPOS_BC_NIBBLE;//
+		m_lServiceObjectVersion = LPU230LOCK_SO_VERSION_1_14_1;//old version setting
+	}
+
+	m_pFireEvent = new CFireEvent();
+}
 
 HRESULT CSoLock::OpenService(BSTR DeviceClass, BSTR DeviceName, IDispatch* pDispatch, long* pRC)
 {
-	Deb_Printf( _T("++ OpenService.\n")  );
-	CSoLock::CShare::get_instance().SOTrace( true, CLog::LEV_NORMAL, _T("++ OpenService(%s,%s).\n"),DeviceClass,DeviceName );
+	Deb_Printf(_T("++ OpenService.\n"));
+	CSoLock::CShare::get_instance().SOTrace(true, CLog::LEV_NORMAL, _T("++ OpenService(%s,%s).\n"), DeviceClass, DeviceName);
 
-	do{
-		if( pRC == NULL || pDispatch == NULL ){
+	do {
+		if (pRC == NULL || pDispatch == NULL) {
 			m_lResultCode = OPOS_E_ILLEGAL;
 			continue;
 		}
 		//
-		CString sClass( DeviceClass );
+		CString sClass(DeviceClass);
 
-		if( sClass != _T(OPOS_CLASSKEY_LOCK) ){
+		if (sClass != _T(OPOS_CLASSKEY_LOCK)) {
 			m_lResultCode = *pRC = OPOS_E_ILLEGAL;
 			continue;
 		}
 
-		CString sDev( DeviceName );
+		CString sDev(DeviceName);
 
-		if( sDev != _T("Lpu230Lock") ){
+		std::list<std::wstring> list_physical_device_name = CRegControl::GetOposPhysicalDeviceName(
+			std::wstring(TO_WIDE(OPOS_CLASSKEY_LOCK))
+			, std::wstring(TO_WIDE(EL_APPUID_KEY))
+			, std::wstring(TO_WIDE(EL_APPUID_SO_KEYLOCK))
+		);
+
+		if (list_physical_device_name.size() != 1) {
+			// 생성자에서의 혼란을 막기 위해 이름은 하나만 지원
 			m_lOpenResultCode = m_lResultCode = *pRC = OPOS_E_NOEXIST;
 			continue;
 		}
+		//CCO 에서 logical device name 은 자동으로 physical device 으로 변경해서 SO open 을 호출 하므로
+		// list_physical_device_name 의 요소 device name 만을 다룬다.
+		if (sDev.Compare(list_physical_device_name.begin()->c_str()) != 0) {
+			m_lOpenResultCode = m_lResultCode = *pRC = OPOS_E_NOEXIST;
+			continue;
+		}
+
 		// save CCO dispatch for callback event
-		m_pFireEvent->setDispatch( pDispatch );
+		m_pFireEvent->setDispatch(pDispatch);
 
 		m_lOpenResultCode = m_lResultCode = *pRC = OPOS_SUCCESS;
 
@@ -54,22 +114,22 @@ HRESULT CSoLock::OpenService(BSTR DeviceClass, BSTR DeviceName, IDispatch* pDisp
 
 		m_pFireEvent->setFreezeEvents(false);
 		m_lPowerNotify = OPOS_PN_DISABLED;
-		m_lPowerState = 	OPOS_PS_UNKNOWN;
+		m_lPowerState = OPOS_PS_UNKNOWN;
 		m_lResultCodeExtended = 0;
-	
+
 		//Open Lock device here
-		if( !CSoLock::CShare::get_instance().is_dll_ok() ){
+		if (!CSoLock::CShare::get_instance().is_dll_ok()) {
 			m_lOpenResultCode = m_lResultCode = *pRC = OPOS_E_NOSERVICE;
 		}
 
-		if( !CSoLock::CShare::get_instance().Lock_Open( this ) ){
+		if (!CSoLock::CShare::get_instance().Lock_Open(this)) {
 			m_lOpenResultCode = m_lResultCode = *pRC = OPOS_E_NOSERVICE;
 		}
-	}while(0);
+	} while (0);
 
 
-	Deb_Printf( _T("-- OpenService.\n")  );
-	CSoLock::CShare::get_instance().SOTrace( true, CLog::LEV_HIGH, _T("-- OpenService.(RC = 0x%x)\n"), *pRC );
+	Deb_Printf(_T("-- OpenService.\n"));
+	CSoLock::CShare::get_instance().SOTrace(true, CLog::LEV_HIGH, _T("-- OpenService.(RC = 0x%x)\n"), *pRC);
 
 	return S_OK;
 }
