@@ -279,6 +279,22 @@
     <!-- WixUI_Mondo, WixUI_InstallDir , WixUI_Advanced , WixUI_Minimal -->
     <UIRef Id="WixUI_ErrorProgressText" />
 
+    <!-- UILevel < 3 (무인 설치 또는 기본 진행률 표시줄 모드)일 때 자동 동의 및 체크 처리 -->
+    <SetProperty Id="LicenseAccepted" Value="1" Before="AppSearch" Sequence="both">
+      <![CDATA[REMOVE="ALL" AND (UILevel < 3)]]>
+    </SetProperty>
+
+    <SetProperty Id="CertAccepted" Value="1" Before="AppSearch" Sequence="both">
+      <![CDATA[REMOVE="ALL" AND (UILevel < 3)]]>
+    </SetProperty>
+
+    <!-- x64가 아닌 경우(또는 전체 플랫폼에서 필요시 조건 제거)에만 OPOS 설치 체크 -->
+    <?if $(var.Pre_PlatformPath) != "x64" ?>
+      <SetProperty Id="INSTALL_OPOS" Value="1" Before="AppSearch" Sequence="both">
+        <![CDATA[REMOVE="ALL" AND (UILevel < 3)]]>
+      </SetProperty>
+    <?endif ?>
+    
     <!-- copy file part -->
     <Feature Id="Complete" 
              Title="installation $(var.Pre_ProductName) $(var.Pre_PlatformPath)" 
@@ -738,7 +754,7 @@
     <CustomAction Id="CA_RemoveCert" Directory="BIN_FOLDER" ExeCommand="[BIN_FOLDER]elpusk-hid-d.exe /removecert"  Return="ignore" Impersonate="no" Execute="deferred"/>
 
     <CustomAction Id="CA_RemoveAll" Directory="BIN_FOLDER" ExeCommand="[BIN_FOLDER]elpusk-hid-d.exe /removeall"  Return="ignore" Impersonate="no" Execute="deferred"/>
-    <CustomAction Id="CA_RemoveAllNoUI" Directory="BIN_FOLDER" ExeCommand="[BIN_FOLDER]elpusk-hid-d.exe /removeall /noui"  Return="ignore" Impersonate="no" Execute="deferred"/>
+    <CustomAction Id="CA_RemoveAllNoUI" Directory="BIN_FOLDER" ExeCommand="[BIN_FOLDER]elpusk-hid-d.exe /removeall"  Return="ignore" Impersonate="no" Execute="deferred"/>
   </Fragment>
 
 </Wix>
