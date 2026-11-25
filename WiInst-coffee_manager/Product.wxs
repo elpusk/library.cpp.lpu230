@@ -309,9 +309,8 @@
       <ComponentGroupRef Id="CG_DLL_x86" />
       <?if $(var.Pre_PlatformPath) = "x64" ?>
         <ComponentGroupRef Id="CG_DLL_x64" />
-      <ComponentGroupRef Id="CG_MCP" />
-      <?endif ?>
-      <?if $(var.Pre_PlatformPath) != "x64" ?>
+        <ComponentGroupRef Id="CG_MCP" />
+      <?else ?>
         <ComponentGroupRef Id="CG_DLL_OPOS_x86" />
         <ComponentGroupRef Id="CG_OPOS_INI_x86" />
         <ComponentGroupRef Id="CG_OPOS_LOCK_INI_x86" />
@@ -698,6 +697,17 @@
                   Arguments="/x [ProductCode]"/>
         <RemoveFolder Id="clean_up_short_cut" Directory="SC_PRODUCT_FOLDER" On="uninstall"/>
       </Component>
+
+      <?if $(var.Pre_PlatformPath) = "x86" ?>
+        <Component Id="co_sc.lpu230_opos" Guid="419FA559-BCA0-4FAA-965B-E9E653FCD741">
+          <Condition>INSTALL_OPOS = "1"</Condition>
+          <Shortcut Id="sc.lpu230_opos"
+                    Name="lpu230_opos"
+                    Description="opos registry setting program."
+                    Target="[#file_lpu230_opos.exe]"
+                    WorkingDirectory="CG_BIN"/>
+        </Component>
+      <?endif ?>
     </ComponentGroup>
   </Fragment>
 
