@@ -295,7 +295,7 @@
       </SetProperty>
     <?endif ?>
     
-    <!-- copy file part -->
+    <!-- copy file part, Feature Id is the name of value -->
     <Feature Id="Complete" 
              Title="installation $(var.Pre_ProductName) $(var.Pre_PlatformPath)" 
              Description ="$(var.Pre_ProductName) $(var.Pre_PlatformPath) v$(var.Pre_ProductVersion) software components" Level="1"
@@ -340,15 +340,36 @@
       <RemoveExistingProducts After="InstallValidate" Suppress="no"/>
       <!-- InstallValidate : Verifies that all costed volumes have enough space for the installation. -->
 
+      <!-- 설치 시 롤백 대비 (실행할 액션의 직전에 배치) -->
+      <Custom Action="CA_Rollback_CommitInstall" Before="CA_CommitInstall">NOT Installed</Custom>
       <Custom Action="CA_CommitInstall" Before="InstallFinalize" >NOT Installed</Custom>
+
+      <Custom Action="CA_Rollback_InstallCert" Before="CA_InstallCert">NOT Installed</Custom>
       <Custom Action="CA_InstallCert" After="CA_CommitInstall" >NOT Installed</Custom>
+
+      <Custom Action="CA_Rollback_InstallSvr" Before="CA_InstallSvr">NOT Installed</Custom>
       <Custom Action="CA_InstallSvr" After="CA_InstallCert" >NOT Installed</Custom>
+
+      <Custom Action="CA_Rollback_StartSvr" Before="CA_StartSvr">NOT Installed</Custom>
       <Custom Action="CA_StartSvr" After="CA_InstallSvr" >NOT Installed</Custom>
+      
       <?if $(var.Pre_PlatformPath) = "x86" ?>
-        <Custom Action="CA_RegMsrSo" After="CA_StartSvr" >NOT Installed</Custom>
-        <Custom Action="CA_RegKeylockSo" After="CA_RegMsrSo" >NOT Installed</Custom>
+        <Custom Action="CA_Rollback_RegMsrSo" Before="CA_RegMsrSo">
+          <![CDATA[NOT Installed AND (INSTALL_OPOS = "1")]]>
+        </Custom>
+        <Custom Action="CA_RegMsrSo" After="CA_StartSvr" >
+          <![CDATA[NOT Installed AND (INSTALL_OPOS = "1")]]>
+        </Custom>
+
+        <Custom Action="CA_Rollback_RegKeylockSo" Before="CA_RegKeylockSo">
+          <![CDATA[NOT Installed AND (INSTALL_OPOS = "1")]]>
+        </Custom>
+        <Custom Action="CA_RegKeylockSo" After="CA_RegMsrSo" >
+          <![CDATA[NOT Installed AND (INSTALL_OPOS = "1")]]>
+        </Custom>
       <?endif ?>
 
+      <!-- uninstall -->
       <Custom Action="CA_BeforeUninstall" After="InstallInitialize" >REMOVE="ALL"</Custom>
 
       <Custom Action="CA_StopSvr" After="CA_BeforeUninstall" >REMOVE="ALL"</Custom>
@@ -358,15 +379,13 @@
         <Custom Action="CA_UnregMsrSo" After="CA_UninstallSvr" >REMOVE="ALL"</Custom>
         <Custom Action="CA_UnregKeylockSo" After="CA_UnregMsrSo" >REMOVE="ALL"</Custom>
         <Custom Action="CA_RemoveCert" After="CA_UnregKeylockSo" >REMOVE="ALL"</Custom>
-
-        <!-- msiexec 에 option 으로 /quiet, /qn, /qn- 또는 /qn+ UILevel 값은 2 이면 -->
-        <Custom Action="CA_RemoveAll" After="CA_RemoveCert" ><![CDATA[REMOVE="ALL" AND (UILevel >= 3)]]></Custom>
-        <Custom Action="CA_RemoveAllNoUI" After="CA_RemoveAll" ><![CDATA[REMOVE="ALL" AND (UILevel < 3)]]></Custom>
-
       <?else ?>
-        <!-- msiexec 에 option 으로 /quiet, /qn, /qn- 또는 /qn+ UILevel 값은 2 이면 -->
-        <Custom Action="CA_RemoveAll" After="CA_RemoveCert" ><![CDATA[REMOVE="ALL" AND (UILevel >= 3)]]></Custom>
+        <Custom Action="CA_RemoveCert" After="CA_UninstallSvr" >REMOVE="ALL"</Custom>
       <?endif ?>
+
+      <!-- msiexec 에 option 으로 /quiet, /qn, /qn- 또는 /qn+ UILevel 값은 2 이면 -->
+      <Custom Action="CA_RemoveAll" After="CA_RemoveCert" ><![CDATA[REMOVE="ALL" AND (UILevel >= 3)]]></Custom>
+      <Custom Action="CA_RemoveAllNoUI" After="CA_RemoveAll" ><![CDATA[REMOVE="ALL" AND (UILevel < 3)]]></Custom>
 
       <!-- Repair -->
       <Custom Action="CA_StopSvr_Repair" Before="InstallFiles">Installed AND REINSTALL AND NOT REMOVE</Custom>
@@ -737,34 +756,145 @@
     </CustomAction>
 
   </Fragment>
-
+  
   <Fragment>
-    <CustomAction Id="CA_InstallCert" Directory="BIN_FOLDER" ExeCommand="[BIN_FOLDER]elpusk-hid-d.exe /cert" Return="check" Impersonate="no" Execute="deferred" />
+    <!-- for rolllback -->
+    <CustomAction Id="CA_Rollback_CommitInstall" Execute="commit" Impersonate="no" Script="vbscript">
+      <!-- msgbox "when CA_CommitInstall is failed. execute this action" -->
+    </CustomAction>
+    <CustomAction Id="CA_Rollback_InstallCert" 
+                  Directory="BIN_FOLDER" 
+                  ExeCommand="[BIN_FOLDER]elpusk-hid-d.exe /removecert"  
+                  Return="ignore" 
+                  Impersonate="no" 
+                  Execute="rollback"/>
 
-    <CustomAction Id="CA_InstallSvr" Directory="BIN_FOLDER" ExeCommand="[BIN_FOLDER]coffee_service.exe -i" Return="check" Impersonate="no" Execute="deferred" />
+    <CustomAction Id="CA_Rollback_InstallSvr"
+                                    Directory="BIN_FOLDER" 
+                  ExeCommand="[BIN_FOLDER]coffee_service.exe -u" 
+                  Return="ignore" Impersonate="no" 
+                  Execute="rollback" />
 
-    <CustomAction Id="CA_StartSvr" Directory="BIN_FOLDER" ExeCommand="[BIN_FOLDER]coffee_service.exe -r" Return="check" Impersonate="no" Execute="deferred" />
+    <CustomAction Id="CA_Rollback_StartSvr"
+                  Directory="BIN_FOLDER"
+                  ExeCommand="[BIN_FOLDER]coffee_service.exe -k"
+                  Return="ignore"
+                  Impersonate="no"
+                  Execute="rollback" />
 
     <?if $(var.Pre_PlatformPath) = "x86" ?>
-    <CustomAction Id="CA_RegMsrSo"   Directory="DLL_x86_FOLDER" ExeCommand='[SystemFolder]regsvr32.exe /s "[DLL_x86_FOLDER]OposLpu230.dll"' Return="check" Impersonate="no" Execute="deferred"/>
-    <CustomAction Id="CA_RegKeylockSo" Directory="DLL_x86_FOLDER" ExeCommand='[SystemFolder]regsvr32.exe /s "[DLL_x86_FOLDER]OposLpu230Lock.dll"' Return="check" Impersonate="no" Execute="deferred"/>
+      <CustomAction Id="CA_Rollback_RegMsrSo" 
+                  Directory="DLL_x86_FOLDER" 
+                  ExeCommand='[SystemFolder]regsvr32.exe /s /u "[DLL_x86_FOLDER]OposLpu230.dll"' 
+                  Return="ignore" 
+                  Impersonate="no" 
+                  Execute="rollback" />
+    
+      <CustomAction Id="CA_Rollback_RegKeylockSo"
+                                    Directory="DLL_x86_FOLDER" 
+                  ExeCommand='[SystemFolder]regsvr32.exe /s /u "[DLL_x86_FOLDER]OposLpu230Lock.dll"' 
+                  Return="ignore" 
+                  Impersonate="no" 
+                  Execute="rollback" />
     <?endif ?>
+    
+  </Fragment>
+  
+  <Fragment>
+    <CustomAction Id="CA_InstallCert" 
+                  Directory="BIN_FOLDER" 
+                  ExeCommand="[BIN_FOLDER]elpusk-hid-d.exe /cert" 
+                  Return="check" 
+                  Impersonate="no" 
+                  Execute="deferred" />
 
-    <CustomAction Id="CA_StopSvr" Directory="BIN_FOLDER" ExeCommand="[BIN_FOLDER]coffee_service.exe -k" Return="ignore" Impersonate="no" Execute="deferred" />
-    <CustomAction Id="CA_UninstallSvr" Directory="BIN_FOLDER" ExeCommand="[BIN_FOLDER]coffee_service.exe -u" Return="ignore" Impersonate="no" Execute="deferred" />
+    <CustomAction Id="CA_InstallSvr" 
+                  Directory="BIN_FOLDER" 
+                  ExeCommand="[BIN_FOLDER]coffee_service.exe -i" 
+                  Return="check" 
+                  Impersonate="no" 
+                  Execute="deferred" />
 
-    <CustomAction Id="CA_StopSvr_Repair" Directory="BIN_FOLDER" ExeCommand="[BIN_FOLDER]coffee_service.exe -k" Return="ignore" Impersonate="no" Execute="deferred" />
-    <CustomAction Id="CA_StartSvr_Repair" Directory="BIN_FOLDER" ExeCommand="[BIN_FOLDER]coffee_service.exe -u" Return="ignore" Impersonate="no" Execute="deferred" />
+    <CustomAction Id="CA_StartSvr" 
+                  Directory="BIN_FOLDER" 
+                  ExeCommand="[BIN_FOLDER]coffee_service.exe -r" 
+                  Return="check" 
+                  Impersonate="no" 
+                  Execute="deferred" />
 
     <?if $(var.Pre_PlatformPath) = "x86" ?>
-      <CustomAction Id="CA_UnregMsrSo" Directory="DLL_x86_FOLDER" ExeCommand='[SystemFolder]regsvr32.exe /s /u "[DLL_x86_FOLDER]OposLpu230.dll"' Return="ignore" Impersonate="no" Execute="deferred"/>
-      <CustomAction Id="CA_UnregKeylockSo" Directory="DLL_x86_FOLDER" ExeCommand='[SystemFolder]regsvr32.exe /s /u "[DLL_x86_FOLDER]OposLpu230Lock.dll"' Return="ignore" Impersonate="no" Execute="deferred"/>
+      <CustomAction Id="CA_RegMsrSo"   
+                    Directory="DLL_x86_FOLDER" 
+                    ExeCommand='[SystemFolder]regsvr32.exe /s "[DLL_x86_FOLDER]OposLpu230.dll"' 
+                    Return="check" 
+                    Impersonate="no" 
+                    Execute="deferred"/>
+      <CustomAction Id="CA_RegKeylockSo" 
+                    Directory="DLL_x86_FOLDER" 
+                    ExeCommand='[SystemFolder]regsvr32.exe /s "[DLL_x86_FOLDER]OposLpu230Lock.dll"' 
+                    Return="check" 
+                    Impersonate="no" 
+                    Execute="deferred"/>
     <?endif ?>
 
-    <CustomAction Id="CA_RemoveCert" Directory="BIN_FOLDER" ExeCommand="[BIN_FOLDER]elpusk-hid-d.exe /removecert"  Return="ignore" Impersonate="no" Execute="deferred"/>
+    <CustomAction Id="CA_StopSvr" 
+                  Directory="BIN_FOLDER" 
+                  ExeCommand="[BIN_FOLDER]coffee_service.exe -k" 
+                  Return="ignore" 
+                  Impersonate="no" 
+                  Execute="deferred" />
+    <CustomAction Id="CA_UninstallSvr" 
+                  Directory="BIN_FOLDER" 
+                  ExeCommand="[BIN_FOLDER]coffee_service.exe -u" 
+                  Return="ignore" Impersonate="no" 
+                  Execute="deferred" />
 
-    <CustomAction Id="CA_RemoveAll" Directory="BIN_FOLDER" ExeCommand="[BIN_FOLDER]elpusk-hid-d.exe /removeall"  Return="ignore" Impersonate="no" Execute="deferred"/>
-    <CustomAction Id="CA_RemoveAllNoUI" Directory="BIN_FOLDER" ExeCommand="[BIN_FOLDER]elpusk-hid-d.exe /removeall"  Return="ignore" Impersonate="no" Execute="deferred"/>
+    <CustomAction Id="CA_StopSvr_Repair" 
+                  Directory="BIN_FOLDER" 
+                  ExeCommand="[BIN_FOLDER]coffee_service.exe -k" 
+                  Return="ignore" 
+                  Impersonate="no" 
+                  Execute="deferred" />
+    <CustomAction Id="CA_StartSvr_Repair" 
+                  Directory="BIN_FOLDER" 
+                  ExeCommand="[BIN_FOLDER]coffee_service.exe -u" 
+                  Return="ignore" 
+                  Impersonate="no" 
+                  Execute="deferred" />
+
+    <?if $(var.Pre_PlatformPath) = "x86" ?>
+      <CustomAction Id="CA_UnregMsrSo" 
+                    Directory="DLL_x86_FOLDER" 
+                    ExeCommand='[SystemFolder]regsvr32.exe /s /u "[DLL_x86_FOLDER]OposLpu230.dll"' 
+                    Return="ignore" 
+                    Impersonate="no" 
+                    Execute="deferred"/>
+      <CustomAction Id="CA_UnregKeylockSo" 
+                    Directory="DLL_x86_FOLDER" ExeCommand='[SystemFolder]regsvr32.exe /s /u "[DLL_x86_FOLDER]OposLpu230Lock.dll"' 
+                    Return="ignore" 
+                    Impersonate="no" 
+                    Execute="deferred"/>
+    <?endif ?>
+
+    <CustomAction Id="CA_RemoveCert" 
+                  Directory="BIN_FOLDER" 
+                  ExeCommand="[BIN_FOLDER]elpusk-hid-d.exe /removecert"  
+                  Return="ignore" 
+                  Impersonate="no" 
+                  Execute="deferred"/>
+
+    <CustomAction Id="CA_RemoveAll" 
+                  Directory="BIN_FOLDER" 
+                  ExeCommand="[BIN_FOLDER]elpusk-hid-d.exe /removeall"  
+                  Return="ignore" 
+                  Impersonate="no" 
+                  Execute="deferred"/>
+    <CustomAction Id="CA_RemoveAllNoUI" 
+                  Directory="BIN_FOLDER" 
+                  ExeCommand="[BIN_FOLDER]elpusk-hid-d.exe /removeall"  
+                  Return="ignore" 
+                  Impersonate="no" 
+                  Execute="deferred"/>
   </Fragment>
 
 </Wix>

@@ -76,6 +76,9 @@
     <Filter Include="doc">
       <UniqueIdentifier>{ddb2c33f-d58c-446b-a44c-e258345467b4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="tools">
+      <UniqueIdentifier>{4f9a2094-880d-42a5-a7a9-e98bd92563c6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)3thpart\src\win\hidapi_descriptor_reconstruct.c">
@@ -354,6 +357,9 @@
       <Filter>doc</Filter>
     </None>
     <None Include="$(MSBuildThisFileDirectory)..\test.md" />
+    <None Include="$(MSBuildThisFileDirectory)..\WiInst-coffee_manager\cvt_guid2compressed.bat">
+      <Filter>tools</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Xml Include="$(MSBuildThisFileDirectory)projects\lpu237_dll\tg_lpu237_dll.xml">

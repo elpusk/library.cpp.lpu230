@@ -1,6 +1,9 @@
-:: @echo off
+@echo off
 chcp 65001 > nul
 setlocal EnableExtensions EnableDelayedExpansion
+
+:: tested x86 2.17
+:: tested x64 2.17
 
 :: need admin right 
 net session >nul 2>&1

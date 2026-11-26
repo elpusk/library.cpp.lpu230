@@ -112,6 +112,7 @@
     <None Include="$(MSBuildThisFileDirectory)..\info.md" />
     <None Include="$(MSBuildThisFileDirectory)..\README.md" />
     <None Include="$(MSBuildThisFileDirectory)..\test.md" />
+    <None Include="$(MSBuildThisFileDirectory)..\WiInst-coffee_manager\cvt_guid2compressed.bat" />
   </ItemGroup>
   <ItemGroup>
     <Xml Include="$(MSBuildThisFileDirectory)projects\ElpuskHidDaemon\device.xml" />
