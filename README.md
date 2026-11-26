@@ -15,7 +15,7 @@
 + deb package directory : /home/tester/build_deb/
 + FTXUI 6.1.9 lib - path : /home/tester/FTXUI/
 
-## the current version(pkg v2.16)
+## the current version(pkg v2.17)
 
 + coffee_sevice : 2.5
   + rebuilded with the changed library.
@@ -57,6 +57,10 @@
 
 + OposLpu230Lock : v1.14.31
   + NC.
+  + Windows x86 only
+
++ lpu230_opos_ : v1.1
+  + New component
   + Windows x86 only
 
 + tg_lpu237_jni : v2.0

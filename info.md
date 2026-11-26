@@ -1,6 +1,6 @@
 # Software components information
 
-package release 2.16
+package release 2.17
 
 ## LiMgmtLpu230
 
@@ -260,7 +260,7 @@ package release 2.16
   rm $(RemoteOutDir)$(TargetName).so;rm $(RemoteOutDir)$(TargetName).so.1;ln -sf $(RemoteOutDir)$(TargetFileName) $(RemoteOutDir)$(TargetName).so.1;ln -sf $(RemoteOutDir)$(TargetName).so.1 $(RemoteOutDir)$(TargetName).so
   ```
 
-## OPOS Service Object
+## OPOS Service Object and tools
 
 ### OposLpu230
 
@@ -283,6 +283,15 @@ package release 2.16
 - for changing version, change
   - SoLock.h : LPU230LOCK_SO_VERSION
   - SoLock.h : Don't change *LPU230LOCK_SO_VERSION_1_14_1*
+  - version resource
+
+### lpu230_opos
+
+- from package release 2.17
+- for windows 11.(x86)
+- executable file name : lpu230_opos.exe
+- for changing the physical & logical device name of OPOS Service Object of lpu237.
+- for changing version, change
   - version resource
 
 ## MCP
