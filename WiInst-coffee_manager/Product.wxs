@@ -291,7 +291,7 @@
     <!-- x64가 아닌 경우(또는 전체 플랫폼에서 필요시 조건 제거)에만 OPOS 설치 체크 -->
     <?if $(var.Pre_PlatformPath) != "x64" ?>
       <SetProperty Id="INSTALL_OPOS" Value="1" Before="AppSearch" Sequence="both">
-        <![CDATA[REMOVE="ALL" AND (UILevel < 3)]]>
+        <![CDATA[UILevel < 3]]>
       </SetProperty>
     <?endif ?>
     
